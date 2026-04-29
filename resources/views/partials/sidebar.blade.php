@@ -1,0 +1,436 @@
+<aside class="app-sidebar" id="sidebar">
+
+    {{-- style="background-color: {{ 'blue'  }};
+    style="background-color: {{ 'blue'  }}; --}}
+    <!-- Start::main-sidebar-header -->
+    @php
+       $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first(); 
+       $site_logo =  App\Models\SiteImage::where('image_category','site_logo')->first();   
+    @endphp
+    <div class="main-sidebar-header " style="background-color: {{ $sidebar_color != NULL && $sidebar_color->color_name != '#000000' ? $sidebar_color->color_value: ''  }} ;">
+        <a href="#" class="header-logo mt-3 mb-20" >
+            {{-- <img src="../assets/img/brand-logos/desktop-logo.png" alt="logo" class="main-logo desktop-logo">
+            <img src="../assets/img/brand-logos/toggle-logo.png" alt="logo" class="main-logo toggle-logo">
+            <img src="../assets/img/brand-logos/desktop-dark.png" alt="logo" class="main-logo desktop-dark">
+            <img src="../assets/img/brand-logos/toggle-dark.png" alt="logo" class="main-logo toggle-dark"> --}}
+            {{-- <img src="{{ asset( env('APP_ASSETS_BASE_URL').'img/logos/logo.png') }}" alt="logo"
+            class="w-14 h-16 mx-auto block dark:hidden" > --}}
+
+            @if ($site_logo)
+            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo desktop-logo">
+            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo toggle-logo">
+            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo desktop-dark">
+            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo toggle-dark">
+            {{-- <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" --}}
+            {{-- class="w-14 h-16 mx-auto block dark:hidden" > --}}
+            @endif
+
+            @if (! $site_logo)
+            <h1 class="block text-2xl font-bold text-white dark:text-gray-900">{{ session('affiliate')->slug }}</h1>                
+            @endif
+
+            
+          
+
+        </a>
+    </div>
+    <!-- End::main-sidebar-header -->
+
+    <!-- Start::main-sidebar -->
+    <div class="main-sidebar"  id="sidebar-scroll" style="background-color: {{ $sidebar_color != NULL && $sidebar_color->color_name != '#000000' ? $sidebar_color->color_value : ''  }} ;">
+
+        <!-- Start::nav -->
+        <nav class="main-menu-container nav nav-pills flex-column sub-open">
+            <div class="slide-left" id="slide-left"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
+                    height="24" viewBox="0 0 24 24">
+                    <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
+                </svg></div>
+            <ul class="main-menu text-md ">
+                <!-- Start::slide__category -->
+                <li class="slide__category"><span class="category-name">Main</span></li>
+                <!-- End::slide__category -->
+
+                @if (session()->has('impersonator'))
+                <li class="slide  has-sub bg-green-800 p-2 rounded-2xl">
+                    <a href="{{route('admin.exit_impersonate')}}" class="side-menu__item">
+                        <i class="ti ti-user-secret side-menu__icon"></i>
+                        <span class="side-menu__label">EXIT User Account</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                 </li>
+                @endif
+
+                <!-- Start::slide -->
+                <li class="slide  has-sub ">
+                    <a href="{{ route('dashboard') }}" class="side-menu__item">
+                        <i class="ri-home-8-line side-menu__icon"></i>
+                        <span class="side-menu__label">{{ __('messages.Dashboard') }} </span>
+                        {{-- <i class="ri ri-arrow-right-s-line side-menu__angle"></i> --}}
+                    </a>
+                    <ul class="slide-menu child1">
+                        <li class="slide side-menu__label1"><a href="#">{{ __('messages.Dashboard') }}</a></li>
+                        {{-- <li class="slide"><a href="index.html" class="side-menu__item">Sales</a></li> --}}
+                        
+                    </ul>
+                </li>
+
+
+                <!-- Start::slide -->
+        
+                <!-- Language Switcher -->
+                <li class="slide has-sub" id="languageSwitcher">
+                    <a href="#" class="side-menu__item text-yellow-700 dark:text-yellow-300 font-semibold">
+                        <i class="ri-translate-2 side-menu__icon text-lg animate-bounce"></i>
+                        <span class="side-menu__label">🌍 Language</span>
+                        <i class="ri-arrow-down-s-line side-menu__angle ml-auto"></i>
+                    </a>
+
+                    <ul class="slide-menu child1 pl-6 py-2 space-y-1 hidden">
+                        <li><a href="{{ route('lang.switch', 'en') }}" class="side-menu__item text-sm hover:text-blue-600">🇬🇧 English</a></li>
+                        <li><a href="{{ route('lang.switch', 'yo') }}" class="side-menu__item text-sm hover:text-blue-600">🟡 Yoruba</a></li>
+                        <li><a href="{{ route('lang.switch', 'ha') }}" class="side-menu__item text-sm hover:text-blue-600">🟢 Hausa</a></li>
+                        <li><a href="{{ route('lang.switch', 'ig') }}" class="side-menu__item text-sm hover:text-blue-600">🔴 Igbo</a></li>
+                    </ul>
+                </li>
+
+<!-- Add this script to the bottom of your Blade template or layout -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const langToggle = document.querySelector('#languageSwitcher > a');
+        const langMenu = document.querySelector('#languageSwitcher > ul');
+
+        langToggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            langMenu.classList.toggle('hidden');
+            langMenu.parentElement.classList.toggle('open'); // Optional: for sidebar visual logic
+        });
+    });
+</script>
+
+
+
+          
+              
+
+
+
+                @if (strtolower(auth()->user()->role->role_name) == 'admin')
+
+                <!-- Start::slide__category -->
+                 <li class="slide__category"><span class="category-name">Admin Modules</span></li>
+                 <!-- End::slide__category -->
+
+                  <!-- Start::slide -->
+                  <li class="slide  has-sub">
+                    <a href="{{ route('admin.users.index') }}" class="side-menu__item">
+                        <i class="ti ti-users side-menu__icon"></i>
+                        <span class="side-menu__label">Users Management</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                 </li>
+                 <!-- End::slide -->
+
+                 <!-- Start::slide: for users -->
+                 <li class="slide  has-sub">
+                    <a href="{{ route('admin.reseller_plans.index') }}" class="side-menu__item">
+                        <i class="ti ti-medal side-menu__icon"></i>
+                        <span class="side-menu__label">Resellers Plans</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item"></a></li> --}}
+                    </ul>
+                  </li>
+                <!-- End::slide -->
+
+                  <!-- Start::slide -->
+                  <li class="slide  has-sub">
+                    <a href="{{ route('admin.networks.index')}}" class="side-menu__item">
+                        <i class="ti ti-wifi side-menu__icon"></i>
+                        <span class="side-menu__label">Networks</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                  </li>
+                <!-- End::slide -->
+
+                 <!-- Start::slide -->
+                 <li class="slide  has-sub">
+                    <a href="{{ route('admin.transactions.index')}}" class="side-menu__item">
+                        <i class="ti ti-exchange side-menu__icon"></i>
+                        <span class="side-menu__label">Transactions</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                  </li>
+                <!-- End::slide -->
+
+                
+
+             
+
+                <!-- Start::slide -->
+                {{-- <li class="slide  has-sub">
+                    <a href="{{ route('admin.transactions.pending_funding_transactions')}}" class="side-menu__item">
+                        <i class="ti ti-credit-card side-menu__icon"></i>
+                        <span class="side-menu__label">Pending Fundings</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                      
+                    </ul>
+                </li> --}}
+                <!-- End::slide -->
+
+                
+
+                <!-- Start::slide -->
+                <li class="slide  has-sub">
+                    <a href="{{ route('admin.products.index')}}" class="side-menu__item">
+                        <i class="ti ti-devices side-menu__icon"></i>
+                        <span class="side-menu__label">Products</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                </li>
+                <!-- End::slide -->
+       
+                <!-- Start::slide -->
+                <li class="slide  has-sub">
+                    <a href="{{ route('admin.product_plan_categories.index')}}" class="side-menu__item">
+                        <i class="ti ti-device-speaker side-menu__icon"></i>
+                        <span class="side-menu__label">Plan Categories</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                </li>
+                <!-- End::slide -->
+
+                  <!-- Start::slide -->
+                  <li class="slide  has-sub">
+                    <a href="{{ route('admin.product_plans.index')}}" class="side-menu__item">
+                        <i class="ti ti-artboard side-menu__icon"></i>
+                        <span class="side-menu__label">Plans & Prices</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                </li>
+                <!-- End::slide -->
+
+               
+
+                {{-- @if (env('APP_NAME') == 'OresamSub' || env('APP_NAME') == 'Mega-sub')
+                <!-- End::slide -->
+                <li class="slide  has-sub">
+                    <a href="{{ route('admin.coupon_codes.index')}}" class="side-menu__item">
+                        <i class="ti ti-exchange side-menu__icon"></i>
+                        <span class="side-menu__label">{{ __('Coupon Codes') }} </span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                     
+                    </ul>
+                </li>
+                @endif --}}
+
+
+                 {{-- @if (env('APP_NAME') == 'OresamSub') --}}
+                        {{-- <!-- Start::slide -->
+                        <li class="slide  has-sub">
+                            <a href="{{ route('admin.wallet_funding_promo.index')}}" class="side-menu__item">
+                                <i class="ti ti-cash side-menu__icon"></i>
+                                <span class="side-menu__label">Funding Promo</span>
+                                <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li>
+                        <!-- End::slide -->
+
+                        <!-- Start::slide -->
+                        <li class="slide  has-sub">
+                            <a href="{{ route('admin.user_wallet_funding_promo.index')}}" class="side-menu__item">
+                                <i class="ti ti-cash side-menu__icon"></i>
+                                <span class="side-menu__label">Custom Funding Promo</span>
+                                <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li>
+                        <!-- End::slide --> --}}
+
+                        <!-- Start::slide -->
+                          {{-- <li class="slide  has-sub">
+                            <a href="{{ route('admin.daily_customer_followup.index')}}" class="side-menu__item">
+                                <i class="ti ti-cash side-menu__icon"></i>
+                                <span class="side-menu__label">Daily Customer Follow-Up</span>
+                                <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                          </li> --}}
+                        <!-- End::slide -->
+
+
+
+                        <!-- Start::slide -->
+                        {{-- <li class="slide  has-sub">
+                            <a href="{{ route('admin.product_plan_custom_pricing.index')}}" class="side-menu__item">
+                                <i class="ti ti-cash side-menu__icon"></i>
+                                <span class="side-menu__label">Custom Plan Pricing</span>
+                                <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li> --}}
+                        <!-- End::slide -->
+
+                         <!-- Start::slide -->
+                         {{-- <li class="slide  has-sub">
+                            <a href="{{ route('admin.plan_profit_settings.index')}}" class="side-menu__item">
+                                <i class="ti ti-cash side-menu__icon"></i>
+                                <span class="side-menu__label">Profit Settings</span>
+                                <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li> --}}
+                        <!-- End::slide -->
+                  {{-- @endif --}}
+
+                  <!-- Start::slide -->
+                  {{-- in progress --}}
+                  <li class="slide  has-sub">
+                    <a href="{{ route('admin.announcements.index')}}" class="side-menu__item">
+                        <i class="ti ti-bell side-menu__icon"></i>
+                        <span class="side-menu__label">Announcements</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                    </ul>
+                  </li>
+                <!-- End::slide -->
+
+
+                
+
+                  <!-- Start::slide -->
+                  {{-- in progress --}}
+                  {{-- <li class="slide  has-sub">
+                    <a href="{{ route('admin.translations.index')}}" class="side-menu__item">
+                        <i class="ti ti-world side-menu__icon"></i>
+                        <span class="side-menu__label">Translation Settings</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                    </ul>
+                  </li> --}}
+                <!-- End::slide -->
+
+            
+
+                  <!-- Start::slide -->
+                  {{-- in progress --}}
+                  {{-- <li class="slide  has-sub">
+                    <a href="{{ route('admin.addons.index')}}" class="side-menu__item">
+                        <i class="ti ti-settings side-menu__icon"></i>
+                        <span class="side-menu__label">Add ons</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                    </ul>
+                  </li> --}}
+                  <!-- End::slide -->
+
+                <!-- Start::slide -->
+                <li class="slide  has-sub">
+                    <a href="{{ route('admin.settings.index')}}" class="side-menu__item">
+                        <i class="ti ti-settings side-menu__icon"></i>
+                        <span class="side-menu__label">Settings</span>
+                        <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                    </ul>
+                </li>
+                <!-- End::slide -->
+
+
+                    @if (auth()->user()->email == 'adebsholey4real@gmail.com')
+                    <!-- Start::slide -->
+                    <li class="slide  has-sub">
+                        <a href="{{ route('admin.wallet_logs.index')}}" class="side-menu__item">
+                            <i class="ti ti-credit-card side-menu__icon"></i>
+                            <span class="side-menu__label">{{ __('Wallet Logs') }}</span>
+                            {{-- <span class="side-menu__label">{{ __('messages.Wallet Logs') }}</span> --}}
+                            <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
+                        </a>
+                        <ul class="slide-menu child1">
+                            {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
+                        </ul>
+                    </li>
+                    <!-- End::slide -->
+                    @endif
+
+                @endif
+ 
+              
+
+                <!-- Start::slide -->
+                <li class="slide">
+                
+                    {{-- <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <a type="button" href="" class="side-menu__item"
+                                onclick="event.preventDefault();
+                                            this.closest('form').submit();">
+                             <i class="ri-apps-2-line side-menu__icon"></i>
+                             <span class="side-menu__label">Logout</span>
+                        </a>
+                      
+                    </form> --}}
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                       <div class="flex items-center">
+                        <i class="ti ti-logout text-white mr-3"></i>
+                        <a type="button" href="" onclick="event.preventDefault();
+                                            this.closest('form').submit();">
+                            
+                             <span class="side-menu__label text-white">{{ __('messages.Logout') }}</span>
+                        </a>
+                       </div>
+                    </form>
+                </li>
+                <!-- End::slide -->
+
+
+            </ul>
+            <div class="slide-right" id="slide-right">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
+                    height="24" viewBox="0 0 24 24">
+                    <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path>
+                </svg></div>
+        </nav>
+        <!-- End::nav -->
+
+    </div>
+    <!-- End::main-sidebar -->
+
+</aside>

@@ -1,0 +1,201 @@
+import { useState } from "react";
+import { usePage, Link } from "@inertiajs/react";
+import DashboardLayout from "@/Layouts/DashboardLayout";
+import PrimaryLink from "@/Components/PrimaryLink";
+import axios from "axios";
+
+
+
+
+export default function Profile() {
+  const { props } = usePage();
+  const { auth } = props;
+  const user = auth.user;
+
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showPinForm, setShowPinForm] = useState(false);
+
+  // Form state
+  const [passwordData, setPasswordData] = useState({ current_password: "", new_password: "", confirm_password: "" });
+  const [pinData, setPinData] = useState({ current_pin: "", new_pin: "", confirm_pin: "" });
+
+  const handlePasswordChange = (e) => {
+    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+  };
+
+  const handlePinChange = (e) => {
+    setPinData({ ...pinData, [e.target.name]: e.target.value });
+  };
+
+
+  // Submit password
+  const submitPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(route("inertia.profile.updatePassword"), passwordData);
+      // Success: hide form & reset fields
+      setShowPasswordForm(false);
+      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+      alert(response.data.message || "Password updated successfully"); // optional toast
+    } catch (error) {
+      if (error.response?.data?.errors) {
+        console.log("Validation errors:", error.response.data.errors);
+        alert(Object.values(error.response.data.errors).flat().join("\n")); // simple alert
+      } else {
+        console.error(error);
+        alert("An unexpected error occurred");
+      }
+    }
+  };
+  
+  // Submit PIN
+  const submitPin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(route("inertia.profile.updatePin"), pinData);
+      // Success: hide form & reset fields
+      setShowPinForm(false);
+      setPinData({ current_pin: "", new_pin: "", confirm_pin: "" });
+      alert(response.data.message || "PIN updated successfully"); // optional toast
+    } catch (error) {
+      if (error.response?.data?.errors) {
+        console.log("Validation errors:", error.response.data.errors);
+        alert(Object.values(error.response.data.errors).flat().join("\n"));
+      } else {
+        console.error(error);
+        alert("An unexpected error occurred");
+      }
+    }
+  };
+  
+
+
+
+
+  return (
+    <DashboardLayout title="Profile">
+      {/* Back Navigation */}
+      <PrimaryLink href={route("dashboard")} primaryColor={props.userDashboardPrimaryColor}>
+        Back to Dashboard
+      </PrimaryLink>
+
+      {/* User Info Card */}
+      <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-4 pb-8 rounded-xl shadow overflow-hidden font-inter">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-700 dark:text-white">
+          Your Infosss
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div className="flex justify-between">
+            <span>Name:</span>
+            <span className="font-semibold">{user.first_name} {user.last_name}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Email:</span>
+            <span className="font-semibold">{user.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Phone:</span>
+            <span className="font-semibold">{user.phone_number ?? "Not set"}</span>
+          </div>
+
+          {/* Change Password */}
+          <div className="mt-4">
+            <button
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md shadow text-sm"
+            >
+              {showPasswordForm ? "Cancel Password Change" : "Change Password"}
+            </button>
+
+            {showPasswordForm && (
+              <form onSubmit={submitPassword} className="mt-3 space-y-2">
+                <input
+                  type="password"
+                  name="current_password"
+                  placeholder="Current Password"
+                  value={passwordData.current_password}
+                  onChange={handlePasswordChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <input
+                  type="password"
+                  name="new_password"
+                  placeholder="New Password"
+                  value={passwordData.new_password}
+                  onChange={handlePasswordChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <input
+                  type="password"
+                  name="confirm_password"
+                  placeholder="Confirm New Password"
+                  value={passwordData.confirm_password}
+                  onChange={handlePasswordChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow text-sm"
+                >
+                  Save Password
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Change PIN */}
+          <div className="mt-4">
+            <button
+              onClick={() => setShowPinForm(!showPinForm)}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow text-sm"
+            >
+              {showPinForm ? "Cancel PIN Change" : "Change PIN"}
+            </button>
+
+            {showPinForm && (
+              <form onSubmit={submitPin} className="mt-3 space-y-2">
+                <input
+                  type="password"
+                  name="current_pin"
+                  placeholder="Current PIN"
+                  value={pinData.current_pin}
+                  onChange={handlePinChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <input
+                  type="password"
+                  name="new_pin"
+                  placeholder="New PIN"
+                  value={pinData.new_pin}
+                  onChange={handlePinChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <input
+                  type="password"
+                  name="confirm_pin"
+                  placeholder="Confirm New PIN"
+                  value={pinData.confirm_pin}
+                  onChange={handlePinChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow text-sm"
+                >
+                  Save PIN
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

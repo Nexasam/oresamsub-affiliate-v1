@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\AdminColorSetting;
+use App\Models\User;
+use Inertia\Inertia;
+use App\Observers\UserObserver;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Inertia::share([
+            'auth' => fn () => [
+                'user' => auth()->check() ? [
+                    'id'         => auth()->id(),
+                    'first_name' => auth()->user()->first_name,
+                    'last_name'  => auth()->user()->last_name,
+                    'email'      => auth()->user()->email,
+                    'main_wallet'      => auth()->user()->main_wallet,
+                    'username'      => auth()->user()->username,
+                    'phone_number'      => auth()->user()->phone_number,
+                    'is_marketer'      => auth()->user()->is_marketer,
+                   
+                ] : null,
+              
+            ],
+            'flash' => fn () => [
+                'success' => session('success'),
+                'error'   => session('error'),
+            ],
+        
+            'impersonator' => fn () =>
+                session()->has('impersonator') ? [
+                    'fname'    => auth()->user()->first_name,
+                    'lname'    => auth()->user()->last_name,
+                    'username'    => auth()->user()->username,
+                    'pin'     => auth()->user()->pin,
+                    'exitUrl' => route('admin.exit_impersonate'),
+                ] : null,
+        ]);
+        
+        
+        User::observe(UserObserver::class);
+    }
+}

@@ -10,7 +10,7 @@ use App\Models\Affiliate;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 
-class SetAffiliate
+class SetAffiliate2
 {
     /**
      * Handle an incoming request.

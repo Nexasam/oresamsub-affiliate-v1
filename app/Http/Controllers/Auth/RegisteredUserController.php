@@ -36,7 +36,6 @@ class RegisteredUserController extends Controller
         $data['upline'] = $upline;
         // dd($upline);
 
-        // dd($data);
 
 
         if( env('APP_NAME') == 'OresamSub') {
@@ -50,12 +49,15 @@ class RegisteredUserController extends Controller
         $data[$landing_data->field_name] = $landing_data->field_details;
         
 
-        $site_images_data = SiteImage::get();
+        $site_images_data = SiteImage::where('affiliate_id',session('affiliate')->id)->get();
         if(count($site_images_data) > 0){
             foreach($site_images_data as $site_image){
                 $data[$site_image->image_category] = $site_image->image_name;
             }
         }
+
+        dd($data);
+
 
 
         $siteTemplate = SiteTemplate::first();

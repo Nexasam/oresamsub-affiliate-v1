@@ -56,7 +56,7 @@ class RegisteredUserController extends Controller
             }
         }
 
-        dd($data);
+        // dd($data);
 
 
 

@@ -572,7 +572,7 @@
                       <div class="overflow-auto">
                         @if (isset($site_logo))
                         {{-- hidden dark:block --}}
-                         <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                         <img src="{{ 'https://'.session('affiliate')->domain.'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
                          class="w-20 h-20 " alt="logo" class=""> 
                          <a href="{{ route('admin.settings.remove_logo') }}" style="color: red">remove image</a>
                        @else

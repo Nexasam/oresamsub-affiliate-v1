@@ -912,7 +912,7 @@
                           </div>
                         </form> --}}
                         
-                        <hr>
+                        {{-- <hr>
                         <br>
                         @if (env('APP_NAME') == 'OresamSub')
                             <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.emails_to_notify_failed_transactions')  }}">
@@ -934,7 +934,7 @@
                             </form>
                                 
                         @endif
-                       
+                        --}}
                       </div>  
 
 

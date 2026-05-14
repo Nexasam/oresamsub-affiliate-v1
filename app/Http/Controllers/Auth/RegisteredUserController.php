@@ -36,7 +36,7 @@ class RegisteredUserController extends Controller
         $data['upline'] = $upline;
         // dd($upline);
 
-        dd($data);
+        // dd($data);
 
 
         if( env('APP_NAME') == 'OresamSub') {

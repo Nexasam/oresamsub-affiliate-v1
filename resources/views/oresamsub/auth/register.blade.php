@@ -4,11 +4,11 @@
 <div class="pt-10 pb-6 max-w-full mx-auto" x-data="{ isRegistering: false, showPassword: false, showConfirm: false }">
 
   <a href="{{ route('dashboard') }}" class="flex flex-col items-center mb-4">
-    {{-- <img 
+    <img 
       src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}" 
       alt="{{ session('affiliate')->name }}" 
       class="h-20 w-20 rounded-full shadow-md"
-    > --}}
+    >
     {{-- Optional text below logo --}}
     {{-- <span class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">OresamSub</span> --}}
   </a>

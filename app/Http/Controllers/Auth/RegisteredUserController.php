@@ -36,6 +36,9 @@ class RegisteredUserController extends Controller
         $data['upline'] = $upline;
         // dd($upline);
 
+        dd($data);
+
+
         if( env('APP_NAME') == 'OresamSub') {
             return view('oresamsub.auth.register')->with($data);
         }
@@ -54,7 +57,6 @@ class RegisteredUserController extends Controller
             }
         }
 
-        dd($data);
 
         $siteTemplate = SiteTemplate::first();
         if(! $siteTemplate || $siteTemplate->template_name == 'template_1'){

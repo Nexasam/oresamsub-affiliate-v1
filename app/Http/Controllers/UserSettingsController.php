@@ -21,34 +21,43 @@ class UserSettingsController extends Controller
       return view('user.settings.create_pin');
     }
 
-    public function store_set_pin(Request $request){
-      // dd($request->all());
-
+    public function store_set_pin(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-          'pin' => ['required','string','regex:/^\d{4,5}$/'],
-          'confirm_pin' => ['required','string','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'string', 'regex:/^\d{4,5}$/'],
+            'confirm_pin' => ['required', 'string', 'regex:/^\d{4,5}$/'],
         ]);
-        
-
-        if ($validator->stopOnFirstFailure()->fails()) {
-          return redirect()->back()->withErrors($validator)->withInput();
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => -1,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
         }
-        
-        if($request->pin != $request->confirm_pin){
-          return response()->json(['status'=> -1, 'message'=>'PIN mismatch found.' ]);
+    
+        if ($request->pin != $request->confirm_pin) {
+            return response()->json([
+                'status' => -1,
+                'message' => 'PIN mismatch found.'
+            ], 422);
         }
-
-
-        if($request->pin == '1234'){
-          return response()->json(['status'=> -1, 'message'=>'Please use another PIN. The PIN: 1234 is not a strong PIN.' ]);
+    
+        if ($request->pin == '1234') {
+            return response()->json([
+                'status' => -1,
+                'message' => 'Please use another PIN. The PIN: 1234 is not a strong PIN.'
+            ], 422);
         }
-
-        User::where('id',auth()->id())->update([
-          'pin' => $request->pin
+    
+        User::where('id', auth()->id())->update([
+            'pin' => bcrypt($request->pin) // IMPORTANT
         ]);
-
-        return response()->json(['status'=> 1, 'message'=>'PIN was successfully set' ]);
-
+    
+        return response()->json([
+            'status' => 1,
+            'message' => 'PIN was successfully set'
+        ]);
     }
     
     public function index(){

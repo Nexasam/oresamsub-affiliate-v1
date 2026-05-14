@@ -109,7 +109,7 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
             // ORESAMSUB WEBPWA V1: ROUTES (wrapped in auth middleware)
             Route::middleware('auth')->get('/set-pin', [InertiaDashboardController::class, 'set_pin'])->name('inertia.setpin.index');   
-            Route::middleware('auth')->get('/store-set-pin', [InertiaDashboardController::class, 'store_set_pin'])->name('inertia.setpin.store');   
+            // Route::middleware('auth')->post('/store-set-pin', [InertiaDashboardController::class, 'store_set_pin'])->name('inertia.setpin.store');   
             // Route::get('oresamsub/set_pin', fn () => view('oresamsub.pages.set_pin'))->name('ore.set_pin'); //use the affiliate session to tell what to show
 
 

@@ -140,7 +140,7 @@
                           @csrf
                           <p> <b> <a target="_blank" href="{{ url('/') }}">Click to preview your landing page </a> </b> </p>
                          <br>
-                          <h1><strong>Template 2 Settings Below</strong> 👇👇👇👇👇👇👇👇👇</h1>
+                          {{-- <h1><strong>Template 2 Settings Below</strong> 👇👇👇👇👇👇👇👇👇</h1>
 
                           <div class="grid lg:grid-cols-2 gap-6 space-y-4 lg:space-y-0">
                             
@@ -297,24 +297,14 @@
                               <label class="ti-form-label mb-0">Physical Address</label>
                               <input value="{{ $physical_address_template2 }}" type="text"  name="physical_address_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                            
-
-                            {{-- <div class="space-y-2 mt-5">
-                              <label class="ti-form-label mb-0">About Us </label>
-                                <div cols="10" rows="5" id="editor">
-                                </div>
-                            </div> --}}
-
-                            {{-- <div class="space-y-2">
-                                <button type="submit" class="ti-btn ti-btn-primary w-full">Update landing pages for TEMPLATE 2</button>
-                            </div> --}}
+                    
                           
                             <br>
-                        </div>
+                           </div>
                           
                           <br>
                           <br>
-                          <br>
+                          <br> --}}
                           <h1><strong>Template 1 Settings Below</strong> 👇👇👇👇👇👇👇👇👇</h1>
                           {{-- <div class="grid w-full lg:w-1/2 lg:grid-cols-2 gap-6 space-y-4 lg:space-y-0"> --}}
                           <div class="grid lg:grid-cols-2 gap-6 space-y-4 lg:space-y-0">

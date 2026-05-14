@@ -26,6 +26,8 @@ export default function SetPin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (submitting) return;
+
     if (data.pin.length !== 4 || data.confirm_pin.length !== 4) {
       Swal.fire("Invalid PIN", "PIN must be exactly 4 digits.", "warning");
       return;
@@ -38,22 +40,39 @@ export default function SetPin() {
 
     try {
       setSubmitting(true);
-      const response = await axios.post(route("user.settings.store_set_pin"), data);
+
+      const response = await axios.post(
+        route("user.settings.store_set_pin"),
+        data,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
 
       if (response.data.status === 1) {
         await Swal.fire("✅ Success", response.data.message, "success");
-        router.visit(route('dashboard'));
-      } else {
-        Swal.fire("⚠️ Failed", response.data.message, "error");
+
+        router.visit(route("dashboard"));
+
+        return;
       }
+
+      Swal.fire("⚠️ Failed", response.data.message, "error");
+
     } catch (error) {
       console.error(error);
-      Swal.fire("❌ Error", "Something went wrong. Please try again.", "error");
+
+      Swal.fire(
+        "❌ Error",
+        error?.response?.data?.message || "Something went wrong",
+        "error"
+      );
     } finally {
       setSubmitting(false);
     }
-    
-  };
+};
 
   return (
     <DashboardLayout title="Set PIN">

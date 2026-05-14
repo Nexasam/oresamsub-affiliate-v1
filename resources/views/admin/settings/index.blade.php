@@ -811,7 +811,7 @@
                               <br>
                           </div>
                         </form>
-                        <br>
+                        {{-- <br>
                         <hr>
                         <br>
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.update')  }}">
@@ -829,7 +829,7 @@
                             
                               <br>
                           </div>
-                        </form>
+                        </form> --}}
 
                         <br>
                   

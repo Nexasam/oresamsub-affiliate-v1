@@ -745,7 +745,7 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
             Route::middleware(['auth','verified'])->post('user/settings/update_pin', [UserSettingsController::class, 'update_pin'])->name('settings.update_pin');
             Route::middleware(['auth','verified','user'])->post('user/settings/update_2fa', [UserSettingsController::class, 'update_2fa'])->name('user.settings.update_2fa');
             Route::middleware(['auth','verified'])->get('user/settings/set_pin', [UserSettingsController::class, 'set_pin'])->name('user.settings.set_pin');
-            Route::middleware(['auth','verified','user'])->post('user/settings/store_set_pin', [UserSettingsController::class, 'store_set_pin'])->name('user.settings.store_set_pin');
+            Route::middleware(['auth','verified'])->post('user/settings/store_set_pin', [UserSettingsController::class, 'store_set_pin'])->name('user.settings.store_set_pin');
 
 
             //VERIFICATIONS

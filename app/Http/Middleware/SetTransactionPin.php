@@ -20,7 +20,7 @@ class SetTransactionPin
 
 
         if(auth()->user()->pin == NULL || auth()->user()->pin == '1234'){
-         
+           logger('ssdfsdfsdf');
             return redirect()->route('inertia.setpin.index');
         }
 

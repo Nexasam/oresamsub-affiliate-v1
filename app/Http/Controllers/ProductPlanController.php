@@ -605,22 +605,7 @@ class ProductPlanController extends Controller
   }
 
     public function store(Request $request){
-        // $validator = Validator::make($request->all(), [
-        //     'first_name' => 'required|max:255',
-        //     'last_name' => 'required|max:255',
-        //     'phone_number' => 'required',
-        //     'email' => 'required|unique:users,email',
-        //     'password' => 'required',
-        //     'confirm_password' => 'required',
-        //     'gender' => 'required',
-        //   ]);
-          
-        //   if ($validator->stopOnFirstFailure()->fails()) {
-        //     return redirect()->back()->withErrors($validator)->withInput();
-        //   }
-
-        
-
+      
           $data['product_plan_name'] = $request->product_plan_name;
           // $data['product_id'] = $request->product_id;
           $data['product_plan_category_id'] = $request->product_plan_category_id; 
@@ -648,8 +633,8 @@ class ProductPlanController extends Controller
             return response()->json(['status'=>'-1', 'message'=> 'Error: Product category not set'  ]);
           }
           if($fetch_product_plan_category && ($fetch_product_plan_category->product->slug == 'airtime' || $fetch_product_plan_category->product->slug == 'utility_bills' ) ){
-             if($request->user_plan_1 > 100 || $request->user_plan_2 > 100 || $request->user_plan_3 > 100 || $request->user_plan_4 > 100 ){
-               return response()->json(['status'=>'-1', 'message'=> 'Error: Percentage discount cannot be greater than 100% for airtime and utility bills'  ]);
+             if($request->user_plan_1 > 30 || $request->user_plan_2 > 30 || $request->user_plan_3 > 30 || $request->user_plan_4 > 30 ){
+               return response()->json(['status'=>'-1', 'message'=> 'Error: Percentage discount cannot be greater than 30% for airtime and utility bills'  ]);
              }
           }
           
@@ -771,8 +756,8 @@ class ProductPlanController extends Controller
          return redirect()->back()->withErrors($validator)->withInput();
        }
 
-       if($request->upline_percentage_commission > 100){
-          Session::flash('failure','Upline percentage commission cannot be greater than 100');
+       if($request->upline_percentage_commission > 20){
+          Session::flash('failure','Upline percentage commission cannot be greater than 20');
           return redirect()->back();
         }
 

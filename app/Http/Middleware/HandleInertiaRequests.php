@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SiteImage;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,12 +40,15 @@ class HandleInertiaRequests extends Middleware
         //     ...parent::share($request),
         //     //
         // ];
+        $siteLogo = SiteImage::where('affiliate_id', session('affiliate')->id)->where('image_category', 'site_logo')->first();
+
 
         return array_merge(parent::share($request), [
             'userDashboardPrimaryColor' => session('user_dashboard_primary_color'),
             'userDashboardSecondaryColor' => session('user_dashboard_secondary_color'),
             'userDashboardAnnouncementColor' => session('user_dashboard_announcement_color'),
             'affiliate' => session('affiliate'),
+            'siteLogo' => $siteLogo?->image_name,
         ]);
     }
 }

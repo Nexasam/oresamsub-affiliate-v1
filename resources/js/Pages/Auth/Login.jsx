@@ -12,7 +12,8 @@ export default function Login() {
     userDashboardPrimaryColor,
     userDashboardSecondaryColor,
     userDashboardAnnouncementColor,
-    affiliate
+    affiliate,
+    siteLogo
   } = props;
 
   // 🎨 Safe color helper (fallback prevents crash)
@@ -51,10 +52,14 @@ export default function Login() {
 
           <div className="flex justify-center mb-4">
             <img
-              src="/assets/logo_imgs/oresamsublogo.jpeg"
-              alt="OresamSub Logo"
-              className="h-20 w-20 rounded-full shadow-md"
-            />
+                src={
+                  siteLogo
+                    ? `/assets/landing_page_assets/img/site_logo/${siteLogo}`
+                    : "/assets/logo_imgs/oresamsublogo.jpeg"
+                }
+                alt={affiliateInfo?.name || "Logo"}
+                className="h-20 w-20 rounded-full shadow-md object-cover"
+              />
           </div>
            
           <h2 className="text-2xl mt-3 font-bold text-center mb-6 text-gray-900 dark:text-white">

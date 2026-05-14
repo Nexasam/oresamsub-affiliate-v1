@@ -117,7 +117,7 @@
                 class="rounded-3xl shadow-lg" alt="About Us">
         </div>
         <div data-aos="fade-left">
-            <h6 class="text-[var(--brand)] uppercase mb-2 font-semibold">About Us</h6>
+            <h6 class="text-[var(--brand)] uppercase mb-2 font-semibold">About Us...</h6>
             <h2 class="text-3xl md:text-4xl font-bold mb-4">Who we are</h2>
             <p class="text-gray-600 leading-relaxed">{{ $aboutus_introduction }}</p>
         </div>

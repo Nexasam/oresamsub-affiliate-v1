@@ -572,7 +572,7 @@
                       <div class="overflow-auto">
                         @if (isset($site_logo))
                         {{-- hidden dark:block --}}
-                         <img src="{{ 'https://'.session('affiliate')->domain.'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                         <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
                          class="w-20 h-20 " alt="logo" class=""> 
                          <a href="{{ route('admin.settings.remove_logo') }}" style="color: red">remove image</a>
                        @else
@@ -647,10 +647,10 @@
                             </div>
                           </div>
 
-                          <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
+                          {{-- <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <div class="space-y-2 mt-5">
                               @if (isset($login_image))
-                                {{-- hidden dark:block --}}
+                             
                                 <img src="{{ env('APP_URL').'assets/landing_page_assets/img/authentication/login/'.$login_image }}" alt="login image"
                                 class="w-20 h-20 "  class=""> 
                               @else
@@ -666,7 +666,7 @@
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <div class="space-y-2 mt-5">
                               @if (isset($signup_image))
-                                {{-- hidden dark:block --}}
+                             
                                 <img src="{{ env('APP_URL').'assets/landing_page_assets/img/authentication/signup/'.$signup_image }}" alt="signup image"
                                 class="w-20 h-20 " class=""> 
                               @else
@@ -676,7 +676,7 @@
                               <label class="ti-form-label mb-0">Update Signup Image</label>
                               <input type="file"  class="my-auto ti-form-input" name="signup_image" max="100" placeholder="update signup image">
                             </div>
-                          </div>
+                          </div> --}}
                           
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <button type="submit" class="ti-btn ti-btn-primary w-full">Update Site Images</button>

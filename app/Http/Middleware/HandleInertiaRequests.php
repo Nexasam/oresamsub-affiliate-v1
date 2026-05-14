@@ -40,7 +40,7 @@ class HandleInertiaRequests extends Middleware
         //     ...parent::share($request),
         //     //
         // ];
-        $siteLogo = SiteImage::where('affiliate_id', session('affiliate')->id)->where('image_category', 'site_logo')->first();
+        $siteLogo = SiteImage::where('image_category', 'site_logo')->first();
 
 
         return array_merge(parent::share($request), [

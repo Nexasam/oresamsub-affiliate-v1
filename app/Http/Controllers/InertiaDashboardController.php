@@ -88,6 +88,11 @@ class InertiaDashboardController extends Controller
         return Inertia::render('SetPin');
     }
 
+    public function store_set_pin(Request $request){
+        dd('testkls');
+        // return Inertia::render('SetPin');
+    }
+
     public function pricing(){
         $user = auth()->user();
         $user = User::with('user_plan')->where('id',auth()->id())->first();

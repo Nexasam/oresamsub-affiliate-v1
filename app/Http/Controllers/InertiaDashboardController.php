@@ -89,6 +89,7 @@ class InertiaDashboardController extends Controller
     }
 
     public function store_set_pin(Request $request){
+        logger('na here ');
         dd('testkls');
         // return Inertia::render('SetPin');
     }

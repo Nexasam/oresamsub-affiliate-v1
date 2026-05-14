@@ -5,15 +5,15 @@
 
   <a href="{{ route('dashboard') }}" class="flex flex-col items-center mb-4">
     <img 
-      src="{{ asset('assets/logo_imgs/oresamsublogo.jpeg') }}" 
-      alt="OresamSub Logo" 
+      src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}" 
+      alt="{{ session('affiliate')->name }}" 
       class="h-20 w-20 rounded-full shadow-md"
     >
     {{-- Optional text below logo --}}
     {{-- <span class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">OresamSub</span> --}}
   </a>
   
-  <h2 class="text-2xl font-bold text-center mb-6">Create Your Account</h2>
+  <h2 class="text-2xl font-bold text-center mb-6">Create Your Account..</h2>
 
   {{-- @if (Session::has('success'))
     <div class="bg-success/10 border border-success/10 alert text-success" role="alert">

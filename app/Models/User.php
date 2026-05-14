@@ -15,7 +15,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 
 
-class User extends Authenticatable implements MustVerifyEmail
+// implements MustVerifyEmail
+class User extends Authenticatable 
 {
     use HasFactory, Notifiable, TwoFactorAuthenticatable, HasApiTokens;
     use HasAffiliateScope;

@@ -54,6 +54,8 @@ class RegisteredUserController extends Controller
             }
         }
 
+        dd($data);
+
         $siteTemplate = SiteTemplate::first();
         if(! $siteTemplate || $siteTemplate->template_name == 'template_1'){
             return view('auth.register')->with($data);

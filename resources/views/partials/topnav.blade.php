@@ -210,7 +210,7 @@
                   </div>
                   <div class="mt-2 ti-dropdown-divider">
 
-                    @if ( auth()->user()->role->role_name == 'User' )
+                    {{-- @if ( auth()->user()->role->role_name == 'User' )
                       <a href="{{ route('user.manage_profile.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-user-circle text-lg"></i>
                         {{__('messages.Profile')}}
@@ -221,7 +221,7 @@
                         {{__('messages.Profile')}}
 
                       </a>
-                    @endif
+                    @endif --}}
                     
                    
                     {{-- <a href="mail-inbox.html" class="ti-dropdown-item">
@@ -243,7 +243,16 @@
                       <a href="{{ route('admin.settings.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
                         {{__('messages.Settings')}}
+
+
                       </a>
+
+
+                      <a href="{{ route('affiliate.edit') }}" class="ti-dropdown-item">
+                        <i class="ti ti-adjustments-horizontal text-lg"></i>
+                        {{__('Update Affilaite')}}
+
+                      </a>   
                     @endif
 
                     @if (auth()->user()->role->role_name == 'User')

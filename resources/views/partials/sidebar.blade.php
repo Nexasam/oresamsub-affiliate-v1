@@ -371,6 +371,14 @@
                 </li>
                 <!-- End::slide -->
 
+                <!-- Update Affiliate -->
+                <li class="slide">
+                    <a href="{{ route('affiliate.edit') }}" class="side-menu__item">
+                        <i class="ti ti-user-edit side-menu__icon"></i>
+                        <span class="side-menu__label">Update Affiliate</span>
+                    </a>
+                </li>
+
 
                     @if (auth()->user()->email == 'adebsholey4real@gmail.com')
                     <!-- Start::slide -->

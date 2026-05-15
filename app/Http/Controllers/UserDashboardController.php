@@ -47,6 +47,8 @@ class UserDashboardController extends Controller
     $hot_sales = AffiliateProductPlanCategory::with('product')->where('is_hot_sales',1)->get();
     $user_virtual_accounts = UserVirtualAccount::with('funding_option.bank_codes')->where('user_id',auth()->id())->latest()->get();
 
+    // return $user_virtual_accounts;
+
     $active_bankcodes = AffiliateFundingOptionBankCodes::where('visibility_status',1)->pluck('bank_code')->toArray();
     $total_expected_bankcodes = AffiliateFundingOptionBankCodes::count();
 

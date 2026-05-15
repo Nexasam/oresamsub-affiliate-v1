@@ -138,7 +138,7 @@ class AdminSettingsController extends Controller
         $funding_options = AffiliateFundingOption::with('bank_codes','webhook_string')->where('activation_status',1)->get();
        if(count($funding_options) <= 0){
           //create
-          $globalfundingoptions = FundingOption::get();
+          $globalfundingoptions = FundingOption::where('activation_status',1)->get();
           foreach($globalfundingoptions as $fund){
               $activation_status = 1;
               if($fund->slug == 'monnify'){

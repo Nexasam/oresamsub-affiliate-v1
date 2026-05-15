@@ -67,23 +67,31 @@ export default function ProductButtons({ loggingOut, setLoggingOut, primaryColor
         <div className="mt-2 font-medium text-[13px] md:text-sm">Transactions</div>
       </button>
 
-      {/* Logout */}
       <button
-        onClick={() => {
-          if (!loggingOut) {
-            setLoggingOut(true);
-            router.post("/logout2", {}, { replace: true, preserveState: false });
-          }
-        }}
-        className="group p-3 rounded-xl shadow hover:shadow-md transition transform hover:scale-[1.05] bg-red-500 text-white"
-      >
-        <div className="w-10 h-10 mx-auto rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center text-white text-xl shadow-sm">
-          🚪
-        </div>
-        <div className="mt-2 font-medium text-[13px] md:text-sm">
-          {loggingOut ? "Logging out…" : "Logout"}
-        </div>
-      </button>
+          onClick={() => {
+            if (!loggingOut) {
+              setLoggingOut(true);
+
+              router.post("/logout2", {}, {
+                preserveState: false,
+                preserveScroll: true,
+                onSuccess: () => {
+                  window.location.href = "/login";
+                }
+              });
+            }
+          }}
+          className="group p-3 rounded-xl shadow hover:shadow-md transition transform hover:scale-[1.05] bg-red-500 text-white"
+        >
+          <div className="w-10 h-10 mx-auto rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center text-white text-xl shadow-sm">
+            🚪
+          </div>
+
+          <div className="mt-2 font-medium text-[13px] md:text-sm">
+            {loggingOut ? "Logging out…" : "Logout"}
+          </div>
+        </button>
+
 
     </div>
   );

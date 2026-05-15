@@ -159,13 +159,23 @@ export default function MorePage() {
             color={secondaryColor}
           />
 
-          {/* Logout */}
-          <ActionBox
-            onClick={() => router.post("/logout2")}
-            icon="🚪"
-            label="Logout"
-            color="#e3342f"
-          />
+       {/* Logout */}
+        <ActionBox
+          onClick={() =>
+            router.post("/logout2", {}, {
+              preserveState: false,
+              preserveScroll: true,
+              onSuccess: () => {
+                window.location.href = "/login";
+              }
+            })
+          }
+          icon="🚪"
+          label="Logout"
+          color="#e3342f"
+        />
+
+
         </div>
       </div>
     </DashboardLayout>

@@ -12,7 +12,9 @@ class InertiaLoginController extends Controller
     // Show login page (Inertia React)
     public function create(Request $request)
     {
-        return Inertia::render('Auth/Login');
+        // return Inertia::render('Auth/Login');
+
+        return inertia_location(route('login'));
     }
 
     // Handle login form submission

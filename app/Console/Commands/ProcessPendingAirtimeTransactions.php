@@ -2,18 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Models\Network;
+use App\Models\Affiliate;
+use App\Models\AffiliateProductPlan;
 use App\Models\Automation;
+use App\Models\Network;
 use App\Models\ProductPlan;
 use App\Models\Transaction;
-use Illuminate\Console\Command;
-use App\Services\Utils\UtilService;
-use App\Models\AffiliateProductPlan;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use App\Services\Automation\AutomationLogic;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendAirtime;
 use App\Services\Automation\MsOrgGroupAutomation\MsOrgGroupAutomation;
+use App\Services\Utils\UtilService;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 
 class ProcessPendingAirtimeTransactions extends Command
 {
@@ -39,13 +40,17 @@ class ProcessPendingAirtimeTransactions extends Command
             //sync with parent.
 
 
-            $pending_transactions = Transaction::where('admin_screen_message','pending_airtime_transaction')
+            $pending_transactions = Transaction::withoutGlobalScope('affiliate')
+            ->where('admin_screen_message','pending_airtime_transaction')
             ->whereNotNull('txn_reference')
             ->where('transaction_category','airtime')
             ->where('status',0) 
             ->get();
     
             foreach($pending_transactions as $pending_transaction){
+
+                     $getAff = Affiliate::select('parent_key','id')->where('affiliate_id',$pending_transaction->affiliate_id)->first();
+                     $key = $getAff->parent_key;
                     
                     $transaction_ref = $pending_transaction->txn_reference;
                     $wallet_category = $pending_transaction->wallet_category;
@@ -60,7 +65,7 @@ class ProcessPendingAirtimeTransactions extends Command
                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                     CURLOPT_CUSTOMREQUEST => 'GET',
                     CURLOPT_HTTPHEADER => array(
-                        'Authorization: 01a472d9582fc1eb9b22cc2f48badf2eb8c0573f',
+                        'Authorization: '.$key,
                         'Content-Type: application/json',
                         'Accept: application/json'
                     ),

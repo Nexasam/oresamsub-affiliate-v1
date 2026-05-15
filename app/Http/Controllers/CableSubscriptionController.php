@@ -458,6 +458,10 @@ class CableSubscriptionController extends Controller
                                 $arrrequest_json = json_encode($arrrequest);
                                 logger('REQ: '.$arrrequest_json);
 
+
+                                $key = session('affiliate')->parent_key;
+
+
                                 $curl = curl_init();
                                 curl_setopt_array($curl, array(
                                 CURLOPT_URL => 'https://oresamsub.com/api/v1/user/buy_cable_tv',
@@ -470,7 +474,7 @@ class CableSubscriptionController extends Controller
                                 CURLOPT_CUSTOMREQUEST => 'POST',
                                 CURLOPT_POSTFIELDS =>$arrrequest_json,
                                 CURLOPT_HTTPHEADER => array(
-                                    'Authorization: Token 01a472d9582fc1eb9b22cc2f48badf2eb8c0573f',
+                                    'Authorization: Token '.$key,
                                     'Content-Type: application/json',
                                     'Accept: application/json'
                                 ),

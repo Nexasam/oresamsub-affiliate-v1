@@ -12,6 +12,8 @@ class ParentSyncController extends Controller
 {
     public function syncplans(Request $request){
         
+        $key = session('affiliate')->parent_key;
+
         $curl = curl_init();
         curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://oresamsub.com/api/v1/user/syncplans',
@@ -23,7 +25,7 @@ class ParentSyncController extends Controller
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',
         CURLOPT_HTTPHEADER => array(
-            'Authorization: 01a472d9582fc1eb9b22cc2f48badf2eb8c0573f',
+            'Authorization: '.$key,
             'Content-Type: application/json',
             'Accept: application/json'
         ),
@@ -195,6 +197,7 @@ class ParentSyncController extends Controller
         ->get();
 
         foreach($pending_transactions as $pending_transaction){
+                $key = session('affiliate')->parent_key;
                 
                 $transaction_ref = $pending_transaction->txn_reference;
                 $wallet_category = $pending_transaction->wallet_category;
@@ -209,7 +212,7 @@ class ParentSyncController extends Controller
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
                 CURLOPT_HTTPHEADER => array(
-                    'Authorization: 01a472d9582fc1eb9b22cc2f48badf2eb8c0573f',
+                    'Authorization: '.$key,
                     'Content-Type: application/json',
                     'Accept: application/json'
                 ),

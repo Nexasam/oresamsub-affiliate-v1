@@ -508,6 +508,8 @@ class AirtimeController extends Controller
                                 $postfieldsjson = json_encode($postarr);
                                 // logger('Airtime request payload: '.$postfieldsjson);
 
+                                $key = session('affiliate')->parent_key;
+
                                 $curl = curl_init();
                                 curl_setopt_array($curl, array(
                                 CURLOPT_URL => 'https://oresamsub.com/api/v1/user/buy_airtime',
@@ -520,7 +522,7 @@ class AirtimeController extends Controller
                                 CURLOPT_CUSTOMREQUEST => 'POST',
                                 CURLOPT_POSTFIELDS =>$postfieldsjson,
                                 CURLOPT_HTTPHEADER => array(
-                                    'Authorization: 01a472d9582fc1eb9b22cc2f48badf2eb8c0573f',
+                                    'Authorization: '.$key,
                                     'Content-Type: application/json',
                                     'Accept: application/json'
                                 ),

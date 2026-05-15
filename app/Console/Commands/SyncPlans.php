@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Http\Services\MultilanguageService;
+use App\Models\Affiliate;
 use App\Models\Network;
 use App\Models\ProductPlan;
-use Illuminate\Console\Command;
 use App\Models\ProductPlanCategory;
+use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use App\Http\Services\MultilanguageService;
 
 class SyncPlans extends Command
 {
@@ -32,6 +33,10 @@ class SyncPlans extends Command
     public function handle()
     {
     
+           
+            $key = env('GENERIC_KEY','sdfsfd');
+
+            
             // logger('dont sync now');exit;
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -44,7 +49,7 @@ class SyncPlans extends Command
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => array(
-                'Authorization: 01a472d9582fc1eb9b22cc2f48badf2eb8c0573f',
+                'Authorization: '.$key,
                 'Content-Type: application/json',
                 'Accept: application/json'
             ),

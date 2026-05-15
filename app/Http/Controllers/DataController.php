@@ -1256,8 +1256,7 @@ class DataController extends Controller
         $mobile_number = $data['mobile_number'];
         $plan = $data['plan'];
         $reference = $data['reference'];
-        // $pkey = env('current_affiliate')->parent_key;
-        $pkey = '01a472d9582fc1eb9b22cc2f48badf2eb8c0573f';
+        $pkey = session('affiliate')->parent_key;
 
         $curl = curl_init();
 

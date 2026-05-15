@@ -255,15 +255,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy2(Request $request)
     {
-        // dd($request->all());
-        // DB::table('sessions')->where('user_id',auth()->user()->id)->delete();
-
         Auth::guard('web')->logout();
-
+    
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
-
+    
         return redirect()->route('login');
     }
 }

@@ -32,7 +32,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="save-pricing-route" content="{{ route('admin.save_unique_plan_pricing') }}">
     
-    <title> Dashboard - {{ env('APP_NAME') }} </title>
+    <title> Dashboard - {{ session('affiliate')->name }} </title>
     <meta name="description" content="We are a data website selling data related products at affordable prices with quality">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 

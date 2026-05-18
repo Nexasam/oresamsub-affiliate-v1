@@ -39,7 +39,7 @@ class UserDashboardController extends Controller
     // if((! $template || $template->template_name == 'template_1') && env('APP_NAME') == 'OresamSub' && auth()->user()->role->role_name == 'User'){
         $data['transactions'] = Transaction::with(relations: 'product_plan')->where('user_id',auth()->id())->limit(10)->latest()->get();
         $data['announcements'] = Announcement::where('status',1)->latest()->get();
-        return Inertia::render('Dashboard')->with($data);
+        // return Inertia::render('Dashboard')->with($data);
         // return view('oresamsub.pages.dashboard')->with($data);
     // }
 

@@ -961,7 +961,7 @@
                                     <tr>
                                       <td>{{ $loop->index + 1 }}</td>
                                       <td>{{ $funding_option->funding_option_name }}</td>
-                                      <td> Webhook url:<strong>{{ $funding_option->webhook_string == NULL ?  'https://' . session('affiliate')->domain_url.'/'.'api/admin/wallets/'.$funding_option->slug.'_webhook/NOT_SET' : env('APP_URL').'api/admin/wallets/'.$funding_option->slug.'_webhook/'.$funding_option->webhook_string->webhook_suffix_string  }}</strong><br>
+                                      <td> Webhook url:<strong>{{ $funding_option->webhook_string == NULL ?  'https://' . session('affiliate')->domain_url.'/'.'api/admin/wallets/'.$funding_option->slug.'_webhook/NOT_SET' : 'https://' . session('affiliate')->domain_url.'/'.'api/admin/wallets/'.$funding_option->slug.'_webhook/'.$funding_option->webhook_string->webhook_suffix_string  }}</strong><br>
                                         <span class="text-red-600 mt-4"><b>(This must be the same with the webhook set on your {{  $funding_option->funding_option_name }} Dashboard)</b></span></td>
                                       <td>
                                         <div class=" flex items-center justify-start">

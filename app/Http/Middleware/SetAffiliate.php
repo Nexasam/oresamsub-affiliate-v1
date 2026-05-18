@@ -21,9 +21,9 @@ class SetAffiliate
         $currentDomain = $request->getHost();
         $currentDomain = preg_replace('/^www\./', '', strtolower($currentDomain));
 
-        Log::info('Current domain detected', [
-            'domain' => $currentDomain
-        ]);
+        // Log::info('Current domain detected', [
+        //     'domain' => $currentDomain
+        // ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -46,20 +46,20 @@ class SetAffiliate
             // SESSION DOMAIN MATCHES CURRENT DOMAIN
             if ($sessionDomain === $currentDomain) {
 
-                Log::info('Affiliate session valid', [
-                    'session_domain' => $sessionDomain,
-                    'current_domain' => $currentDomain,
-                    'affiliate_id' => $sessionAffiliate->id ?? null,
-                ]);
+                // Log::info('Affiliate session valid', [
+                //     'session_domain' => $sessionDomain,
+                //     'current_domain' => $currentDomain,
+                //     'affiliate_id' => $sessionAffiliate->id ?? null,
+                // ]);
 
                 return $next($request);
             }
 
             // DOMAIN MISMATCH → CLEAR SESSION
-            Log::warning('Affiliate session mismatch detected. Resetting session.', [
-                'session_domain' => $sessionDomain,
-                'current_domain' => $currentDomain,
-            ]);
+            // Log::warning('Affiliate session mismatch detected. Resetting session.', [
+            //     'session_domain' => $sessionDomain,
+            //     'current_domain' => $currentDomain,
+            // ]);
 
             Session::forget([
                 'affiliate',
@@ -127,11 +127,11 @@ class SetAffiliate
                 $announcementColor ?? '#5a66f2'
             );
 
-            Log::info('Affiliate set successfully from domain.', [
-                'domain' => $currentDomain,
-                'affiliate_id' => $affiliate->id,
-                'affiliate_slug' => $affiliate->slug,
-            ]);
+            // Log::info('Affiliate set successfully from domain.', [
+            //     'domain' => $currentDomain,
+            //     'affiliate_id' => $affiliate->id,
+            //     'affiliate_slug' => $affiliate->slug,
+            // ]);
 
         } else {
 
@@ -141,9 +141,9 @@ class SetAffiliate
             |--------------------------------------------------------------------------
             */
 
-            Log::warning('Affiliate not configured for domain.', [
-                'domain' => $currentDomain,
-            ]);
+            // Log::warning('Affiliate not configured for domain.', [
+            //     'domain' => $currentDomain,
+            // ]);
 
             return response()->json([
                 'success' => false,

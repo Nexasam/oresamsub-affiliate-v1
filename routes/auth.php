@@ -14,9 +14,12 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use Inertia\Inertia;
+
 // use App\Http\Controllers\Auth\TwoFactorEmailVerificationPromptController;
 
 Route::middleware('guest')->group(function () {
+
 
     Route::get('register', [RegisteredUserController::class, 'create'])
                 ->name('register');
@@ -25,22 +28,49 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register2', [RegisteredUserController::class, 'store2'])->name('store2');
 
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-                ->name('password.request');
+    // Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+    //             ->name('password.request');
 
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-                ->name('password.email');
+    // Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+    //             ->name('password.email');
 
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-                ->name('password.reset');
+    // Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+    //             ->name('password.reset');
 
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
-                ->name('password.store');
+    // Route::post('reset-password', [NewPasswordController::class, 'store'])
+    //             ->name('password.store');
+
+
+    Route::get('/forgot-password', function () {
+        return inertia('Auth/ForgotPassword');
+    })->name('password.request');
+
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->name('password.email');
+
+    Route::get('/reset-password/{token}', function (string $token) {
+        return inertia('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => request('email'),
+        ]);
+    })->name('password.reset');
+
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.store');
+
 })->withoutMiddleware([RoleAdminAccess::class,RoleUserAccess::class]);
 
+// Route::get('email/verify', function () {
+//     return Inertia::render('Auth/VerifyEmail');
+// })
+// ->name('verification.notice');
+
 Route::middleware('auth')->group(function () {
-    Route::get('verify-email', EmailVerificationPromptController::class)
-                ->name('verification.notice');
+    // Route::get('verify-email', EmailVerificationPromptController::class)
+    //             ->name('verification.notice');
+
+
+
 
     Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
                 ->middleware(['signed', 'throttle:6,1'])

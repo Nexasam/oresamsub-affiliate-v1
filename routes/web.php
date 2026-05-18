@@ -72,6 +72,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
 
@@ -82,7 +83,7 @@ use Rap2hpoutre\LaravelLogViewer\LogViewerController;
    
 Route::get('oresamsub/newlanding', fn () => view('oresamsub.landing.new'))->name('ore.landing'); //use the affiliate session to tell what to show
 
-Route::get('oresamsub/register', fn () => view('oresamsub.auth.register'))->name('ore.register'); //use the affiliate session to tell what to show
+Route::get('register', fn () => view('auth.register'))->name('ore.register'); //use the affiliate session to tell what to show
 
 Route::get('syncplans', [ParentSyncController::class, 'syncplans'])->name('parent.syncplans');
 Route::get('query_airtime_transaction', [ParentSyncController::class, 'queryAirtimeTransaction'])->name('parent.queryAirtimeTransaction');
@@ -117,7 +118,7 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
             Route::middleware(['auth','set_transaction_pin'])->group(function () {
 
                 //   INERTIAJS
-                Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');   
+                Route::middleware('verified')->get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');   
                 Route::get('/pricing', [InertiaDashboardController::class, 'pricing'])->name('inertia.pricing.index');   
                 Route::get('/data', [InertiaDashboardController::class, 'data'])->name('inertia.data.index');   
                 Route::get('/airtime', [InertiaDashboardController::class, 'airtime'])->name('inertia.airtime.index');   
@@ -444,6 +445,18 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
                 
             });
 
+            // Route::middleware(['auth'])->get('/email/verify', function () {
+            //     return Inertia::render('Auth/VerifyEmail');
+            // })->name('verification.notice');
+
+            Route::get('email/verify', function () {
+                return Inertia::render('Auth/VerifyEmail', [
+                    'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
+                    'affiliate' => session('affiliate'),
+                    'siteLogo' => session('site_logo'),
+                ]);
+            })->middleware('auth')->name('verification.notice');
+
 
 
             Route::get('/delete_user_account', function () {
@@ -536,7 +549,6 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
             })->name('access_denied');
 
             /////////////EDITING AFFILIATE
-
             Route::get('/affiliate/edit', [AffiliateController::class, 'edit'])->name('affiliate.edit');
             Route::put('/affiliate/update', [AffiliateController::class, 'update'])->name('affiliate.update');
 

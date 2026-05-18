@@ -18,7 +18,13 @@ class SetTransactionPin
     public function handle(Request $request, Closure $next): Response|Array
     {
 
+        if ($request->routeIs('verification.notice') ||
+        $request->routeIs('verification.verify') ||
+        $request->routeIs('verification.send')) {
+            return $next($request);
+        }
 
+        
         if(auth()->user()->pin == NULL || auth()->user()->pin == '1234'){
            logger('ssdfsdfsdf');
             return redirect()->route('inertia.setpin.index');

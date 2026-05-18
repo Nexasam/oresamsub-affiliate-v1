@@ -4,11 +4,14 @@
 <div class="pt-10 pb-6 max-w-full mx-auto" x-data="{ isRegistering: false, showPassword: false, showConfirm: false }">
 
   <a href="{{ route('dashboard') }}" class="flex flex-col items-center mb-4">
-    <img 
-      src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}" 
-      alt="{{ session('affiliate')->name }}" 
-      class="h-20 w-20 rounded-full shadow-md"
-    >
+    @if (isset($site_logo))
+      <img 
+        src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}" 
+        alt="{{ session('affiliate')->name }}" 
+        class="h-20 w-20 rounded-full shadow-md"
+      >     
+    @endif
+   
     {{-- Optional text below logo --}}
     {{-- <span class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">OresamSub</span> --}}
   </a>
@@ -121,6 +124,24 @@
         <x-input-error :messages="$errors->get('upline_referral_phone_number')" class="mt-1" />
       </div>
     </div>
+
+
+    <!-- Transaction PIN -->
+<div class="mb-4">
+  <label for="pin" class="block text-sm mb-1">Transaction PIN</label>
+
+  <input
+    type="password"
+    name="pin"
+    id="pin"
+    max="4"
+    required
+    placeholder="Enter 4-digit PIN"
+    class="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+
+  <x-input-error :messages="$errors->get('pin')" class="mt-1" />
+</div>
 
     <!-- Password -->
     <div class="mb-4">

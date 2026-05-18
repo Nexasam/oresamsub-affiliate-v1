@@ -162,12 +162,104 @@ class RegisteredUserController extends Controller
         return redirect(route('dashboard', absolute: false));
     }
 
-     /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
+  
+
     public function store2(Request $request): RedirectResponse
+    {
+        // 1. Validate input
+        $validated = $request->validate([
+            'username' => ['required', 'string', 'unique:users,username'],
+            'fullname' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:255', 'unique:users,phone_number'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', Password::min(6)],
+            // 'pin' => ['required', 'digits:4'], // 🔥 ADD THIS
+            'pin' => [
+                'required',
+                'digits:4',
+                'regex:/^[0-9]{4}$/', // strictly integers only
+                function ($attribute, $value, $fail) {
+
+                    // ❌ Reject repeated digits (1111, 2222, etc)
+                    if (preg_match('/^(.)\1{3}$/', $value)) {
+                        $fail('PIN cannot be repeating numbers.');
+                    }
+
+                    // ❌ Reject sequential PINs (1234, 2345, 4321, etc)
+                    $sequences = [
+                        '1234'
+                    ];
+
+                    if (in_array($value, $sequences)) {
+                        $fail('PIN is too weak. Choose a stronger PIN.');
+                    }
+                }
+            ],
+        ]);
+
+        // 2. Email security check
+        $dotCount = substr_count($validated['email'], '.');
+        if ($dotCount > 2 || preg_match('/\.+@/', $validated['email'])) {
+            return back()->with('failure', 'This email is not allowed. Contact support.');
+        }
+
+        // 3. Split name
+        $nameParts = explode(' ', $validated['fullname'], 2);
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? $firstName;
+
+        // 4. Upline check
+        $uplineId = null;
+        if (
+            $request->filled('upline_referral_phone_number') &&
+            $request->upline_referral_phone_number !== $validated['phone_number']
+        ) {
+            $upline = User::where('phone_number', $request->upline_referral_phone_number)->first();
+            if ($upline) {
+                $uplineId = $upline->id;
+            }
+        }
+
+        // 5. Role & Plan
+        $roleId = Role::where('role_name', 'User')->value('id');
+        $defaultPlanId = UserPlan::where('is_default', 1)->value('id');
+
+        // 6. Detect Tenant (VERY IMPORTANT 🔥)
+        // adjust this based on your tenancy logic (subdomain, session, referral, etc.)
+        $tenantId = session('affiliate')->id ?? null;
+
+        // 7. Create user (NO email_verified_at ❌)
+        $user = User::create([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'username' => $validated['username'],
+            'phone_number' => $validated['phone_number'],
+            'email' => $validated['email'],
+            'upline_id' => $uplineId,
+            'affiliate_id' => $tenantId, // 👈 critical for branded emails
+            // 'pin' => null,
+            'role_id' => $roleId,
+            'user_plan_id' => $defaultPlanId,
+            'password' => Hash::make($validated['password']),
+            'pin' => $validated['pin'], // 🔥 STORE PIN SECURELY
+            'email_verified_at' => null, // 👈 enforce verification
+        ]);
+
+        // 8. Trigger email verification
+        // event(new Registered($user));
+        // 8. Trigger email verification
+       $user->sendEmailVerificationNotification();
+
+        // 9. Login user
+        Auth::login($user);
+
+        // 10. Redirect to verify page
+        return redirect()->route('verification.notice')
+            ->with('success', 'Account created! Please verify your email.');
+    }
+
+
+    public function store2back(Request $request): RedirectResponse
     {
         // 1. Validate input
         $validated = $request->validate([
@@ -227,89 +319,6 @@ class RegisteredUserController extends Controller
 
 
 
-
-    public function store2BACKUP(Request $request): RedirectResponse
-    {
-  
-        $request->validate([
-            'username' => ['required', 'string', 'unique:users,username'],
-            'fullname' => ['required', 'string', 'max:255'],
-            'phone_number' => ['required','unique:users,phone_number', 'string', 'max:255'],
-            // 'upline_referral_phone_number' => ['nullable', 'string','exists:users,phone_number' ,'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Password::min(6)],
-        ]);
-
-        // 	echo REGEX_CountMatches('as.sfad.asdferw.asdfsdf.@gmail.com','.');
-        // 	echo $count = preg_match_all('/\b.\b/','as.sfad.asdferw.asdfsdf.l.@gmail.com');
-        // 	echo $count = preg_match_all('/\b.\b/','ade.a@gmail.com');
-        // 	echo substr_count('as.sfad.asdferw.asdfsdf.l.@gmail.com','.');
-        // 	echo substr_count('sam.ade@gmail.com','.');
-
-        $validate_email =  count(explode('.',$request->email));
-        if($validate_email > 2){
-            Session::flash('failure','This email is not allowed.. You can reach out to our support via whatsapp');
-            return redirect()->back();
-        }
-
-        $name_array = explode(' ',$request->fullname);
-        if(count($name_array) == 1){
-            $first_name = $name_array[0];
-            $last_name = $name_array[0];
-        }else if(count($name_array) > 1){
-            $first_name = $name_array[0];
-            $last_name = $name_array[1];
-        }
-
-        //second security check
-        $new_email_array = explode('.',$request->email);
-        $last_item = array_pop($new_email_array);
-        // echo $last_item;
-        $checked_email = implode('',$new_email_array).'.'.$last_item;
-
-        if($request->email != $checked_email){
-            Session::flash('failure','This email is not allowed.. You can reach out to our support via whatsapp...');
-            return redirect()->back();
-        }
-
-
-        $upline_details = NULL;
-        if(isset($request->upline_referral_phone_number) &&  $request->upline_referral_phone_number != NULL){
-            $upline_details = User::where('phone_number',$request->upline_referral_phone_number)->first();
-        }
-        $upline_id = $upline_details != NULL && $request->upline_referral_phone_number != $request->phone_number ? $upline_details->id : NULL;
-        // $upline_id = $upline_details->id;
-       
-
-        $role_details = Role::where('role_name','User')->first();
-        $default_reseller_plan = UserPlan::where('is_default',1)->first();
-        $data['first_name'] = $first_name;
-        $data['last_name'] = $last_name;
-        $data['phone_number'] = $request->phone_number;
-        $data['username'] = $request->username;
-        $data['upline_id'] = $upline_id;
-        $data['email'] = $request->email;
-        $data['pin'] = NULL;
-        $data['role_id'] = $role_details->id;
-        $data['user_plan_id'] = $default_reseller_plan->id;
-        $data['password'] = Hash::make($request->password);
-
-        // dd($data);
-        // $data['confirm_password'] = Hash::make($request->confirm_password);
-        if(env('APP_NAME') == 'OresamSub'){
-            $data['email_verified_at'] = date('Y-m-d H:i:s');
-        }
-
-        $user = User::create($data);
-
-        // $dataaa['user'] = $user;
-        // (new VirtualAccountService())->generate_accounts($dataaa);
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
-    }
 
 
 }

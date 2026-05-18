@@ -43,10 +43,12 @@ export default function DashboardLayout({ children , title}) {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  const { sitename } = usePage().props;
+
   return (
   
     <div className="space-y-6 pt-2 px-3 sm:px-6 dark:bg-gray-900 min-h-screen">
-      <Head title={`Oresamsub | ${title}`} />
+       <Head title={`${sitename || "Oresamsub"} | ${title}`} />
 
     
           {/* PWA Install Popup */}

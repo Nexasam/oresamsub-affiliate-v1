@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
             'userDashboardAnnouncementColor' => session('user_dashboard_announcement_color'),
             'affiliate' => session('affiliate'),
             'siteLogo' => $siteLogo?->image_name,
+            'sitename' => session('affiliate')->name ?? 'Oresamsub'
         ]);
     }
 }

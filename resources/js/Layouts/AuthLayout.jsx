@@ -16,7 +16,7 @@ const getInitialTheme = () => {
 
 export default function AuthLayout({ children, title }) {
   const { props } = usePage();
-  const { auth } = props;
+  const { auth,sitename } = props;
 
   const [darkMode, setDarkMode] = useState(getInitialTheme());
   const [showLoader, setShowLoader] = useState(false);
@@ -64,9 +64,13 @@ export default function AuthLayout({ children, title }) {
     );
   }
 
+    // const { sitename } = usePage().props;
+  
+
   return (
     <div className="min-h-screen text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-900">
-    <Head title={`Oresamsub | ${title}`} />
+        <Head title={`${sitename || "Oresamsub"} | ${title}`} />
+
       <div className="max-w-full mx-auto border border-gray-300 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden bg-white dark:bg-gray-900">
         {/* Header */}
         <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">

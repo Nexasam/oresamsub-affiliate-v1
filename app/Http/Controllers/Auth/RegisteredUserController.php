@@ -24,6 +24,8 @@ use Illuminate\Validation\Rules\Password;
 use App\Mail\UserRegistrationNotification;
 use App\Http\Services\VirtualAccountService;
 
+use Illuminate\Validation\Rule;
+
 class RegisteredUserController extends Controller
 {
     /**
@@ -170,8 +172,23 @@ class RegisteredUserController extends Controller
         $validated = $request->validate([
             'username' => ['required', 'string', 'unique:users,username'],
             'fullname' => ['required', 'string', 'max:255'],
-            'phone_number' => ['required', 'string', 'max:255', 'unique:users,phone_number'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+          'phone_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users')
+                    ->where(fn ($query) => $query->where('affiliate_id', $request->affiliate_id)),
+            ],
+
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique('users')
+                    ->where(fn ($query) => $query->where('affiliate_id', $request->affiliate_id)),
+            ],
             'password' => ['required', 'confirmed', Password::min(6)],
             // 'pin' => ['required', 'digits:4'], // 🔥 ADD THIS
             'pin' => [

@@ -11,7 +11,7 @@ use App\Models\FundingOptionBankCodes;
 
 class SecurewavengService{
 
-    public function generate_accounts($data): void{
+    public function generate_accounts($data): array{
         $user = $data['user'];
         $user_id = $user->id;
         $first_name = $user->first_name;

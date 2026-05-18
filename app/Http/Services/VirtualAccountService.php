@@ -3,6 +3,7 @@
 namespace App\Http\Services;
 
 use App\Http\Services\XixaPayService;
+use App\Http\Services\SecurewavengService;
 use App\Http\Services\CrystalPayService;
 
 class VirtualAccountService{
@@ -11,12 +12,16 @@ class VirtualAccountService{
             $dataaa['user'] = $data['user'];
             // (new CrystalPayService())->generate_accounts($dataaa);
             
-            $xixa =  (new XixaPayService())->generate_accounts($dataaa);
-            logger("XIXA Repsone: ".json_encode($xixa));
-            if($xixa['status'] == 1){
+            // $xixa =  (new XixaPayService())->generate_accounts($dataaa);
+            // logger("XIXA Repsone: ".json_encode($xixa));
+
+           $sec =  (new SecurewavengService())->generate_accounts($dataaa);
+
+
+            if($sec['status'] == 1){
                 return [
                     'status' => 1,
-                    'message' => 'Virtual Accounts Generated Successfully',
+                    'message' => $sec['message'],
                 ];
             }
 

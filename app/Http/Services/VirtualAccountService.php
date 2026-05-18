@@ -27,7 +27,7 @@ class VirtualAccountService{
 
             return [
                 'status' => -1,
-                'message' => 'Account(s) could not be generated',
+                'message' => 'Account(s) could not be generated:  '.$sec['message'],
             ];
   
 

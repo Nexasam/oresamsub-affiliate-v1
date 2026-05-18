@@ -43,7 +43,10 @@ class SecurewavengService{
         //     // logger('na here oh2');
         //     exit;
         // }
-        $bank_codes = AffiliateFundingOptionBankCodes::where('funding_option_id',$funding_option->id)->get();
+        $bank_codes = AffiliateFundingOptionBankCodes::select('bank_code')
+        ->where('visibility_status',1)
+        ->where('funding_option_id',$funding_option->id)
+        ->pluck('bank_code')->toArray();
         if(count($bank_codes) <= 0 ){
             // logger('xixa1');
             // exit;
@@ -64,7 +67,7 @@ class SecurewavengService{
 
         }else if($user_virtual_accts_count < count($bank_codes)){
                 
-            
+                  logger('sec '.json_encode($bank_codes));
           
                 foreach($bank_codes as $key=>$bank_code){
                     $bankcode = $bank_code;

@@ -61,7 +61,7 @@ class SecurewaveWebhookController extends Controller
             
             $can_fund = '';
 
-            $funding_option_details = FundingOption::with('webhook_string')->where('slug','securewaveng')->first();
+            $funding_option_details = AffiliateFundingOption::with('webhook_string')->where('slug','securewaveng')->first();
 
             $promo_id = NULL;
             $custom_user_funding_promo_id = NULL;

@@ -7,9 +7,9 @@ use App\Models\SiteTemplate;
 use App\Models\FundingOption;
 use App\Models\UserVirtualAccount;
 use App\Models\LandingPagesSetting;
-use App\Models\FundingOptionBankCodes;
+// use App\Models\FundingOptionBankCodes;
 use App\Models\AffiliateFundingOption;
-use App\Models\FundingOptionBankCodes;
+use App\Models\AffiliateFundingOptionBankCodes;
 
 class SecurewavengService{
 

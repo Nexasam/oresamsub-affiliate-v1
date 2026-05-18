@@ -207,7 +207,9 @@ class UserDashboardController extends Controller
      
       $template = SiteTemplate::first();
       if(!$template || $template->template_name == 'template_1'){
-          return view('oresamsub.pages.dashboard')->with($data);
+          // return view('dashboard')->with($data);
+           return Inertia::render('Dashboard')->with($data);
+
           
       }else{
           //this is template 2 

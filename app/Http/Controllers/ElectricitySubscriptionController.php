@@ -220,6 +220,7 @@ class ElectricitySubscriptionController extends Controller
 
     public function validate_metre_number(Request $request){
         //call the automation involved
+        logger('yes oh, na here oh for elec');
         $plan_details = ProductPlan::with('product_plan_category','automation')
         ->where('visibility',1)
         ->where('id',$request->plan_id)->first();

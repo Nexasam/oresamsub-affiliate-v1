@@ -184,7 +184,17 @@ class ProductPlanController extends Controller
             ->addColumn('validity_in_days', fn($data) => $data->validity_in_days ? $data->validity_in_days . ' days' : '—')
     
             // Cost Price
-            ->addColumn('cost_price', fn($data) => '₦' . number_format((float)$data->cost_price, 2))
+            
+            // ->addColumn('cost_price', fn($data) => '₦' . number_format((float)$data->$cost_price_level, 2))
+
+            // Profit Range
+            ->addColumn('cost_price', function ($data) {
+          
+                $cost_price_level = 'cost_price_' . session('affiliate')->parent_level; //plan level
+
+
+                return number_format((float)$data->$cost_price_level, 2))
+            })
     
             // Profit Range
             ->addColumn('max_profit_range', function ($data) {

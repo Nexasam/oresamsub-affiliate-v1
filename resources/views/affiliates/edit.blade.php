@@ -63,6 +63,15 @@
             <!-- ✅ ONLY EDITABLE FIELD -->
 
             <!-- parent EMAIL (READONLY) -->
+            {{-- <div class="mb-3">
+                <label>Parent Email</label>
+                <input type="email"
+                        name="parent_email"
+                       value="{{ $affiliate->parent_email }}"
+                      class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400"
+                       >
+            </div> --}}
+
             <div class="mb-3">
                 <label>Parent Email</label>
                 <input type="email"

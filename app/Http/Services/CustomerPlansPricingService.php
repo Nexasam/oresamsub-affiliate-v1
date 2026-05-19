@@ -96,7 +96,7 @@ class CustomerPlansPricingService{
         $amount = $data['amount'] ?? 0;
         $slug = Product::select('slug')->where('id',$product_id)->first()->slug;
 
-        logger()->info('wetin dey hhappen here: '.json_encode($data));
+        // logger()->info('wetin dey hhappen here: '.json_encode($data));
 
 
         // AffiliateUserPlan::select('id')->where('plan_level',1)->first()->id ??

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 class SyncPlans extends Command
 {
     /**
-     * The name and signature of the console command.
+     * The name and signature of the console command.: should run every 5 mins for now.
      *
      * @var string
      */
@@ -61,7 +61,7 @@ class SyncPlans extends Command
     
             $response_dec = json_decode($response,true);
 
-            logger($response);
+            logger("From parent:  ".$response);
     
             // return $response;
     

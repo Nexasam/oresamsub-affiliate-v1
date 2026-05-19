@@ -11,6 +11,7 @@ trait WalletTransactionLogs{
         // DATA_FROM_MAIN_WALLET, DATA_FROM_DATA_WALLET, AIRTIME, CABLE, BILLS, BULK_DATA_PURCHASE
         // ADMIN_WALLET_CREDITING, USER_WALLET_CREDITING?:check use , CRYSTALPAY_WALLET_FUNDING
         WalletLog::create([
+            'affiliate_id' => $array['affiliate_id'],
             'user_id' => $array['user_id'],
             'transaction_category' => $array['transaction_category'], //  
             'balance_before' => $array['balance_before'],

@@ -190,11 +190,12 @@ class ProductPlanController extends Controller
             // Profit Range
             ->addColumn('cost_price', function ($data) {
           
-                $cost_price_level = 'cost_price_' . session('affiliate')->parent_level; //plan level
+                $cost_price_level = 'cost_price_' . session('affiliate')->parent_plan_level; //plan level
 
 
                 return number_format((float)$data->$cost_price_level, 2);
             })
+
     
             // Profit Range
             ->addColumn('max_profit_range', function ($data) {

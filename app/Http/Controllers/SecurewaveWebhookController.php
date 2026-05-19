@@ -102,7 +102,9 @@ class SecurewaveWebhookController extends Controller
                 
                 $email = $response_decode['customer']['email'];
 
-                $user_details = User::select('id','main_wallet')->where('email',$email)->first();
+                $user_details = User::select('id','main_wallet')
+                ->where('affiliate_id',$affiliate_id)
+                ->where('email',$email)->first();
                 
                 if($user_details){
                     $created_data['funding_status'] = 'success';

@@ -47,11 +47,15 @@ class ProductPlanController extends Controller
 
           $plan = AffiliateProductPlan::with('product_plan')->where('product_plan_id',$request->plan_id)->first();
       
-          $level = auth()->user()->user_plan->plan_level;
+          // $level = auth()->user()->user_plan->plan_level;
+          $level = session('affiliate')->parent_plan_level;
 
           $afflev = "aff_level_{$level}_max_profit";
 
-          $defaultval = $plan->product_plan->profit_category == 'flat' ? 50 : 1;          
+          $flatval = $plan->product_plan->profit_category == 'flat' ? $plan->product_plan->$afflev : 50;
+          $percval = $plan->product_plan->profit_category == 'percent' ? $plan->product_plan->$afflev : 1;
+
+          $defaultval = $plan->product_plan->profit_category == 'flat' ? $flatval : $percval;          
           $max_profit = $plan->product_plan->$afflev ?? $defaultval;
 
          

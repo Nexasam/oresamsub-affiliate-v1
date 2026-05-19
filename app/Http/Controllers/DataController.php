@@ -836,11 +836,34 @@ class DataController extends Controller
                         }
 
 
-        }catch(Exception $exception){
-            logger($exception->getMessage().' on line: '. $exception->getLine());
+        }catch(\Exception $exception){
+
+            logger([
+                'message' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+        
             DB::rollBack();
-            return response()->json(['status'=> -1, 'message'=>'Something went wrong... Please try again', 'data'=>[]]);
+        
+            return response()->json([
+                'status'=> -1,
+                'message'=>'Something went wrong... Please try again',
+                'debug' => [
+                    'error' => $exception->getMessage(),
+                    'line' => $exception->getLine(),
+                    'file' => $exception->getFile(),
+                ]
+            ]);
         }
+        
+        
+        // catch(Exception $exception){
+        //     logger($exception->getMessage().' on line: '. $exception->getLine());
+        //     DB::rollBack();
+        //     return response()->json(['status'=> -1, 'message'=>'Something went wrong... Please try again', 'data'=>[]]);
+        // }
     }
 
 

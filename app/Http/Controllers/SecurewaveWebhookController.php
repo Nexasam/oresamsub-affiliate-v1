@@ -262,7 +262,7 @@ class SecurewaveWebhookController extends Controller
                 
             }else{
                     // logger('This webhook did not update wallet because its likely that the payment has been processed before');
-                    return response()->json(['status' => 'already  likely received'], 200);
+                    return response()->json(['status' => 'already likely received'], 200);
             }
             }catch(Exception $ex){
                 logger(

@@ -1310,7 +1310,7 @@ class DataController extends Controller
         $response = curl_exec($curl);
 
         logger('for parent request:'.$jsonarr);
-        logger('parent respn:'.$response);
+        // logger('parent respn:'.$response);
         
         curl_close($curl);
         

@@ -193,7 +193,7 @@ class ProductPlanController extends Controller
                 $cost_price_level = 'cost_price_' . session('affiliate')->parent_level; //plan level
 
 
-                return number_format((float)$data->$cost_price_level, 2))
+                return number_format((float)$data->$cost_price_level, 2);
             })
     
             // Profit Range

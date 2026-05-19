@@ -49,7 +49,7 @@ class ProcessPendingAirtimeTransactions extends Command
     
             foreach($pending_transactions as $pending_transaction){
 
-                     $getAff = Affiliate::select('parent_key','id')->where('affiliate_id',$pending_transaction->affiliate_id)->first();
+                     $getAff = Affiliate::select('parent_key','id')->where('id',$pending_transaction->affiliate_id)->first();
                      $key = $getAff->parent_key;
                     
                     $transaction_ref = $pending_transaction->txn_reference;

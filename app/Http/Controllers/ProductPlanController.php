@@ -206,9 +206,10 @@ class ProductPlanController extends Controller
                 $afflev = "aff_level_{$level}_max_profit";
 
                 if($data->profit_category == 'percent'){
-                  $res = $data->product_plan->$afflev ?? 1;
+                  // product_plan->
+                  $res = $data->$afflev ?? 1;
                 }else{
-                $res = $data->product_plan->$afflev ?? 50;
+                  $res = $data->$afflev ?? 50;
                 }
 
 

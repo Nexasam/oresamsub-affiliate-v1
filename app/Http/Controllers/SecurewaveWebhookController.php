@@ -3,13 +3,10 @@ namespace App\Http\Controllers;
 
 use App\Models\AffiliateFundingOption;
 use App\Models\AffiliateFundingOptionBankCodes;
-use App\Models\FundingOption;
-use App\Models\FundingOptionBankCodes;
 use App\Models\FundingWebhookPayload;
 use App\Models\MaxCrystalPaymentsPendingApproval;
 use App\Models\Setting;
 use App\Models\User;
-use App\Traits\Dashboard\UserDashboardDataTrait;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

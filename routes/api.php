@@ -1,19 +1,20 @@
 <?php
 
-use App\Models\ProductPlan;
-use Illuminate\Http\Request;
-use App\Models\ProductPlanCategory;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AddonController;
-use App\Http\Controllers\UsersController;
-use App\Http\Controllers\NetworkController;
-use App\Http\Controllers\WalletsController;
-use App\Http\Controllers\UserDashboardController;
-use App\Http\Controllers\ProductWebhookController;
 use App\Http\Controllers\ExternalIntegration\ApiIntegrationController;
+use App\Http\Controllers\ExternalIntegration\ApiIntegrationPasswordResetController;
 use App\Http\Controllers\ExternalIntegration\Products\ProductsController;
 use App\Http\Controllers\ExternalIntegration\Wallets\FundingOptionsController;
-use App\Http\Controllers\ExternalIntegration\ApiIntegrationPasswordResetController;
+use App\Http\Controllers\NetworkController;
+use App\Http\Controllers\ProductWebhookController;
+use App\Http\Controllers\SecurewaveWebhookController;
+use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\WalletsController;
+use App\Models\ProductPlan;
+use App\Models\ProductPlanCategory;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 // use App\Http\Controllers\ExternalIntegration\ApiIntegrationController;
 // use App\Http\Controllers\ExternalIntegration\Products\ProductsController;
 // use App\Http\ExternalIntegration\Controllers\ApiIntegrationPasswordResetController;
@@ -49,6 +50,7 @@ Route::post('admin/wallets/crystal_pay_webhook/{id}', [WalletsController::class,
 Route::post('admin/products/oresamsub', [ProductWebhookController::class, 'product_webhook'])->name('admin.product.webhook');
 Route::get('admin/fetch_addons', [AddonController::class, 'fetch_addons'])->name('admin.addons.fetch_addons');
 Route::post('admin/wallets/xixapayhook/{id}', [WalletsController::class, 'xixapayhook'])->name('admin.wallet.xixapay.webhook');
+Route::post('admin/wallets/securewaveng_webhook/{id}',[SecurewaveWebhookController::class, 'securewavehook'])->name('admin.wallet.securewaveng.webhook');
 
 //WEBHOOK
 

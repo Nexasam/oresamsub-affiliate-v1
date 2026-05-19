@@ -2,34 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Models\User;
+use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
+use App\Mail\WalletFundingNotification;
+use App\Models\AffiliateProductPlan;
+use App\Models\AffiliateUserPlan;
+use App\Models\Automation;
+use App\Models\BulkDataProductPlans;
 use App\Models\Network;
 use App\Models\Product;
-use App\Models\UserPlan;
-use App\Models\Automation;
-use App\Models\ProductPlan;
-use App\Models\Transaction;
-use App\Models\SiteTemplate;
-use Illuminate\Http\Request;
 use App\Models\ProductCategory;
+use App\Models\ProductPlan;
+use App\Models\ProductPlanCategory;
+use App\Models\SiteTemplate;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Models\UserBulkDataPurchase;
+use App\Models\UserBulkDataWallet;
+use App\Models\UserPlan;
+use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendAirtime;
+use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendData;
+use App\Services\Automation\MegaSubPlugAutomation\VendData;
+use App\Services\Utils\UtilService;
+use App\Traits\Dashboard\UserDashboardDataTrait;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
-use App\Models\UserBulkDataWallet;
-use Illuminate\Support\Facades\DB;
-use App\Models\ProductPlanCategory;
-use App\Services\Utils\UtilService;
-use App\Models\AffiliateProductPlan;
-use App\Models\BulkDataProductPlans;
-use App\Models\UserBulkDataPurchase;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\WalletFundingNotification;
-use Illuminate\Support\Facades\Validator;
-use App\Traits\Dashboard\UserDashboardDataTrait;
-use App\Services\Automation\MegaSubPlugAutomation\VendData;
-use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendData;
-use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
-use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendAirtime;
 
 class AirtimeController extends Controller
 {
@@ -423,7 +424,7 @@ class AirtimeController extends Controller
         $user_details = auth()->user();
         $user_plan_id = $user_details->user_plan_id;
         $user_id = $user_details->id;
-        $user_level = UserPlan::select('plan_level')->where('id',$user_plan_id)->first();
+        $user_level = AffiliateUserPlan::select('plan_level')->where('id',$user_plan_id)->first();
         $plan_level = $user_level->plan_level;
 
         

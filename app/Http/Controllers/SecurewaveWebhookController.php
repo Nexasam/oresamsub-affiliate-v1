@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\AdminWebhookString;
+use App\Models\Affiliate;
 use App\Models\AffiliateFundingOption;
 use App\Models\AffiliateFundingOptionBankCodes;
 use App\Models\FundingWebhookPayload;
@@ -17,12 +19,23 @@ class SecurewaveWebhookController extends Controller
     // use UserDashboardDataTrait;
   
 
-    public function securewavehook(Request $request)
+    public function securewavehook(Request $request,$id)
     {
        
             $raw = $request->getContent();
             $response  = $raw;
             $response_decode = json_decode($response,true);
+
+            $domain = $request->getHost();
+
+            $affiliate = Affiliate::where('domain_url', $domain)->first();
+
+            if(! $affiliate){
+                return response()->json(['status' => 'unauthorized', 'message' => 'Business record not detected'], 401);
+            }
+
+            $affiliate_id = $affiliate->id;
+
 
             // $rawPayload = $request->getContent();
             $signature = $request->header('X-Signature'); // The HMAC sent from Securewaveng
@@ -35,7 +48,9 @@ class SecurewaveWebhookController extends Controller
             // Retrieve merchant secret (configured on their system)
             // $secretKey = config('securewave.webhook_secret');
             //  // or fetch from DB
-            $getSecret = AffiliateFundingOption::where('slug','securewaveng')->first();
+            $getSecret = AffiliateFundingOption::where('affiliate_id',$affiliate_id)
+            ->where('slug','securewaveng')->first();
+            
             if(! $getSecret || !$getSecret->api_secret_key){
                 logger('Webhook signature verification failed - wrong key.');
                 return response()->json(['status' => 'unauthorized...wrong key'], 401);
@@ -58,7 +73,14 @@ class SecurewaveWebhookController extends Controller
             
             $can_fund = '';
 
-            $funding_option_details = AffiliateFundingOption::with('webhook_string')->where('slug','securewaveng')->first();
+            $funding_option_details = AffiliateFundingOption::with('webhook_string')
+            ->where('affiliate_id',$affiliate_id)
+            ->where('slug','securewaveng')->first();
+
+            if($funding_option_details->webhook_string->webhook_suffix_string != $id){
+                return response()->json(['status' => 'unauthorized', 'message' => 'Wrong hook detected'], 401);
+            }
+
 
             $promo_id = NULL;
             $custom_user_funding_promo_id = NULL;
@@ -69,7 +91,9 @@ class SecurewaveWebhookController extends Controller
 
             $provider_ref = $response_decode['provider_reference'];
 
-            $check_exists = FundingWebhookPayload::where('transaction_reference',$response_decode['provider_reference'])
+            $check_exists = FundingWebhookPayload::
+            where('affiliate_id',$affiliate_id)
+            ->where('transaction_reference',$response_decode['provider_reference'])
             ->first();
 
      
@@ -94,6 +118,7 @@ class SecurewaveWebhookController extends Controller
                     //log automatic crediting
                     $can_fund = 'no';
                     MaxCrystalPaymentsPendingApproval::create([
+                        'affiliate_id' => $affiliate_id,
                         'user_id' => $user_details->id,
                         'amount' => $amount_funded,
                         'payment_reference' => $response_decode['provider_reference']
@@ -122,6 +147,7 @@ class SecurewaveWebhookController extends Controller
                     // $package_id = $response_decode['provider_reference']; //work on changing later most likely
                 }
                 $get_charges = AffiliateFundingOptionBankCodes::where('bank_code',$package_id)
+                ->where('affiliate_id',$affiliate_id)
                 ->where('funding_option_id',$funding_option_details->id)
                 ->first();
                 if($get_charges){
@@ -197,6 +223,7 @@ class SecurewaveWebhookController extends Controller
                 $created_data['collection_reference'] = $response_decode['provider_reference'];
                 $created_data['transaction_reference'] = $response_decode['provider_reference'];
                 $created_data['payload_content'] = $response;
+                $created_data['affiliate_id'] = $affiliate_id;
                 $created = FundingWebhookPayload::create($created_data);
                 $new_amount = $old_amount + $amount_to_fund_user;
 
@@ -208,6 +235,7 @@ class SecurewaveWebhookController extends Controller
                     $updated = true;
                 }
 
+                    $walletLog['affiliate_id'] = $affiliate_id;
                     $walletLog['user_id'] = $user_details->id;
                     $walletLog['transaction_category'] = 'SECUREWAVENG_WALLET_FUNDING';
                     $walletLog['balance_before'] = $old_amount;
@@ -220,7 +248,7 @@ class SecurewaveWebhookController extends Controller
                     if( $created && $updated ){
                     DB::commit();
                     logger('Great... All good.');
-                    return response()->json(['status' => 'successfully processed'], 200);
+                    return response()->json(['status' => 'wallet crediting was successfully processed'], 200);
 
 
                     }else{

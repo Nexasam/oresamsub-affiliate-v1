@@ -200,14 +200,15 @@ class ProductPlanController extends Controller
             // Profit Range
             ->addColumn('max_profit_range', function ($data) {
               
-                $level = auth()->user()->user_plan->plan_level;
+                // $level = auth()->user()->user_plan->plan_level;
+                $level = session('affiliate')->parent_plan_level;
 
                 $afflev = "aff_level_{$level}_max_profit";
 
                 if($data->profit_category == 'percent'){
-                  $res = $data->$afflev ?? 1;
+                  $res = $data->product_plan->$afflev ?? 1;
                 }else{
-                $res = $data->$afflev ?? 50;
+                $res = $data->product_plan->$afflev ?? 50;
                 }
 
 

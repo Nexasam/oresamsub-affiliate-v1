@@ -113,24 +113,22 @@ class AdminSettingsController extends Controller
 
         // dd($data);
 
-        
-
-        $admin_2fa_setting = Admin2faSetting::first();
-        if(!$admin_2fa_setting){
-          $admin_2fa_setting = Admin2faSetting::create();
-        }
-
-
-        $referral_setting = ReferralSetting::first();
-        if(! $referral_setting){
-            $referral_setting = ReferralSetting::create();
-        } 
-
         $user_details = User::where('id',auth()->id())->first();
 
         if(! $user_details){
           //user is not loggedin
           redirect()->route('login');
+        }
+
+        $admin_2fa_setting = Admin2faSetting::where('affiliate_id', $user_details->affiliate_id)->first();
+        if(!$admin_2fa_setting){
+          $admin_2fa_setting = Admin2faSetting::create(['affiliate_id' => $user_details->affiliate_id]);
+        }
+
+
+        $referral_setting = ReferralSetting::where('affiliate_id', $user_details->affiliate_id)->first();
+        if(! $referral_setting){
+            $referral_setting = ReferralSetting::create(['affiliate_id' => $user_details->affiliate_id]);
         }
 
         $data['user'] = $user_details;
@@ -378,9 +376,9 @@ class AdminSettingsController extends Controller
 
           $data = $validator->validated();
           
-          $check_table = ReferralSetting::whereNotNull('id')->first();
+          $check_table = ReferralSetting::where('affiliate_id', auth()->user()->affiliate_id)->first();
 
-          $result = $check_table ? ReferralSetting::where('id',$check_table->id)->update($data) : ReferralSetting::create($data);
+          $result = $check_table ? ReferralSetting::where('id',$check_table->id)->update($data) : ReferralSetting::create(array_merge($data, ['affiliate_id' => auth()->user()->affiliate_id]));
 
           Session::flash('success','Referral settings successfully updated');
 
@@ -465,11 +463,12 @@ class AdminSettingsController extends Controller
       }
       
      
-        $admin_2fa_setting = Admin2faSetting::first();
+        $admin_2fa_setting = Admin2faSetting::where('affiliate_id', auth()->user()->affiliate_id)->first();
         if($admin_2fa_setting == NULL){
           //insert
           Admin2faSetting::create([
-            'global_user_2fa_setting' => $request->global_user_2fa_setting
+            'global_user_2fa_setting' => $request->global_user_2fa_setting,
+            'affiliate_id' => auth()->user()->affiliate_id
           ]);
         }else{
           //update

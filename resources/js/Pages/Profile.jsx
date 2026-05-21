@@ -18,8 +18,8 @@ export default function Profile() {
   const [serverErrors, setServerErrors] = useState({});
 
   // Form state
-  const [passwordData, setPasswordData] = useState({ current_password: "", new_password: "", confirm_password: "" });
-  const [pinData, setPinData] = useState({ current_pin: "", new_pin: "", confirm_pin: "" });
+  const [passwordData, setPasswordData] = useState({ current_password: "", new_password: "", new_password_confirmation: "" });
+  const [pinData, setPinData] = useState({ current_pin: "", new_pin: "", new_pin_confirmation: "" });
 
   const handlePasswordChange = (e) => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
@@ -36,7 +36,7 @@ export default function Profile() {
     try {
       const response = await axios.post(route("inertia.profile.updatePassword"), passwordData);
       setShowPasswordForm(false);
-      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+      setPasswordData({ current_password: "", new_password: "", new_password_confirmation: "" });
       setServerErrors({});
       setStatusMessage(response.data.message || "Password updated successfully");
     } catch (error) {
@@ -56,7 +56,7 @@ export default function Profile() {
     try {
       const response = await axios.post(route("inertia.profile.updatePin"), pinData);
       setShowPinForm(false);
-      setPinData({ current_pin: "", new_pin: "", confirm_pin: "" });
+      setPinData({ current_pin: "", new_pin: "", new_pin_confirmation: "" });
       setServerErrors({});
       setStatusMessage(response.data.message || "PIN updated successfully");
     } catch (error) {
@@ -127,6 +127,9 @@ export default function Profile() {
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
                   required
                 />
+                {serverErrors.current_password && (
+                  <p className="text-sm text-red-500 mt-1">{serverErrors.current_password[0]}</p>
+                )}
                 <input
                   type="password"
                   name="new_password"
@@ -136,11 +139,14 @@ export default function Profile() {
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
                   required
                 />
+                {serverErrors.new_password && (
+                  <p className="text-sm text-red-500 mt-1">{serverErrors.new_password[0]}</p>
+                )}
                 <input
                   type="password"
-                  name="confirm_password"
+                  name="new_password_confirmation"
                   placeholder="Confirm New Password"
-                  value={passwordData.confirm_password}
+                  value={passwordData.new_password_confirmation}
                   onChange={handlePasswordChange}
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
                   required
@@ -175,6 +181,9 @@ export default function Profile() {
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
                   required
                 />
+                {serverErrors.current_pin && (
+                  <p className="text-sm text-red-500 mt-1">{serverErrors.current_pin[0]}</p>
+                )}
                 <input
                   type="password"
                   name="new_pin"
@@ -184,11 +193,14 @@ export default function Profile() {
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
                   required
                 />
+                {serverErrors.new_pin && (
+                  <p className="text-sm text-red-500 mt-1">{serverErrors.new_pin[0]}</p>
+                )}
                 <input
                   type="password"
-                  name="confirm_pin"
+                  name="new_pin_confirmation"
                   placeholder="Confirm New PIN"
-                  value={pinData.confirm_pin}
+                  value={pinData.new_pin_confirmation}
                   onChange={handlePinChange}
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
                   required

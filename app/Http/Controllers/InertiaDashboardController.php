@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserVirtualAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class InertiaDashboardController extends Controller
@@ -117,43 +118,47 @@ class InertiaDashboardController extends Controller
     // Update Password
     public function updatePassword(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'current_password' => ['required'],
-            'new_password' => ['required', 'confirmed'], # Password::min(6)
+            'new_password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         $user = auth()->user();
 
-        // Check current password
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'Current password does not match']);
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Current password does not match',
+                'errors' => ['current_password' => ['Current password does not match']],
+            ], 422);
         }
 
-        $user->password = Hash::make($request->new_password);
+        $user->password = Hash::make($validated['new_password']);
         $user->save();
 
-        return back()->with('success', 'Password updated successfully');
+        return response()->json(['message' => 'Password updated successfully']);
     }
 
     // Update PIN
     public function updatePin(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'current_pin' => ['required'],
-            'new_pin' => ['required', 'confirmed', 'digits:4'], // Assuming 4-digit PIN
+            'new_pin' => ['required', 'confirmed', 'digits:4'],
         ]);
 
         $user = auth()->user();
 
-        // Check current PIN
-        if ($user->pin && $request->current_pin != $user->pin) {
-            return back()->withErrors(['current_pin' => 'Current PIN does not match']);
+        if ($user->pin && $validated['current_pin'] !== $user->pin) {
+            return response()->json([
+                'message' => 'Current PIN does not match',
+                'errors' => ['current_pin' => ['Current PIN does not match']],
+            ], 422);
         }
 
-        $user->pin = $request->new_pin;
+        $user->pin = $validated['new_pin'];
         $user->save();
 
-        return back()->with('success', 'PIN updated successfully');
+        return response()->json(['message' => 'PIN updated successfully']);
     }
 
 

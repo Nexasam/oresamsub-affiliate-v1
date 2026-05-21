@@ -14,6 +14,8 @@ export default function Profile() {
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showPinForm, setShowPinForm] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [serverErrors, setServerErrors] = useState({});
 
   // Form state
   const [passwordData, setPasswordData] = useState({ current_password: "", new_password: "", confirm_password: "" });
@@ -33,17 +35,17 @@ export default function Profile() {
     e.preventDefault();
     try {
       const response = await axios.post(route("inertia.profile.updatePassword"), passwordData);
-      // Success: hide form & reset fields
       setShowPasswordForm(false);
       setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
-      alert(response.data.message || "Password updated successfully"); // optional toast
+      setServerErrors({});
+      setStatusMessage(response.data.message || "Password updated successfully");
     } catch (error) {
       if (error.response?.data?.errors) {
-        console.log("Validation errors:", error.response.data.errors);
-        alert(Object.values(error.response.data.errors).flat().join("\n")); // simple alert
+        setServerErrors(error.response.data.errors);
+        setStatusMessage(error.response.data.message || "Please fix the highlighted errors.");
       } else {
         console.error(error);
-        alert("An unexpected error occurred");
+        setStatusMessage("An unexpected error occurred.");
       }
     }
   };
@@ -53,17 +55,17 @@ export default function Profile() {
     e.preventDefault();
     try {
       const response = await axios.post(route("inertia.profile.updatePin"), pinData);
-      // Success: hide form & reset fields
       setShowPinForm(false);
       setPinData({ current_pin: "", new_pin: "", confirm_pin: "" });
-      alert(response.data.message || "PIN updated successfully"); // optional toast
+      setServerErrors({});
+      setStatusMessage(response.data.message || "PIN updated successfully");
     } catch (error) {
       if (error.response?.data?.errors) {
-        console.log("Validation errors:", error.response.data.errors);
-        alert(Object.values(error.response.data.errors).flat().join("\n"));
+        setServerErrors(error.response.data.errors);
+        setStatusMessage(error.response.data.message || "Please fix the highlighted errors.");
       } else {
         console.error(error);
-        alert("An unexpected error occurred");
+        setStatusMessage("An unexpected error occurred.");
       }
     }
   };
@@ -78,6 +80,12 @@ export default function Profile() {
       <PrimaryLink href={route("dashboard")} primaryColor={props.userDashboardPrimaryColor}>
         Back to Dashboard
       </PrimaryLink>
+
+      {statusMessage && (
+        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+          {statusMessage}
+        </div>
+      )}
 
       {/* User Info Card */}
       <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-4 pb-8 rounded-xl shadow overflow-hidden font-inter">

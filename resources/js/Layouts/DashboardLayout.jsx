@@ -180,8 +180,7 @@ export default function DashboardLayout({ children , title}) {
             )
           )}
 
-          {/* "More" Dropdown Menu */}
-          {/* <MoreMenu /> */}
+          <MoreMenu />
         
         </div>
       </nav>

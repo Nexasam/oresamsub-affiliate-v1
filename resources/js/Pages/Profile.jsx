@@ -1,201 +1,245 @@
-import { useState } from "react";
-import { usePage, Link } from "@inertiajs/react";
+import { useMemo, useState } from "react";
+import { useForm, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PrimaryLink from "@/Components/PrimaryLink";
-import axios from "axios";
 
-
-
+const tabs = [
+  { id: "profile", label: "View Profile" },
+  { id: "password", label: "Change Password" },
+  { id: "pin", label: "Change PIN" },
+];
 
 export default function Profile() {
   const { props } = usePage();
-  const { auth } = props;
+  const { auth, userDashboardPrimaryColor } = props;
   const user = auth.user;
+  const primaryColor = userDashboardPrimaryColor || "#0d6efd";
+  const [activeTab, setActiveTab] = useState("profile");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [showPinForm, setShowPinForm] = useState(false);
+  const passwordForm = useForm({
+    current_password: "",
+    new_password: "",
+    new_password_confirmation: "",
+  });
 
-  // Form state
-  const [passwordData, setPasswordData] = useState({ current_password: "", new_password: "", confirm_password: "" });
-  const [pinData, setPinData] = useState({ current_pin: "", new_pin: "", confirm_pin: "" });
+  const pinForm = useForm({
+    current_pin: "",
+    new_pin: "",
+    new_pin_confirmation: "",
+  });
 
-  const handlePasswordChange = (e) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-  };
+  const profileRows = useMemo(
+    () => [
+      ["Full Name", `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.name || "Not set"],
+      ["Username", user.username || "Not set"],
+      ["Email", user.email || "Not set"],
+      ["Phone", user.phone_number || user.phone || "Not set"],
+      ["Role", user.role?.role_name || "Not set"],
+      ["Plan", user.user_plan?.plan_name || user.user_plan?.name || "Not set"],
+      ["Wallet Balance", `NGN ${Number(user.main_wallet || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`],
+    ],
+    [user]
+  );
 
-  const handlePinChange = (e) => {
-    setPinData({ ...pinData, [e.target.name]: e.target.value });
-  };
-
-
-  // Submit password
-  const submitPassword = async (e) => {
+  function submitPassword(e) {
     e.preventDefault();
-    try {
-      const response = await axios.post(route("inertia.profile.updatePassword"), passwordData);
-      // Success: hide form & reset fields
-      setShowPasswordForm(false);
-      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
-      alert(response.data.message || "Password updated successfully"); // optional toast
-    } catch (error) {
-      if (error.response?.data?.errors) {
-        console.log("Validation errors:", error.response.data.errors);
-        alert(Object.values(error.response.data.errors).flat().join("\n")); // simple alert
-      } else {
-        console.error(error);
-        alert("An unexpected error occurred");
-      }
-    }
-  };
-  
-  // Submit PIN
-  const submitPin = async (e) => {
+    setSuccessMessage("");
+
+    passwordForm.post(route("inertia.profile.updatePassword"), {
+      preserveScroll: true,
+      onSuccess: () => {
+        passwordForm.reset();
+        setSuccessMessage("Password updated successfully.");
+      },
+    });
+  }
+
+  function submitPin(e) {
     e.preventDefault();
-    try {
-      const response = await axios.post(route("inertia.profile.updatePin"), pinData);
-      // Success: hide form & reset fields
-      setShowPinForm(false);
-      setPinData({ current_pin: "", new_pin: "", confirm_pin: "" });
-      alert(response.data.message || "PIN updated successfully"); // optional toast
-    } catch (error) {
-      if (error.response?.data?.errors) {
-        console.log("Validation errors:", error.response.data.errors);
-        alert(Object.values(error.response.data.errors).flat().join("\n"));
-      } else {
-        console.error(error);
-        alert("An unexpected error occurred");
-      }
-    }
-  };
-  
+    setSuccessMessage("");
 
+    pinForm.post(route("inertia.profile.updatePin"), {
+      preserveScroll: true,
+      onSuccess: () => {
+        pinForm.reset();
+        setSuccessMessage("Transaction PIN updated successfully.");
+      },
+    });
+  }
 
-
+  const inputClass =
+    "w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
-    <DashboardLayout title="Profile">
-      {/* Back Navigation */}
-      <PrimaryLink href={route("dashboard")} primaryColor={props.userDashboardPrimaryColor}>
+    <DashboardLayout title="Profile Settings">
+      <PrimaryLink href={route("dashboard")} primaryColor={primaryColor}>
         Back to Dashboard
       </PrimaryLink>
 
-      {/* User Info Card */}
-      <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-4 pb-8 rounded-xl shadow overflow-hidden font-inter">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-700 dark:text-white">
-          Your Infosss
+      <section className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-4 mb-24 rounded-xl shadow overflow-hidden">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold">Profile Settings</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            View your profile and manage your password or transaction PIN.
+          </p>
         </div>
 
-        <div className="p-4 space-y-3">
-          <div className="flex justify-between">
-            <span>Name:</span>
-            <span className="font-semibold">{user.first_name} {user.last_name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Email:</span>
-            <span className="font-semibold">{user.email}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Phone:</span>
-            <span className="font-semibold">{user.phone_number ?? "Not set"}</span>
-          </div>
-
-          {/* Change Password */}
-          <div className="mt-4">
+        <div className="grid grid-cols-3 gap-2 p-3 border-b border-gray-200 dark:border-gray-700">
+          {tabs.map((tab) => (
             <button
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md shadow text-sm"
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab.id);
+                setSuccessMessage("");
+              }}
+              className={`rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition ${
+                activeTab === tab.id
+                  ? "text-white shadow"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+              }`}
+              style={activeTab === tab.id ? { backgroundColor: primaryColor } : undefined}
             >
-              {showPasswordForm ? "Cancel Password Change" : "Change Password"}
+              {tab.label}
             </button>
-
-            {showPasswordForm && (
-              <form onSubmit={submitPassword} className="mt-3 space-y-2">
-                <input
-                  type="password"
-                  name="current_password"
-                  placeholder="Current Password"
-                  value={passwordData.current_password}
-                  onChange={handlePasswordChange}
-                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
-                  required
-                />
-                <input
-                  type="password"
-                  name="new_password"
-                  placeholder="New Password"
-                  value={passwordData.new_password}
-                  onChange={handlePasswordChange}
-                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
-                  required
-                />
-                <input
-                  type="password"
-                  name="confirm_password"
-                  placeholder="Confirm New Password"
-                  value={passwordData.confirm_password}
-                  onChange={handlePasswordChange}
-                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow text-sm"
-                >
-                  Save Password
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Change PIN */}
-          <div className="mt-4">
-            <button
-              onClick={() => setShowPinForm(!showPinForm)}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow text-sm"
-            >
-              {showPinForm ? "Cancel PIN Change" : "Change PIN"}
-            </button>
-
-            {showPinForm && (
-              <form onSubmit={submitPin} className="mt-3 space-y-2">
-                <input
-                  type="password"
-                  name="current_pin"
-                  placeholder="Current PIN"
-                  value={pinData.current_pin}
-                  onChange={handlePinChange}
-                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
-                  required
-                />
-                <input
-                  type="password"
-                  name="new_pin"
-                  placeholder="New PIN"
-                  value={pinData.new_pin}
-                  onChange={handlePinChange}
-                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
-                  required
-                />
-                <input
-                  type="password"
-                  name="confirm_pin"
-                  placeholder="Confirm New PIN"
-                  value={pinData.confirm_pin}
-                  onChange={handlePinChange}
-                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:text-white"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow text-sm"
-                >
-                  Save PIN
-                </button>
-              </form>
-            )}
-          </div>
+          ))}
         </div>
-      </div>
+
+        {successMessage && (
+          <div className="mx-4 mt-4 rounded-lg border border-green-300 bg-green-100 p-3 text-sm text-green-700">
+            {successMessage}
+          </div>
+        )}
+
+        <div className="p-4">
+          {activeTab === "profile" && (
+            <div className="space-y-3">
+              {profileRows.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-start justify-between gap-4 rounded-lg border border-gray-100 dark:border-gray-700 px-3 py-3"
+                >
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+                  <span className="text-right text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "password" && (
+            <form onSubmit={submitPassword} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm">Current Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.data.current_password}
+                  onChange={(e) => passwordForm.setData("current_password", e.target.value)}
+                  className={inputClass}
+                  required
+                />
+                {passwordForm.errors.current_password && (
+                  <p className="mt-1 text-sm text-red-500">{passwordForm.errors.current_password}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm">New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.data.new_password}
+                  onChange={(e) => passwordForm.setData("new_password", e.target.value)}
+                  className={inputClass}
+                  required
+                />
+                {passwordForm.errors.new_password && (
+                  <p className="mt-1 text-sm text-red-500">{passwordForm.errors.new_password}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.data.new_password_confirmation}
+                  onChange={(e) => passwordForm.setData("new_password_confirmation", e.target.value)}
+                  className={inputClass}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={passwordForm.processing}
+                className="w-full rounded-lg px-4 py-2 text-white shadow transition disabled:opacity-50"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {passwordForm.processing ? "Saving..." : "Save Password"}
+              </button>
+            </form>
+          )}
+
+          {activeTab === "pin" && (
+            <form onSubmit={submitPin} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm">Current PIN</label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength="4"
+                  value={pinForm.data.current_pin}
+                  onChange={(e) => pinForm.setData("current_pin", e.target.value)}
+                  className={inputClass}
+                  required
+                />
+                {pinForm.errors.current_pin && (
+                  <p className="mt-1 text-sm text-red-500">{pinForm.errors.current_pin}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm">New PIN</label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength="4"
+                  value={pinForm.data.new_pin}
+                  onChange={(e) => pinForm.setData("new_pin", e.target.value)}
+                  className={inputClass}
+                  required
+                />
+                {pinForm.errors.new_pin && (
+                  <p className="mt-1 text-sm text-red-500">{pinForm.errors.new_pin}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm">Confirm New PIN</label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength="4"
+                  value={pinForm.data.new_pin_confirmation}
+                  onChange={(e) => pinForm.setData("new_pin_confirmation", e.target.value)}
+                  className={inputClass}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={pinForm.processing}
+                className="w-full rounded-lg px-4 py-2 text-white shadow transition disabled:opacity-50"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {pinForm.processing ? "Saving..." : "Save PIN"}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
     </DashboardLayout>
   );
 }

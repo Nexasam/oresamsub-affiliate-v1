@@ -53,6 +53,12 @@
                   <button type="button" class="hs-tab-active:bg-primary hs-tab-active:border-primary hs-tab-active:text-white dark:hs-tab-active:bg-primary dark:hs-tab-active:border-primary dark:hs-tab-active:text-white -me-px py-3 px-3 inline-flex items-center gap-2 bg-gray-50 text-sm font-medium text-center border text-gray-500 rounded-sm hover:text-gray-700 dark:bg-bodybg dark:border-white/10 dark:text-white/70 active" id="profile-settings-item-1" data-hs-tab="#profile-settings-1" aria-controls="profile-settings-1" role="tab">
                     <i class="ri ri-shield-user-line"></i> Personal Information
                   </button>
+                  <button type="button" class="hs-tab-active:bg-primary hs-tab-active:border-primary hs-tab-active:text-white dark:hs-tab-active:bg-primary dark:hs-tab-active:border-primary dark:hs-tab-active:text-white -me-px py-3 px-3 inline-flex items-center gap-2 bg-gray-50 text-sm font-medium text-center border text-gray-500 rounded-sm hover:text-gray-700 dark:bg-bodybg dark:border-white/10 dark:text-white/70" id="profile-settings-item-2" data-hs-tab="#profile-settings-2" aria-controls="profile-settings-2" role="tab">
+                    <i class="ri ri-lock-line"></i> Change Password
+                  </button>
+                  <button type="button" class="hs-tab-active:bg-primary hs-tab-active:border-primary hs-tab-active:text-white dark:hs-tab-active:bg-primary dark:hs-tab-active:border-primary dark:hs-tab-active:text-white -me-px py-3 px-3 inline-flex items-center gap-2 bg-gray-50 text-sm font-medium text-center border text-gray-500 rounded-sm hover:text-gray-700 dark:bg-bodybg dark:border-white/10 dark:text-white/70" id="profile-settings-item-3" data-hs-tab="#profile-settings-3" aria-controls="profile-settings-3" role="tab">
+                    <i class="ri ri-key-2-line"></i> Change PIN
+                  </button>
                   {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:border-primary hs-tab-active:text-white dark:hs-tab-active:bg-primary dark:hs-tab-active:border-primary dark:hs-tab-active:text-white -me-px py-3 px-3 inline-flex items-center gap-2 bg-gray-50 text-sm font-medium text-center border text-gray-500 rounded-sm hover:text-gray-700 dark:bg-bodybg dark:border-white/10 dark:text-white/70 dark:hover:text-gray-300" id="profile-settings-item-2" data-hs-tab="#profile-settings-2" aria-controls="profile-settings-2" role="tab">
                     <i class="ri ri-global-line"></i> Fund Wallet
                   </button> --}}
@@ -75,6 +81,24 @@
           <div class="col-span-12 xl:col-span-9">
             <div class="box">
               <div class="box-body p-0">
+                @if (Session::has('success'))
+                  <div class="m-4 rounded-sm border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {{ Session::get('success') }}
+                  </div>
+                @endif
+
+                @if (Session::has('failure'))
+                  <div class="m-4 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {{ Session::get('failure') }}
+                  </div>
+                @endif
+
+                @if ($errors->any())
+                  <div class="m-4 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {{ $errors->first() }}
+                  </div>
+                @endif
+
                 <div id="profile-settings-1" role="tabpanel" aria-labelledby="profile-settings-item-1">
                   <div class="box border-0 shadow-none mb-0">
                     <div class="box-header">
@@ -155,6 +179,65 @@
                   </div>
                 </div>
                 <div id="profile-settings-2" class="hidden" role="tabpanel" aria-labelledby="profile-settings-item-2">
+                  <div class="box border-0 shadow-none mb-0">
+                    <div class="box-header">
+                      <h5 class="box-title leading-none flex"><i class="ri ri-lock-line me-2"></i> Change Password</h5>
+                    </div>
+                    <div class="box-body">
+                      <form method="POST" action="{{ route('settings.update_password') }}">
+                        @csrf
+                        <div class="grid lg:grid-cols-2 gap-6">
+                          <div class="space-y-2">
+                            <label class="ti-form-label mb-0">New Password</label>
+                            <input type="password" class="my-auto ti-form-input" name="new_password" autocomplete="new-password" required>
+                          </div>
+                          <div class="space-y-2">
+                            <label class="ti-form-label mb-0">Confirm New Password</label>
+                            <input type="password" class="my-auto ti-form-input" name="confirm_new_password" autocomplete="new-password" required>
+                          </div>
+                          <div class="space-y-2 lg:col-span-2">
+                            <label class="ti-form-label mb-0">Transaction PIN</label>
+                            <input type="password" inputmode="numeric" class="my-auto ti-form-input" name="pin5" maxlength="5" required>
+                            <p class="text-xs text-gray-500 dark:text-white/70">Enter your current transaction PIN to confirm this password change.</p>
+                          </div>
+                        </div>
+                        <div class="mt-6">
+                          <button type="submit" class="ti-btn ti-btn-primary w-full">Save Password</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div id="profile-settings-3" class="hidden" role="tabpanel" aria-labelledby="profile-settings-item-3">
+                  <div class="box border-0 shadow-none mb-0">
+                    <div class="box-header">
+                      <h5 class="box-title leading-none flex"><i class="ri ri-key-2-line me-2"></i> Change PIN</h5>
+                    </div>
+                    <div class="box-body">
+                      <form method="POST" action="{{ route('settings.update_pin') }}">
+                        @csrf
+                        <div class="grid lg:grid-cols-3 gap-6">
+                          <div class="space-y-2">
+                            <label class="ti-form-label mb-0">Current PIN</label>
+                            <input type="password" inputmode="numeric" class="my-auto ti-form-input" name="current_pin" maxlength="5" required>
+                          </div>
+                          <div class="space-y-2">
+                            <label class="ti-form-label mb-0">New PIN</label>
+                            <input type="password" inputmode="numeric" class="my-auto ti-form-input" name="new_pin" maxlength="5" required>
+                          </div>
+                          <div class="space-y-2">
+                            <label class="ti-form-label mb-0">Confirm New PIN</label>
+                            <input type="password" inputmode="numeric" class="my-auto ti-form-input" name="confirm_new_pin" maxlength="5" required>
+                          </div>
+                        </div>
+                        <div class="mt-6">
+                          <button type="submit" class="ti-btn ti-btn-primary w-full">Save PIN</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div id="profile-settings-wallet" class="hidden" role="tabpanel" aria-labelledby="profile-settings-wallet-item">
                   <div class="box border-0 shadow-none mb-0">
                     <div class="box-header">
                       <h5 class="box-title leading-none flex"><i class="ri ri-global-line me-2"></i> Wallet Balance : &#8358;{{ number_format($user->main_wallet,2) }}</h5>
@@ -624,4 +707,3 @@
 
        
 @endsection
-

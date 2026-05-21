@@ -32,14 +32,6 @@ class InertiaLoginController extends Controller
             // return redirect()->route('dashboard');
         }
 
-        $user = auth()->id();
-
-        (new VirtualAccountService())->generate_accounts($user);
-
-
-        // dd(auth()->user());
-
-
         return back()->withErrors([
             'email' => 'Invalid credentials.',
         ])->onlyInput('email');

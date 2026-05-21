@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserVirtualAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class InertiaDashboardController extends Controller
@@ -110,7 +111,7 @@ class InertiaDashboardController extends Controller
     {
         $user = auth()->user();
         return Inertia::render('Profile', [
-            'auth' => ['user' => $user],
+            'auth' => ['user' => $user->loadMissing(['role', 'user_plan'])],
         ]);
     }
 
@@ -119,7 +120,7 @@ class InertiaDashboardController extends Controller
     {
         $request->validate([
             'current_password' => ['required'],
-            'new_password' => ['required', 'confirmed'], # Password::min(6)
+            'new_password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
         $user = auth()->user();
@@ -140,7 +141,7 @@ class InertiaDashboardController extends Controller
     {
         $request->validate([
             'current_pin' => ['required'],
-            'new_pin' => ['required', 'confirmed', 'digits:4'], // Assuming 4-digit PIN
+            'new_pin' => ['required', 'confirmed', 'digits:4'],
         ]);
 
         $user = auth()->user();

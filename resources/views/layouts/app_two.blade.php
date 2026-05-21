@@ -32,7 +32,10 @@
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
     <!-- Quil Css -->    
-    <link id="style" rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/quill/quill.snow.css') }}">
+    @php
+      $ASSET_BASE = env('APP_ASSETS_BASE_URL', 'assets/');
+    @endphp
+    <link id="style" rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/quill/quill.snow.css') }}">
 
     
     <!-- Favicon -->
@@ -41,30 +44,30 @@
 
     <!-- Main JS -->
     {{-- <script src="../../../assets/js/main.js"></script> --}}
-    <script  src="{{ asset(env('APP_ASSETS_BASE_URL').'js/main.js') }}"></script>
+    <script  src="{{ asset($ASSET_BASE.'js/main.js') }}"></script>
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../../../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'css/style.css') }}">
 
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../../../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/simplebar/simplebar.min.css') }}"> 
 
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../../../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
 <!-- Tabulator Css -->
 {{-- <link rel="stylesheet" href="../../../assets/libs/tabulator-tables/css/tabulator.min.css"> --}}
-<link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/tabulator-tables/css/tabulator.min.css') }}">
+<link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/tabulator-tables/css/tabulator.min.css') }}">
 
 
 <!-- Choices Css -->
 {{-- <link rel="stylesheet" href="../../../assets/libs/choices.js/public/assets/styles/choices.min.css"> --}}
-<link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/choices.js/public/assets/styles/choices.min.css') }}">
+<link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/choices.js/public/assets/styles/choices.min.css') }}">
 
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
@@ -556,7 +559,7 @@
    <!-- Loader -->
    <div id="loader" >
       {{-- <img src="../../../assets/img/media/loader.svg" alt=""> --}}
-      <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/media/loader.svg') }}" alt="">
+      <img src="{{ asset($ASSET_BASE.'img/media/loader.svg') }}" alt="">
   </div>
   <!-- Loader -->
 
@@ -959,42 +962,42 @@
 
   <!-- popperjs -->
   {{-- <script src="../../../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'libs/@popperjs/core/umd/popper.min.js') }}"></script>
 
 
   <!-- Color Picker JS -->
   {{-- <script src="../../../assets/libs/@simonwep/pickr/pickr.es5.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
 
   <!-- sidebar JS -->
   {{-- <script src="../../../assets/js/defaultmenu.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/defaultmenu.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'js/defaultmenu.js') }}"></script>
 
 
   <!-- sticky JS -->
   {{-- <script src="../../../assets/js/sticky.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/sticky.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'js/sticky.js') }}"></script>
 
 
   <!-- Switch JS -->
   {{-- <script src="../../../assets/js/switch.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/switch.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'js/switch.js') }}"></script>
 
 
   <!-- Preline JS -->
   {{-- <script src="../../../assets/libs/preline/preline.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'libs/preline/preline.js') }}"></script>
 
 
   <!-- Simplebar JS -->
   {{-- <script src="../../../assets/libs/simplebar/simplebar.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/assets/libs/simplebar/simplebar.min.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'js/assets/libs/simplebar/simplebar.min.js') }}"></script>
 
 
   <!-- Custom JS -->
   {{-- <script src="../../../assets/js/custom.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/custom.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'js/custom.js') }}"></script>
 
 
 
@@ -1002,22 +1005,22 @@
     
     <!-- Custom-Switcher JS -->
     {{-- <script src="../../../assets/js/custom-switcher.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'js/custom-switcher.js') }}"></script>
 
 
   <!-- Tabulator JS -->
   {{-- <script src="../../../assets/libs/tabulator-tables/js/tabulator.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/tabulator-tables/js/tabulator.min.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'libs/tabulator-tables/js/tabulator.min.js') }}"></script>
 
 
   <!-- Choices JS -->
   {{-- <script src="../../../assets/libs/choices.js/public/assets/scripts/choices.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
 
 
   <!-- XLXS JS -->
   {{-- <script src="../../../assets/libs/xlsx/xlsx.full.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/xlsx/xlsx.full.min.js') }}"></script>
+  <script src=" {{asset($ASSET_BASE.'libs/xlsx/xlsx.full.min.js') }}"></script>
 
 
   <!-- JSPDF JS -->

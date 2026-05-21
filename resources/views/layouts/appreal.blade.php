@@ -8,23 +8,21 @@
     <meta name="description" content="Empowering Connections, One Byte at a Time - {{ env('APP_NAME') }}">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="../../assets/img/brand-logos/favicon.ico">
+    <!-- Favicon and assets (use configured base or default to assets/) -->
+    @php $ASSET_BASE = env('APP_ASSETS_BASE_URL', 'assets/'); @endphp
+    <link rel="shortcut icon" href="{{ asset($ASSET_BASE.'img/brand-logos/favicon.ico') }}">
 
     <!-- Main JS -->
-    <script src="../../assets/js/main.js"></script>
+    <script src="{{ asset($ASSET_BASE.'js/main.js') }}"></script>
 
     <!-- Style Css -->
-    <link rel="stylesheet" href="../../assets/css/style.css">
-    {{-- <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}"> --}}
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'css/style.css') }}">
 
     <!-- Simplebar Css -->
-    <link rel="stylesheet" href="../../assets/libs/simplebar/simplebar.min.css">
-    {{-- <link rel="stylesheet" href="{{ asset('assets/libs/simplebar/simplebar.min.css') }}"> --}}
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
-    <link rel="stylesheet" href="../../assets/libs/@simonwep/pickr/themes/nano.min.css">
-    {{-- <link rel="stylesheet" href="{{ asset('assets/libs/@simonwep/pickr/themes/nano.min.css') }}"> --}}
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
 </head>
 

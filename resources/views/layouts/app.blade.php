@@ -43,21 +43,25 @@
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+    @php
+      $ASSET_BASE = env('APP_ASSETS_BASE_URL', 'assets/');
+    @endphp
+
 
     <!-- Main JS -->
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/main.js') }}"></script>
+    <script src="{{ asset($ASSET_BASE.'js/main.js') }}"></script>
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'css/style.css') }}">
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($ASSET_BASE.'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
 
@@ -683,7 +687,7 @@
      <!-- Loader -->
      <div id="loader" >
         {{-- <img src="../../assets/img/media/loader.svg" alt=""> --}}
-        <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/media/loader.svg') }}" alt="">
+        <img src="{{ asset($ASSET_BASE.'img/media/loader.svg') }}" alt="">
     </div>
     <!-- Loader -->
 
@@ -724,7 +728,7 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-    <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script>
+    <script src="{{asset($ASSET_BASE.'js/admin_datatables/datatables.js') }}"></script>
 
 
 
@@ -2318,12 +2322,12 @@
 
     <!-- Apex Charts JS -->
     {{-- <script src="../../assets/libs/apexcharts/apexcharts.min.js"></script> --}}
-    <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/apexcharts/apexcharts.min.js') }}"></script>
+    <script src=" {{asset($ASSET_BASE.'libs/apexcharts/apexcharts.min.js') }}"></script>
 
 
     <!-- Index JS -->
     {{-- <script src="../../assets/js/index-2.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/index-2.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'js/index-2.js') }}"></script>
 
     <!-- Back To Top -->
     <div class="scrollToTop">
@@ -2334,55 +2338,55 @@
 
     <!-- popperjs -->
     {{-- <script src="../../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'libs/@popperjs/core/umd/popper.min.js') }}"></script>
     
 
     <!-- Color Picker JS -->
     {{-- <script src="../../assets/libs/@simonwep/pickr/pickr.es5.min.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
 
     <!-- sidebar JS -->
     {{-- <script src="../../assets/js/defaultmenu.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/defaultmenu.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'js/defaultmenu.js') }}"></script>
 
 
     <!-- sticky JS -->
     {{-- <script src="../../assets/js/sticky.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/sticky.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'js/sticky.js') }}"></script>
 
 
     <!-- Switch JS -->
     {{-- <script src="../../assets/js/switch.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/switch.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'js/switch.js') }}"></script>
 
 
     <!-- Preline JS -->
     {{-- <script src="../../assets/libs/preline/preline.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'libs/preline/preline.js') }}"></script>
 
 
     <!-- Simplebar JS -->
     {{-- <script src="../../assets/libs/simplebar/simplebar.min.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'libs/simplebar/simplebar.min.js') }}"></script>
 
 
     <!-- Custom JS -->
     {{-- <script src="../../assets/js/custom.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/custom.js') }}"></script>
+    <script src=" {{ asset($ASSET_BASE.'js/custom.js') }}"></script>
 
     
     <!-- Custom-Switcher JS -->
     {{-- <script src="../../assets/js/custom-switcher.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+    <script src="{{ asset($ASSET_BASE.'js/custom-switcher.js') }}"></script>
 
       <!-- Choices JS -->
     <script src="../assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
     <script src="../assets/js/choices.js"></script>
 
     <!-- Tom Select JS -->
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/tom-select/js/tom-select.complete.min.js') }}"></script>
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/tom-select.js') }}"></script>
+    <script src="{{ asset($ASSET_BASE.'libs/tom-select/js/tom-select.complete.min.js') }}"></script>
+    <script src="{{ asset($ASSET_BASE.'js/tom-select.js') }}"></script>
     {{-- <script src="../assets/libs/tom-select/js/tom-select.complete.min.js"></script> --}}
     {{-- <script src="../assets/js/tom-select.js"></script> --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

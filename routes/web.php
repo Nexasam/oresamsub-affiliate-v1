@@ -480,6 +480,14 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
                     foreach($landing_data as $landing_component){
                         $data[$landing_component->field_name] = $landing_component->field_details;
                     }
+
+                    // Apply config defaults when landing settings are missing.
+                    $landingDefaults = config('landing_pages');
+                    foreach ($landingDefaults as $key => $defaultValue) {
+                        if (!isset($data[$key]) && is_array($defaultValue) && array_key_exists(2, $defaultValue)) {
+                            $data[$key] = $defaultValue[2];
+                        }
+                    }
                 
                     // dd($data);
                     $site_colors = AdminColorSetting::get();

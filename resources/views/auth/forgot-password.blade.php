@@ -2,66 +2,68 @@
 <html lang="en" dir="ltr" class="h-full">
 
 <head>
+
     @if (env('APP_NAME') == 'FoxDataHub' )
-        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-        
 
-
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
-        <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-NCKP7MH1KN');
-        </script>
-  @endif
-
-  @if (env('APP_NAME') == 'OresamSub')
-      <!-- Meta Pixel Code -->
-        <script>
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '4058518677737855');
-        fbq('track', 'PageView');
-        </script>
-        <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=4058518677737855&ev=PageView&noscript=1"
-        /></noscript>
-        <!-- End Meta Pixel Code -->
-  @endif
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+     })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
+     
   
+  
+     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
+     <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+  
+     gtag('config', 'G-NCKP7MH1KN');
+     </script>
+  
+    @endif
+
+
+    @if (env('APP_NAME') == 'OresamSub')
+      <!-- Meta Pixel Code -->
+      <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '4058518677737855');
+      fbq('track', 'PageView');
+      </script>
+      <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=4058518677737855&ev=PageView&noscript=1"
+      /></noscript>
+      <!-- End Meta Pixel Code -->
+    @endif
+    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Data App - {{ env('APP_NAME') }} </title>
-    <meta name="description" content="Empowering Connections, One Byte at a Time - {{ env('APP_NAME') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title> {{env('APP_NAME')}} - Recover Your Account </title>
+    <meta name="description" content="Reset your password securely - {{ env('APP_NAME') }}">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
-     <!-- Favicon -->
-    {{-- <link rel="shortcut icon" href="../assets/img/brand-logos/favicon.ico"> --}}
+    <!-- Favicon -->
     {{-- <link rel="shortcut icon" href="{{ asset(env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
 
     <!-- Style Css -->
-    {{-- <link rel="stylesheet" href="../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+     <link rel="stylesheet"  href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
 
     <!-- Simplebar Css -->
-    {{-- <link rel="stylesheet" href="../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+     <link rel="stylesheet"  href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
-    {{-- <link rel="stylesheet" href="../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+     <link rel="stylesheet"  href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

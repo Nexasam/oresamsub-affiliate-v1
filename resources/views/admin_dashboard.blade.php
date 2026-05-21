@@ -14,6 +14,18 @@
         <div>
             {{-- <p>Current locale: {{ app()->getLocale() }}</p> --}}
             <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white text-2xl font-medium"> <small style=" font-size: 14px;">{{ __('messages.Welcome') }} <strong>{{ $user->first_name. ' '. $user->last_name }}</strong></small> </h3>
+            @if(session('affiliate') && session('affiliate')->parent_website)
+                  <div class="mb-3">
+                      <a
+                          href="{{ session('affiliate')->parent_website.'/login' }}"
+                          target="_blank"
+                          class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 underline"
+                      >
+                          🌐 Visit Parent Website
+                      </a>
+                  </div>
+              @endif
+
         </div>
         
     </div>

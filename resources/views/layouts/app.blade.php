@@ -700,8 +700,8 @@
         <div class="content dark:bg-gray-900">
 
              {{-- <input value="{{  env('APP_URL') }}" type="text" class="root_url"> --}}
-             <input value="{{ 'https://' . request()->getHost().'/' }}" type="hidden" class="root_url">
-             <input value="{{ 'https://' . request()->getHost().'/' }}" type="hidden" class="root_url_public">
+             <input value="{{ request()->getSchemeAndHttpHost().'/' }}" type="hidden" class="root_url">
+             <input value="{{ request()->getSchemeAndHttpHost().'/' }}" type="hidden" class="root_url_public">
              
 
             <!-- Start::main-content main content stays here -->

@@ -110,24 +110,6 @@
                               </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200">
-                              {{-- Example Row --}}
-                              <tr class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150">
-                                <td class="px-2 py-1.5">1</td>
-                                <td class="px-2 py-1.5 font-medium">John Doe</td>
-                                <td class="px-2 py-1.5">₦12,000</td>
-                                <td class="px-2 py-1.5">
-                                  <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full text-[11px] font-semibold">
-                                    Active
-                                  </span>
-                                </td>
-                                <td class="px-2 py-1.5">john@example.com</td>
-                                <td class="px-2 py-1.5">08012345678</td>
-                                <td class="px-2 py-1.5">29 Oct, 2025</td>
-                                <td class="px-2 py-1.5">10:30 AM</td>
-                                <td class="px-2 py-1.5">
-                                  <button class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2 py-1 rounded-md transition">View</button>
-                                </td>
-                              </tr>
                             </tbody>
                           </table>
                         </div>

@@ -54,20 +54,15 @@
 
                 <div class="box-body">
                   <nav class="flex space-x-2" aria-label="Tabs" role="tablist">
-                    {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white active" id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
-                      Wallet Setting
-                    </button> --}}
-                    {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500" id="pills-with-brand-color-item-2" data-hs-tab="#pills-with-brand-color-2" aria-controls="pills-with-brand-color-2">
-                      Profile
-                    </button> --}}
-                    
-                    {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white active" id="pills-with-brand-color-item-3" data-hs-tab="#pills-with-brand-color-3" aria-controls="pills-with-brand-color-3">
-                      Security/2fa Authentication
-                    </button> --}}
-
-                    {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500" id="pills-with-brand-color-item-4" data-hs-tab="#pills-with-brand-color-4" aria-controls="pills-with-brand-color-4">
-                      2FA Authentication
-                    </button> --}}
+                    <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary dark:text-white/70 dark:hover:text-white active" id="user-settings-tab-profile" data-hs-tab="#user-settings-profile" aria-controls="user-settings-profile" role="tab">
+                      View Profile
+                    </button>
+                    <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary dark:text-gray-500 dark:hover:text-white" id="user-settings-tab-password" data-hs-tab="#user-settings-password" aria-controls="user-settings-password" role="tab">
+                      Change Password
+                    </button>
+                    <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary dark:text-gray-500 dark:hover:text-white" id="user-settings-tab-pin" data-hs-tab="#user-settings-pin" aria-controls="user-settings-pin" role="tab">
+                      Change PIN
+                    </button>
                   </nav>
 
                   <div class="mt-3">
@@ -106,7 +101,7 @@
                     </div> --}}
 
                     {{-- class="hidden" --}}
-                    <div id="pills-with-brand-color-2"  role="tabpanel" aria-labelledby="pills-with-brand-color-item-2">
+                    <div id="user-settings-profile" role="tabpanel" aria-labelledby="user-settings-tab-profile">
                       <div class="overflow-auto">
                         <form method="POST" action="{{ route('user.settings.update_profile')  }}">
                           @csrf
@@ -195,53 +190,40 @@
                               <br>
                           </div>
                         </form>
-                      </div>  
+                      </div>
                     </div>
 
-                    {{-- class="hidden"  --}}
-                    <div id="pills-with-brand-color-3" role="tabpanel" aria-labelledby="pills-with-brand-color-item-3">
+                    <div id="user-settings-password" class="hidden" role="tabpanel" aria-labelledby="user-settings-tab-password">
                       <div class="overflow-auto">
                         <form method="POST" action="{{ route('user.settings.update_password')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                              {{-- <div class="space-y-2 mt-5">
-                                <label class="ti-form-label mb-0"> {{__('messages.Current password')}}</label>
-                                <input type="password" id="current_password" name="current_password" class="my-auto ti-form-input" placeholder="">    
-                                <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_password_current">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show password')}}</label>
-                                </div>                        
-                              </div> --}}
-
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.New password')}}</label>
                                 <input type="password" id="new_password" name="new_password" class="my-auto ti-form-input" placeholder="">                            
                                 <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_password">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show password')}}</label>
+                                  <input type="checkbox" id="show_password" class="ti-switch show_password">
+                                  <label for="show_password" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show password')}}</label>
                                 </div>
                               </div>
-
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.Confirm new password')}}</label>
                                 <input type="password" id="confirm_new_password" name="confirm_new_password" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_password2">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show Confirm Password')}}</label>
+                                  <input type="checkbox" id="show_password2" class="ti-switch show_password2">
+                                  <label for="show_password2" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show Confirm Password')}}</label>
                                 </div>                           
                               </div>
-                             
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0">PIN</label>
                                 <input type="password" id="pin5" name="pin5" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin5">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
+                                  <input type="checkbox" id="show_pin5" class="ti-switch show_pin5">
+                                  <label for="show_pin5" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
                                 </div>                                
                               </div>
-
 
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">{{__('messages.Update Password')}}</button>
@@ -250,21 +232,20 @@
                               <br>
                           </div>
                         </form>
-                        <hr>
+                      </div>
+                    </div>
+
+                    <div id="user-settings-pin" class="hidden" role="tabpanel" aria-labelledby="user-settings-tab-pin">
+                      <div class="overflow-auto">
                         <form method="POST" action="{{ route('user.settings.update_pin')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                              {{-- <div class="space-y-2 mt-5">
-                                <label class="ti-form-label mb-0"> Current password</label>
-                                <input type="password" id="current_password" name="current_password" class="my-auto ti-form-input" placeholder="enter current password">                            
-                              </div> --}}
-
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.Current PIN')}}</label>
                                 <input type="password" id="current_pin" name="current_pin" class="my-auto ti-form-input" placeholder="">   
                                 <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin2">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
+                                  <input type="checkbox" id="show_pin2" class="ti-switch show_pin2">
+                                  <label for="show_pin2" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
                                 </div>                          
                               </div>
 
@@ -272,8 +253,8 @@
                                 <label class="ti-form-label mb-0"> {{__('messages.New PIN')}}</label>
                                 <input type="password" id="new_pin" name="new_pin" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin3">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
+                                  <input type="checkbox" id="show_pin3" class="ti-switch show_pin3">
+                                  <label for="show_pin3" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
                                 </div>                            
                               </div>
 
@@ -281,11 +262,10 @@
                                 <label class="ti-form-label mb-0">{{__('messages.Confirm New PIN')}}</label>
                                 <input type="password" id="confirm_new_pin" name="confirm_new_pin" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
-                                  <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin4">
-                                  <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
+                                  <input type="checkbox" id="show_pin4" class="ti-switch show_pin4">
+                                  <label for="show_pin4" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
                                 </div>                            
                               </div>
-
 
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">{{__('messages.Update PIN')}}</button>
@@ -297,70 +277,9 @@
                         <hr>
                         <div class="overflow-auto">
                           <span class="ti-btn ti-btn-danger w-1/2">{{ __('messages.Note that 2FA feature is currently disabled. It will be enabled as soon as possible.') }}</span>
-           
-
-                          {{-- Note: Please we are currently making some updates and as a result, the 2fa will be temporarily unavailable.
-                          We are sorry for the inconvenience this might cause. Thanks --}}
                           <br>
-                          {{-- <form method="POST" action="{{ url('/user/two-factor-authentication') }}">
-                                @csrf
-                    
-                                @if(auth()->user()->two_factor_secret)
-                                    <h3>2Factor authentication setup</h3>
-                                    <p>Two factor authentication is enabled.</p>
-                                    <div class="pt-5 pb-5">
-                                        {!!  auth()->user()->twoFactorQrCodeSvg() !!}
-                                    </div>
-                                    <h3><strong>Please save recovery codes below:</strong></h3>
-                                    <textarea name="myInput" id="myInput" cols="35" rows="16">
-                                      @foreach(auth()->user()->recoveryCodes() as $code)
-                                      {{ $code }}
-                                      @endforeach
-                                    </textarea>
-                                    <br>
-                                    <a class="ti-btn ti-btn-info w-1/4" href="#" onclick="copyToClipboard()"><span id="copyText">Copy Codes</span></a>
-                                    <br>
-                                    <br>
-                                    <br>
-                                    @method('DELETE')
-                                    <div class="space-y-2">
-                                      <button type="submit" class="ti-btn ti-btn-danger w-1/2">Disable Two Factor Authentication</button>
-                                    </div>
-                                @else
-                                    Two factor authentication is not enabled.
-                                    <div class="space-y-2">
-                                      <button type="submit" class="ti-btn ti-btn-primary w-1/2">Enable Two Factor Authentication</button>
-                                    </div>
-                                @endif
-                          </form> --}}
-
-
-                            {{-- <form method="POST" action="{{ url('user/two-factor-authentication')  }}">
-                              @csrf
-                              <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                                  <div class="space-y-2 mt-5">
-                                    <label class="ti-form-label mb-0"> Your 2-factor authentication is currently turned <strong>{{ $user->user_2fa_setting }}</strong></label>
-                                    <select id="user_2fa_setting" name="user_2fa_setting" required class="my-auto ti-form-select">
-                                      <option value="">Select</option>
-                                      <option @if ($user->user_2fa_setting == 'ON')
-                                          selected
-                                      @endif value="ON">ON</option>
-                                      <option @if ($user->user_2fa_setting == 'OFF')
-                                        selected
-                                    @endif value="OFF">OFF</option>
-                                    </select>
-                                      
-                                  </div>
-
-                                  <div class="space-y-2">
-                                      <button type="submit" class="ti-btn ti-btn-primary w-full">Update 2FA setting</button>
-                                  </div>
-                                
-                                  <br>
-                              </div>
-                          </form> --}}
-                        </div>  
-                      </div>  
+                        </div>
+                      </div>
                     </div>
 
                   

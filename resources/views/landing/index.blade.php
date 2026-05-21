@@ -93,17 +93,64 @@
 </nav>
 
 <!-- Hero -->
-<section id="home" class="relative flex flex-col justify-center items-center text-center text-white min-h-screen"
-         style="background-image: linear-gradient(rgba(15,23,42,0.6),rgba(15,23,42,0.6)),url('{{ $hero1 }}'); background-size:cover; background-position:center;">
-    <div data-aos="fade-up">
-        <h6 class="uppercase tracking-wide mb-3 text-gray-200">{{ $sub_hero1 }}</h6>
-        <h1 class="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-[var(--brand)] via-[var(--brand-hover)] to-[var(--brand-accent)] bg-clip-text text-transparent animate-gradient">
-            {{ $hero1_part1 }} <br> {{ $hero1_part2 }}
+<section id="home" class="relative flex flex-col justify-center items-center text-center text-white min-h-screen overflow-hidden"
+         style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ $hero1 }}'); background-size:cover; background-position:center;">
+    
+    <!-- Decorative elements -->
+    <div class="absolute top-0 left-0 w-96 h-96 bg-[var(--brand)]/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-[var(--brand-accent)]/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+    
+    <div class="relative z-10 max-w-3xl mx-auto px-6 md:px-8 py-20" data-aos="fade-up">
+        <!-- Eyebrow text -->
+        <div class="flex items-center justify-center gap-2 mb-4">
+            <span class="inline-block w-2 h-2 rounded-full bg-[var(--brand)]"></span>
+            <p class="uppercase tracking-widest text-sm md:text-base text-gray-300 font-medium">{{ $sub_hero1 }}</p>
+            <span class="inline-block w-2 h-2 rounded-full bg-[var(--brand)]"></span>
+        </div>
+        
+        <!-- Main heading -->
+        <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6 tracking-tight text-white">
+            {{ $hero1_part1 }}
+            <br>
+            {{ $hero1_part2 }}
         </h1>
-        <p class="max-w-lg mx-auto mb-6 text-gray-200">{{ $service_intro ?? 'Simple, fast, and reliable digital solutions built for you.' }}</p>
-        <div class="space-x-3">
-            <a href="{{ url('/register') }}" class="bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white px-6 py-3 rounded-full font-semibold transition">Get Started</a>
-            <a href="{{ url('/login') }}" class="border border-white/70 text-white px-6 py-3 rounded-full hover:bg-white/20 transition">Login</a>
+        
+        <!-- Subheading -->
+        <p class="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            {{ $service_intro ?? 'Simple, fast, and reliable digital solutions built for you.' }}
+        </p>
+        
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="{{ url('/register') }}" class="group relative px-8 py-4 bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                <span class="flex items-center gap-2">
+                    Get Started Free
+                    <i class="bx bx-arrow-to-right text-xl"></i>
+                </span>
+            </a>
+            
+            <a href="{{ url('/login') }}" class="px-8 py-4 border-2 border-white/60 text-white font-bold text-lg rounded-full backdrop-blur-md hover:bg-white/10 hover:border-white transition-all duration-300 transform hover:scale-105">
+                <span class="flex items-center gap-2">
+                    Sign In
+                    <i class="bx bx-log-in text-xl"></i>
+                </span>
+            </a>
+        </div>
+        
+        <!-- Trust indicators -->
+        <div class="mt-14 pt-8 border-t border-white/20 flex flex-col md:flex-row items-center justify-center gap-8 text-sm md:text-base text-gray-300">
+            <div class="flex items-center gap-2">
+                <i class="bx bx-check-circle text-[var(--brand)] text-2xl"></i>
+                <span>No credit card required</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i class="bx bx-check-circle text-[var(--brand)] text-2xl"></i>
+                <span>Instant activation</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i class="bx bx-check-circle text-[var(--brand)] text-2xl"></i>
+                <span>24/7 support</span>
+            </div>
         </div>
     </div>
 </section>

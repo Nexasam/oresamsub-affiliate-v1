@@ -2,30 +2,31 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Exception;
-use App\Models\User;
-use App\Models\SiteImage;
-use App\Models\SiteTemplate;
-use Illuminate\Http\Request;
-use Laravel\Fortify\Fortify;
-use Laravel\Fortify\Features;
-use App\Models\AdminColorSetting;
-use Illuminate\Pipeline\Pipeline;
-use Illuminate\Support\Facades\DB;
-use App\Models\LandingPagesSetting;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Session;
 use App\Http\Services\CouponCodeService;
 use App\Http\Services\CrystalPayService;
 use App\Http\Services\VirtualAccountService;
-use Laravel\Fortify\Contracts\LoginResponse;
-use Laravel\Fortify\Http\Requests\LoginRequest;
+use App\Models\AdminColorSetting;
+use App\Models\LandingPagesSetting;
+use App\Models\SiteImage;
+use App\Models\SiteTemplate;
+use App\Models\User;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 use Laravel\Fortify\Actions\AttemptToAuthenticate;
 use Laravel\Fortify\Actions\EnsureLoginIsNotThrottled;
 use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Features;
+use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Http\Requests\LoginRequest;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -251,15 +252,23 @@ class AuthenticatedSessionController extends Controller
      * Destroy an authenticated session.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy2(Request $request)
     {
-        Auth::guard('web')->logout();
+        // Auth::guard('web')->logout();
     
+        // $request->session()->invalidate();
+        // $request->session()->regenerateToken();
+    
+        // return redirect()->route('login');
+
+
+        Auth::guard('web')->logout();
+
         $request->session()->invalidate();
+    
         $request->session()->regenerateToken();
     
-        return redirect()->route('login');
+        return Inertia::location(route('login'));
     }
 }

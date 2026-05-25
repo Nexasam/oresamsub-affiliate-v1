@@ -1,218 +1,230 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr" class="h-full">
+@extends('oresamsub.layouts.authapp')
 
-<head>
-    @if (env('APP_NAME') == 'FoxDataHub' )
-        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-        
+@section('content')
 
+<div 
+    class="relative min-h-screen w-full flex items-center justify-center overflow-hidden"
+    x-data="{ 
+        isSending: false
+    }"
+>
 
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
-        <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-NCKP7MH1KN');
-        </script>
-  @endif
-
-  @if (env('APP_NAME') == 'OresamSub')
-      <!-- Meta Pixel Code -->
-        <script>
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '4058518677737855');
-        fbq('track', 'PageView');
-        </script>
-        <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=4058518677737855&ev=PageView&noscript=1"
-        /></noscript>
-        <!-- End Meta Pixel Code -->
-  @endif
-  
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Data App - {{ env('APP_NAME') }} </title>
-    <meta name="description" content="Empowering Connections, One Byte at a Time - {{ env('APP_NAME') }}">
-    <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
-
-     <!-- Favicon -->
-    {{-- <link rel="shortcut icon" href="../assets/img/brand-logos/favicon.ico"> --}}
-    {{-- <link rel="shortcut icon" href="{{ asset(env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
-
-    <!-- Style Css -->
-    {{-- <link rel="stylesheet" href="../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
-
-    <!-- Simplebar Css -->
-    {{-- <link rel="stylesheet" href="../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
-
-    <!-- Color Picker Css -->
-    {{-- <link rel="stylesheet" href="../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
-
-
-</head>
-
-<body class="error-page flex h-full !py-0 bg-white dark:bg-bgdark montserrat2">
-    @if (env('APP_NAME') == 'FoxDataHub')
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
-     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    @endif
-    <div class="grid grid-cols-12 gap-6 w-full h-full">
-        <div class="lg:col-span-6 col-span-12 hidden lg:block relative">
-            <div class="cover relative w-full h-full z-[1]">
-                <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth3.jpg') }}" alt="logo" class="object-cover mx-auto h-full">
-            </div>
-        </div>
-        <div class="lg:col-span-6 col-span-12">
-            <div class="authentication-page w-full">
-                <!-- ========== MAIN CONTENT ========== -->
-                <main id="content" class="w-full max-w-md mx-auto p-6">
-                    {{-- <a href="#" class="header-logo lg:hidden">
-                        <img src="../assets/img/brand-logos/desktop-logo.png" alt="logo" class="mx-auto block dark:hidden">
-                        <img src="../assets/img/brand-logos/desktop-dark.png" alt="logo" class="mx-auto hidden dark:block">
-                    </a> --}}
-                    <div class="mt-7">
-                        <div class="p-4 sm:p-12 rounded-2xl border border-2 border-gray-100 shadow-lg">
-                            
-                            @if (  isset($site_logo) && $site_logo != '')
-                    
-                                    <a href="#" class="header-logo ">
-                                        <img style="background-size: contain;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                                        class="w-24 h-24 mx-auto  block dark:hidden" > 
-                                        <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                                            class="w-24 h-24 mx-auto hidden dark:block" alt="logo" class=""> 
-                                    </a>
-                                    <br>
-                                    <hr>
-                                    <br>
-                            @endif
-                           
-
-                            <div class="text-center">
-                                @if (session('status') == 'verification-link-sent')
-                                <div class="mb-4 font-medium text-sm text-blue-600 dark:text-blue-400">
-                                    {{ __('messages.A new verification link has been sent to the email address you provided during registration.') }}
-                                </div>
-                                @endif 
-                                 @if ( !isset($site_logo)  )
-                                    <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ env('APP_NAME') }}</h1>
-                                    <hr>
-                                @endif
-                               
-                               <h3 class="block mt-2 text-xl text-gray-800 dark:text-gray-900">{{__('messages.Password Reset')}}</h3>
-                                <p class="mt-3 text-sm text-gray-600 dark:text-white/70">
-                                    {{ __('messages.Forgot your password')}}?  {{ __('messages.No problem')}}. 
-                                    {{__('messages.Just let us know your email address and we will email you a password reset link that will allow you to choose a new one')}}. <br> 
-                                    {{ __('messages.Please check your spam folder too in case you dont find the email notification sent to you in your inbox') }}.
-                                </p>
-                            </div>
-
-                            <div class="mt-5">
-                                
-                                <x-auth-session-status class="mb-4" :status="session('status')" />
-                                <!-- Form -->
-                                <form method="POST" action="{{ route('password.email') }}">
-                                    @csrf
-                                    <div>
-                                        <div class="grid gap-y-4">
-                                            <div>
-                                                <label for="email" class="block text-sm mb-2 dark:text-gray-900">{{__('messages.Email Address')}}</label>
-                                                <div class="relative">
-                                                    <x-text-input id="email" name="email" class="block mt-1 w-full" type="email" email="email" :value="old('email')" required autofocus autocomplete="email" />
-                                                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                                                </div>
-                                            </div>
-                                            <!-- End Checkbox -->
-                                            <x-primary-button class="ms-3">
-                                                {{ __('messages.Email Password Reset Link') }}
-                                            </x-primary-button>
-                                        </div>
-                                    </div>
-                                </form>
-                              
-                                <div class="text-center">
-                                   
-                                    <p class="mt-3 text-sm text-gray-600 dark:text-white/70">
-                                        <a class="text-primary decoration-2 hover:underline font-medium"  href="{{route('login')}}">
-                                          {{__('messages.Return to login')}}
-                                        </a>
-                                    </p>
-                                </div>
-
-                                <!-- End Form -->
-                            </div>
-                        </div>
-                    </div>
-                </main>
-                <!-- ========== END MAIN CONTENT ========== -->
-            </div>
+    {{-- Background Pattern --}}
+    <div class="absolute inset-0 z-0 pointer-events-none">
+        <div class="w-full h-full 
+            bg-gray-50 dark:bg-gray-900 
+            bg-[radial-gradient(circle,_rgba(0,0,0,0.05)_1px,_transparent_1px)] 
+            dark:bg-[radial-gradient(circle,_rgba(255,255,255,0.05)_1px,_transparent_1px)] 
+            [background-size:22px_22px]">
         </div>
     </div>
 
-   
-  <!-- popperjs -->
-    {{-- <script src="../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+    {{-- Forgot Password Card --}}
+    <div 
+        class="relative z-10 pt-10 pb-6 max-w-full w-full mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-t-4"
+        style="border-color: {{ session('user_dashboard_primary_color', '#0d6efd') }}"
+    >
 
+        {{-- Logo --}}
+        <div class="flex justify-center mb-4">
 
-    <!-- Custom-Switcher JS -->
-    {{-- <script src="../assets/js/custom-switcher.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+            @if(isset($site_logo) && $site_logo)
 
-    <!-- Preline JS -->
-    {{-- <script src="../assets/libs/preline/preline.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+                <img
+                    src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}"
+                    alt="{{ session('affiliate')->name ?? 'Logo' }}"
+                    class="h-20 w-20 rounded-full shadow-md object-cover"
+                >
 
-    @php
-     $admin_site_color =  App\Models\AdminColorSetting::where('color_name','admin_site_color')->first();
-     $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241'; 
-    //  echo $admin_site_color_value;  
-    @endphp
+            @else
 
-    <style>
-      :root {
-            --color-primary: {{  $admin_site_color_value  }};
-            /* --color-primary: 90 102 241; */
-            --color-primary-rgb: 90,102,241;
-            --color-secondary: 96 165 250;
-            --color-success: 34 197 94;
-            --color-info: 76 117 207;
-            --color-warning: 234 179 8;
-            --color-danger: 244 63 94;
-            --body-bg: 242 246 249;
-            --default-text-color: 71 85 105;
-            --default-border: 243 243 243;
-            --muted: 140 144 151;
-            --dark-rgb: 14 16 20;
-            --menu-bg: 255 255 255;
-            --menu-border-color: 243 243 243;
-            --menu-prime-color: 100 116 139;
-            --header-bg: 255 255 255;
-            --header-prime-color: 100 116 139;
-            --header-border-color: 243 243 243;
-            --dark-bg: 30 41 59;
-            --dark-bg2: 249 250 251;
-        }
-        </style>
+                <div
+                    class="h-20 w-20 rounded-full shadow-md flex items-center justify-center text-white font-bold text-2xl uppercase"
+                    style="background-color: {{ session('user_dashboard_primary_color', '#0d6efd') }}"
+                >
+                    {{ substr(session('affiliate')->name ?? 'A', 0, 1) }}
+                </div>
 
-</body>
+            @endif
 
-</html>
+        </div>
+
+        {{-- Heading --}}
+        <div class="text-center">
+
+            <h2 class="text-2xl mt-3 font-bold text-gray-900 dark:text-white">
+                Forgot Password
+            </h2>
+
+            <p class="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                Forgot your password? No problem.
+                Enter your email address below and we’ll send you a password reset link.
+            </p>
+
+        </div>
+
+        {{-- Flash Messages --}}
+        <div class="mt-5">
+
+            <x-auth-session-status class="mb-4" :status="session('status')" />
+
+            @if(Session::has('success'))
+                <div class="bg-success/10 border border-success/10 alert text-success mb-4" role="alert">
+                    {{ Session::get('success') }}
+                </div>
+            @endif
+
+            @if(Session::has('failure'))
+                <div class="bg-danger/10 border border-danger/10 alert text-danger mb-4" role="alert">
+                    {{ Session::get('failure') }}
+                </div>
+            @endif
+
+            @if(Session::has('error'))
+                <div class="bg-danger/10 border border-danger/10 alert text-danger mb-4" role="alert">
+                    {{ Session::get('error') }}
+                </div>
+            @endif
+
+        </div>
+
+        {{-- Form --}}
+        <form 
+            method="POST" 
+            action="{{ route('password.email') }}"
+            @submit.prevent="isSending = true; $el.submit();"
+        >
+
+            @csrf
+
+            {{-- Email --}}
+            <div class="mb-4">
+
+                <label for="email" class="block text-sm mb-1">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value="{{ old('email') }}"
+                    required
+                    autofocus
+                    autocomplete="email"
+                    placeholder="Enter your email address"
+                    class="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+
+                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+
+            </div>
+
+            {{-- Submit Button --}}
+            <div class="mt-6">
+
+                <button
+                    type="submit"
+                    :disabled="isSending"
+                    class="w-full py-2 px-4 text-white rounded-lg transition disabled:opacity-50 shadow hover:shadow-md"
+                    style="
+                        background-color: {{ session('user_dashboard_primary_color', '#0d6efd') }};
+                        border: 2px solid {{ session('user_dashboard_primary_color', '#0d6efd') }};
+                        box-shadow: 0 0 6px {{ session('user_dashboard_primary_color', '#0d6efd') }}40;
+                    "
+                >
+
+                    <span x-show="!isSending">
+                        📩 Email Password Reset Link
+                    </span>
+
+                    <span 
+                        x-show="isSending"
+                        x-cloak
+                        class="flex items-center justify-center gap-2"
+                    >
+
+                        <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                                fill="none"
+                            />
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                            />
+                        </svg>
+
+                        Sending Link...
+
+                    </span>
+
+                </button>
+
+            </div>
+
+        </form>
+
+        {{-- Back To Login --}}
+        <p 
+            class="text-xs text-center mt-6 text-gray-500 dark:text-gray-400"
+            x-data="{ loading: false }"
+        >
+
+            Remember your password?
+
+            <a
+                href="{{ route('login') }}"
+                @click.prevent="loading = true; setTimeout(() => window.location.href = '{{ route('login') }}', 300)"
+                class="font-semibold transition"
+                x-show="!loading"
+                style="
+                    color: {{ session('user_dashboard_primary_color', '#0d6efd') }};
+                    text-shadow: 0 0 4px {{ session('user_dashboard_primary_color', '#0d6efd') }}33;
+                "
+            >
+                Return to login
+            </a>
+
+            <span
+                x-show="loading"
+                x-cloak
+                class="font-semibold flex justify-center items-center gap-1"
+                style="color: {{ session('user_dashboard_primary_color', '#0d6efd') }}"
+            >
+
+                <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    />
+
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                    />
+                </svg>
+
+                Redirecting...
+
+            </span>
+
+        </p>
+
+    </div>
+
+</div>
+
+@endsection
+

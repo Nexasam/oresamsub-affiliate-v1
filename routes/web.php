@@ -22,6 +22,7 @@ use App\Http\Controllers\MarketersController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\MultilanguageController;
 use App\Http\Controllers\NetworkController;
+use App\Http\Controllers\NewLoginController;
 use App\Http\Controllers\NewTemplateController;
 use App\Http\Controllers\ParentSyncController;
 use App\Http\Controllers\PlanProfitSettingsController;
@@ -96,8 +97,8 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
 
             // Inertia routes
-            Route::get('/login', [InertiaLoginController::class, 'create'])->name('login');
-            Route::post('/login', [InertiaLoginController::class, 'store'])->name('inertia.login.store');
+            Route::get('/login', [NewLoginController::class, 'create'])->name('login');
+            Route::post('/login', [NewLoginController::class, 'store'])->name('inertia.login.store'); #change this route name oh
 
           
            Route::get('/migrate_product_plans', [MigrationController::class, 'migrate_product_plans'])->name('migration.product_plans');

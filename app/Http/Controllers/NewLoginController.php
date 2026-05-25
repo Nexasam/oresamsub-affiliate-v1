@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Services\VirtualAccountService;
+use App\Models\AdminColorSetting;
+use App\Models\LandingPagesSetting;
+use App\Models\SiteImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 
 #its destiny has changed oh
-class InertiaLoginController extends Controller
+class NewLoginController extends Controller
 {
     // Show login page (Inertia React)
     public function create(Request $request)
@@ -20,13 +23,6 @@ class InertiaLoginController extends Controller
         $data = [];
         $data['upline'] = $upline;
         // dd($upline);
-
-
-
-        if( env('APP_NAME') == 'OresamSub') {
-            return view('oresamsub.auth.register')->with($data);
-        }
-
 
        
         // dd($data);
@@ -49,7 +45,7 @@ class InertiaLoginController extends Controller
             }
         }
 
-        return view('auth.register')->with($data);
+        return view('auth.login')->with($data);
 
 
         // return Inertia::render('Auth/Login');
@@ -68,13 +64,16 @@ class InertiaLoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            $user = auth()->user();
+            $data['user'] = $user;
+    
+            (new VirtualAccountService())->generate_accounts($data);
+
             return redirect()->intended('/dashboard');
             // return redirect()->route('dashboard');
         }
 
-        $user = auth()->id();
-
-        (new VirtualAccountService())->generate_accounts($user);
+     
 
 
         // dd(auth()->user());

@@ -58,14 +58,6 @@ class RegisteredUserController extends Controller
             }
         }
 
-        // dd($data);
-
-
-
-        $siteTemplate = SiteTemplate::first();
-        if(! $siteTemplate || $siteTemplate->template_name == 'template_1'){
-            return view('auth.register')->with($data);
-        }
 
         $site_colors = AdminColorSetting::get();
         if(count($site_colors) > 0){
@@ -73,7 +65,15 @@ class RegisteredUserController extends Controller
                 $data[$site_color->color_name] = $site_color->color_value;
             }
         }
+
         // dd($data);
+
+        $siteTemplate = SiteTemplate::first();
+        if(! $siteTemplate || $siteTemplate->template_name == 'template_1'){
+            return view('auth.register')->with($data);
+        }
+
+    
         return view('template2.auth.register')->with($data);
     }
 

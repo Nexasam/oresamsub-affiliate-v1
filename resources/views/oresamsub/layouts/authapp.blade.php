@@ -2,7 +2,7 @@
 <html lang="en" class="font-sans bg-gray-100 text-gray-800">
 <head>
   <meta charset="UTF-8">
-  <title>{{ $title ?? 'OresamSub' }}</title>
+  <title>{{ session('affiliate')->name ?? 'Affiliate Data Site' }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
 
@@ -19,7 +19,7 @@
       <link rel="apple-touch-icon" sizes="512x512" href="{{ asset('assets/logo_imgs/favicon/android-chrome-512x512.png') }}">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <meta name="apple-mobile-web-app-title" content="OresamSub">
+      <meta name="apple-mobile-web-app-title" content="{{session('affiliate')->name ?? 'Affiliate Data Site'}}">
 {{-- new content ends --}}
 
 

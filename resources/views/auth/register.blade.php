@@ -4,17 +4,33 @@
 <div class="pt-10 pb-6 max-w-full mx-auto" x-data="{ isRegistering: false, showPassword: false, showConfirm: false }">
 
   <a href="{{ route('dashboard') }}" class="flex flex-col items-center mb-4">
-    @if (isset($site_logo))
-      <img 
-        src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}" 
-        alt="{{ session('affiliate')->name }}" 
-        class="h-20 w-20 rounded-full shadow-md"
-      >     
+
+    @if(isset($site_logo) && $site_logo)
+
+        <img 
+            src="{{ asset('assets/landing_page_assets/img/site_logo/'.$site_logo) }}" 
+            alt="{{ session('affiliate')->name ?? 'Logo' }}" 
+            class="h-20 w-20 rounded-full shadow-md object-cover"
+        >  
+
+    @else
+
+        <div
+            class="h-20 w-20 rounded-full shadow-md flex items-center justify-center text-white font-bold text-2xl uppercase"
+            style="background-color: {{ session('user_dashboard_primary_color', '#0d6efd') }}"
+        >
+            {{ substr(session('affiliate')->name ?? 'A', 0, 1) }}
+        </div>
+
     @endif
-   
+
     {{-- Optional text below logo --}}
-    {{-- <span class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">OresamSub</span> --}}
-  </a>
+    {{-- 
+    <span class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">
+        {{ session('affiliate')->name }}
+    </span> 
+    --}}
+</a>
   
   <h2 class="text-2xl font-bold text-center mb-6">Create Your Account..</h2>
 

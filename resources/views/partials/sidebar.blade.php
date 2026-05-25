@@ -26,7 +26,7 @@
             @endif
 
             @if (! $site_logo)
-            <h1 class="block text-2xl font-bold text-white dark:text-gray-900">{{ session('affiliate')->slug }}</h1>                
+            <h1 class="block text-2xl font-bold text-white dark:text-gray-900">{{ session('affiliate')->name }}</h1>                
             @endif
 
             

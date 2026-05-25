@@ -23,6 +23,14 @@
         $accent = Session::get('user_dashboard_announcement_color') ?? '#3b82f6'; // Blue-500 fallback
     @endphp
 
+    <link rel="icon"
+    type="image/png"
+    href="{{ session('affiliate') && session('affiliate')->logo
+            ? asset(session('affiliate')->logo)
+            : asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <link href="https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>

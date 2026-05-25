@@ -4,23 +4,42 @@
   <meta charset="UTF-8">
   <title>{{ session('affiliate')->name ?? 'Affiliate Data Site' }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
+  {{-- <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}"> --}}
 
   {{-- new content --}}
       <!-- Favicon -->
-      <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
+      {{-- <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}"> --}}
+      <link rel="icon"
+      type="image/png"
+      href="{{ session('affiliate') && session('affiliate')->logo
+                ? asset(session('affiliate')->logo)
+                : asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
+   
+       <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
 
       <!-- Manifest -->
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <meta name="theme-color" content="#047857">
 
       <!-- iOS support -->
-      <link rel="apple-touch-icon" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
-      <link rel="apple-touch-icon" sizes="512x512" href="{{ asset('assets/logo_imgs/favicon/android-chrome-512x512.png') }}">
+      {{-- <link rel="apple-touch-icon"
+      href="{{ session('affiliate')?->logo
+          ? asset('assets/landing_page_assets/img/site_logo/' . session('affiliate')->logo)
+          : asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
+
+    <link rel="apple-touch-icon"
+          sizes="512x512"
+          href="{{ session('affiliate')?->logo
+              ? asset('assets/landing_page_assets/img/site_logo/' . session('affiliate')->logo)
+              : asset('assets/logo_imgs/favicon/android-chrome-512x512.png') }}">
+
+
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <meta name="apple-mobile-web-app-title" content="{{session('affiliate')->name ?? 'Affiliate Data Site'}}">
-{{-- new content ends --}}
+      <meta name="apple-mobile-web-app-title" content="{{session('affiliate')->name ?? 'Affiliate Data Site'}}"> --}}
+      {{-- new content ends --}}
 
 
   <!-- DARK MODE PREVENT FLASH -->

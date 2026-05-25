@@ -8,7 +8,7 @@
 
         <h2 class="text-lg font-semibold mb-4">Edit Affiliate</h2>
 
-        <form action="{{ route('affiliate.update') }}" method="POST">
+        <form action="{{ route('affiliate.update') }}" enctype="multipart/form-data" method="POST">
             @csrf
             @method('PUT')
 
@@ -19,6 +19,37 @@
                        value="{{ $affiliate->name }}"
                        class="w-full border p-2 rounded bg-gray-100"
                        readonly>
+            </div>
+
+            <div class="mb-4">
+
+                <label class="block text-sm font-medium text-gray-700">
+                    Affiliate Logo
+                </label>
+            
+                @if ($affiliate->logo)
+                    <div class="mb-3">
+                        <img src="{{ asset($affiliate->logo) }}"
+                             alt="Affiliate Logo"
+                             class="w-24 h-24 object-cover rounded-lg border border-gray-300 shadow-sm">
+                    </div>
+                @else
+                    <div class="mb-3 text-sm text-gray-500">
+                        No logo uploaded
+                    </div>
+                @endif
+            
+                <input type="file"
+                       name="logo"
+                       accept="image/*"
+                       class="w-full border p-2 rounded">
+            
+                @error('logo')
+                    <p class="text-red-500 text-xs mt-1">
+                        {{ $message }}
+                    </p>
+                @enderror
+            
             </div>
 
             <!-- EMAIL (READONLY) -->

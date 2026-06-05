@@ -445,11 +445,11 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
                         $data[$site_image->image_category] = $site_image->image_name;
                     }
                 }
-                return [
-                    'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
-                    'affiliate' => session('affiliate'),
-                    'siteLogo' => $data['site_logo' ?? 'default_logo.png'],
-                ];
+                // return [
+                //     'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
+                //     'affiliate' => session('affiliate'),
+                //     'siteLogo' => $data['site_logo' ?? 'default_logo.png'],
+                // ];
                 return Inertia::render('Auth/VerifyEmail', [
                     'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
                     'affiliate' => session('affiliate'),

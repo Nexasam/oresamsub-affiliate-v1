@@ -438,6 +438,11 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
             // })->name('verification.notice');
 
             Route::get('email/verify', function () {
+                return [
+                    'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
+                    'affiliate' => session('affiliate'),
+                    'siteLogo' => session('site_logo'),
+                ];
                 return Inertia::render('Auth/VerifyEmail', [
                     'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
                     'affiliate' => session('affiliate'),

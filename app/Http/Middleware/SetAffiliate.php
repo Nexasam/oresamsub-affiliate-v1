@@ -201,10 +201,11 @@ class SetAffiliate
         /**
          * ✅ Truth check: is seeding actually complete?
          */
-        $existingCount = LandingPagesSetting::where('affiliate_id', $affiliate->id)->count();
+        $existingCount = LandingPagesSetting::where('affiliate_id', $affiliate->id)->where('template_type','template_1')->count();
         
-        $totalExpected = count(config('landing_pages')) 
-            + count(config('landing_template2_pages'));
+
+        // + count(config('landing_template2_pages'))
+        $totalExpected = count(config('landing_pages'));
         
         if ($existingCount >= $totalExpected) {
             logger('Skipped (already fully seeded) affiliate: ' . $affiliate->id);

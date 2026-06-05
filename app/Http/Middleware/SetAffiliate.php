@@ -187,11 +187,11 @@ class SetAffiliate
     protected function seedAffiliateDefaults(Affiliate $affiliate): void
     {
 
-        if (
-            LandingPagesSetting::where('affiliate_id', $affiliate->id)->count() > 0
-        ) {
-            return;
-        }
+        // if (
+        //     LandingPagesSetting::where('affiliate_id', $affiliate->id)->count() > 0
+        // ) {
+        //     return;
+        // }
 
         /*
         |--------------------------------------------------------------------------

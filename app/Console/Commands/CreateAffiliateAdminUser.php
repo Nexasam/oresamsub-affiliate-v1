@@ -28,12 +28,12 @@ class CreateAffiliateAdminUser extends Command
         }
 
         // Optional: prevent duplicate email globally (safer)
-        $globalCheck = User::where('email', $email)->first();
+        // $globalCheck = User::where('email', $email)->first();
 
-        if ($globalCheck) {
-            $this->info("Email already exists in system. Skipping creation...");
-            return;
-        }
+        // if ($globalCheck) {
+        //     $this->info("Email already exists in system. Skipping creation...");
+        //     return;
+        // }
 
         $user = User::create([
             'username' => 'samuel.adebunmi',

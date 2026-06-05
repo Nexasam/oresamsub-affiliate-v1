@@ -104,7 +104,7 @@
 <section id="home" class="relative flex flex-col justify-center items-center text-center text-white min-h-screen"
          style="background-image: linear-gradient(rgba(15,23,42,0.6),rgba(15,23,42,0.6)),url('{{ $hero1 }}'); background-size:cover; background-position:center;">
     <div data-aos="fade-up">
-        <h6 class="uppercase tracking-wide mb-3 text-gray-200">{{ $sub_hero1 }}</h6>
+        <h6 class="uppercase tracking-wide mb-3 text-gray-200">{{ $sub_hero1 ?? 'ss' }}</h6>
         <h1 class="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-[var(--brand)] via-[var(--brand-hover)] to-[var(--brand-accent)] bg-clip-text text-transparent animate-gradient">
             {{ $hero1_part1 }} <br> {{ $hero1_part2 }}
         </h1>

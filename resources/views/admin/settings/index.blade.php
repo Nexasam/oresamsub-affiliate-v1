@@ -560,7 +560,8 @@
                               </div> --}}
 
                               <div class="space-y-2">
-                                  <button type="submit" class="ti-btn ti-btn-primary w-full">Update landing page settings[Template 1 and 2]</button>
+                                {{-- and 2 --}}
+                                  <button type="submit" class="ti-btn ti-btn-primary w-full">Update landing page settings</button>
                               </div>
                             
                               <br>

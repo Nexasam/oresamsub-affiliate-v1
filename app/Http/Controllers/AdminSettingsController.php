@@ -904,6 +904,10 @@ class AdminSettingsController extends Controller
           }   
         }
           
+        session()->put(
+          'whatsapp_support_number',
+          $request->support_whatsapp_number
+        );
         Session::flash('success','Landing page settings successfully updated');
         return redirect()->back();
     }

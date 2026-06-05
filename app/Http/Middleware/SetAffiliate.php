@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\AdminColorSetting;
 use App\Models\Affiliate;
 use App\Models\LandingPagesSetting;
+use App\Models\Setting;
 use App\Models\SiteImage;
 use App\Models\SiteTemplate;
 use Closure;

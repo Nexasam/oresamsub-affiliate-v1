@@ -186,99 +186,87 @@ class SetAffiliate
      */
     protected function seedAffiliateDefaults(Affiliate $affiliate): void
     {
-
-        // if (
-        //     LandingPagesSetting::where('affiliate_id', $affiliate->id)->count() > 0
-        // ) {
-        //     return;
-        // }
-
         /*
         |--------------------------------------------------------------------------
-        | LANDING PAGE SETTINGS
+        | USERS REDIRECT SETTING
         |--------------------------------------------------------------------------
         */
-
-        foreach (config('landing_pages') as $setting) {
-
-            LandingPagesSetting::firstOrCreate(
-                [
-                    'affiliate_id' => $affiliate->id,
-                    'field_name' => $setting[0],
-                ],
-                [
-                    'field_details' => $setting[2],
-                ]
-            );
+    
+        Setting::firstOrCreate(
+            ['field_name' => 'users_redirect_after_authentication'],
+            ['field_value' => 'dashboard']
+        );
+    
+        /*
+        |--------------------------------------------------------------------------
+        | TEMPLATE 1 LANDING SETTINGS
+        |--------------------------------------------------------------------------
+        */
+    
+        $existingFields = LandingPagesSetting::where(
+            'affiliate_id',
+            $affiliate->id
+        )->pluck('field_name')->toArray();
+    
+        $rows = [];
+    
+        foreach (config('landing_pages') as $key => $value) {
+    
+            if (in_array($key, $existingFields)) {
+                continue;
+            }
+    
+            $rows[] = [
+                'affiliate_id' => $affiliate->id,
+                'field_name' => $key,
+                'field_details' => $value[2],
+                'template_type' => 'template_1',
+                'visibility' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
-
+    
         /*
         |--------------------------------------------------------------------------
-        | COLORS
+        | TEMPLATE 2 LANDING SETTINGS
         |--------------------------------------------------------------------------
         */
-
-        $colors = [
-            'user_dashboard_primary_color' => '#5a66f2',
-            'user_dashboard_secondary_color' => '#5a66f2',
-            'user_dashboard_announcement_color' => '#5a66f2',
-
-            'admin_site_color' => '90, 102, 242',
-            'site_landing_analytics_color' => '90, 102, 242',
-            'site_landing_review_color' => '90, 102, 242',
-        ];
-
-        foreach ($colors as $name => $value) {
-
-            AdminColorSetting::firstOrCreate(
-                [
-                    'affiliate_id' => $affiliate->id,
-                    'color_name' => $name,
-                ],
-                [
-                    'color_value' => $value,
-                ]
-            );
+    
+        foreach (config('landing_template2_pages') as $key => $value) {
+    
+            if (in_array($key, $existingFields)) {
+                continue;
+            }
+    
+            $rows[] = [
+                'affiliate_id' => $affiliate->id,
+                'field_name' => $key,
+                'field_details' => $value[2],
+                'template_type' => 'template_2',
+                'visibility' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
-
+    
+        if (!empty($rows)) {
+            LandingPagesSetting::insert($rows);
+        }
+    
         /*
         |--------------------------------------------------------------------------
-        | TEMPLATE
+        | DEFAULT TEMPLATE
         |--------------------------------------------------------------------------
         */
-
+    
         SiteTemplate::firstOrCreate(
             [
-                'affiliate_id' => $affiliate->id,
+                'affiliate_id' => $affiliate->id
             ],
             [
-                'template_name' => 'template_1',
+                'template_name' => 'template_1'
             ]
         );
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT IMAGES
-        |--------------------------------------------------------------------------
-        */
-
-        $images = [
-            'site_logo' => 'default-logo.png',
-            'favicon' => 'favicon.png',
-            'hero_image' => 'hero.png',
-        ];
-
-        foreach ($images as $category => $image) {
-
-            SiteImage::firstOrCreate(
-                [
-                    'affiliate_id' => $affiliate->id,
-                    'image_category' => $category,
-                ],
-                [
-                    'image_name' => $image,
-                ]
-            );
-        }
     }
 }

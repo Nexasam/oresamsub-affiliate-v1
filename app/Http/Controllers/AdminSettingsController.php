@@ -55,17 +55,17 @@ class AdminSettingsController extends Controller
         }
 
        //landingpages: Template 2 check
-       $landing_page_settings2 = config('landing_template2_pages');
-       foreach($landing_page_settings2 as $key2=>$value2){
-           $dataa['field_name'] = $key2;
-           $dataa['field_details'] = $value2[2];
-           $dataa['template_type'] = 'template_2';
-           $dataa['visibility'] = 1;
-           $check_template_field_exist = LandingPagesSetting::where('field_name',$key2)->first();
-           if(! $check_template_field_exist){
-             LandingPagesSetting::create($dataa);
-           }
-       }
+      //  $landing_page_settings2 = config('landing_template2_pages');
+      //  foreach($landing_page_settings2 as $key2=>$value2){
+      //      $dataa['field_name'] = $key2;
+      //      $dataa['field_details'] = $value2[2];
+      //      $dataa['template_type'] = 'template_2';
+      //      $dataa['visibility'] = 1;
+      //      $check_template_field_exist = LandingPagesSetting::where('field_name',$key2)->first();
+      //      if(! $check_template_field_exist){
+      //        LandingPagesSetting::create($dataa);
+      //      }
+      //  }
 
       
         //landingpages: All params
@@ -880,10 +880,10 @@ class AdminSettingsController extends Controller
             $data[$key] = "required";
         }
 
-        $landing_pages_arr2 = config('landing_template2_pages');
-        foreach($landing_pages_arr2 as $key2=>$value2){
-            $data[$key2] = "required";
-        }
+        // $landing_pages_arr2 = config('landing_template2_pages');
+        // foreach($landing_pages_arr2 as $key2=>$value2){
+        //     $data[$key2] = "required";
+        // }
 
         $validator = Validator::make($request->all(), $data);
          

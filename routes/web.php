@@ -453,7 +453,7 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
                 return Inertia::render('Auth/VerifyEmail', [
                     'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
                     'affiliate' => session('affiliate'),
-                    'siteLogo' => session('site_logo'),
+                    'siteLogo' => $data['site_logo' ?? 'default_logo.png'],
                 ]);
             })->middleware('auth')->name('verification.notice');
 

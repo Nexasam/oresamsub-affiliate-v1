@@ -42,16 +42,17 @@ export default function VerifyEmail() {
         >
           
           {/* Logo */}
+      
           <div className="flex justify-center mb-4">
             <img
-              src={
-                siteLogo
-                  ? `/assets/landing_page_assets/img/site_logo/${siteLogo}`
-                  : "/assets/logo_imgs/oresamsublogo.jpeg"
-              }
-              alt={affiliateInfo?.name || "Logo"}
-              className="h-20 w-20 rounded-full shadow-md object-cover"
-            />
+                src={
+                  siteLogo
+                    ? `/assets/landing_page_assets/img/site_logo/${siteLogo}`
+                    : "/assets/logo_imgs/oresamsublogo.jpeg"
+                }
+                alt={affiliateInfo?.name || "Logo"}
+                className="h-20 w-20 rounded-full shadow-md object-cover"
+              />
           </div>
 
           {/* Title */}

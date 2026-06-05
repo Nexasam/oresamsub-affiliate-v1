@@ -45,6 +45,7 @@ class CreateAffiliateAdminUser extends Command
             'role_id' => 1,
             'active' => 1,
             'customer_category' => 'generic',
+            'email_verified_at' => now(),
             'user_2fa_setting' => 'OFF',
             'default_wallet_setting' => 'main_wallet',
             'main_wallet' => 0,

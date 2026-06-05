@@ -187,7 +187,43 @@ class SetAffiliate
      */
     protected function seedAffiliateDefaults(Affiliate $affiliate): void
     {
-        /*
+
+        $cacheKey = "landing_seed_lock_{$affiliate->id}";
+
+        /**
+         * 🚫 Fast skip: already recently processed
+         */
+        if (cache()->has($cacheKey)) {
+            logger('Skipped (cached) affiliate: ' . $affiliate->id);
+            return;
+        }
+        
+        /**
+         * ✅ Truth check: is seeding actually complete?
+         */
+        $existingCount = LandingPagesSetting::where('affiliate_id', $affiliate->id)->count();
+        
+        $totalExpected = count(config('landing_pages')) 
+            + count(config('landing_template2_pages'));
+        
+        if ($existingCount >= $totalExpected) {
+            logger('Skipped (already fully seeded) affiliate: ' . $affiliate->id);
+        
+            // Optional: cache permanently or long TTL
+            cache()->put($cacheKey, true, now()->addHours(6));
+        
+            return;
+        }
+        
+        /**
+         * 🔒 Lock BEFORE running actual seeding logic
+         */
+        cache()->put($cacheKey, true, now()->addMinutes(5));
+
+        
+       logger('Running seeder for affiliate: ' . $affiliate->id);
+       
+       /*
         |--------------------------------------------------------------------------
         | USERS REDIRECT SETTING
         |--------------------------------------------------------------------------

@@ -4,6 +4,9 @@ namespace App\Http\Middleware;
 
 use App\Models\AdminColorSetting;
 use App\Models\Affiliate;
+use App\Models\LandingPagesSetting;
+use App\Models\SiteImage;
+use App\Models\SiteTemplate;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +38,19 @@ class SetAffiliate
 
         if (Session::has('affiliate')) {
 
+
+
             $sessionAffiliate = Session::get('affiliate');
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ENSURE DEFAULT RECORDS EXIST
+            |--------------------------------------------------------------------------
+            */
+
+            $this->seedAffiliateDefaults($sessionAffiliate);
+
 
             $sessionDomain = $sessionAffiliate->domain_url ?? null;
 
@@ -87,6 +102,17 @@ class SetAffiliate
         if ($affiliate) {
 
             Session::put('affiliate', $affiliate);
+
+            $sessionAffiliate = Session::get('affiliate');
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ENSURE DEFAULT RECORDS EXIST
+            |--------------------------------------------------------------------------
+            */
+            $this->seedAffiliateDefaults($sessionAffiliate);
+
 
             $primaryColor = AdminColorSetting::where(
                 'affiliate_id',
@@ -153,5 +179,106 @@ class SetAffiliate
         }
 
         return $next($request);
+    }
+
+      /**
+     * Create missing affiliate defaults
+     */
+    protected function seedAffiliateDefaults(Affiliate $affiliate): void
+    {
+
+        if (
+            LandingPagesSetting::where('affiliate_id', $affiliate->id)->count() > 0
+        ) {
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | LANDING PAGE SETTINGS
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (config('landing_pages') as $setting) {
+
+            LandingPagesSetting::firstOrCreate(
+                [
+                    'affiliate_id' => $affiliate->id,
+                    'field_name' => $setting[0],
+                ],
+                [
+                    'field_details' => $setting[2],
+                ]
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | COLORS
+        |--------------------------------------------------------------------------
+        */
+
+        $colors = [
+            'user_dashboard_primary_color' => '#5a66f2',
+            'user_dashboard_secondary_color' => '#5a66f2',
+            'user_dashboard_announcement_color' => '#5a66f2',
+
+            'admin_site_color' => '90, 102, 242',
+            'site_landing_analytics_color' => '90, 102, 242',
+            'site_landing_review_color' => '90, 102, 242',
+        ];
+
+        foreach ($colors as $name => $value) {
+
+            AdminColorSetting::firstOrCreate(
+                [
+                    'affiliate_id' => $affiliate->id,
+                    'color_name' => $name,
+                ],
+                [
+                    'color_value' => $value,
+                ]
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | TEMPLATE
+        |--------------------------------------------------------------------------
+        */
+
+        SiteTemplate::firstOrCreate(
+            [
+                'affiliate_id' => $affiliate->id,
+            ],
+            [
+                'template_name' => 'template_1',
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEFAULT IMAGES
+        |--------------------------------------------------------------------------
+        */
+
+        $images = [
+            'site_logo' => 'default-logo.png',
+            'favicon' => 'favicon.png',
+            'hero_image' => 'hero.png',
+        ];
+
+        foreach ($images as $category => $image) {
+
+            SiteImage::firstOrCreate(
+                [
+                    'affiliate_id' => $affiliate->id,
+                    'image_category' => $category,
+                ],
+                [
+                    'image_name' => $image,
+                ]
+            );
+        }
     }
 }

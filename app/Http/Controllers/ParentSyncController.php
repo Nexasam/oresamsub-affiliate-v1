@@ -37,6 +37,8 @@ class ParentSyncController extends Controller
 
         $response_dec = json_decode($response,true);
 
+        logger('Syncplans response: '.$response);
+
         // return $response;
 
         //networks and products wont change on the parent for now...

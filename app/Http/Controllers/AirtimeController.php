@@ -624,7 +624,8 @@ class AirtimeController extends Controller
                     
                             if($failure > 0){
                               return response()->json(['status'=>2, 'message'=>" $failure issue(s) found. Check transaction history", 'data' => $display_results  ]);   
-                            }else if($status == 0){
+                            }else if($status == 1){
+                                //suffer it to be so for now and sort out the pending issue at the parent level. only for airtime
                                 return response()->json(['status'=>1, 'message'=>'Transaction was successfully processed', 'data' => $display_results  ]);
                             }else if($status == -1){
                                 return response()->json(['status'=> -1, 'message'=>$user_message ?? 'Could not be completed', 'data' => $display_results  ]);

@@ -2,35 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Models\User;
+use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
+use App\Http\Services\DataPlansService;
+use App\Models\AffiliateProductPlan;
+use App\Models\AffiliateProductPlanCategory;
+use App\Models\Automation;
+use App\Models\BulkDataProductPlans;
 use App\Models\Network;
 use App\Models\Product;
-use App\Models\UserPlan;
-use App\Models\Automation;
-use App\Models\ProductPlan;
-use App\Models\Transaction;
-use App\Models\SiteTemplate;
-use Illuminate\Http\Request;
 use App\Models\ProductCategory;
-use Illuminate\Validation\Rule;
-use Yajra\DataTables\DataTables;
-use App\Models\UserBulkDataWallet;
-use Illuminate\Support\Facades\DB;
+use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
-use App\Models\AffiliateProductPlan;
-use App\Models\BulkDataProductPlans;
+use App\Models\SiteTemplate;
+use App\Models\Transaction;
+use App\Models\User;
 use App\Models\UserBulkDataPurchase;
-use App\Http\Services\DataPlansService;
-use Illuminate\Support\Facades\Validator;
-use App\Models\AffiliateProductPlanCategory;
+use App\Models\UserBulkDataWallet;
+use App\Models\UserPlan;
 use App\Services\Automation\AutomationLogic;
-use App\Services\Automation\VtpassAutomation;
-use App\Traits\Dashboard\UserDashboardDataTrait;
-use App\Services\Automation\MegaSubPlugAutomation\VendData;
-use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubElectricity;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubelectricityTV;
+use App\Services\Automation\MegaSubPlugAutomation\VendData;
+use App\Services\Automation\PayscribeAutomation;
+use App\Services\Automation\VtpassAutomation;
+use App\Traits\Dashboard\UserDashboardDataTrait;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Yajra\DataTables\DataTables;
 
 class ElectricitySubscriptionController extends Controller
 {
@@ -236,7 +237,34 @@ class ElectricitySubscriptionController extends Controller
 
         $user_id = auth()->id();
         // $automation_slug = $plan_details->automation->slug;
-        $automation_slug = 'megasubplug';
+        $automation_slug = 'payscribe';
+
+        if($automation_slug == 'foxdatahub'){
+            $validate_metre_number = (new MegaSubElectricity(metre_number: $request->smart_card_number, plan_id: $request->plan_id, user_id: $user_id))->validateMetreNumber();
+            return $validate_metre_number;
+      
+        }
+
+
+         if($automation_slug == 'payscribe'){
+            $dataa['smart_card_number'] = $request->smart_card_number;
+            $dataa['plan_id'] = $request->plan_id;
+            $dataa['user_id'] = $request->user_id;
+
+
+            $token = env('ELECTRICITY_API_KEY','sdf');
+            // $token = $plan_details->automation->api_public_key;
+            $dataa['automation_id'] =  $plan_details->automation->id;
+            $dataa['metre_number'] = $request->smart_card_number;
+            $dataa['plan_id'] = $request->plan_id;
+            $dataa['token'] = $token;
+            $dataa['user_id'] = $user_id;
+            $dataa['amount'] = $request->amount ?? 1000;//not really needed
+            $dataa['url'] = $plan_details->automation->electricity_url;
+            $validate_metre_number = (new PayscribeAutomation($dataa))->validateMetreNumber();
+            return $validate_metre_number;
+        }
+
         if($automation_slug == 'megasubplug'){
             $validate_metre_number = (new MegaSubElectricity(metre_number: $request->smart_card_number, plan_id: $request->plan_id, user_id: $user_id))->validateMetreNumber();
             return $validate_metre_number;

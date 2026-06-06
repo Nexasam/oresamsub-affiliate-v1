@@ -239,13 +239,13 @@ class RegisteredUserController extends Controller
 
         // 5. Role & Plan
         $roleId = Role::where('role_name', 'User')->value('id');
-        // $defaultPlanId = UserPlan::where('is_default', 1)->value('id');
-        $defaultPlanId = AffiliateUserPlan::where('plan_level',1)->first();
-
 
         // 6. Detect Tenant (VERY IMPORTANT 🔥)
         // adjust this based on your tenancy logic (subdomain, session, referral, etc.)
         $tenantId = session('affiliate')->id ?? null;
+
+         // $defaultPlanId = UserPlan::where('is_default', 1)->value('id');
+         $defaultPlanId = AffiliateUserPlan::where('plan_level',"1")->first();
 
         // 7. Create user (NO email_verified_at ❌)
         $user = User::create([

@@ -194,7 +194,7 @@ class SetAffiliate
          * 🚫 Fast skip: already recently processed
          */
         if (cache()->has($cacheKey)) {
-            logger('Skipped (cached) affiliate: ' . $affiliate->id);
+            // logger('Skipped (cached) affiliate: ' . $affiliate->id);
             return;
         }
         
@@ -208,7 +208,7 @@ class SetAffiliate
         $totalExpected = count(config('landing_pages'));
         
         if ($existingCount >= $totalExpected) {
-            logger('Skipped (already fully seeded) affiliate: ' . $affiliate->id);
+            // logger('Skipped (already fully seeded) affiliate: ' . $affiliate->id);
         
             // Optional: cache permanently or long TTL
             cache()->put($cacheKey, true, now()->addHours(6));

@@ -2,29 +2,29 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\Registered;
+use App\Http\Controllers\Controller;
+use App\Http\Services\CrystalPayService;
+use App\Http\Services\VirtualAccountService;
+use App\Mail\UserRegistrationNotification;
+use App\Models\AdminColorSetting;
+use App\Models\AffiliateUserPlan;
+use App\Models\LandingPagesSetting;
 use App\Models\Role;
+use App\Models\SiteImage;
+use App\Models\SiteTemplate;
 use App\Models\User;
 use App\Models\UserPlan;
-use App\Models\SiteImage;
-use Illuminate\View\View;
-use App\Events\Registered;
-use App\Models\SiteTemplate;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules;
-use App\Models\AdminColorSetting;
-use App\Models\LandingPagesSetting;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Session;
-use App\Http\Services\CrystalPayService;
-use Illuminate\Validation\Rules\Password;
-use App\Mail\UserRegistrationNotification;
-use App\Http\Services\VirtualAccountService;
-
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
@@ -40,9 +40,9 @@ class RegisteredUserController extends Controller
 
 
 
-        if( env('APP_NAME') == 'OresamSub') {
-            return view('oresamsub.auth.register')->with($data);
-        }
+        // if( env('APP_NAME') == 'OresamSub') {
+        //     return view('oresamsub.auth.register')->with($data);
+        // }
 
 
        
@@ -135,7 +135,7 @@ class RegisteredUserController extends Controller
        
 
         $role_details = Role::where('role_name','User')->first();
-        $default_reseller_plan = UserPlan::where('is_default',1)->first();
+        $default_reseller_plan = AffiliateUserPlan::where('plan_level',1)->first();
         $data['first_name'] = $request->first_name;
         $data['last_name'] = $request->last_name;
         // $data['other_names'] = $request->other_names;

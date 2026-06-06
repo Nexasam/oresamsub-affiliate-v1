@@ -1309,10 +1309,7 @@ class DataController extends Controller
         
         $response = curl_exec($curl);
 
-        logger('for parent request:'.$jsonarr);
-        logger('parent respn:'.$response);
-        logger('parent key: '.$pkey);
-        
+
         curl_close($curl);
         
         $purchase_dec = json_decode($response,true);

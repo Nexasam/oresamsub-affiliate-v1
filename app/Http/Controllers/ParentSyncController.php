@@ -82,6 +82,8 @@ class ParentSyncController extends Controller
             // $product = $res['plan_category']['product'];
             // $network = $res['network'];
             // $plan_category = $res['plan_category'];
+            $automation_product_plan_id = $res['automation_product_plan_id'] ?? 'nilll';
+
             $product_plan_name = $res['product_plan_name'];
             $data_size_in_mb = $res['data_size_in_mb'];
             $validity_in_days = $res['validity_in_days'];
@@ -136,6 +138,7 @@ class ParentSyncController extends Controller
                             'cost_price_12' => $cost_price_aff_12,
                             'data_size_in_mb' => $data_size_in_mb,
                             'validity_in_days' => $validity_in_days,
+                            'automation_product_plan_id' => $automation_product_plan_id ?? NULL,
                             'profit_category' => $profitcat
                         ]);
 

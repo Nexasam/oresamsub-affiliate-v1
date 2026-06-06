@@ -384,7 +384,7 @@ class AirtimeController extends Controller
     public function buy_airtime_action(Request $request)
     {
        
-
+    
         $validator = Validator::make($request->all(), [
             'network_id' => 'required',
             'phone_number' => 'required',
@@ -534,6 +534,9 @@ class AirtimeController extends Controller
 
                                 curl_close($curl);
                                 $decores = json_decode($response,true);
+
+                                //FOR NOW: FORCE STATUS AS TRUE AND SORT IT OUT AT THEE PARENT LEVEL. ONLY FOR AIRTIME
+                                $decores['status'] = 1; //force success for now and sort it out at the parent level. only for airtime   
 
 
                             //     else{

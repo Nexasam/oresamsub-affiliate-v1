@@ -190,6 +190,7 @@ class UsersController extends Controller
 
         $user = User::with(['role','upline:id,username,phone_number','virtual_accounts'])->where('id',$id)->first();
         $user_plans = AffiliateUserPlan::get();
+        return $user_plans;
         if(!$user){
           Session::flash('failure','User not found');
           return redirect()->back();

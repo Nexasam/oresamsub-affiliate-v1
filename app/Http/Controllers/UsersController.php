@@ -344,7 +344,7 @@ class UsersController extends Controller
         'customer_category' => 'nullable',
         'customer_landmark' => 'nullable',
         'pin' => 'required','integer','regex:/^\d{4,5}$/',
-        'user_plan_id' => ['required','string','exists:user_plans,id'],
+        'user_plan_id' => ['required','string','exists:affiliate_user_plans,id'],
       ]);
       
  

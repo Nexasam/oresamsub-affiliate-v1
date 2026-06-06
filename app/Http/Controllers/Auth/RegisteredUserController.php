@@ -239,7 +239,9 @@ class RegisteredUserController extends Controller
 
         // 5. Role & Plan
         $roleId = Role::where('role_name', 'User')->value('id');
-        $defaultPlanId = UserPlan::where('is_default', 1)->value('id');
+        // $defaultPlanId = UserPlan::where('is_default', 1)->value('id');
+        $defaultPlanId = AffiliateUserPlan::where('plan_level',1)->first();
+
 
         // 6. Detect Tenant (VERY IMPORTANT 🔥)
         // adjust this based on your tenancy logic (subdomain, session, referral, etc.)
@@ -256,7 +258,7 @@ class RegisteredUserController extends Controller
             'affiliate_id' => $tenantId, // 👈 critical for branded emails
             // 'pin' => null,
             'role_id' => $roleId,
-            'user_plan_id' => $defaultPlanId,
+            'user_plan_id' => $defaultPlanId->id ?? 1,
             'password' => Hash::make($validated['password']),
             'pin' => $validated['pin'], // 🔥 STORE PIN SECURELY
             'email_verified_at' => null, // 👈 enforce verification

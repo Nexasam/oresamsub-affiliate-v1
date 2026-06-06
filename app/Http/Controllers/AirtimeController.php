@@ -565,7 +565,8 @@ class AirtimeController extends Controller
 
                                }else if($decores['status'] == 1 || $decores['status'] == '1'){
                                     //no issues
-                                    $status = 0; //on the affiliate side: db then query script gets the actual update
+                                    //for now just leave it as success and sort out the pending issue at the parent level. only for airtime
+                                    $status = 1; //on the affiliate side: db then query script gets the actual update
                                     $user_message = $decores['data']['user_message'] ?? $decores['message'];
                                     $admin_message = $decores['data']['admin_message'] ?? $decores['message'];
                                 }else{

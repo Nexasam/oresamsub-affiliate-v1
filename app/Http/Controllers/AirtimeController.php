@@ -604,7 +604,7 @@ class AirtimeController extends Controller
                                 $transaction =  Transaction::create($creationData);
 
                                 //log only pending transactions
-                                if($status == 0){
+                                if($status == 1){
                                     $walletLog['user_id'] = $user_id;
                                     $walletLog['transaction_category'] = 'AIRTIME';
                                     $walletLog['balance_before'] = $wallet_before;

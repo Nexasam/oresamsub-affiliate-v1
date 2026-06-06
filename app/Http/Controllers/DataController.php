@@ -1311,6 +1311,7 @@ class DataController extends Controller
 
         logger('for parent request:'.$jsonarr);
         logger('parent respn:'.$response);
+        logger('parent key: '.$pkey);
         
         curl_close($curl);
         

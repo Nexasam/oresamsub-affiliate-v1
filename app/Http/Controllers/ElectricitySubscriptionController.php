@@ -223,7 +223,7 @@ class ElectricitySubscriptionController extends Controller
     public function validate_metre_number(Request $request){
         //call the automation involved
         logger('yes oh, na here oh for elec');
-        $plan_details = ProductPlan::with('product_plan_category','automation')
+        $plan_details = AffiliateProductPlan::with('product_plan','product_plan_category','automation')
         ->where('visibility',1)
         ->where('id',$request->plan_id)->first();
      
@@ -268,7 +268,7 @@ class ElectricitySubscriptionController extends Controller
         }
         
         if($automation_slug == 'safehaven'){
-                // $catId = $plan_details->automation_product_plan_id; //cat id used as automation plan id   
+                // $catId = $plan_details->product_plan->automation_product_plan_id; //cat id used as automation plan id   
                 $catId = '61efac51da92348f9dde5f7d'; //temporary catId for testing 
                 $validate_metre_number = (new SafehavenAutomation())->verifyCableElectricityByCategoryId($catId,$request->smart_card_number);
                 logger('Safehaven response: '.json_encode($validate_metre_number));

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Http\Services\DataPlansService;
+use App\Http\Services\SafehavenAutomation;
 use App\Models\AffiliateProductPlan;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\Automation;
@@ -263,6 +264,13 @@ class ElectricitySubscriptionController extends Controller
             $dataa['url'] = $plan_details->automation->electricity_url;
             $validate_metre_number = (new PayscribeAutomation($dataa))->validateMetreNumber();
             return $validate_metre_number;
+        }
+        
+        if($automation_slug == 'safehaven'){
+                $catId = $plan_details->automation_product_plan_id; //cat id used as automation plan id    
+                $validate_metre_number = (new SafehavenAutomation())->verifyCableElectricityByCategoryId($catId,$request->smart_card_number);
+                logger('Safehaven response: '.json_encode($validate_metre_number));
+                return $validate_metre_number;
         }
 
         if($automation_slug == 'megasubplug'){

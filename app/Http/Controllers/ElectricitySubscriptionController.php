@@ -268,8 +268,8 @@ class ElectricitySubscriptionController extends Controller
         }
         
         if($automation_slug == 'safehaven'){
-                // $catId = $plan_details->product_plan->automation_product_plan_id; //cat id used as automation plan id   
-                $catId = '61efac51da92348f9dde5f7d'; //temporary catId for testing 
+                $catId = $plan_details->product_plan->automation_product_plan_id; //cat id used as automation plan id   
+                // $catId = '61efac51da92348f9dde5f7d'; //temporary catId for testing 
                 $validate_metre_number = (new SafehavenAutomation())->verifyCableElectricityByCategoryId($catId,$request->smart_card_number);
                 logger('Safehaven response: '.json_encode($validate_metre_number));
                 return $validate_metre_number;

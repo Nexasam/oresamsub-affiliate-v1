@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Http\Services\DataPlansService;
-use App\Http\Services\SafehavenAutomation;
+use App\Services\SafehavenAutomation;
 use App\Models\AffiliateProductPlan;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\Automation;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services\Automation;
 
 use App\Models\ProductPlan;
 use App\Models\UserVirtualAccount;

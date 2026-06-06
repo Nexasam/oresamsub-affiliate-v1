@@ -229,6 +229,7 @@ class ElectricitySubscriptionController extends Controller
      
       
         if(! $plan_details){
+            logger('Plan details not found for plan id: '.$request->plan_id);
             return [
                 'status' => -1,
                 'user_message' => 'An error occurred while processing this transaction. Please try again or reach out to support',

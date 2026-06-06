@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Http\Services\DataPlansService;
-use App\Services\Automation\SafehavenAutomation;
 use App\Models\AffiliateProductPlan;
 use App\Models\AffiliateProductPlanCategory;
+use App\Models\AffiliateUserPlan;
 use App\Models\Automation;
 use App\Models\BulkDataProductPlans;
 use App\Models\Network;
@@ -25,6 +25,7 @@ use App\Services\Automation\MegaSubPlugAutomation\MegaSubElectricity;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubelectricityTV;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
 use App\Services\Automation\PayscribeAutomation;
+use App\Services\Automation\SafehavenAutomation;
 use App\Services\Automation\VtpassAutomation;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use Exception;
@@ -421,7 +422,7 @@ class ElectricitySubscriptionController extends Controller
         }
 
         $user_plan_id = auth()->user()->user_plan_id;
-        $user_level = UserPlan::select('plan_level')->where('id',$user_plan_id)->first();
+        $user_level = AffiliateUserPlan::select('plan_level')->where('id',$user_plan_id)->first();
         $plan_level = $user_level->plan_level;
         $user_plan_selling_price = 'user_level_'.$plan_level.'_selling_price';
         $user_details = auth()->user();

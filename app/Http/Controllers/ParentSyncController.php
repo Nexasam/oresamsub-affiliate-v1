@@ -12,7 +12,7 @@ class ParentSyncController extends Controller
 {
     public function syncplans(Request $request){
         
-        $key = session('affiliate')->parent_key;
+        $key = session('affiliate')->parent_key ?? env('GENERIC_KEY');
 
         $curl = curl_init();
         curl_setopt_array($curl, array(

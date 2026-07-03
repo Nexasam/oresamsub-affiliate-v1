@@ -392,8 +392,8 @@ class ElectricitySubscriptionController extends Controller
         }
 
         
-        if($request->amount < 0){
-            return response()->json(['status'=>-1, 'message'=>'amount cannot be less than 0','data' => ''  ]);
+        if($request->amount < 1000){
+            return response()->json(['status'=>-1, 'message'=>'amount cannot be less than 1000','data' => ''  ]);
         }
 
         $success = 0;

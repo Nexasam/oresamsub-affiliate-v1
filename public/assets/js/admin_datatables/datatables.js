@@ -1,7 +1,7 @@
 $(document).ready(function(){
     const root_url = $('.root_url').val();
-    var root_url_public = $('.root_url2').val();
-    // alert(root_url_public)
+    const root_url_public = $('.root_url2').val() || root_url;
+    // alert($('.root_url2').val())
 
     getUsers();        
     getPlanCategories();

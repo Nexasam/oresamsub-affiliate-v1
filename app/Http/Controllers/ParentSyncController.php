@@ -37,7 +37,7 @@ class ParentSyncController extends Controller
 
         $response_dec = json_decode($response,true);
 
-        logger('Syncplans response: '.$response);
+        // logger('Syncplans response: '.$response);
 
         // return $response;
 
@@ -108,7 +108,7 @@ class ParentSyncController extends Controller
                 $get_cat_id = ProductPlanCategory::where('api_id',$plan_category_api_id)->first();
                 $categid = $get_cat_id->id; 
                 $productid = $get_cat_id->product_id;
-                logger('pid: '.$productid);
+                // logger('pid: '.$productid);
 
 
                 if($productid == 2 || $productid == 3){
@@ -122,7 +122,7 @@ class ParentSyncController extends Controller
 
                 if($get_cat_id){
                     if($pp_plan){
-                        logger('opop');
+                        // logger('opop');
                         //exists: just update
                         $pp_plan->update([
                             'product_plan_category_id' => $categid, //not sure how to add this yet. use the api id

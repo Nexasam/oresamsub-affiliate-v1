@@ -49,6 +49,7 @@ class CreateAffiliateAdminUser extends Command
             'user_2fa_setting' => 'OFF',
             'default_wallet_setting' => 'main_wallet',
             'main_wallet' => 0,
+            'pin' =>rand(1000, 9999),
             'verification_status' => 0,
         ]);
 

@@ -3,7 +3,15 @@ self.addEventListener('install', () => {
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim());
+    // This worker does not maintain an application cache. Remove caches left
+    // behind by older releases so stale HTML cannot load a newer JS bundle.
+    event.waitUntil(
+        caches.keys()
+            .then((cacheNames) => Promise.all(
+                cacheNames.map((cacheName) => caches.delete(cacheName))
+            ))
+            .then(() => self.clients.claim())
+    );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -21,7 +29,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request).then((response) => response || fetch(event.request))
-    );
+    // Always fetch navigations and versioned Vite assets from the network.
+    // Their HTML/manifest pairing must come from the same deployment.
+    if (event.request.mode === 'navigate' || url.pathname.startsWith('/build/')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
+    event.respondWith(fetch(event.request));
 });

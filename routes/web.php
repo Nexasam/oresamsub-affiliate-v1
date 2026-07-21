@@ -439,21 +439,21 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
             Route::get('email/verify', function () {
 
-                $site_images_data = SiteImage::where('affiliate_id',session('affiliate')->id)->get();
-                if(count($site_images_data) > 0){
-                    foreach($site_images_data as $site_image){
-                        $data[$site_image->image_category] = $site_image->image_name;
-                    }
+                $data = [];
+            
+                $site_images_data = SiteImage::where(
+                    'affiliate_id',
+                    session('affiliate')->id
+                )->get();
+            
+                foreach ($site_images_data as $site_image) {
+                    $data[$site_image->image_category] = $site_image->image_name;
                 }
-                // return [
-                //     'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
-                //     'affiliate' => session('affiliate'),
-                //     'siteLogo' => $data['site_logo' ?? 'default_logo.png'],
-                // ];
+            
                 return Inertia::render('Auth/VerifyEmail', [
                     'userDashboardPrimaryColor' => session('user_dashboard_primary_color', '#0d6efd'),
                     'affiliate' => session('affiliate'),
-                    'siteLogo' => $data['site_logo' ?? 'default_logo.png'],
+                    'siteLogo' => $data['site_logo'] ?? 'default_logo.png',
                 ]);
             })->middleware('auth')->name('verification.notice');
 

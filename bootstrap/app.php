@@ -1,20 +1,20 @@
 <?php
 
-use App\Http\Middleware\RoleAssess;
-use App\Http\Middleware\AdminSettings;
-use Illuminate\Foundation\Application;
-use App\Http\Middleware\RoleUserAccess;
+use App\Http\Middleware\AuthenticateExternalIntegration;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\MarketerMiddleware;
 use App\Http\Middleware\RoleAdminAccess;
+use App\Http\Middleware\RoleAssess;
+use App\Http\Middleware\RoleUserAccess;
+use App\Http\Middleware\SetAffiliate;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetTransactionPin;
 use App\Http\Middleware\TemplateSetting;
 use App\Http\Middleware\ValidateApiToken;
-use App\Http\Middleware\SetTransactionPin;
-use App\Http\Middleware\ApiTokenMiddleware;
-use App\Http\Middleware\MarketerMiddleware;
 use App\Http\Middleware\ValidateSanctumUser;
-use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\AuthenticateExternalIntegration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,23 +24,30 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectGuestsTo(fn ($request) => str_starts_with((string) $request->route()?->getName(), 'platform-admin.')
+            ? route('platform-admin.login')
+            : route('login'));
+        $middleware->redirectUsersTo(fn ($request) => str_starts_with((string) $request->route()?->getName(), 'platform-admin.')
+            ? route('platform-admin.dashboard')
+            : route('dashboard'));
+
         // $middleware->append(RoleAssess::class);
         $middleware->alias([
-            'template_setting'=>TemplateSetting::class,
+            'template_setting' => TemplateSetting::class,
             'admin' => RoleAdminAccess::class,
-            'user' => RoleUserAccess::class, 
-            'marketer' => MarketerMiddleware::class, 
+            'user' => RoleUserAccess::class,
+            'marketer' => MarketerMiddleware::class,
             'validate_user' => ValidateSanctumUser::class,
             'api_token' => ValidateApiToken::class,
             'set_transaction_pin' => SetTransactionPin::class,
-            'set_locale' => \App\Http\Middleware\SetLocale::class,
-            'set_affiliate' => \App\Http\Middleware\SetAffiliate::class,
-         ]);
+            'set_locale' => SetLocale::class,
+            'set_affiliate' => SetAffiliate::class,
+        ]);
 
-         $middleware->web(append: [
+        $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
-        
+
         // 'api_access' => AuthenticateExternalIntegration::class
         // $middleware->alias(['user' => RoleUserAccess::class]);
         $middleware->statefulApi();

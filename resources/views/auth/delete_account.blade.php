@@ -56,26 +56,26 @@
                 {{-- <img src="{{ asset('assets/img/authentication/delacc.jpg') }}" alt="Delete Account" class="w-full h-full object-cover"> --}}
                 <img src="https://cdn.pixabay.com/photo/2015/02/21/17/47/computer-644457_1280.png" alt="Delete Account" class="w-full h-full object-cover">
             </div>
-        
+
             <!-- Right side form -->
             <div class="lg:col-span-6 col-span-12 flex items-center justify-center">
                 <div x-data="{ showModal: false }" class="w-full max-w-md px-6 py-10">
-        
+
                     <!-- Intro -->
                     <div class="text-center mb-6">
                         <h1 class="text-4xl underline font-semibold text-gray-800 dark:text-white mb-4">
-                            {{ env('APP_NAME') }}
+                            {{ config('app.name') }}
                         </h1>
                         <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">Account Settings</h2>
                         <p class="text-sm text-gray-500 dark:text-gray-300">You can deactivate your account below.</p>
                     </div>
-        
+
                     <!-- Delete Button -->
                     <button @click="showModal = true"
                         class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md text-sm font-medium">
                         Delete My Account
                     </button>
-        
+
                     <!-- Modal -->
                     <div x-show="showModal"
                          class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
@@ -87,7 +87,7 @@
                             <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
                                 This will deactivate your account. You can recover it later by contacting support.
                             </p>
-        
+
                             <form id="deactivateForm">
                                 @csrf
                                 <div class="mb-3">
@@ -114,7 +114,7 @@
                             </form>
                         </div>
                     </div>
-        
+
                 </div>
             </div>
         </div>
@@ -124,7 +124,7 @@
     <script>
         $('#deactivateForm').on('submit', function(e) {
             e.preventDefault();
-    
+
             $.ajax({
                 url: "{{ route('user.delete_user_account.action') }}",
                 method: 'POST',

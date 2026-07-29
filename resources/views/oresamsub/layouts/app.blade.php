@@ -73,7 +73,7 @@
     <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <div class="flex items-center space-x-2">
         <h1 class="text-xl font-bold text-gray-800 dark:text-white">OresamSub</h1>
-    
+
         <!-- WhatsApp Support Link (compact + bold + emerald green + full message) -->
         <a
           href="https://wa.me/2349163128718?text=Hello%20OresamSub%20Support%2C%20I%20need%20help%20on%20your%20website"
@@ -86,17 +86,17 @@
           Support
         </a>
       </div>
-    
+
       <button @click="toggle()" class="text-xl">
         <span x-text="darkMode ? '☀️' : '🌙'"></span>
       </button>
     </div>
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 
     <!-- Main Content -->
     <main class="px-4 pt-4 pb-28 min-h-[calc(100vh-96px)]">
@@ -114,7 +114,7 @@
           ['label' => 'Electricity', 'icon' => '⚡', 'route' => 'ore.electricity'],
           // ['label' => 'Profile', 'icon' => '👤', 'route' => 'dashboard'], // Replace 'profile' with your actual route
         ] as $item)
-          <a 
+          <a
             href="{{ route($item['route']) }}"
             @click.prevent="showLoader = true; setTimeout(() => window.location.href = '{{ route($item['route']) }}', 200)"
             class="flex flex-col items-center hover:text-blue-600 dark:hover:text-blue-400"
@@ -125,7 +125,7 @@
         @endforeach
       </div>
     </nav>
-    
+
 
   </div>
 
@@ -141,18 +141,18 @@
   style="display: none;"
 >
   <div class="text-center text-white space-y-4">
-  
+
     <svg class="animate-spin h-10 w-10 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
     </svg>
 
-    
+
     <p class="text-sm max-w-xs mx-auto">
       Please wait... If this loader appears for too long, check your internet connection and reload this page again.
     </p>
 
-   
+
     <button
       @click="window.location.reload()"
       class="mt-2 px-4 py-2 bg-white text-black rounded shadow hover:bg-gray-200 transition"
@@ -199,12 +199,12 @@
 
 
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> 
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  var APP_NAME = @json(env('APP_NAME'));
+  var APP_NAME = @json(config('app.name'));
    $(document).ready(function(){
-    //  alert('this is working') 
+    //  alert('this is working')
 
     function getProductPlans(network_id='', plan_category_id='', product_slug='', amount = ''){
               if(network_id != '' && product_slug != '' && plan_category_id == ''){
@@ -213,7 +213,7 @@
                   product_slug : product_slug,
                   amount : amount
                 };
-              
+
                 // alert('hhhhh')
               }
 
@@ -223,12 +223,12 @@
                   plan_category_id : plan_category_id,
                   product_slug : product_slug,
                   amount : amount
-                };        
+                };
               }
 
               //  console.log(data);
               //  return;
-              
+
 
               $.ajax({
                         type: 'GET',
@@ -248,7 +248,7 @@
 
                               // Add "All" button first (active)
                               $('#size_filters').append(`
-                                  <button 
+                                  <button
                                       type="button"
                                       class="size-btn active px-3 py-1 border rounded text-sm bg-green-500 text-white hover:bg-green-600 transition"
                                       data-size="all"
@@ -262,7 +262,7 @@
                                   let label = size >= 1000 ? (size / 1000) + 'GB' : size + 'MB';
 
                                   $('#size_filters').append(`
-                                      <button 
+                                      <button
                                           type="button"
                                           class="size-btn px-3 py-1 border rounded text-sm bg-white text-gray-700 hover:bg-green-600 transition"
                                           data-size="${size}"
@@ -275,21 +275,21 @@
                           }
 
 
-                            
+
                               $('#product_plan_id').html("");
                               $('#product_plan_id').append('<option value="">Select Product Plan</option>');
-      
+
                               // let jj = jsonn;
                               for (const child in dataList) {
-            
-                                 
+
+
                                   const idd = dataList[child].product_plan_id;
                                   const product_plan_name = dataList[child].product_plan_name;
                                   const upline_commission = dataList[child].upline_commission;
                                   const selling_price = dataList[child].selling_price;
                                   if(product_slug == 'data'){
 
-                                    
+
                                     // if(APP_NAME == 'OresamSub'){
                                     //   option = "<option value="+idd+">"+product_plan_name+"- &#8358; "+selling_price+" - Upline Commission:&#8358;"+upline_commission+"</option>";
                                     // }else{
@@ -305,12 +305,12 @@
                                       const name = dataList[child].product_plan_name;
                                       const price = dataList[child].selling_price;
                                       const commission = dataList[child].upline_commission;
-                                      const planSize = dataList[child].data_size_in_mb; 
+                                      const planSize = dataList[child].data_size_in_mb;
 
                                       // let label = APP_NAME == 'OresamSub'
                                       //   ? `${name}<br><span class='text-xs text-green-600'>₦${price} | Upline: ₦${commission}</span>`
                                       //   : `${name}<br><span class='text-xs'>₦${price}</span>`
-                                      // 
+                                      //
                                       // ;
 
                                       // let label = `${name}<br><span class='text-xs text-green-600'>₦${price}</span>`;
@@ -327,7 +327,7 @@
 
 
                                       planBoxes += `
-                                        <div 
+                                        <div
                                           class="plan-box border rounded-lg p-3 text-center cursor-pointer bg-white dark:bg-gray-600 hover:border-green-600 transition"
                                           data-id="${idd}"
                                           data-size="${planSize}"
@@ -342,7 +342,7 @@
 
                                     // ✅ Filter function
                                     // window.filterPlans = function(size, el) {
-                                      
+
                                     //     $('.size-btn').removeClass('bg-green-500 text-white').addClass('bg-white text-gray-700');
                                     //     $(el).removeClass('bg-white text-gray-700').addClass('bg-green-500 text-white');
 
@@ -418,11 +418,11 @@
                                     }
                                   }
                                   $('#product_plan_id').append(option);
-                                
-                                
+
+
                               }
-                            
-                          
+
+
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
@@ -432,7 +432,7 @@
     }
 
 
- 
+
 
   //   function getProductPlans(network_id = '', plan_category_id = '', product_slug = '', amount = '') {
   //   let data = {};
@@ -484,13 +484,13 @@
 
   //               if (product_slug === 'data') {
   //                   let label = `
-  //                       ${name} 
+  //                       ${name}
   //                       <br><span class="text-xs text-green-600">₦${price}</span>
   //                       <br><span class="text-[10px] text-gray-500">${dataSize}MB</span>
   //                   `;
 
   //                   planBoxes += `
-  //                       <div 
+  //                       <div
   //                           class="border rounded-lg p-3 text-center cursor-pointer bg-white dark:bg-gray-800 hover:border-blue-600 transition"
   //                           data-id="${idd}"
   //                           onclick="selectPlan(this)"
@@ -524,13 +524,13 @@
 
 
     function getCableProductPlans(plan_category_id='', product_slug=''){
-              
+
               var data = {
                 plan_category_id : plan_category_id,
                 product_slug : product_slug
               };
-                
-  
+
+
                 $.ajax({
                           type: 'GET',
                           url: "{{ route('user.fetch_product_plans') }}",
@@ -541,15 +541,15 @@
                               // console.log(response.data)
                               var result = JSON.stringify(response.data);
                               var dataList = JSON.parse(result);
-                          
+
                               $('#cable_product_plan_id').html("");
                               $('#cable_product_plan_id').append('<option value="">Select Product Plan</option>');
-  
+
                                 // let jj = jsonn;
 
                                   $('#plan_grid').html(""); // Clear previous
                                   let boxes = '';
-                             
+
                                   for (const child in dataList) {
                                       const idd = dataList[child].product_plan_id;
                                       const name = dataList[child].product_plan_name;
@@ -563,7 +563,7 @@
                                       let label = `${name}<br><span class='text-xs text-green-600'>₦${price}</span>`;
 
                                         boxes += `
-                                        <div 
+                                        <div
                                           class="border rounded-lg p-3 text-center cursor-pointer bg-white dark:bg-gray-800 hover:border-blue-600 transition plan-card"
                                           data-id="${idd}">
                                           ${name}<br>
@@ -571,8 +571,8 @@
                                         </div>`;
                                     }
                                     $('#plan_grid').html(boxes);
-                              
-                            
+
+
                           },
                           error: function(xhr, status, error) {
                               // Handle errors if needed
@@ -583,13 +583,13 @@
 
 
     function getElectricityProductPlans(plan_category_id='', product_slug='', amount = ''){
-              
+
               var data = {
                 plan_category_id : plan_category_id,
                 product_slug : product_slug,
                 amount : amount,
               };
-              
+
               console.log('electric',data);
 
               $.ajax({
@@ -603,13 +603,13 @@
                             // console.log(response.data)
                             var result = JSON.stringify(response.data);
                             var dataList = JSON.parse(result);
-                        
+
                               $('#electricity_product_plan_id').html("");
                               $('#electricity_product_plan_id').append('<option value="">Select Product Plan</option>');
-      
+
                               $('#plan_grid').html(""); // Clear previous
                               let boxes = '';
-                             
+
                               for (const child in dataList) {
                                   const idd = dataList[child].product_plan_id;
                                   const name = dataList[child].product_plan_name;
@@ -623,7 +623,7 @@
                                     let label = `${name}<br><span class='text-xs text-green-600'>₦${price}</span>`;
 
                                     boxes += `
-                                    <div 
+                                    <div
                                       class="border rounded-lg p-3 text-center cursor-pointer bg-white dark:bg-gray-800 hover:border-blue-600 transition plan-card-elect"
                                       data-id="${idd}">
                                       ${name}<br>
@@ -631,8 +631,8 @@
                                     </div>`;
                               }
                               $('#plan_grid').html(boxes);
-                            
-                          
+
+
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
@@ -648,7 +648,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const electricity_product_plan_category_id = $('#electricity_product_plan_category_id').val();
             const metre_number = $('#metre_number').val();
@@ -659,8 +659,8 @@
             const pin = $('#pin').val();
             const no_of_slots = 1;
             const utility_amount = $('#utility_amount').val();
-            
-            
+
+
 
             const data = {
               electricity_product_plan_category_id : electricity_product_plan_category_id,
@@ -679,7 +679,7 @@
 
             if (confirm("Are you sure you want to complete this electricity subscription purchase?") == true) {
                 // alert('logic happens here')
-              
+
 
                 $.ajax({
                   type: 'GET',
@@ -711,7 +711,7 @@
                         $('#buy_electricity_btn').html('Buy Token');
                         $('#buy_electricity_btn').prop('disabled',false);
                       }
-                    
+
 
                   },
                   error: function(xhr, status, error) {
@@ -724,7 +724,7 @@
               $('#buy_electricity_btn').prop('disabled',false);
 
               return;
-            }  
+            }
         })
 
     //cable
@@ -744,7 +744,7 @@
       $('#plan_error').addClass('hidden');
     });
 
-  
+
     let verifyTimer;
     $('#smart_card_number').on('keyup', function () {
         clearTimeout(verifyTimer); // Cancel previous timer
@@ -754,7 +754,7 @@
 
         console.log(plan_id,number);
 
-        
+
 
         if (number.length >= 10 && plan_id) {
           $('#smartcard_name_preview').text('Typing...');
@@ -795,7 +795,7 @@
 
         console.log(plan_id,number);
 
-        
+
 
         if (number.length >= 10 && plan_id) {
           $('#meter_name_preview').text('Checking...');
@@ -859,7 +859,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const cable_product_plan_category_id = $('#cable_product_plan_category_id').val();
             let smart_card_number = $('#smart_card_number').val();
@@ -868,7 +868,7 @@
             const cable_product_plan_id = $('#cable_product_plan_id').val();
             const pin = $('#pin').val();
             const no_of_slots = $('#no_of_slots').val();
-            
+
             const data = {
               cable_product_plan_category_id : cable_product_plan_category_id,
               smart_card_number : smart_card_number,
@@ -885,7 +885,7 @@
 
             if (confirm("Are you sure you want to complete this cable subscription purchase?") == true) {
                 // alert('logic happens here')
-              
+
 
                 $.ajax({
                   type: 'GET',
@@ -924,11 +924,11 @@
               return;
             }
 
-            
-          
+
+
         })
 
-    
+
 
 
 
@@ -937,7 +937,7 @@
         var amount =  $(this).val();
         var product_slug = $("#product_slug").val();
         var plan_category_id = $('#electricity_product_plan_category_id').val();
-          
+
         var amount = product_slug == 'airtime' || product_slug == 'utility_bills'  ? amount : '';
         // alert(plan_category_id)
 
@@ -952,14 +952,14 @@
             var product_slug = $("#product_slug").val();
             var plan_category_id = $('#product_plan_category_id').val();
             var product_plan_id = $('#product_product_plan_id').val();
-            
-              
+
+
             if(network_id == ''){
               sweetAlertDisplay('Network is required','Network required','error');
               return;
             }
             var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-      
+
             getProductPlans(network_id,plan_category_id,product_slug,amount);
     });
 
@@ -994,7 +994,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const network_id = $('#network_id').val();
             const product_plan_category_id = $('#product_plan_category_id').val();
@@ -1008,9 +1008,9 @@
               var validatephonenetwork = 1;
             }else{
               var validatephonenetwork = 0;
-              
+
             }
-            
+
 
             const data = {
               network_id : network_id,
@@ -1023,14 +1023,14 @@
               _token: $('meta[name="csrf-token"]').attr('content')
             };
 
-            
+
 
             // console.log(data);
             // return;
 
             if (confirm("Are you sure you want to complete this data purchase?") == true) {
                 // alert('logic happens here')
-              
+
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1067,7 +1067,7 @@
                           $("#buy_data_btn").prop('disabled',false);
                           $('#cancel_disabling').addClass('hidden')
                           // reload(6000);
-                      }        
+                      }
                       $('#buy_data_btn').html('Buy Data');
                       $('#buy_data_btn').prop('disabled',false);
 
@@ -1102,7 +1102,7 @@
               var validatephonenetwork = 1;
             }else{
               var validatephonenetwork = 0;
-              
+
             }
 
             if($('#amount_for_airtime_category').val() == ''){
@@ -1121,9 +1121,9 @@
               sweetAlertDisplay("{{ __('messages.You need to buy at least N50 worth of airtime.') }}",'Airtime purchase error','error');
               // sweetAlertDisplay('You need to buy atleast &#8358;50 worth of airtime','Airtime purchase error','error');
               return;
-            
+
             }
-            
+
 
             const data = {
               network_id : network_id,
@@ -1178,14 +1178,14 @@
               $('#buy_airtime_btn').html('Buy Airtime');
               $('#buy_airtime_btn').prop('disabled',false);
               return;
-            }      
+            }
     })
 
 
     $('#filter_by_plan_category').change(function(e){
           e.preventDefault();
-      
-          
+
+
           if(this.checked){
             $("#product_plan_category_div").removeClass('hidden');
             //display product plans categories
@@ -1240,10 +1240,10 @@
             $("#product_plan_category_div").addClass('hidden');
           }
         })
- 
-  
+
+
     $('#network_id').change(function(){
-      
+
           $('#product_plan_category_id').html('<option value="all">All categories selected</option>');
           $("#product_plan_category_div").addClass('hidden');
           $('#filter_by_plan_category').prop('checked',false)
@@ -1281,18 +1281,18 @@
           }
           // $('#network_id').prepend('<option selected value="'+response.network_id+'">'+selectedNetwork+'</option>');
 
-          
+
           // alert(network_id)
           //here you have to display all plans that are tied to this network but only where tied to the automation tied to each product plan category
           var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-          
+
           getProductPlans(network_id,'',product_slug,amount);
-        })    
+        })
    })
   </script>
 
 
-  
+
   <script>
     function themeToggle() {
       return {
@@ -1360,11 +1360,11 @@
           Add this app to your home screen for a faster, app-like experience.
         </p>
         <div class="flex gap-3 justify-center">
-          <button id="dismissInstall" 
+          <button id="dismissInstall"
             class="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600">
             Not now
           </button>
-          <button id="confirmInstall" 
+          <button id="confirmInstall"
             class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium shadow hover:bg-emerald-700">
             Install
           </button>

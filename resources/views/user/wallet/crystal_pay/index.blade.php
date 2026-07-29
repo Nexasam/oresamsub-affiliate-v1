@@ -10,7 +10,7 @@
                 <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-900 dark:hover:text-white text-2xl font-medium">Fund Wallet using  <b>{{ $funding_option->funding_option_name }}</b> </h3>
             </div>
             <ol class="flex items-center whitespace-nowrap min-w-0">
-          
+
             </ol> --}}
         </div>
         <!-- Page Header Close -->
@@ -30,7 +30,7 @@
                Ops! {{ Session::get('failure') }}
               </div>
             @endif
-            
+
             @if ($errors->any())
               <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                 <ul>
@@ -41,9 +41,9 @@
               </div>
             @endif
           </div>
-         
+
           <div class="col-span-12">
-          
+
               <div class="box">
                 <div class="box-header">
                    <p class="text-xl underline"><b>{{ __('messages.Wallet Balance')}} {{ number_format(auth()->user()->main_wallet) }}</b></p>
@@ -51,13 +51,13 @@
                   <h5 class="box-title">{{  __('messages.Fund wallet using') }} <b>{{ $funding_option->funding_option_name }}</b></h5>
                   {{-- <b>{{  __('messages.Please note') }}:</b>
                   <p>{{  __('messages.You can also make a direct payment to our bank account and your wallet will be credited.') }} <br>
-                    @if (env('APP_NAME') == 'OresamSub')
+                    @if (config('app.name') == 'OresamSub')
                         <b>{{ __("messages.Here's the details") }}:</b> <br>
                         <b>{{__('messages.Account Number')}}:</b> 3069976671 <br>
-                        <b>{{__('messages.Bank Name')}}:</b>      First Bank  <br> 
-                        <b>{{__('messages.Account Name')}}:</b>   Olusola Samuel Adebunmi <br> 
+                        <b>{{__('messages.Bank Name')}}:</b>      First Bank  <br>
+                        <b>{{__('messages.Account Name')}}:</b>   Olusola Samuel Adebunmi <br>
                     @else
-                        
+
                     @endif
                      <a class="ti-btn ti-btn-primary w-full md:w-1/3" href="https://api.whatsapp.com/send?phone={{ session()->get('whatsapp_support_number') }}&text=Hello,%20Please%20I%20want%20to%20fund%20my%20wallet%20on%20your%20platform">{{ __('messages.Click here to reach us on whatsapp') }}</a>
 
@@ -71,14 +71,14 @@
                     </button>
                     <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white " id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
                       {{ __('messages.Wallet Transactions') }}
-                    </button> 
+                    </button>
                     {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white " id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
                       Dynamic Wallets
                     </button>
                     <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white " id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
                       Wallet Transactions
                     </button> --}}
-                  
+
                   </nav>
 
                   <div class="mt-3">
@@ -86,7 +86,7 @@
                       <div class="overflow-auto">
                         {{-- <table  class="ti-custom-table ti-custom-table-head ti-striped-table ti-custom-table-hover ">
                             <thead> --}}
-                              <table  class="ti-custom-table ti-custom-table-head">    
+                              <table  class="ti-custom-table ti-custom-table-head">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                 <tr>
                                     {{-- <th>ID</th> --}}
@@ -99,30 +99,30 @@
                                       @if (count($funding_option->bank_codes) > 0)
                                           @foreach ($funding_option->bank_codes as $key=>$bank_code)
                                           <tr aria-colspan="3">
-                                          
-                                            <td>{{ __('messages.Bank Name') }}: {{ $bank_code->bank_name }} 
+
+                                            <td>{{ __('messages.Bank Name') }}: {{ $bank_code->bank_name }}
                                               @if ($bank_code->rate_category == 'Flat')
                                               <br>{{ __('messages.Charges') }}: 	&#8358;{{ $bank_code->bank_charges }} - (Flat rate)
                                               @else
                                                 <br> {{ __('messages.Charges') }}: {{ $bank_code->bank_charges }} %
                                               @endif
                                               {{-- @if (strtolower($bank_code->bank_name) == 'wema bank' || strtolower($bank_code->bank_name) == 'palmpay' )
-                                                <br> Charges: 	&#8358;{{ $bank_code->bank_charges }}                                                 
+                                                <br> Charges: 	&#8358;{{ $bank_code->bank_charges }}
                                               @else
                                                 <br> Charges: {{ $bank_code->bank_charges }} %
-                                                  
+
                                               @endif --}}
-                                            
+
                                               <br>
                                             @if ( in_array($bank_code->bank_code,$generated_user_virtual_accts_bank_code) )
-                                             
-                                                  <b> - </b>                                                  
-                                               
+
+                                                  <b> - </b>
+
                                             @else
 
                                             <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-primary" data-hs-overlay="#hs-vertically-centered-modal{{$bank_code->id}}">
                                               {{ __('messages.Generate') }}
-                                            </button> 
+                                            </button>
                                             <div id="hs-vertically-centered-modal{{$bank_code->id}}" class="hs-overlay ti-modal hidden">
                                               <div class="ti-modal-box">
                                                 <div class="ti-modal-content">
@@ -143,12 +143,12 @@
                                                   </div>
                                                   <div class="ti-modal-body">
                                                     <div class="overflow-auto">
-          
+
                                                       <form method="POST" action="{{ route('user.wallet.generate_virtual_account')  }}">
                                                         <input type="hidden" id="_token" name="_token" value="{{ csrf_token() }}" />
-                                                 
+
                                                         <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                                                            
+
                                                             {{-- <div class="space-y-2"> --}}
                                                                 {{-- <label class="ti-form-label mb-0">BVN:</label> --}}
                                                                 {{-- <span>This is needed due to the directive from CBN</span> --}}
@@ -158,28 +158,28 @@
                                                                 <input type="hidden" class="my-auto ti-form-input" id="last_name" name="last_name" value="{{ auth()->user()->last_name }}"> --}}
                                                                 <input type="hidden" class="my-auto ti-form-input" id="bank_code" name="bank_code" value="{{ $bank_code->bank_code }}">
                                                                 <input type="hidden" class="my-auto ti-form-input" id="funding_option" name="funding_option" value="{{ $funding_option->id }}">
-                                                             
+
                                                               {{-- </div> --}}
-            
+
                                                             <div class="space-y-2">
                                                               <label class="ti-form-label mb-0">PIN:</label>
                                                               <input type="password" required class="my-auto ti-form-input" id="pin" name="pin" value="" placeholder="{{ __('messages.Enter your pin to secure transaction') }}">
                                                             </div>
-            
+
                                                             <div class="space-y-2">
                                                                 <button type="submit" id="generate_virtual_account" class="ti-btn ti-btn-primary w-full">{{ __('messages.Generate') }}</button><br>
-                                                                
+
                                                             </div>
-                                                           
+
                                                             <br>
                                                         </div>
                                                         {{-- <div class="my-5">
                                                             <button type="submit" class="ti-btn ti-btn-primary w-full">Submit</button>
                                                         </div> --}}
-                                
+
                                                     </form>
-                                                  
-                                                </div>   
+
+                                                </div>
                                                 </div>
                                               </div>
                                             </div>
@@ -188,10 +188,10 @@
 
 
                                             @endif
-                                               
+
                                             </td>
                                             <td>
-                                              
+
                                               @if ( in_array($bank_code->bank_code,$generated_user_virtual_accts_bank_code))
                                                     @foreach ($user_virtual_accounts as $user_virtual_account)
                                                         @if ($user_virtual_account->bank_code == $bank_code->bank_code)
@@ -207,25 +207,25 @@
                                               @endif
                                             </td>
                                           </tr>
-                                              
+
                                           @endforeach
                                       @else
                                           <tr aria-colspan="3"><td>No bank code available at the moment</td></tr>
                                       @endif
-                                    
+
                                 </tbody>
-                              </table>     
-                      </div>                
+                              </table>
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-1" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-1">
-                                          
-                      {{-- FILTER STARTS HERE --}} 
-                      <div class="box-body">     
+
+                      {{-- FILTER STARTS HERE --}}
+                      <div class="box-body">
                         <div class="box-header">
                           <div class="flex">
                             <h5 class="box-title my-auto">Filter options</h5>
                             <div class="hs-dropdown ti-dropdown block ms-auto my-auto s  sm:flex items-center justify-between">
-                            
+
                                   <button type="button"
                                   class="hs-dropdown-toggle ti-dropdown-toggle rounded-sm p-1 px-3 mr-8 !border border-gray-200 text-gray-400 hover:text-gray-500 hover:bg-gray-200 hover:border-gray-200 focus:ring-gray-200  dark:hover:bg-black/30 dark:border-white/10 dark:hover:border-white/20 dark:focus:ring-white/10 dark:focus:ring-offset-white/10">
                             Filter <i class="ti ti-chevron-down"></i>
@@ -276,7 +276,7 @@
                                     </div>
                                   </div>
                                   <div class="ti-modal-footer">
-                                  
+
                                     <a id="filter_crystalpay_txn_table" class="ti-btn ti-btn-primary" data-hs-overlay="#hs-slide-down-animation-modal"
                                       href="javascript:void(0);">
                                       Save changes
@@ -284,19 +284,19 @@
                                   </div>
                                 </div>
                               </div>
-                            </div>   
-                          </div>                       
-                          </div> 
+                            </div>
+                          </div>
+                          </div>
                         </div>
                         </div>
                         {{-- FILTER ENDS HERE --}}
-                     
+
                       <div class="overflow-auto" style="font-size: 10px;">
-                     
-                              <table  id="crystal_pay_funding_logs_table" class="ti-custom-table ti-custom-table-head">    
+
+                              <table  id="crystal_pay_funding_logs_table" class="ti-custom-table ti-custom-table-head">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                   <tr>
-                          
+
                                     <th>ID</th>
                                     <th>User</th>
                                     <th>Txn Reference</th>
@@ -315,12 +315,12 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                           
+
                             <tbody>
 
                            </tbody>
-                            </table> 
-                      </div>                
+                            </table>
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-3" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-3">
                       <p class="text-gray-500 dark:text-white/70 p-5 border rounded-sm dark:border-white/10 border-gray-200">
@@ -329,14 +329,14 @@
                     </div>
                   </div>
                 </div>
-               
+
                 {{-- <div class="box-body">
-                 
+
                 </div> --}}
               </div>
-             
-               
-                
+
+
+
             </div>
           </div>
         </div>
@@ -393,6 +393,6 @@
       </div>
       <!-- Start::main-content -->
 
-       
+
 @endsection
 

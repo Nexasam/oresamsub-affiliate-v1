@@ -13,26 +13,26 @@
         </div>
 
         @php
-        $site_logo =  App\Models\SiteImage::where('image_category','site_logo')->first();   
+        $site_logo =  App\Models\SiteImage::where('image_category','site_logo')->first();
        @endphp
 
         <div class="responsive-logo">
           @if ($site_logo)
-              <a class="responsive-logo-dark" href="#" aria-label="{{env('APP_NAME')}}"><img
-              src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" height="50" width="60" alt="logo" class="mx-auto"></a>
-              <a class="responsive-logo-light" href="#" aria-label="{{env('APP_NAME')}}"><img
-              src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" height="50" width="60"  alt="logo" class="mx-auto"></a>
+              <a class="responsive-logo-dark" href="#" aria-label="{{config('app.name')}}"><img
+              src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" height="50" width="60" alt="logo" class="mx-auto"></a>
+              <a class="responsive-logo-light" href="#" aria-label="{{config('app.name')}}"><img
+              src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" height="50" width="60"  alt="logo" class="mx-auto"></a>
           @endif
 
           @if (! $site_logo)
-           <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ env('APP_NAME') }}</h1>
+           <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ config('app.name') }}</h1>
           @endif
         </div>
 
         <div class="header-right">
           <div class="responsive-headernav">
             <div class="header-nav-right">
-            
+
               {{-- <div class="header-search">
                 <button aria-label="button" type="button" data-hs-overlay="#search-modal"
                   class="inline-flex flex-shrink-0 justify-center items-center gap-2 h-[2.375rem] w-[2.375rem] rounded-full font-medium bg-gray-100 hover:bg-gray-200 text-gray-500 align-middle focus:outline-none focus:ring-0 focus:ring-gray-400 focus:ring-offset-0 focus:ring-offset-white transition-all text-xs dark:bg-bgdark dark:hover:bg-black/20 dark:text-white/70 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10">
@@ -57,7 +57,7 @@
                   <i class="ri-fullscreen-line header-icon fullscreen-exit-line full-screen-close hidden"></i>
                 </a>
               </div>
-            
+
               {{-- <div class="header-notification hs-dropdown ti-dropdown hidden sm:block"
                 data-hs-dropdown-placement="bottom-right">
                 <button id="dropdown-notification" type="button"
@@ -143,7 +143,7 @@
                       </a>
                     </div>
                   </div>
-                </div> 
+                </div>
               </div> --}}
               {{-- <div class="header-apps hs-dropdown ti-dropdown hidden md:block" data-hs-dropdown-placement="bottom-right">
                 <button aria-label="button" id="dropdown-apps" type="button"
@@ -194,14 +194,14 @@
                 <button id="dropdown-profile" type="button"
                   class="hs-dropdown-toggle ti-dropdown-toggle gap-2 p-0 flex-shrink-0 h-8 w-8 rounded-full shadow-none focus:ring-gray-400 text-xs dark:focus:ring-white/10">
                   <img class="inline-block rounded-full ring-2 ring-white dark:ring-white/10"
-                    src="{{ asset(env('APP_ASSETS_BASE_URL').'img/users/default_profile.jpg ') }}" alt="Image Description">
+                    src="{{ asset(config('app.assets_base_url').'img/users/default_profile.jpg ') }}" alt="Image Description">
                 </button>
 
                 <div class="hs-dropdown-menu ti-dropdown-menu border-0 w-[20rem]" aria-labelledby="dropdown-profile">
                   <div class="ti-dropdown-header !bg-primary flex">
                     <div class="me-3">
                       <img class="avatar shadow-none rounded-full !ring-transparent"
-                        src="{{ asset(env('APP_ASSETS_BASE_URL').'img/users/default_profile.jpg') }}"  alt="profile-img">
+                        src="{{ asset(config('app.assets_base_url').'img/users/default_profile.jpg') }}"  alt="profile-img">
                     </div>
                     <div>
                       <p class="ti-dropdown-header-title !text-white">{{  auth()->user()->username  }}</p>
@@ -214,7 +214,7 @@
                       <a href="{{ route('user.manage_profile.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-user-circle text-lg"></i>
                         {{__('messages.Profile')}}
-                      </a>                     
+                      </a>
                     @else
                       <a href="{{ route('admin.manage_profile.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-user-circle text-lg"></i>
@@ -222,8 +222,8 @@
 
                       </a>
                     @endif --}}
-                    
-                   
+
+
                     {{-- <a href="mail-inbox.html" class="ti-dropdown-item">
                       <i class="ti ti-inbox text-lg"></i>
                       Inbox
@@ -238,7 +238,7 @@
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
                         {{__('messages.Settings')}}
 
-                      </a>                        
+                      </a>
                     @else
                       <a href="{{ route('admin.settings.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
@@ -252,14 +252,14 @@
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
                         {{__('Update Affilaite')}}
 
-                      </a>   
+                      </a>
                     @endif
 
                     @if (auth()->user()->role->role_name == 'User')
                     <a href="#" class="ti-dropdown-item">
                       <i class="ti ti-wallet text-lg"></i>
                       {{__('messages.Main Wallet')}} : &#8358;{{ number_format(auth()->user()->main_wallet ?? 0) }}
-                    </a>                        
+                    </a>
                     @endif
 
                     {{-- <a href="signin.html" class="ti-dropdown-item">
@@ -281,26 +281,26 @@
                   </div>
                 </div>
               </div>
-       
+
               <div x-data="{ open: false }" class="relative group">
                 <!-- Language Button with Badge -->
                 <button @click="open = !open" @click.outside="open = false"
                   class="relative inline-flex items-center justify-center h-[2.75rem] w-[2.75rem] rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:hover:bg-yellow-800 dark:text-yellow-200 transition-all shadow-md focus:outline-none">
                   <i class="ri-translate-2 text-xl animate-bounce-slow"></i>
-              
+
                   <!-- "New" badge -->
                   <span
                     class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
                     New
                   </span>
-              
+
                   <!-- Tooltip -->
                   <span
                     class="absolute bottom-full mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                     Switch Language
                   </span>
                 </button>
-              
+
                 <!-- Dropdown -->
                 <div x-show="open" x-transition
                   class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50"
@@ -323,8 +323,8 @@
                   </a>
                 </div>
               </div>
-              
-              
+
+
             </div>
           </div>
         </div>

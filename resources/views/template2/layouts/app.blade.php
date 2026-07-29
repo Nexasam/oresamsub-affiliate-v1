@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> {{ env('APP_NAME') }} - @yield('title','My Data Application')
+    <title> {{ config('app.name') }} - @yield('title','My Data Application')
     </title>
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,24 +20,24 @@
     @php
     $site_primary_color =  App\Models\AdminColorSetting::where('color_name','site_primary_color')->first();
     $site_secondary_color =  App\Models\AdminColorSetting::where('color_name','site_secondary_color')->first();
-    $site_primary_color = $site_primary_color->color_value ?? (int) '90, 102, 241'; 
-    $site_secondary_color = $site_secondary_color->color_value ?? (int) '90, 102, 241'; 
+    $site_primary_color = $site_primary_color->color_value ?? (int) '90, 102, 241';
+    $site_secondary_color = $site_secondary_color->color_value ?? (int) '90, 102, 241';
     $support_whatsapp_number_template2 =  App\Models\LandingPagesSetting::where('field_name','support_whatsapp_number_template2')->first();
     $support_whatsapp_number_template2 = $support_whatsapp_number_template2->field_details;
 
     $site_txn_volume_color =  App\Models\AdminColorSetting::where('color_name','site_txn_volume_color')->first();
-     $site_txn_volume_color = $site_txn_volume_color->color_value ?? '#ffffff'; 
+     $site_txn_volume_color = $site_txn_volume_color->color_value ?? '#ffffff';
 
      $site_wallet_balance_color =  App\Models\AdminColorSetting::where('color_name','site_wallet_balance_color')->first();
-     $site_wallet_balance_color = $site_wallet_balance_color->color_value ?? '#ffffff';  
+     $site_wallet_balance_color = $site_wallet_balance_color->color_value ?? '#ffffff';
 
      $site_txns_count_analytics_color =  App\Models\AdminColorSetting::where('color_name','site_txns_count_analytics_color')->first();
-     $site_txns_count_analytics_color = $site_txns_count_analytics_color->color_value ?? '#ffffff';  
+     $site_txns_count_analytics_color = $site_txns_count_analytics_color->color_value ?? '#ffffff';
 
      $site_virtual_accounts_color =  App\Models\AdminColorSetting::where('color_name','site_virtual_accounts_color')->first();
-     $site_virtual_accounts_color = $site_virtual_accounts_color->color_value ?? '#ffffff';  
+     $site_virtual_accounts_color = $site_virtual_accounts_color->color_value ?? '#ffffff';
 
-    
+
     //  echo $admin_site_color_value;  p
     @endphp
 
@@ -85,7 +85,7 @@
     {{-- &text=Hola%21%20Quisiera%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Varela%202. --}}
     <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number_template2  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="float" target="_blank">
     <i class="fa fa-whatsapp my-float"></i>
-    </a>     
+    </a>
 
    <!-- Include Flowbite and Alpine.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.8/cdn.min.js" defer></script>
@@ -124,9 +124,9 @@
 
 <!-- Modal toggle -->
 
-  
 
-  
+
+
 
 <!-- JavaScript to Open Modal -->
 {{-- <script>
@@ -146,30 +146,30 @@
     });
 </script> --}}
 
-    
+
 <div class="max-w-screen bg-white">
      <!-- NAV  -->
      @include('template2.partials.topnav')
 
      <!-- MAIN NAV -->
      <div class="relative grid grid-cols-12 h-screen ">
-        
+
         <!-- SIDEBAR -->
         @include('template2.partials.sidebar')
-        
+
         <!-- MAIN AREA -->
         <div class="col-span-12 md:col-span-10">
-           
+
             {{-- dont show for api docs --}}
             @unless(isset($hideNav) && $hideNav)
                 {{-- @include('template2.partials.notification') --}}
                 @include('template2.partials.analytics')
             @endunless
-            
-            @include('template2.partials.quickaction')
-            
 
-            @yield('template2_content')  
+            @include('template2.partials.quickaction')
+
+
+            @yield('template2_content')
 
         </div>
 
@@ -200,7 +200,7 @@
             .catch(err => console.error("Error copying api key:", err));
     }
 
-   
+
     // @if (session('welcome_message'))
     // @endif
 

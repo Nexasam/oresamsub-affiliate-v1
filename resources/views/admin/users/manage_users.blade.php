@@ -4,7 +4,7 @@
       <!-- Start::main-content -->
       <div class="main-content">
 
-     
+
              <!-- Page Header -->
         <div class="block justify-between page-header md:flex">
             <div>
@@ -38,7 +38,7 @@
                Ops! {{ Session::get('failure') }}
               </div>
             @endif
-            
+
             @if ($errors->any())
               <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                 <ul>
@@ -82,7 +82,7 @@
                   <button type="button" class="hs-tab-active:bg-primary hs-tab-active:border-primary hs-tab-active:text-white dark:hs-tab-active:bg-primary dark:hs-tab-active:border-primary dark:hs-tab-active:text-white -me-px py-3 px-3 inline-flex items-center gap-2 bg-gray-50 text-sm font-medium text-center border text-gray-500 rounded-sm hover:text-gray-700 dark:bg-gray-900 dark:border-white/10 dark:text-white/70 dark:hover:text-gray-300" id="profile-settings-item-3" data-hs-tab="#profile-settings-3" aria-controls="profile-settings-3" role="tab">
                     <i class="ri ri-global-line"></i> Reset 2FA
                   </button>
-              
+
                   {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:border-primary hs-tab-active:text-white dark:hs-tab-active:bg-primary dark:hs-tab-active:border-primary dark:hs-tab-active:text-white -me-px py-3 px-3 inline-flex items-center gap-2 bg-gray-50 text-sm font-medium text-center border text-gray-500 rounded-sm hover:text-gray-700 dark:bg-bodybg dark:border-white/10 dark:text-white/70 dark:hover:text-gray-300" id="profile-settings-item-3" data-hs-tab="#profile-settings-3" aria-controls="profile-settings-3" role="tab">
                     <i class="ri ri-lock-line"></i> Password Settings
                   </button>
@@ -104,8 +104,8 @@
                     <div class="box-header">
                       <h5 class="box-title leading-none flex"><i class="ri ri-shield-user-line me-2"></i> Personal Settings  </h5>
                       @php
-                      $fullnameinfo = '<br><b>Virtual Accounts Generated: '.count($user->virtual_accounts).'</b></br>'; 
-                      @endphp 
+                      $fullnameinfo = '<br><b>Virtual Accounts Generated: '.count($user->virtual_accounts).'</b></br>';
+                      @endphp
                       @if (count($user->virtual_accounts) > 0)
                           <div class="grid grid-cols-3">
                             @foreach($user->virtual_accounts as $va)
@@ -114,19 +114,19 @@
                                   $fullnameinfo .= 'Account Name: '.$va->account_name.'&nbsp;';
                                   $fullnameinfo .= 'Account No: '.$va->account_number.'&nbsp;';
                                   $fullnameinfo .= '</div>';
-                              @endphp  
+                              @endphp
 
                             @endforeach
                           </div>
-                       
+
                           {!! $fullnameinfo !!}
-                          
+
                        @endif
                     </div>
                     <div class="box-body">
                       <div>
                         {{-- <form method="POST" action="{{ route('admin.users.reset_password')  }}">
-                          <input type="submit" class="ti-btn ti-btn-primary w-1/2" value="Reset Customer Password">           
+                          <input type="submit" class="ti-btn ti-btn-primary w-1/2" value="Reset Customer Password">
                         </form> --}}
 
                         <form method="POST" action="{{ route('admin.users.update_user_info')  }}">
@@ -162,8 +162,8 @@
                                 <label class="ti-form-label mb-0">Email Address</label>
                                 <input type="email" readonly class="my-auto ti-form-input" id="email_address" name="email_address" value="{{ $user->email }}" placeholder="Email">
                             </div>
-                            @if (env('APP_NAME') == 'OresamSub')
-                            
+                            @if (config('app.name') == 'OresamSub')
+
                                 <div class="space-y-2">
                                   <label class="ti-form-label mb-0">Customer Landmark: Describe a way for us to know how the business meet this customer</label>
                                   <input type="text"  class="my-auto ti-form-input" id="customer_landmark" name="customer_landmark" value="{{ $user->customer_landmark ?? NULL }}" placeholder="Landmark">
@@ -184,38 +184,38 @@
                               <label class="ti-form-label mb-0">PIN</label>
                               @if ($user->role->role_name == 'User')
                                 <input type="number" class="my-auto ti-form-input" id="pin" name="pin" value="{{  $user->pin }}" placeholder="PIN">
-                                  
+
                               @else
                               <input type="text" class="my-auto ti-form-input" id="pin" name="pin" value="xxxx" placeholder="PIN">
-                                  
+
                               @endif
                             </div>
                             <div class="space-y-2">
                               <label class="ti-form-label mb-0">Upline: @if ($upline != NULL){{ $upline->email_address .' '.$upline->phone_number }}@endif</label>
-                             
+
                               <input type="text" class="my-auto ti-form-input" id="upline_id" name="upline_id" value="@if ($upline != NULL){{ $upline->first_name .' '.$upline->last_name }}@endif" placeholder="Upline">
                            </div>
-                      
+
                            <div class="space-y-2">
                             <label class="ti-form-label mb-0">User Plan</label>
                             <select required id="user_plan_id" name="user_plan_id"  class="my-auto ti-form-select">
                               <option value="">Select</option>
-                                
+
                               @foreach ($user_plans as $user_plan)
-                                  <option  
+                                  <option
                                   @if ($user_plan->id == $user->user_plan_id)
                                   selected
-                                  @endif 
+                                  @endif
                                   value="{{ $user_plan->id  }}">{{ $user_plan?->updated_user_plan_name ?? $user_plan->user_plan_name  }}</option>
                               @endforeach
                             </select>
 
-                            <input type="submit" class="ti-btn ti-btn-primary w-1/2" value="Update User Details">           
-                          
+                            <input type="submit" class="ti-btn ti-btn-primary w-1/2" value="Update User Details">
+
                             </div>
                             <br>
                             <br>
-                           
+
                             {{-- <div class="space-y-2">
                                 <label class="ti-form-label mb-0">Date Of Birth</label>
                                 <input type="text" class="ti-form-input flatpickr-input date" placeholder="Choose date" readonly>
@@ -298,22 +298,22 @@
                         <div class="grid mt-3">
                           <h5 class="text-base font-semibold">Update User Plan</h5>
                           <form method="POST" action="{{ route('admin.users.update_user_plan')  }}">
-                               @csrf    
+                               @csrf
                                <div class="space-y-2">
                                 {{-- <label class="ti-form-label mb-0">Update User Plan</label> --}}
                                 <select required id="user_plan_id" name="user_plan_id"  class="my-auto ti-form-select w-1/2">
-                                  <option value="">Select</option>   
+                                  <option value="">Select</option>
                                   @foreach ($user_plans as $user_plan)
-                                      <option  
+                                      <option
                                       @if ($user_plan->id == $user->user_plan_id)
                                       selected
-                                      @endif 
+                                      @endif
                                       value="{{ $user_plan->id  }}">{{ $user_plan?->updated_user_plan_name ?? $user_plan->user_plan_name  }}</option>
                                   @endforeach
-                                </select> 
+                                </select>
                                 <input type="hidden" id="user_id" name="user_id" value="{{$user->id}}">
-                
-                                <input type="submit" class="ti-btn ti-btn-primary w-1/2" value="Update plan for this user">           
+
+                                <input type="submit" class="ti-btn ti-btn-primary w-1/2" value="Update plan for this user">
                               </div>
 
                           </form>
@@ -346,13 +346,13 @@
                                   </div>
                               </div>
                             </div>
-    
+
                             <div class="my-5">
                                 <button type="submit" class="ti-btn ti-btn-primary w-full">Fund</button>
                             </div>
                       </form>
-                     
-                 
+
+
                     </div>
                   </div>
                 </div>
@@ -365,19 +365,19 @@
                       <h5 class="text-base font-semibold">Reset 2FA</h5>
                       <p>Currently: {{   $user->two_factor_secret == NULL && $user->two_factor_recovery_codes == NULL ? 'OFF' : 'ON' }}</p>
                       <form method="POST" action="{{ route('admin.users.reset_2fa')  }}">
-                           @csrf    
+                           @csrf
                             <div class="my-2">
                               <input type="hidden" class="my-auto ti-form-input" value="{{ $user->id }}" name="user_id" id="user_id" placeholder="">
-                            
+
                               <button type="submit" class="ti-btn ti-btn-primary w-full">Reset 2FA</button>
                             </div>
                       </form>
-                     
-                 
+
+
                     </div>
                   </div>
                 </div>
-              
+
                 {{-- <div id="profile-settings-3" class="hidden" role="tabpanel" aria-labelledby="profile-settings-item-3">
                   <div class="box border-0 shadow-none mb-0">
                     <div class="box-header">
@@ -753,15 +753,15 @@
         </div>
         <!-- End::row-1 -->
 
-                
-                
+
+
                 {{-- <div class="box-body">
-                 
+
                 </div> --}}
               </div>
-             
-               
-                
+
+
+
             </div>
           </div>
         </div>
@@ -818,6 +818,6 @@
       </div>
       <!-- Start::main-content -->
 
-       
+
 @endsection
 

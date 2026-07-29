@@ -2,14 +2,14 @@
 <html lang="en" dir="ltr" class="h-full">
 
 <head>
-    @if (env('APP_NAME') == 'FoxDataHub' )
+    @if (config('app.name') == 'FoxDataHub' )
 
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
    })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-   
+
 
 
    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
@@ -22,32 +22,32 @@
    </script>
 
   @endif
-    
-    
+
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> {{env('APP_NAME')}} - {{__('messages.Enjoy data at the best rate')}} </title>
+    <title> {{config('app.name')}} - {{__('messages.Enjoy data at the best rate')}} </title>
     <meta name="description" content="This is an amazing data website for your special data needs">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
      <!-- Favicon -->
     {{-- <link rel="shortcut icon" href="../assets/img/brand-logos/favicon.ico"> --}}
-    {{-- <link rel="shortcut icon" href="{{ asset(env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
+    {{-- <link rel="shortcut icon" href="{{ asset(config('app.assets_base_url').'img/brand-logos/favicon.ico') }}"> --}}
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'css/style.css') }}">
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.8/cdn.min.js" defer></script>
- 
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,8 +57,8 @@
 
     @php
     $admin_site_color =  App\Models\AdminColorSetting::where('color_name','admin_site_color')->first();
-    $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241'; 
-    //  echo $admin_site_color_value;  
+    $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241';
+    //  echo $admin_site_color_value;
     @endphp
 
    <style>
@@ -122,14 +122,14 @@
 </head>
 
 <body class="error-page flex h-full !py-0 bg-white dark:bg-bgdark montserrat2">
-    @if (env('APP_NAME') == 'FoxDataHub')
+    @if (config('app.name') == 'FoxDataHub')
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @endif
     <div class="grid grid-cols-12 gap-6 w-full h-full">
         <div class="lg:col-span-6 col-span-12 hidden lg:block relative">
             <div class="cover relative w-full h-full z-[1]">
-                <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth3.jpg') }}" alt="logo" class="object-cover mx-auto h-full">
+                <img src="{{ asset(config('app.assets_base_url').'img/authentication/auth3.jpg') }}" alt="logo" class="object-cover mx-auto h-full">
             </div>
         </div>
         <div class="lg:col-span-6 col-span-12">
@@ -143,12 +143,12 @@
                     <div class="mt-7">
                         <div class="p-4 sm:p-12 rounded-2xl border border-2 border-gray-100 shadow-lg">
                             @if (  isset($site_logo) && $site_logo != '')
-                    
+
                             <a href="#" class="header-logo ">
-                                <img style="background-size: contain;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                                class="w-24 h-24 mx-auto  block dark:hidden" > 
-                                <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                                    class="w-24 h-24 mx-auto hidden dark:block" alt="logo" class=""> 
+                                <img style="background-size: contain;" src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                                class="w-24 h-24 mx-auto  block dark:hidden" >
+                                <img src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                                    class="w-24 h-24 mx-auto hidden dark:block" alt="logo" class="">
                                 {{-- <img src="../assets/img/brand-logos/desktop-dark.png" alt="logo" class="mx-auto hidden dark:block"> --}}
                             </a>
                             <br>
@@ -162,9 +162,9 @@
                                     {{ __('A new verification link has been sent to the email address you provided during registration.') }}
                                 </div>
                                 @endif
-                                
+
                                 @if ( ! isset($site_logo) )
-                                <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ env('APP_NAME') }}</h1>
+                                <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ config('app.name') }}</h1>
                                 <hr>
                                  @endif
                                 <h3 class="block mt-2 text-xl text-gray-800 dark:text-gray-900">{{__('messages.Complete Password Reset')}}</h3>
@@ -213,7 +213,7 @@
                                                         autocomplete="new-password"
                                                         class="block mt-1 w-full pr-10 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     />
-                                                
+
                                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" @click="show = !show">
                                                         <!-- Eye icon (hidden password) -->
                                                         <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -230,11 +230,11 @@
                                                                 d="M3 3l18 18" />
                                                         </svg>
                                                     </div>
-                                                
+
                                                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                                                 </div>
-                                                
-                                                
+
+
 
 
                                                 {{-- <div class="relative">
@@ -254,7 +254,7 @@
                                                         autocomplete="new-password"
                                                         class="block mt-1 w-full pr-10 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     />
-                                                
+
                                                     <!-- Toggle eye icon -->
                                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" @click="showConfirm = !showConfirm">
                                                         <!-- Show password (eye) -->
@@ -265,7 +265,7 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                         </svg>
-                                                
+
                                                         <!-- Hide password (eye-off) -->
                                                         <svg x-show="showConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none"
                                                             viewBox="0 0 24 24" stroke="currentColor">
@@ -275,10 +275,10 @@
                                                                 d="M3 3l18 18" />
                                                         </svg>
                                                     </div>
-                                                
+
                                                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                                                 </div>
-                                                
+
                                             </div>
 
                                             <div>
@@ -291,7 +291,7 @@
                                                         required
                                                         class="block mt-1 w-full pr-10 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     />
-                                                
+
                                                     <!-- Toggle eye icon -->
                                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" @click="showPin = !showPin">
                                                         <!-- Show PIN (eye) -->
@@ -302,7 +302,7 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                         </svg>
-                                                
+
                                                         <!-- Hide PIN (eye-off) -->
                                                         <svg x-show="showPin" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none"
                                                              viewBox="0 0 24 24" stroke="currentColor">
@@ -312,10 +312,10 @@
                                                                   d="M3 3l18 18"/>
                                                         </svg>
                                                     </div>
-                                                
+
                                                     <x-input-error :messages="$errors->get('new_pin')" class="mt-2" />
                                                 </div>
-                                                
+
                                             </div>
 
                                             <div>
@@ -328,7 +328,7 @@
                                                         required
                                                         class="block mt-1 w-full pr-10 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     />
-                                                
+
                                                     <!-- Toggle eye icon -->
                                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" @click="showPinConfirm = !showPinConfirm">
                                                         <!-- Show PIN (eye) -->
@@ -339,7 +339,7 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                         </svg>
-                                                
+
                                                         <!-- Hide PIN (eye-off) -->
                                                         <svg x-show="showPinConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none"
                                                              viewBox="0 0 24 24" stroke="currentColor">
@@ -349,13 +349,13 @@
                                                                   d="M3 3l18 18"/>
                                                         </svg>
                                                     </div>
-                                                
+
                                                     <x-input-error :messages="$errors->get('new_pin_confirmation')" class="mt-2" />
                                                 </div>
-                                                
+
                                             </div>
 
-                                         
+
                                             <!-- End Checkbox -->
                                             <x-primary-button class="ms-3">
                                                 {{ __('messages.Reset Password') }}
@@ -376,16 +376,16 @@
 
     <!-- popperjs -->
     {{-- <script src="../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
 
 
     <!-- Custom-Switcher JS -->
     {{-- <script src="../assets/js/custom-switcher.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'js/custom-switcher.js') }}"></script>
 
     <!-- Preline JS -->
     {{-- <script src="../assets/libs/preline/preline.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/preline/preline.js') }}"></script>
 
 
 </body>

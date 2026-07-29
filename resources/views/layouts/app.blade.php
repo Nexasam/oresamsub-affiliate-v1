@@ -3,15 +3,15 @@
 
 <head>
 
-  
-     @if (env('APP_NAME') == 'FoxDataHub' )
+
+     @if (config('app.name') == 'FoxDataHub' )
 
      <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
       new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
       j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
       })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-      
+
 
 
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
@@ -22,22 +22,22 @@
 
       gtag('config', 'G-NCKP7MH1KN');
       </script>
-   
+
      @endif
 
-    
-    
+
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="save-pricing-route" content="{{ route('admin.save_unique_plan_pricing') }}">
-    
+
     <title> Dashboard - {{ session('affiliate')->name }} </title>
     <meta name="description" content="We are a data website selling data related products at affordable prices with quality">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
     <!-- Favicon -->
-    {{-- <link rel="shortcut icon" href="{{ asset( env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
+    {{-- <link rel="shortcut icon" href="{{ asset( config('app.assets_base_url').'img/brand-logos/favicon.ico') }}"> --}}
    {{-- <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}"> --}}
    <link rel="icon"
    type="image/png"
@@ -49,19 +49,19 @@
 
 
     <!-- Main JS -->
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/main.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'js/main.js') }}"></script>
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'css/style.css') }}">
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
 
@@ -73,12 +73,12 @@
 
 
     <link rel="stylesheet" href="">
-    {{-- 
+    {{--
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"> --}}
     {{-- <link href="https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.css" rel="stylesheet" /> --}}
-      
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,10 +88,10 @@
 
     @php
        $admin_site_color =  App\Models\AdminColorSetting::where('color_name','admin_site_color')->first();
-       $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241'; 
-      //  echo $admin_site_color_value;  
+       $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241';
+      //  echo $admin_site_color_value;
 
-      
+
     @endphp
 
     <style>
@@ -167,7 +167,7 @@
      .table.dataTable  {
           /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
           font-size: 9px;
-          
+
       }
 
       .table.dataTable td  {
@@ -241,11 +241,11 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.6; }
     }
-      
-          
+
+
     </style>
 
-    
+
 
 
 @livewireStyles
@@ -261,9 +261,9 @@
           <div class="spinner"></div>
           <div class="loading-text">Loading, please wait...</div>
         </div>
-      
 
-       @if (env('APP_NAME') == 'FoxDataHub')
+
+       @if (config('app.name') == 'FoxDataHub')
        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
        @endif
@@ -274,7 +274,7 @@
             {{-- &text=Hola%21%20Quisiera%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Varela%202. --}}
             <a href="https://api.whatsapp.com/send?phone={{ session()->get('whatsapp_support_number') }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="float" target="_blank">
             <i class="fa fa-whatsapp my-float"></i>
-            </a>            
+            </a>
         {{-- @endif --}}
 
 
@@ -687,11 +687,11 @@
      <!-- Loader -->
      <div id="loader" >
         {{-- <img src="../../assets/img/media/loader.svg" alt=""> --}}
-        <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/media/loader.svg') }}" alt="">
+        <img src="{{ asset(config('app.assets_base_url').'img/media/loader.svg') }}" alt="">
     </div>
     <!-- Loader -->
 
-    
+
     <div class="page bg-gray-100 dark:bg-gray-900">
 
         <!-- Start::Header -->
@@ -705,7 +705,7 @@
 
              <input value="{{ url('/') }}/" type="hidden" class="root_url">
              <input value="{{ url('/') }}/" type="hidden" class="root_url2 root_url_public">
-             
+
 
             <!-- Start::main-content main content stays here -->
             @yield('content')
@@ -727,24 +727,24 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-    <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script>
+    <script src="{{asset(config('app.assets_base_url').'js/admin_datatables/datatables.js') }}"></script>
 
 
 
-    {{-- <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/swetalert.js') }}"></script> --}}
+    {{-- <script src="{{asset(config('app.assets_base_url').'js/swetalert.js') }}"></script> --}}
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
     <script>
-      var APP_NAME = @json(env('APP_NAME'));
+      var APP_NAME = @json(config('app.name'));
 
       function numberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       }
 
       function getProductPlans(network_id='', plan_category_id='', product_slug='', amount = ''){
-              
+
 
               if(network_id != '' && product_slug != '' && plan_category_id == ''){
                 var data = {
@@ -752,7 +752,7 @@
                   product_slug : product_slug,
                   amount : amount
                 };
-              
+
                 // alert('hhhhh')
               }
 
@@ -762,12 +762,12 @@
                   plan_category_id : plan_category_id,
                   product_slug : product_slug,
                   amount : amount
-                };        
+                };
               }
 
               //  console.log(data);
               //  return;
-              
+
 
               $.ajax({
                         type: 'GET',
@@ -779,27 +779,27 @@
                             // console.log(response.data)
                             var result = JSON.stringify(response.data);
                             var dataList = JSON.parse(result);
-                        
+
                               $('#product_plan_id').html("");
                               $('#product_plan_id').append('<option value="">Select Product Plan</option>');
-      
+
                               // let jj = jsonn;
                               for (const child in dataList) {
-                                
+
                                   const idd = dataList[child].product_plan_id;
                                   const product_plan_name = dataList[child].product_plan_name;
                                   const upline_commission = dataList[child].upline_commission;
                                   const selling_price = dataList[child].selling_price;
                                   if(product_slug == 'data'){
 
-                                    
+
                                     if(APP_NAME == 'OresamSub'){
                                       option = "<option value="+idd+">"+product_plan_name+"- &#8358; "+selling_price+" - Upline Commission:&#8358;"+upline_commission+"</option>";
                                     }else{
                                       option = "<option value="+idd+">"+product_plan_name+'- &#8358;'+selling_price+"</option>";
                                     }
-                                  
-                                  
+
+
                                   }
                                   else if(product_slug == 'airtime' && amount != ''){
 
@@ -817,11 +817,11 @@
                                     }
                                   }
                                   $('#product_plan_id').append(option);
-                                
-                                
+
+
                               }
-                            
-                          
+
+
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
@@ -833,7 +833,7 @@
 
 
       function getSingleAirtimePlan(plan_category_id='', amount = ''){
-              
+
 
               if(plan_category_id != '' && amount != ''){
                 var data = {
@@ -851,45 +851,45 @@
                             // console.log(response.data)
                             var result = JSON.stringify(response.data);
                             var dataList = JSON.parse(result);
-                        
+
                             $('#product_plan_id').html("");
                             // $('#product_plan_id').append('<option value="">Select Product Plan</option>');
 
                               // let jj = jsonn;
                               for (const child in dataList) {
-                              
+
                                   const idd = dataList[child].product_plan_id;
                                   const product_plan_name = dataList[child].product_plan_name;
                                   const selling_price = dataList[child].selling_price;
-                              
+
                                   option = "<option selected value="+idd+">"+product_plan_name+'- You are buying for: &#8358;'+selling_price+"</option>";
                                     $('#product_plan_id').append(option);
-                                
-                                
+
+
                               }
-                            
-                          
+
+
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
                             console.error(xhr.responseText);
                         }
                       });
-            
+
               }else{
               return;
               }
 
-            
+
       }
 
       function getCableProductPlans(plan_category_id='', product_slug=''){
-              
+
             var data = {
               plan_category_id : plan_category_id,
               product_slug : product_slug
             };
-              
+
 
               $.ajax({
                         type: 'GET',
@@ -901,7 +901,7 @@
                             // console.log(response.data)
                             var result = JSON.stringify(response.data);
                             var dataList = JSON.parse(result);
-                        
+
                             $('#cable_product_plan_id').html("");
                             $('#cable_product_plan_id').append('<option value="">Select Product Plan</option>');
 
@@ -913,10 +913,10 @@
                                   const selling_price = dataList[child].selling_price;
                                   option = "<option value="+idd+">"+product_plan_name+'- &#8358;'+selling_price+"</option>";
                                   $('#cable_product_plan_id').append(option);
-                                
+
                               }
-                            
-                          
+
+
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
@@ -926,13 +926,13 @@
       }
 
       function getElectricityProductPlans(plan_category_id='', product_slug='', amount = ''){
-              
+
               var data = {
                 plan_category_id : plan_category_id,
                 product_slug : product_slug,
                 amount : amount,
               };
-              
+
               console.log('electric',data);
 
               $.ajax({
@@ -946,20 +946,20 @@
                             // console.log(response.data)
                             var result = JSON.stringify(response.data);
                             var dataList = JSON.parse(result);
-                        
+
                               $('#electricity_product_plan_id').html("");
                               $('#electricity_product_plan_id').append('<option value="">Select Product Plan</option>');
-      
+
                               // let jj = jsonn;
                               for (const child in dataList) {
                                   const idd = dataList[child].product_plan_id;
                                   const product_plan_name = dataList[child].product_plan_name;
                                   const selling_price = dataList[child].selling_price;
-                                  option = "<option value="+idd+">"+product_plan_name+'- You are buying for: &#8358;'+selling_price+"</option>";     
+                                  option = "<option value="+idd+">"+product_plan_name+'- You are buying for: &#8358;'+selling_price+"</option>";
                                   $('#electricity_product_plan_id').append(option);
                               }
-                            
-                          
+
+
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
@@ -968,7 +968,7 @@
                 });
         }
 
-      
+
 
       function reload(timeout = '3000'){
         setTimeout(() => {
@@ -1042,9 +1042,9 @@
                             const account_number = dataList.account_number;
 
                             $('.crystal_pay_dynamic_account_details').append(`<p>Bank Name:  ${bank_name} </p>`);
-                            $('.crystal_pay_dynamic_account_details').append(`<p>Account No:  ${account_number}</p>`);          
-                            $('.crystal_pay_dynamic_account_details').append(`<p><strong>NOTE:</strong> Please ensure that the exact amount of ${amount} is paid into the generated account. </p>`);          
-                            $('.crystal_pay_dynamic_account_details').append(`Please complete transaction in 5 minutes else the account will be invalid.</p>`);          
+                            $('.crystal_pay_dynamic_account_details').append(`<p>Account No:  ${account_number}</p>`);
+                            $('.crystal_pay_dynamic_account_details').append(`<p><strong>NOTE:</strong> Please ensure that the exact amount of ${amount} is paid into the generated account. </p>`);
+                            $('.crystal_pay_dynamic_account_details').append(`Please complete transaction in 5 minutes else the account will be invalid.</p>`);
                         },
                         error: function(xhr, status, error) {
                             // Handle errors if needed
@@ -1052,9 +1052,9 @@
                         }
                 });
       }
-        
-      
-      
+
+
+
 
       function togglePassword(className,id,showValue){
         $('.'+className).change(function(e){
@@ -1070,9 +1070,9 @@
         })
       }
 
-      
+
       function toggleProductPlanVisibility(productPlanId,token,checkedd){
-      
+
                 const data = {
                   productPlanId : productPlanId,
                   token : token
@@ -1106,7 +1106,7 @@
       }
 
       function toggleProductPlanPublicVisibility(productPlanId,token,checkedd){
-      
+
       const data = {
         productPlanId : productPlanId,
         token : token
@@ -1131,7 +1131,7 @@
     }
 
       function togglePlanCategoryVisibility(productPlanCategoryId,token,checkedd){
-              
+
 
                 const data = {
                   productPlanCategoryId : productPlanCategoryId,
@@ -1166,7 +1166,7 @@
       }
 
       function toggleUserStatus(userId,token,actualValue){
-              
+
 
               const data = {
                 userId : userId,
@@ -1174,7 +1174,7 @@
               };
             //  console.log(data);
             //  return;
-              
+
               $.ajax({
                 type: 'GET',
                 url: "{{ route('admin.users.toggle_verification_status') }}",
@@ -1259,7 +1259,7 @@
         };
       }
 
- 
+
 
 
       function doValidateNameOnSmartCard(typpe=''){
@@ -1305,7 +1305,7 @@
                         $('#'+display_address).val(response.address);
                       }
                       $('#'+display_id).val(response.name);
-                    
+
                       console.log(response);
                   },
                   error: function(xhr, status, error) {
@@ -1314,7 +1314,7 @@
                   }
               });
       }
-      
+
       const validateNameOnSmartCard = debounce((typee) => doValidateNameOnSmartCard(typee));
 
       togglePassword('show_pin1','pin','number');
@@ -1325,8 +1325,8 @@
       togglePassword('show_password','new_password','text');
       togglePassword('show_password2','confirm_new_password','text');
       togglePassword('show_password_current','current_password','text');
-      
-      
+
+
 
       $(document).ready(function(){
 
@@ -1337,7 +1337,7 @@
         $("[data-close]").click(function () {
             $(this).parents(".modal").fadeOut();
         });
-      
+
 
         //reset
         // $('#buy_data_btn').click
@@ -1358,7 +1358,7 @@
           $('#buy_electricity_btn').html('Buy Electricity');
           $('#buy_electricity_btn').prop('disabled',false);
           $(this).addClass('hidden');
-        
+
         })
 
         //reset ends
@@ -1375,7 +1375,7 @@
         //   console.log(catid)
         // });
 
-        
+
         $('#generate_crystalpay_dynamic_account').click(function(e){
             e.preventDefault();
             const amount = $('#amount').val();
@@ -1399,7 +1399,7 @@
             var amount =  $(this).val();
             var product_slug = $("#product_slug").val();
             var plan_category_id = $('#electricity_product_plan_category_id').val();
-              
+
             var amount = product_slug == 'airtime' || product_slug == 'utility_bills'  ? amount : '';
             // alert(plan_category_id)
 
@@ -1414,14 +1414,14 @@
             var product_slug = $("#product_slug").val();
             var plan_category_id = $('#product_plan_category_id').val();
             var product_plan_id = $('#product_product_plan_id').val();
-            
-              
+
+
             if(network_id == ''){
               sweetAlertDisplay('Network is required','Network required','error');
               return;
             }
             var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-      
+
             getProductPlans(network_id,plan_category_id,product_slug,amount);
         });
 
@@ -1431,20 +1431,20 @@
             var network_id = $("#network_id").val();
             var product_slug = $("#product_slug").val();
             var plan_category_id = $('#product_plan_category_id').val();
-              
+
             if(network_id == ''){
               sweetAlertDisplay('Network is requiredddd','Network required','error');
               return;
             }
             var amount = product_slug == 'airtime' ? $(this).val() : '';
-          
+
             getSingleAirtimePlan(plan_category_id,amount);
         });
 
-        
 
-        
-        
+
+
+
 
         $('#phone_number').keyup(debounce(function(){
 
@@ -1470,7 +1470,7 @@
               $('#show_data_details').hide();
               return;
           }
-    
+
           let data = {
             phone_number : phone_number,
             _token : _token,
@@ -1490,7 +1490,7 @@
                   success: function(response) {
                       $('#loading').hide();
                       $('#show_data_details').show();
-                    
+
                       console.log(response.network_id,response.network_name);
                       if(response.network_name == 'MTN'){
                         $('#mtn_svg').show();
@@ -1554,7 +1554,7 @@
 
           //ajax to get network and render it
         }, 500))
-       
+
 
         $('#product_plan_category_id').change(function(){
           var network_id = $("#network_id").val();
@@ -1573,7 +1573,7 @@
             return;
           }
           var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-          
+
           getProductPlans(network_id,plan_category_id,product_slug,amount);
         })
 
@@ -1599,17 +1599,17 @@
           }
           getElectricityProductPlans(plan_category_id,product_slug);
         })
-        
-        
+
+
         $('#buy_bulk_data_btn').click(function(e){
           e.preventDefault();
-          
+
             //display product plans categories
             const bulk_data_plan_id = $('#bulk_data_plan_id').val();
             const bulk_data_wallet_id = $('#bulk_data_wallet_id').val();
             const pin = $('#pin').val();
             const _token = $('#_token').val();
-          
+
             const data = {
               bulk_data_plan_id : bulk_data_plan_id,
               bulk_data_wallet_id : bulk_data_wallet_id,
@@ -1645,9 +1645,9 @@
               return;
             }
 
-          
-            
-          
+
+
+
         })
 
         $('#bulk_data_plan_id').change(function(e){
@@ -1658,11 +1658,11 @@
           if(bulk_data_plan_id == ''){
             sweetAlertDisplay("Please select a plan",'Plan required','error');
           }
-      
+
           const data = {
               bulk_data_plan_id : bulk_data_plan_id,
-          };  
-          
+          };
+
           $.ajax({
                 type: 'GET',
                 url: "{{ route('user.data.fetch_bulk_data_plan_details') }}",
@@ -1670,7 +1670,7 @@
                 dataType: 'json',
                 success: function(response) {
                     console.log(response);
-                    
+
                     if(response.status == '1'){
                         var bulk_data_plan_name = response.data.bulk_data_plan_name;
                         var selling_price = numberWithCommas(response.data.selling_price);
@@ -1680,7 +1680,7 @@
                         var data_value_tb = response.data.data_value_tb;
                         var selling_price = numberWithCommas(response.data.selling_price);
                         var mb_data_measurement = numberWithCommas(response.data.mb_data_measurement);
-                        
+
                         var data_content = '<p>Bulk data plan: '+ bulk_data_plan_name+'</p>';
                         data_content += '<p>Measurement per MB: '+ mb_data_measurement+'</p>';
                         data_content += '<p>Data value in TB: '+ data_value_tb+'</p>';
@@ -1693,8 +1693,8 @@
                         $('#bulk_data_plan_details').removeClass('hidden');
                         $('#bulk_data_plan_details').html('');
                         console.log(response);
-                    } 
-                  
+                    }
+
                 },
                 error: function(xhr, status, error) {
                     // Handle errors if needed
@@ -1712,10 +1712,10 @@
             // $('#bulk_data_plan_details').addClass('hidden');
             $('#bulk_data_plan_details').html('');
           //  alert('testing')
-            
+
             const bulk_data_wallet_id = $(this).val();
             const _token = $('#_token').val();
-            
+
             const data = {
               bulk_data_wallet_id : bulk_data_wallet_id,
               _token : _token
@@ -1729,7 +1729,7 @@
                 dataType: 'json',
                 success: function(response) {
                     console.log(response);
-                    
+
                     if(response.status == '1'){
                       let dataResult = response?.data;
                       $('#bulk_data_plan_id').html('<option value="">Select a plan</option>');
@@ -1747,10 +1747,10 @@
                       });
 
                     }else{
-                      
+
                       console.log(response);
                     }
-                  
+
                 },
                 error: function(xhr, status, error) {
                     // Handle errors if needed
@@ -1797,18 +1797,18 @@
           }
           // $('#network_id').prepend('<option selected value="'+response.network_id+'">'+selectedNetwork+'</option>');
 
-          
+
           // alert(network_id)
           //here you have to display all plans that are tied to this network but only where tied to the automation tied to each product plan category
           var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-          
+
           getProductPlans(network_id,'',product_slug,amount);
         })
 
         $('#filter_by_plan_category').change(function(e){
           e.preventDefault();
-      
-          
+
+
           if(this.checked){
             $("#product_plan_category_div").removeClass('hidden');
             //display product plans categories
@@ -1870,7 +1870,7 @@
           url = url.replace(':product_plan_id', product_plan_id);
 
           if(wallet_category == ''){
-            sweetAlertDisplay('Wallet category cannot be empty','Wallet selection required','error');        
+            sweetAlertDisplay('Wallet category cannot be empty','Wallet selection required','error');
           }
 
           if(wallet_category == 'data_wallet'){
@@ -1907,7 +1907,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const cable_product_plan_category_id = $('#cable_product_plan_category_id').val();
             let smart_card_number = $('#smart_card_number').val();
@@ -1916,7 +1916,7 @@
             const cable_product_plan_id = $('#cable_product_plan_id').val();
             const pin = $('#pin').val();
             const no_of_slots = $('#no_of_slots').val();
-            
+
             const data = {
               cable_product_plan_category_id : cable_product_plan_category_id,
               smart_card_number : smart_card_number,
@@ -1933,7 +1933,7 @@
 
             if (confirm("Are you sure you want to complete this cable subscription purchase?") == true) {
                 // alert('logic happens here')
-              
+
 
                 $.ajax({
                   type: 'GET',
@@ -1966,10 +1966,10 @@
                 });
             } else {
               return;
-            }     
+            }
         })
 
-        
+
 
         $('#buy_electricity_btn').click(function(e){
           e.preventDefault();
@@ -1977,7 +1977,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const electricity_product_plan_category_id = $('#electricity_product_plan_category_id').val();
             const metre_number = $('#metre_number').val();
@@ -1988,8 +1988,8 @@
             const pin = $('#pin').val();
             const no_of_slots = $('#no_of_slots').val();
             const utility_amount = $('#utility_amount').val();
-            
-            
+
+
 
             const data = {
               electricity_product_plan_category_id : electricity_product_plan_category_id,
@@ -2008,7 +2008,7 @@
 
             if (confirm("Are you sure you want to complete this electricity subscription purchase?") == true) {
                 // alert('logic happens here')
-              
+
 
                 $.ajax({
                   type: 'GET',
@@ -2041,7 +2041,7 @@
                 });
             } else {
               return;
-            }  
+            }
         })
 
         $('#buy_data_btn').click(function(e){
@@ -2050,7 +2050,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const network_id = $('#network_id').val();
             const product_plan_category_id = $('#product_plan_category_id').val();
@@ -2064,9 +2064,9 @@
               var validatephonenetwork = 1;
             }else{
               var validatephonenetwork = 0;
-              
+
             }
-            
+
 
             const data = {
               network_id : network_id,
@@ -2079,7 +2079,7 @@
               _token: $('meta[name="csrf-token"]').attr('content')
             };
 
-            
+
 
             // console.log(data);
             // return;
@@ -2093,7 +2093,7 @@
                     }
                 });
 
-              
+
 
                 $.ajax({
                   type: 'GET',
@@ -2142,7 +2142,7 @@
             $(this).prop('disabled',true);
             $('#cancel_disabling').removeClass('hidden')
 
-          
+
             //display product plans categories
             const network_id = $('#network_id').val();
             const product_plan_category_id = $('#product_plan_category_id').val();
@@ -2155,7 +2155,7 @@
               var validatephonenetwork = 1;
             }else{
               var validatephonenetwork = 0;
-              
+
             }
 
             if($('#amount_for_airtime_category').val() == ''){
@@ -2173,9 +2173,9 @@
               sweetAlertDisplay("{{ __('messages.You need to buy at least N50 worth of airtime.') }}",'Airtime purchase error','error');
               // sweetAlertDisplay('You need to buy atleast &#8358;50 worth of airtime','Airtime purchase error','error');
               return;
-            
+
             }
-            
+
 
             const data = {
               network_id : network_id,
@@ -2193,7 +2193,7 @@
 
             if (confirm("Are you sure you want to complete this airtime purchase?") == true) {
                 // alert('logic happens here')
-              
+
 
                 $.ajax({
                   type: 'GET',
@@ -2229,13 +2229,13 @@
               return;
             }
 
-            
-          
+
+
         })
 
 
 
-        
+
 
       })
 
@@ -2321,12 +2321,12 @@
 
     <!-- Apex Charts JS -->
     {{-- <script src="../../assets/libs/apexcharts/apexcharts.min.js"></script> --}}
-    <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/apexcharts/apexcharts.min.js') }}"></script>
+    <script src=" {{asset(config('app.assets_base_url').'libs/apexcharts/apexcharts.min.js') }}"></script>
 
 
     <!-- Index JS -->
     {{-- <script src="../../assets/js/index-2.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/index-2.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'js/index-2.js') }}"></script>
 
     <!-- Back To Top -->
     <div class="scrollToTop">
@@ -2337,71 +2337,71 @@
 
     <!-- popperjs -->
     {{-- <script src="../../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
-    
+    <script src=" {{ asset(config('app.assets_base_url').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+
 
     <!-- Color Picker JS -->
     {{-- <script src="../../assets/libs/@simonwep/pickr/pickr.es5.min.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
 
     <!-- sidebar JS -->
     {{-- <script src="../../assets/js/defaultmenu.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/defaultmenu.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'js/defaultmenu.js') }}"></script>
 
 
     <!-- sticky JS -->
     {{-- <script src="../../assets/js/sticky.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/sticky.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'js/sticky.js') }}"></script>
 
 
     <!-- Switch JS -->
     {{-- <script src="../../assets/js/switch.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/switch.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'js/switch.js') }}"></script>
 
 
     <!-- Preline JS -->
     {{-- <script src="../../assets/libs/preline/preline.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'libs/preline/preline.js') }}"></script>
 
 
     <!-- Simplebar JS -->
     {{-- <script src="../../assets/libs/simplebar/simplebar.min.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'libs/simplebar/simplebar.min.js') }}"></script>
 
 
     <!-- Custom JS -->
     {{-- <script src="../../assets/js/custom.js"></script> --}}
-    <script src=" {{ asset(env('APP_ASSETS_BASE_URL').'js/custom.js') }}"></script>
+    <script src=" {{ asset(config('app.assets_base_url').'js/custom.js') }}"></script>
 
-    
+
     <!-- Custom-Switcher JS -->
     {{-- <script src="../../assets/js/custom-switcher.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'js/custom-switcher.js') }}"></script>
 
       <!-- Choices JS -->
     <script src="../assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
     <script src="../assets/js/choices.js"></script>
 
     <!-- Tom Select JS -->
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/tom-select/js/tom-select.complete.min.js') }}"></script>
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/tom-select.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/tom-select/js/tom-select.complete.min.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'js/tom-select.js') }}"></script>
     {{-- <script src="../assets/libs/tom-select/js/tom-select.complete.min.js"></script> --}}
     {{-- <script src="../assets/js/tom-select.js"></script> --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     {{-- <script src="https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.js"></script> --}}
 
-  
-  
+
+
     <script>
       document.addEventListener("livewire:navigated", function () {
           let scrollPosition = 0;
-  
+
           // Store scroll position before Livewire updates the page
           Livewire.hook('message.sent', () => {
               scrollPosition = window.scrollY;
           });
-  
+
           // Restore scroll position after Livewire updates
           Livewire.hook('message.processed', () => {
               window.scrollTo(0, scrollPosition);
@@ -2444,10 +2444,10 @@
         });
 
   </script>
-  
-  
+
+
   @stack('scripts')
-  
+
 </body>
 
 </html>

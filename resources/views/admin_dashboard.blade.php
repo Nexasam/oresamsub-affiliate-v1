@@ -4,7 +4,7 @@
 <div class="main-content ">
 
     @php
-        $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first(); 
+        $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first();
         $sidebar_color = $sidebar_color->color_value ?? '#6B21A8';
         //   echo $sidebar_color;
     @endphp
@@ -27,16 +27,16 @@
               @endif
 
         </div>
-        
+
     </div>
     <!-- Page Header Close -->
 
-    
+
 
 
                     <div class="grid grid-cols-12">
-                
-                        
+
+
                             {{-- MODERN DASHBOARD CARDS --}}
                                 <div class="col-span-12 grid gap-5 p-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
 
@@ -107,7 +107,7 @@
                                         </div>
                                     @endforeach
 
-                               
+
 
                                 </div>
 
@@ -116,7 +116,7 @@
                                 <div class="col-span-12 sm:col-span-2 md:col-span-3 lg:col-span-12 p-2">
                                   <div class="w-full p-3 rounded-xl shadow-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                
+
                                       @foreach ($user_virtual_accounts as $user_virtual_account)
                                       <div
                                         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all transform hover:-translate-y-0.5 p-3 flex flex-col justify-between text-[13px]">
@@ -151,17 +151,17 @@
                                         </div>
                                       </div>
                                       @endforeach
-                                
+
                                     </div>
                                   </div>
                                 </div>
-                                
+
 
 
 
                     </div>
     </div>
-      
+
         <div class="col-span-12 xxl:col-span-12 px-6 rounded-lg">
 
             {{-- <div class="box w-full mb-4">
@@ -174,7 +174,7 @@
 
             </div> --}}
 
-        
+
 
             <div class="box dark:bg-gray-900 dark:text-gray-100">
                 <div class="box-header dark:bg-gray-800">
@@ -182,18 +182,18 @@
                     <h5 class="box-title my-auto dark:text-gray-100">Recent Transactions</h5>
                     <div class="box-header dark:bg-gray-800">
                       <div class="flex items-center">
-                        @if (env('APP_NAME') == 'OresamSub')
+                        @if (config('app.name') == 'OresamSub')
                           <!-- Refresh button -->
                           <button
                             type="button"
                             id="reload_txns_tbl"
-                            class="w-full text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-400 
+                            class="w-full text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-400
                               font-medium rounded-lg text-sm px-4 py-2 text-left"
                           >
                             Refresh
                           </button>
                         @endif
-              
+
                         <div
                           class="hs-dropdown ti-dropdown block ms-auto my-auto sm:flex items-center justify-between dark:bg-gray-800"
                         >
@@ -225,7 +225,7 @@
                                     </svg>
                                   </button>
                                 </div>
-              
+
                                 <div class="ti-modal-body dark:bg-gray-900 dark:text-gray-100">
                                   <p class="mt-1 text-gray-800 dark:text-gray-200">Phone recharged:</p>
                                   <input
@@ -235,7 +235,7 @@
                                     class="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded p-2"
                                   />
                                   <hr class="my-3 border-gray-300 dark:border-gray-700" />
-              
+
                                   <p class="mt-1 text-gray-800 dark:text-gray-200">Filter by Plan Category:</p>
                                   <select
                                     name="product_plan_category_filter"
@@ -249,10 +249,10 @@
                                       </option>
                                     @endforeach
                                   </select>
-              
+
                                   <hr class="my-3 border-gray-300 dark:border-gray-700" />
                                   <p class="mt-1 text-gray-800 dark:text-gray-200">Date range:</p>
-              
+
                                   <div class="flex items-center justify-between mt-2">
                                     <div class="flex items-center justify-start space-x-5">
                                       <div>
@@ -274,7 +274,7 @@
                                     </div>
                                   </div>
                                 </div>
-              
+
                                 <div class="ti-modal-footer dark:bg-gray-800">
                                   <a
                                     id="filter_user_txn_table"
@@ -291,7 +291,7 @@
                         </div>
                       </div>
                     </div>
-              
+
                     <div
                       class="hs-dropdown ti-dropdown block ms-auto my-auto dark:bg-gray-900"
                     >
@@ -299,7 +299,7 @@
                         aria-label="button"
                         id="hs-dropdown-custom-icon-trigger3"
                         type="button"
-                        class="hs-dropdown-toggle ti-dropdown-toggle rounded-sm p-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 
+                        class="hs-dropdown-toggle ti-dropdown-toggle rounded-sm p-2 bg-gray-100 hover:bg-gray-200 border border-gray-200
                         text-gray-600 focus:ring-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 dark:text-gray-100"
                       >
                         <i class="text-sm leading-none ti ti-dots-vertical"></i>
@@ -319,7 +319,7 @@
                     </div>
                   </div>
                 </div>
-              
+
                 <div class="box-body p-0 dark:bg-gray-900">
                   <div id="taskactive" class="" role="tabpanel" aria-labelledby="active-item">
                     <div class="overflow-auto dark:bg-gray-900">
@@ -350,7 +350,7 @@
                   </div>
                 </div>
               </div>
-              
+
 
 
         </div>
@@ -358,20 +358,20 @@
         <div class="col-span-12 xxl:col-span-12 px-6 rounded-lg">
 
             <div class="grid grid-cols-12 gap-1">
-         
+
                 <div class="col-span-12">
-                
+
                     <div class="box bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 transition-colors duration-300">
                         <!-- Header -->
                         <div class="box-header border-b border-gray-200 dark:border-gray-700 px-4 py-3">
                           <h5 class="box-title text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Creditings</h5>
                         </div>
-                      
+
                         <div class="box-body px-4 py-5">
                           <!-- Filter Header -->
                           <div class="flex items-center mb-4">
                             <h5 class="box-title my-auto text-gray-800 dark:text-gray-100">{{ __('messages.Filter Options') }}</h5>
-                      
+
                             <!-- Filter Dropdown -->
                             <div class="hs-dropdown ti-dropdown block ms-auto my-auto sm:flex items-center justify-between">
                               <button
@@ -381,14 +381,14 @@
                                 Filter
                                 <i class="ti ti-chevron-down"></i>
                               </button>
-                      
+
                               <div class="hs-dropdown-menu ti-dropdown-menu bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg p-2">
                                 <a href="javascript:void(0)" class="ti-dropdown-item block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hs-dropdown-toggle"
                                    data-hs-overlay="#hs-slide-down-animation-modal">Basic filter</a>
                                 <a id="reload_txns_tbl" class="ti-dropdown-item block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                    href="javascript:void(0)">Refresh</a>
                               </div>
-                      
+
                               <!-- Modal -->
                               <div id="hs-slide-down-animation-modal" class="hs-overlay hidden ti-modal">
                                 <div class="hs-overlay-open:mt-7 ti-modal-box mt-0 ease-out">
@@ -403,7 +403,7 @@
                                         </svg>
                                       </button>
                                     </div>
-                      
+
                                     <!-- Modal Body -->
                                     <div class="ti-modal-body px-4 py-4 space-y-4">
                                       <div>
@@ -411,7 +411,7 @@
                                         <input type="text" id="txn_reference" name="txn_reference"
                                                class="w-full border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2">
                                       </div>
-                      
+
                                       <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
                                         <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date range:</p>
                                         <div class="flex items-center space-x-6">
@@ -428,7 +428,7 @@
                                         </div>
                                       </div>
                                     </div>
-                      
+
                                     <!-- Modal Footer -->
                                     <div class="ti-modal-footer border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-end">
                                       <a id="filter_crystalpay_txn_table"
@@ -444,7 +444,7 @@
                               <!-- End Modal -->
                             </div>
                           </div>
-                      
+
                           <!-- Table -->
                           <div class="overflow-auto mt-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                             <table id="crystal_pay_funding_logs_table" class="w-full text-sm text-left border-collapse">
@@ -474,8 +474,8 @@
                           </div>
                         </div>
                       </div>
-                      
-                      
+
+
 
 
                     {{-- <div class="box-body">
@@ -483,7 +483,7 @@
                         <table id="basic-table" class="ti-custom-table ti-striped-table ti-custom-table-hover">
                           <thead>
                               <tr>
-                             
+
                                   <td>First Name</td>
                                   <td>Last Name</td>
                                   <td>Action</td>
@@ -493,17 +493,17 @@
                           </tbody>
                         </table>
                       </div>
-                     
+
                     </div> --}}
-                     
-                      
+
+
                   </div>
                 </div>
         </div>
 
     </div>
-     
-       
+
+
     </div>
     <!-- End::row-1 -->
 

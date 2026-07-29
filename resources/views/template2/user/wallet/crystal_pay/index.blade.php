@@ -3,15 +3,15 @@
 @section('template2_content')
 <div class="grid grid-cols-1">
     <div class="max-w-5xl text-center m-4">
-        @if (Session::has('success')) 
+        @if (Session::has('success'))
         <div class="text-black bg-blue-400 p-1 rounded-lg">
-        {{ Session::get('success') }} 
+        {{ Session::get('success') }}
         </div>
         @endif
 
         @if (Session::has('failure'))
         <div class="text-black bg-red-400 p-1 rounded-lg">
-        {{ Session::get('failure') }}  
+        {{ Session::get('failure') }}
         </div>
         @endif
 
@@ -27,7 +27,7 @@
         <li class="me-2" role="presentation">
             <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-[{{$site_primary_color}}] hover:border-[{{$site_primary_color}}]" id="dashboard-styled-tab" data-tabs-target="#styled-dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">Wallet Transactions</button>
         </li>
-       
+
     </ul>
 </div>
 <div id="max-w-6xl mx-auto default-styled-tab-content">
@@ -45,25 +45,25 @@
                   @if (count($funding_option->bank_codes) > 0)
                       @foreach ($funding_option->bank_codes as $key=>$bank_code)
                       <tr aria-colspan="3">
-                      
-                        <td class="border border-gray-300 px-2">Bank Name: {{ $bank_code->bank_name }} 
+
+                        <td class="border border-gray-300 px-2">Bank Name: {{ $bank_code->bank_name }}
                           @if ($bank_code->rate_category == 'Flat')
                             <br> Charges: 	&#8358;{{ $bank_code->bank_charges }} - (Flat rate)
                           @else
                             <br> Charges: {{ $bank_code->bank_charges }} %
                           @endif
                           {{-- @if (strtolower($bank_code->bank_name) == 'wema bank' || strtolower($bank_code->bank_name) == 'palmpay' )
-                            <br> Charges: 	&#8358;{{ $bank_code->bank_charges }}                                                 
+                            <br> Charges: 	&#8358;{{ $bank_code->bank_charges }}
                           @else
                             <br> Charges: {{ $bank_code->bank_charges }} %
-                              
+
                           @endif --}}
-                        
+
                           <br>
                         @if ( in_array($bank_code->bank_code,$generated_user_virtual_accts_bank_code) )
-                         
-                              <b>  </b>                                                  
-                           
+
+                              <b>  </b>
+
                         @else
 
                         {{-- <button type="button" class="w-1/4 mt-2 text-white bg-[{{$site_primary_color}}] hover:bg-[{{$site_primary_color}}]/90 focus:ring-4 focus:outline-none focus:ring-[{{$site_primary_color}}]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center items-center dark:focus:ring-[{{$site_primary_color}}]/55 me-2 mb-2" data-hs-overlay="#hs-vertically-centered-modal{{$bank_code->id}}">
@@ -92,9 +92,9 @@
 
                                   <form method="POST" action="{{ route('user.wallet.generate_virtual_account')  }}">
                                     <input type="hidden" id="_token" name="_token" value="{{ csrf_token() }}" />
-                             
+
                                     <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                                        
+
                                         {{-- <div class="space-y-2"> --}}
                                             {{-- <label class="ti-form-label mb-0">BVN:</label> --}}
                                             {{-- <span>This is needed due to the directive from CBN</span> --}}
@@ -104,7 +104,7 @@
                                             <input type="hidden" class="my-auto ti-form-input" id="last_name" name="last_name" value="{{ auth()->user()->last_name }}"> --}}
                                             <input type="text"  id="bank_code" name="bank_code" value="{{ $bank_code->bank_code }}">
                                             <input type="text"  id="funding_option" name="funding_option" value="{{ $funding_option->id }}">
-                                         
+
                                           {{-- </div> --}}
 
                                         <div class="space-y-2">
@@ -114,26 +114,26 @@
 
                                         <div class="space-y-2">
                                             <button type="submit" id="generate_virtual_account" class="ti-btn ti-btn-primary w-full">Generate Virtual Account</button><br>
-                                            
+
                                         </div>
-                                       
+
                                         <br>
                                     </div>
-                             
+
                                 </form>
-                              
-                            </div>   
+
+                            </div>
                             </div>
                           </div>
                         </div>
 
-                        </div>                        
+                        </div>
 
                         <!-- Modal toggle -->
                         <button data-modal-target="virtual_account_form{{$bank_code->id}}" data-modal-toggle="virtual_account_form{{$bank_code->id}}" class="w-1/2 mt-2 text-white bg-[{{$site_primary_color}}] hover:bg-[{{$site_primary_color}}]/90 focus:ring-4 focus:outline-none focus:ring-[{{$site_primary_color}}]/50 font-medium rounded-lg text-sm px-2 py-2.5 text-center items-center  me-2 mb-2" type="button">
                             Generate
                         </button>
-                        
+
                         <!-- Main modal -->
                         <div id="virtual_account_form{{$bank_code->id}}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
                             <div class="relative p-4 w-full max-w-md max-h-full">
@@ -153,32 +153,32 @@
                                     </div>
                                     <!-- Modal body -->
                                     <div class="p-4 md:p-5">
-                                       
+
                                         <form method="POST" action="{{ route('user.wallet.generate_virtual_account')  }}">
                                             <input type="hidden" id="_token" name="_token" value="{{ csrf_token() }}" />
                                             <input type="hidden" class="my-auto ti-form-input" id="bank_code" name="bank_code" value="{{ $bank_code->bank_code }}">
                                             <input type="hidden" class="my-auto ti-form-input" id="funding_option" name="funding_option" value="{{ $funding_option->id }}">
-                                         
+
                                             <div>
                                                 <label for="PIN" class="block mb-2 text-sm font-medium text-gray-900 ">Your PIN</label>
                                                 <input type="password" name="pin" id="pin" placeholder="••••••••" class="bg-gray-50 border border-[{{$site_secondary_color}}] text-gray-900 text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5 " required />
                                             </div>
-                                            
+
                                             <button type="submit" id="generate_virtual_account" class="w-full mt-4 text-white bg-[{{$site_primary_color}}] hover:bg-[{{$site_primary_color}}] focus:ring-4 focus:outline-none focus:ring-[{{$site_primary_color}}] font-medium rounded-lg text-sm px-5 py-2.5 text-center ">Generate Virtual Account</button>
-                                            
+
                                         </form>
                                     </div>
                                 </div>
                             </div>
-                        </div> 
-  
+                        </div>
+
 
 
                         @endif
-                           
+
                         </td>
                         <td class="border border-gray-300 px-2">
-                          
+
                           @if ( in_array($bank_code->bank_code,$generated_user_virtual_accts_bank_code))
                                 @foreach ($user_virtual_accounts as $user_virtual_account)
                                     @if ($user_virtual_account->bank_code == $bank_code->bank_code)
@@ -194,28 +194,28 @@
                           @endif
                         </td>
                       </tr>
-                          
+
                       @endforeach
                   @else
                       <tr aria-colspan="3"><td>No bank code available at the moment</td></tr>
                   @endif
-                
-            </tbody>
-          </table> 
 
-       
+            </tbody>
+          </table>
+
+
     </div>
     <div class="hidden"  id="styled-dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
        <livewire:user-wallet-transactions />
 
     </div>
-    
+
 </div>
 @endsection
 
 {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-<script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script>
+<script src="{{asset(config('app.assets_base_url').'js/admin_datatables/datatables.js') }}"></script>
 <script>
     $(document).ready(function(){
         alert('oooo')

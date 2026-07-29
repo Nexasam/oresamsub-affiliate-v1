@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-    @if (env('APP_NAME') == 'FoxDataHub' )
+    @if (config('app.name') == 'FoxDataHub' )
 
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
      })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-     
-  
-  
+
+
+
      <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
      <script>
      window.dataLayer = window.dataLayer || [];
      function gtag(){dataLayer.push(arguments);}
      gtag('js', new Date());
-  
+
      gtag('config', 'G-NCKP7MH1KN');
      </script>
-  
+
     @endif
 
 
-    @if (env('APP_NAME') == 'OresamSub')
+    @if (config('app.name') == 'OresamSub')
       <!-- Meta Pixel Code -->
       <script>
       !function(f,b,e,v,n,t,s)
@@ -41,11 +41,11 @@
       /></noscript>
       <!-- End Meta Pixel Code -->
      @endif
-    
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ env('APP_NAME') }} - @yield('title','Auth')</title>
+    <title>{{ config('app.name') }} - @yield('title','Auth')</title>
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,20 +58,20 @@
 
     @php
      $site_primary_color =  App\Models\AdminColorSetting::where('color_name','site_primary_color')->first();
-     $site_primary_color = $site_primary_color->color_value ?? (int) '90, 102, 241'; 
+     $site_primary_color = $site_primary_color->color_value ?? (int) '90, 102, 241';
 
 
-     
-   
-     
-     
+
+
+
+
      $support_whatsapp_number_template2 =  App\Models\LandingPagesSetting::where('field_name','support_whatsapp_number_template2')->first();
      $support_whatsapp_number_template2 = $support_whatsapp_number_template2->field_details;
-    //  echo $admin_site_color_value;  
+    //  echo $admin_site_color_value;
     @endphp
 
     <style>
-     
+
 
         .float{
          position:fixed;
@@ -108,9 +108,9 @@
     {{-- &text=Hola%21%20Quisiera%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Varela%202. --}}
     <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number_template2  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="float" target="_blank">
     <i class="fa fa-whatsapp my-float"></i>
-    </a>     
+    </a>
     <div class="bg-[{{ $site_secondary_color }}]  md:bg-white  p-0 m-0 h-screen  overflow-y-hidden bg-[linear-gradient(45deg,{{$site_primary_color}}_60%,{{$site_secondary_color}}_40%)] skew-y-4 md:bg-none">
-    
+
         <div class="max-w-4xl mx-auto ">
 
             @if (Session::has('success'))
@@ -124,55 +124,55 @@
             {{ Session::get('failure') }}
             </div>
             @endif
-            
+
         </div>
         <div class="relative  w-full md:max-w-full h-[400px] items-center md:grid grid-cols-2 py-6 px-4  sm:mx-auto">
 
             <div  class="flex items-center justify-center h-screen rounded-xl bg-white">
-               
 
-            
+
+
                 @if (Route::currentRouteName() == 'register')
                 <div class="w-[500px]">
-                    
+
                 @else
                 <div class="w-[400px]">
 
                 @endif
-                
+
                     @if ( !isset($site_logo) )
-                        <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ env('APP_NAME') }}</h1>
+                        <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ config('app.name') }}</h1>
                         <hr>
                     @else
-                        {{-- <img src="{{asset(env('APP_ASSETS_BASE_URL').'template2/images/logonew.png') }}" alt="datahub" class="w-44 mx-auto"> --}}
-                        <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="{{env('APP_NAME')}}" class="w-24 mx-auto">
+                        {{-- <img src="{{asset(config('app.assets_base_url').'template2/images/logonew.png') }}" alt="datahub" class="w-44 mx-auto"> --}}
+                        <img src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="{{config('app.name')}}" class="w-24 mx-auto">
                     @endif
 
                     @yield('content')
-                
+
                 </div>
-            
+
             </div>
-        
+
             <div class="hidden md:block bg-white">
-                <div class="relative p-0 mb-4 rounded-2xl overflow-y-hidden  h-screen bg-[conic-gradient(at_center,#000000_0%,transparent_30%,{{$site_primary_color}}_70%,transparent_100%)] 
+                <div class="relative p-0 mb-4 rounded-2xl overflow-y-hidden  h-screen bg-[conic-gradient(at_center,#000000_0%,transparent_30%,{{$site_primary_color}}_70%,transparent_100%)]
                 bg-gradient-to-r from-[{{$site_primary_color}}] to-[#000000]">
 
 
                 @if (isset($login_image) && $login_image != '')
-                    {{-- <img src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/authentication/login/'.$login_image) }}" alt="login" class="object-cover mx-auto h-full"> --}}
-                    {{-- <img class="absolute bottom-5 right-0 w-4/5" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/authentication/login/'.$login_image) }}" alt="">                  --}}
-                    <img class="absolute bottom-5 right-0 w-4/5" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/authentication/login/'.$login_image) }}" alt="">                 
+                    {{-- <img src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/authentication/login/'.$login_image) }}" alt="login" class="object-cover mx-auto h-full"> --}}
+                    {{-- <img class="absolute bottom-5 right-0 w-4/5" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/authentication/login/'.$login_image) }}" alt="">                  --}}
+                    <img class="absolute bottom-5 right-0 w-4/5" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/authentication/login/'.$login_image) }}" alt="">
                 @else
-                    {{-- <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth.jpg') }}" alt="login" class="object-cover mx-auto h-full"> --}}
-                    <img class="absolute bottom-5 right-0 w-4/5" src=" {{asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth.jpg') }}" alt="">
-                    
+                    {{-- <img src="{{ asset(config('app.assets_base_url').'img/authentication/auth.jpg') }}" alt="login" class="object-cover mx-auto h-full"> --}}
+                    <img class="absolute bottom-5 right-0 w-4/5" src=" {{asset(config('app.assets_base_url').'img/authentication/auth.jpg') }}" alt="">
+
                 @endif
 
-                </div> 
+                </div>
             </div>
-        
-    
+
+
         </div>
     </div>
 

@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        @if (env('APP_NAME') == 'FoxDataHub')
+        @if (config('app.name') == 'FoxDataHub')
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif

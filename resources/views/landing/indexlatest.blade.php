@@ -16,13 +16,13 @@
 
     @php
         $hero1 = isset($hero_image1)
-            ? env('APP_URL').'assets/landing_page_assets/img/hero_image1/'.$hero_image1
-            : env('APP_URL').'assets/landing_page_assets/img/bg_banner1.jpg';
+            ? config('app.url').'assets/landing_page_assets/img/hero_image1/'.$hero_image1
+            : config('app.url').'assets/landing_page_assets/img/bg_banner1.jpg';
         $hero2 = isset($hero_image2)
-            ? env('APP_URL').'assets/landing_page_assets/img/hero_image2/'.$hero_image2
-            : env('APP_URL').'assets/landing_page_assets/img/bg_banner2.jpg';
+            ? config('app.url').'assets/landing_page_assets/img/hero_image2/'.$hero_image2
+            : config('app.url').'assets/landing_page_assets/img/bg_banner2.jpg';
         $logo = isset($site_logo)
-            ? env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo
+            ? config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo
             : null;
     @endphp
 
@@ -178,8 +178,8 @@
             <div class="row align-items-center gy-4">
                 <div class="col-lg-6" data-aos="fade-right">
                     <img src="{{ isset($aboutus_image)
-                        ? asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/aboutus_image/'.$aboutus_image)
-                        : asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth11.jpg') }}"
+                        ? asset(config('app.assets_base_url').'landing_page_assets/img/aboutus_image/'.$aboutus_image)
+                        : asset(config('app.assets_base_url').'img/authentication/auth11.jpg') }}"
                          class="img-fluid rounded-4 shadow" alt="About Us">
                 </div>
                 <div class="col-lg-6" data-aos="fade-left">
@@ -359,7 +359,7 @@
     </script>
 </section>
 
-    
+
     {{-- <script>
     function pricingTabs() {
         return {
@@ -370,17 +370,17 @@
         }
     }
     </script>
-    
+
     <style>
     /* Optional: Hide scrollbars for tab rows */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
      --}}
-    
-    
-    
-    
+
+
+
+
 
 <!-- TESTIMONIAL SECTION -->
 <section id="reviews" class="py-5 bg-gray-50 dark:bg-gray-950">

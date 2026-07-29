@@ -26,6 +26,9 @@
             <a href="{{ route('platform-admin.affiliates.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliates.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                 <span>◎</span> Affiliates
             </a>
+            <a href="{{ route('platform-admin.transactions.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.transactions.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                <span>↔</span> Transactions
+            </a>
         </nav>
         <div class="border-t border-white/10 p-4">
             <div class="mb-3 px-3">

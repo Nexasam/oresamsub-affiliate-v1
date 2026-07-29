@@ -3,14 +3,14 @@
 
 <head>
 
-  @if (env('APP_NAME') == 'FoxDataHub' )
+  @if (config('app.name') == 'FoxDataHub' )
 
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
    })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-   
+
 
 
    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
@@ -23,53 +23,53 @@
    </script>
 
   @endif
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Data App - {{ env('APP_NAME') }} </title>
+    <title> Data App - {{ config('app.name') }} </title>
 
-    <meta name="description" content="Empowering Connections, One Byte at a Time - {{ env('APP_NAME') }}">
+    <meta name="description" content="Empowering Connections, One Byte at a Time - {{ config('app.name') }}">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
-    <!-- Quil Css -->    
-    <link id="style" rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/quill/quill.snow.css') }}">
+    <!-- Quil Css -->
+    <link id="style" rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/quill/quill.snow.css') }}">
 
-    
+
     <!-- Favicon -->
     {{-- <link rel="shortcut icon" href="../../assets/img/brand-logos/favicon.ico"> --}}
-    {{-- <link rel="shortcut icon" href="{{ asset(env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
+    {{-- <link rel="shortcut icon" href="{{ asset(config('app.assets_base_url').'img/brand-logos/favicon.ico') }}"> --}}
 
     <!-- Main JS -->
     {{-- <script src="../../../assets/js/main.js"></script> --}}
-    <script  src="{{ asset(env('APP_ASSETS_BASE_URL').'js/main.js') }}"></script>
+    <script  src="{{ asset(config('app.assets_base_url').'js/main.js') }}"></script>
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../../../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'css/style.css') }}">
 
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../../../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/simplebar/simplebar.min.css') }}">
 
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../../../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
 <!-- Tabulator Css -->
 {{-- <link rel="stylesheet" href="../../../assets/libs/tabulator-tables/css/tabulator.min.css"> --}}
-<link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/tabulator-tables/css/tabulator.min.css') }}">
+<link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/tabulator-tables/css/tabulator.min.css') }}">
 
 
 <!-- Choices Css -->
 {{-- <link rel="stylesheet" href="../../../assets/libs/choices.js/public/assets/styles/choices.min.css"> --}}
-<link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/choices.js/public/assets/styles/choices.min.css') }}">
+<link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/choices.js/public/assets/styles/choices.min.css') }}">
 
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 
-{{-- 
+{{--
 <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
@@ -91,11 +91,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
 
 
-  
+
     @php
        $admin_site_color =  App\Models\AdminColorSetting::where('color_name','admin_site_color')->first();
-       $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241'; 
-      //  echo $admin_site_color_value;  
+       $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241';
+      //  echo $admin_site_color_value;
     @endphp
 
     <style>
@@ -143,7 +143,7 @@
 
 <body class="montserrat2">
 
-  @if (env('APP_NAME') == 'FoxDataHub')
+  @if (config('app.name') == 'FoxDataHub')
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   @endif
@@ -556,7 +556,7 @@
    <!-- Loader -->
    <div id="loader" >
       {{-- <img src="../../../assets/img/media/loader.svg" alt=""> --}}
-      <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/media/loader.svg') }}" alt="">
+      <img src="{{ asset(config('app.assets_base_url').'img/media/loader.svg') }}" alt="">
   </div>
   <!-- Loader -->
 
@@ -765,8 +765,8 @@
       }
 
       function displayDataMeasurements(data_measurement,data_value_tb){
-         const compute_gb_value = parseFloat(data_value_tb) * parseFloat(data_measurement); 
-         const compute_mb_value = parseInt(parseFloat(data_value_tb) * parseFloat(data_measurement) * parseFloat(data_measurement)); 
+         const compute_gb_value = parseFloat(data_value_tb) * parseFloat(data_measurement);
+         const compute_mb_value = parseInt(parseFloat(data_value_tb) * parseFloat(data_measurement) * parseFloat(data_measurement));
         //  var display_result = "Data in MB: "+ compute_mb_value+"&nbsp;&nbsp;";
         //      display_result += "Data in MB: "+ compute_gb_value;
          $('#display_data_measurements').removeClass('hidden');
@@ -787,17 +787,17 @@
           const data_measurement = $('#data_measurement').val();
           displayDataMeasurements(data_measurement,data_value_tb);
       })
-      
+
 
       //edit user plan
       save_quick_edit('edit_class','prefix_id');
       $('.reseller_inputs').css('background-color', 'lightGray');
 
       function save_quick_edit(className,prefix_id = ''){
-         
+
           $('.'+className).click(function(e){
           e.preventDefault();
-        
+
 
           if(! $(this).hasClass('updater')  ){
                 //means its currently editing....
@@ -811,7 +811,7 @@
                 return;
           }else{
                 let id = $(this).attr('id');
-                
+
                 showDisplayButton(id);
                 let name = $('#'+prefix_id+id).val();
                 let _token = $('#_token').val();
@@ -842,10 +842,10 @@
                 $('#'+prefix_id+id).attr('disabled','');
                 $('#'+prefix_id+id).css('background-color', 'lightGray');
                 $(this).removeClass('updater');
-          }          
+          }
         });
       }
-      
+
       // alert('sss')
        $('.save_product_plan').click(function(e){
 
@@ -870,10 +870,10 @@
             let user_plan_3 = $(`#user_plan_${id}_3`).val();
             let user_plan_4 = $(`#user_plan_${id}_4`).val();
             let _token = $('#_token').val();
-            
+
 
             showLoadingButton(id);
-           
+
             //call a store endpoint to submit the request
             const data = {
               id:id,
@@ -932,7 +932,7 @@
             product_category_id,
             automation_id
           };
-         
+
           // showLoadingButton(id);
 
           $.ajax({
@@ -943,7 +943,7 @@
               success: function(response) {
                   // console.log(response);
                   $('#notify_span'+id).text('Successfully updated to: '+ automation_name);
-               
+
               },
               error: function(xhr, status, error) {
                   // Handle errors if needed
@@ -953,85 +953,85 @@
 
         });
 
-       
+
     })
   </script>
 
   <!-- popperjs -->
   {{-- <script src="../../../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
 
 
   <!-- Color Picker JS -->
   {{-- <script src="../../../assets/libs/@simonwep/pickr/pickr.es5.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/@simonwep/pickr/pickr.es5.min.js') }}"></script>
 
 
   <!-- sidebar JS -->
   {{-- <script src="../../../assets/js/defaultmenu.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/defaultmenu.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/defaultmenu.js') }}"></script>
 
 
   <!-- sticky JS -->
   {{-- <script src="../../../assets/js/sticky.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/sticky.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/sticky.js') }}"></script>
 
 
   <!-- Switch JS -->
   {{-- <script src="../../../assets/js/switch.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/switch.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/switch.js') }}"></script>
 
 
   <!-- Preline JS -->
   {{-- <script src="../../../assets/libs/preline/preline.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/preline/preline.js') }}"></script>
 
 
   <!-- Simplebar JS -->
   {{-- <script src="../../../assets/libs/simplebar/simplebar.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/assets/libs/simplebar/simplebar.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/assets/libs/simplebar/simplebar.min.js') }}"></script>
 
 
   <!-- Custom JS -->
   {{-- <script src="../../../assets/js/custom.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/custom.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/custom.js') }}"></script>
 
 
 
 
-    
+
     <!-- Custom-Switcher JS -->
     {{-- <script src="../../../assets/js/custom-switcher.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/custom-switcher.js') }}"></script>
 
 
   <!-- Tabulator JS -->
   {{-- <script src="../../../assets/libs/tabulator-tables/js/tabulator.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/tabulator-tables/js/tabulator.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/tabulator-tables/js/tabulator.min.js') }}"></script>
 
 
   <!-- Choices JS -->
   {{-- <script src="../../../assets/libs/choices.js/public/assets/scripts/choices.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
 
 
   <!-- XLXS JS -->
   {{-- <script src="../../../assets/libs/xlsx/xlsx.full.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/xlsx/xlsx.full.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/xlsx/xlsx.full.min.js') }}"></script>
 
 
   <!-- JSPDF JS -->
   {{-- <script src="../../../assets/libs/jspdf/jspdf.umd.min.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'libs/jspdf/jspdf.umd.min.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'libs/jspdf/jspdf.umd.min.js') }}"></script>
 
   <!-- Tabulator Custom JS -->
   {{-- <script src="../../../assets/js/datatable.js"></script> --}}
-  <script src=" {{asset(env('APP_ASSETS_BASE_URL').'js/datatable.js') }}"></script>
+  <script src=" {{asset(config('app.assets_base_url').'js/datatable.js') }}"></script>
 
-  <script src="{{asset(env('APP_ASSETS_BASE_URL').'libs/quill/quill.min.js')}}"></script>
-  <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/quill.js')}}"></script>
- 
-  
+  <script src="{{asset(config('app.assets_base_url').'libs/quill/quill.min.js')}}"></script>
+  <script src="{{asset(config('app.assets_base_url').'js/quill.js')}}"></script>
+
+
 
 </body>
 

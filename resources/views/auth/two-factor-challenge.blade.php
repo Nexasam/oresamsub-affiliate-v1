@@ -2,53 +2,53 @@
 <html lang="en" dir="ltr" class="h-full">
 
 <head>
-    @if (env('APP_NAME') == 'FoxDataHub' )
+    @if (config('app.name') == 'FoxDataHub' )
 
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
      })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-     
-  
-  
+
+
+
      <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
      <script>
      window.dataLayer = window.dataLayer || [];
      function gtag(){dataLayer.push(arguments);}
      gtag('js', new Date());
-  
+
      gtag('config', 'G-NCKP7MH1KN');
      </script>
-  
+
     @endif
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> {{env('APP_NAME')}} - Enjoy data at the best rate </title>
+    <title> {{config('app.name')}} - Enjoy data at the best rate </title>
     <meta name="description" content="This is an amazing data website for your special data needs">
     <meta name="keywords" content="data purchase, mtn, airtel, utility bills, cable subscription">
 
      <!-- Favicon -->
     {{-- <link rel="shortcut icon" href="../assets/img/brand-logos/favicon.ico"> --}}
-    {{-- <link rel="shortcut icon" href="{{ asset(env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
+    {{-- <link rel="shortcut icon" href="{{ asset(config('app.assets_base_url').'img/brand-logos/favicon.ico') }}"> --}}
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'css/style.css') }}">
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
     @php
     $admin_site_color =  App\Models\AdminColorSetting::where('color_name','admin_site_color')->first();
-    $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241'; 
-   //  echo $admin_site_color_value;  
+    $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241';
+   //  echo $admin_site_color_value;
    @endphp
 
    <style>
@@ -98,14 +98,14 @@
 </head>
 
 <body class="error-page flex h-full !py-0 bg-white dark:bg-bgdark">
-    @if (env('APP_NAME') == 'FoxDataHub')
+    @if (config('app.name') == 'FoxDataHub')
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @endif
     <div class="grid grid-cols-12 gap-6 w-full h-full">
         <div class="lg:col-span-6 col-span-12 hidden lg:block relative">
             <div class="cover relative w-full h-full z-[1]">
-                <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth3.jpg') }}" alt="logo" class="object-cover mx-auto h-full">
+                <img src="{{ asset(config('app.assets_base_url').'img/authentication/auth3.jpg') }}" alt="logo" class="object-cover mx-auto h-full">
             </div>
         </div>
         <div class="lg:col-span-6 col-span-12">
@@ -119,7 +119,7 @@
                     <div class="mt-7">
                         <div class="p-4 sm:p-7">
                             <a href="#" class="header-logo">
-                                {{-- <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/logos/logo.png') }}" alt="logo"
+                                {{-- <img src="{{ asset(config('app.assets_base_url').'img/logos/logo.png') }}" alt="logo"
                                 class="w-20 h-20 mx-auto block dark:hidden" alt="logo" class=""> --}}
                                 {{-- <img src="../../assets/img/logos/{{  $logo }}" alt="logo"
                                 class="w-20 h-20 mx-auto hidden dark:block" alt="logo" class=""> --}}
@@ -130,14 +130,14 @@
                             <br>
 
                             <div class="text-center">
-                                <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ env('APP_NAME') }}</h1>
+                                <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ config('app.name') }}</h1>
                                 <hr>
                                 <h3 class="block mt-2 text-xl text-gray-800 dark:text-gray-900">2-Factor Authentication</h3>
                                 <small>Access your chosen authenticator app (Google Authenticator, Authy or any other) and input the 6-digit code provided to complete the login flow.</small>
                             </div>
 
                             <div class="mt-5">
-                             
+
                                 <x-auth-session-status class="mb-4" :status="session('status')" />
                                 <!-- Form -->
                                 <form method="POST" action="{{ url('/two-factor-challenge') }}">
@@ -151,7 +151,7 @@
                                                     <x-input-error :messages="$errors->get('code')" class="mt-2" />
                                                 </div>
                                             </div>
-                                          
+
                                             <!-- End Checkbox -->
                                             <x-primary-button class="ms-3">
                                                 {{ __('Authenticate') }}
@@ -172,16 +172,16 @@
 
     <!-- popperjs -->
     {{-- <script src="../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
 
 
     <!-- Custom-Switcher JS -->
     {{-- <script src="../assets/js/custom-switcher.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'js/custom-switcher.js') }}"></script>
 
     <!-- Preline JS -->
     {{-- <script src="../assets/libs/preline/preline.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/preline/preline.js') }}"></script>
 
 
 </body>

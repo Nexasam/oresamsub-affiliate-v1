@@ -1,10 +1,10 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-<script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script>
+<script src="{{asset(config('app.assets_base_url').'js/admin_datatables/datatables.js') }}"></script>
 
 
 
-{{-- <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/swetalert.js') }}"></script> --}}
+{{-- <script src="{{asset(config('app.assets_base_url').'js/swetalert.js') }}"></script> --}}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -15,7 +15,7 @@
   }
 
   function getProductPlans(network_id='', plan_category_id='', product_slug='', amount = ''){
-          
+
 
           if(network_id != '' && product_slug != '' && plan_category_id == ''){
             var data = {
@@ -23,7 +23,7 @@
               product_slug : product_slug,
               amount : amount
             };
-          
+
             // alert('hhhhh')
           }
 
@@ -33,12 +33,12 @@
               plan_category_id : plan_category_id,
               product_slug : product_slug,
               amount : amount
-            };        
+            };
           }
 
           //  console.log(data);
           //  return;
-          
+
 
           $.ajax({
                     type: 'GET',
@@ -50,13 +50,13 @@
                         // console.log(response.data)
                         var result = JSON.stringify(response.data);
                         var dataList = JSON.parse(result);
-                    
+
                           $('#product_plan_id').html("");
                           $('#product_plan_id').append('<option value="">Select Product Plan</option>');
-  
+
                           // let jj = jsonn;
                           for (const child in dataList) {
-                            
+
                               const idd = dataList[child].product_plan_id;
                               const product_plan_name = dataList[child].product_plan_name;
                               const selling_price = dataList[child].selling_price;
@@ -72,11 +72,11 @@
                                 option = "<option value="+idd+">"+product_plan_name+"</option>";
                               }
                               $('#product_plan_id').append(option);
-                            
-                            
+
+
                           }
-                        
-                      
+
+
                     },
                     error: function(xhr, status, error) {
                         // Handle errors if needed
@@ -88,7 +88,7 @@
 
 
   function getSingleAirtimePlan(plan_category_id='', amount = ''){
-          
+
 
           if(plan_category_id != '' && amount != ''){
             var data = {
@@ -106,45 +106,45 @@
                         // console.log(response.data)
                         var result = JSON.stringify(response.data);
                         var dataList = JSON.parse(result);
-                    
+
                         $('#product_plan_id').html("");
                         // $('#product_plan_id').append('<option value="">Select Product Plan</option>');
 
                           // let jj = jsonn;
                           for (const child in dataList) {
-                          
+
                               const idd = dataList[child].product_plan_id;
                               const product_plan_name = dataList[child].product_plan_name;
                               const selling_price = dataList[child].selling_price;
-                          
+
                               option = "<option selected value="+idd+">"+product_plan_name+'- You are buying for: &#8358;'+selling_price+"</option>";
                                 $('#product_plan_id').append(option);
-                            
-                            
+
+
                           }
-                        
-                      
+
+
                     },
                     error: function(xhr, status, error) {
                         // Handle errors if needed
                         console.error(xhr.responseText);
                     }
                   });
-        
+
           }else{
           return;
           }
 
-        
+
   }
 
   function getCableProductPlans(plan_category_id='', product_slug=''){
-          
+
         var data = {
           plan_category_id : plan_category_id,
           product_slug : product_slug
         };
-          
+
 
           $.ajax({
                     type: 'GET',
@@ -156,23 +156,23 @@
                         // console.log(response.data)
                         var result = JSON.stringify(response.data);
                         var dataList = JSON.parse(result);
-                    
+
                         $('#cable_product_plan_id').html("");
                         $('#cable_product_plan_id').append('<option value="">Select Product Plan</option>');
 
                           // let jj = jsonn;
                           for (const child in dataList) {
-                          
+
                               const idd = dataList[child].product_plan_id;
                               const product_plan_name = dataList[child].product_plan_name;
                               const selling_price = dataList[child].selling_price;
                               option = "<option value="+idd+">"+product_plan_name+'- &#8358;'+selling_price+"</option>";
-                              
+
                               $('#cable_product_plan_id').append(option);
-                            
+
                           }
-                        
-                      
+
+
                     },
                     error: function(xhr, status, error) {
                         // Handle errors if needed
@@ -182,13 +182,13 @@
   }
 
   function getElectricityProductPlans(plan_category_id='', product_slug='', amount = ''){
-          
+
           var data = {
             plan_category_id : plan_category_id,
             product_slug : product_slug,
             amount : amount,
           };
-          
+
           console.log('electric',data);
 
           $.ajax({
@@ -202,20 +202,20 @@
                         // console.log(response.data)
                         var result = JSON.stringify(response.data);
                         var dataList = JSON.parse(result);
-                    
+
                           $('#electricity_product_plan_id').html("");
                           $('#electricity_product_plan_id').append('<option value="">Select Product Plan</option>');
-  
+
                           // let jj = jsonn;
                           for (const child in dataList) {
                               const idd = dataList[child].product_plan_id;
                               const product_plan_name = dataList[child].product_plan_name;
                               const selling_price = dataList[child].selling_price;
-                              option = "<option value="+idd+">"+product_plan_name+'- You are buying for: &#8358;'+selling_price+"</option>";     
+                              option = "<option value="+idd+">"+product_plan_name+'- You are buying for: &#8358;'+selling_price+"</option>";
                               $('#electricity_product_plan_id').append(option);
                           }
-                        
-                      
+
+
                     },
                     error: function(xhr, status, error) {
                         // Handle errors if needed
@@ -224,7 +224,7 @@
             });
     }
 
-  
+
 
   function reload(timeout = '3000'){
     setTimeout(() => {
@@ -298,9 +298,9 @@
                         const account_number = dataList.account_number;
 
                         $('.crystal_pay_dynamic_account_details').append(`<p>Bank Name:  ${bank_name} </p>`);
-                        $('.crystal_pay_dynamic_account_details').append(`<p>Account No:  ${account_number}</p>`);          
-                        $('.crystal_pay_dynamic_account_details').append(`<p><strong>NOTE:</strong> Please ensure that the exact amount of ${amount} is paid into the generated account. </p>`);          
-                        $('.crystal_pay_dynamic_account_details').append(`Please complete transaction in 5 minutes else the account will be invalid.</p>`);          
+                        $('.crystal_pay_dynamic_account_details').append(`<p>Account No:  ${account_number}</p>`);
+                        $('.crystal_pay_dynamic_account_details').append(`<p><strong>NOTE:</strong> Please ensure that the exact amount of ${amount} is paid into the generated account. </p>`);
+                        $('.crystal_pay_dynamic_account_details').append(`Please complete transaction in 5 minutes else the account will be invalid.</p>`);
                     },
                     error: function(xhr, status, error) {
                         // Handle errors if needed
@@ -308,9 +308,9 @@
                     }
             });
   }
-    
-  
-  
+
+
+
 
   function togglePassword(className,id,showValue){
     $('.'+className).change(function(e){
@@ -326,9 +326,9 @@
     })
   }
 
-  
+
   function toggleProductPlanVisibility(productPlanId,token,checkedd){
-  
+
             const data = {
               productPlanId : productPlanId,
               token : token
@@ -362,7 +362,7 @@
   }
 
   function toggleProductPlanPublicVisibility(productPlanId,token,checkedd){
-  
+
   const data = {
     productPlanId : productPlanId,
     token : token
@@ -387,7 +387,7 @@
 }
 
   function togglePlanCategoryVisibility(productPlanCategoryId,token,checkedd){
-          
+
 
             const data = {
               productPlanCategoryId : productPlanCategoryId,
@@ -422,7 +422,7 @@
   }
 
   function toggleUserStatus(userId,token,actualValue){
-          
+
 
           const data = {
             userId : userId,
@@ -430,7 +430,7 @@
           };
         //  console.log(data);
         //  return;
-          
+
           $.ajax({
             type: 'GET',
             url: "{{ route('admin.users.toggle_verification_status') }}",
@@ -561,7 +561,7 @@
                     $('#'+display_address).val(response.address);
                   }
                   $('#'+display_id).val(response.name);
-                
+
                   console.log(response);
               },
               error: function(xhr, status, error) {
@@ -570,7 +570,7 @@
               }
           });
   }
-  
+
   const validateNameOnSmartCard = debounce((typee) => doValidateNameOnSmartCard(typee));
 
   togglePassword('show_pin1','pin','number');
@@ -581,8 +581,8 @@
   togglePassword('show_password','new_password','text');
   togglePassword('show_password2','confirm_new_password','text');
   togglePassword('show_password_current','current_password','text');
-  
-  
+
+
 
   $(document).ready(function(){
 
@@ -596,7 +596,7 @@
             $('#product_plan_category_id').html('<option value="all">All categories selected</option>');
             $("#product_plan_category_div").addClass('hidden');
             $('#filter_by_plan_category').prop('checked',false)
-            
+
             var product_slug = $('#product_slug').val();
 
             // // alert(network_id)
@@ -624,7 +624,7 @@
         var amount =  $(this).val();
         var product_slug = $("#product_slug").val();
         var plan_category_id = $('#electricity_product_plan_category_id').val();
-          
+
         var amount = product_slug == 'airtime' || product_slug == 'utility_bills'  ? amount : '';
         // alert(plan_category_id)
 
@@ -649,7 +649,7 @@
         $(this).prop('disabled',true);
         $('#cancel_disabling').removeClass('hidden')
 
-      
+
         //display product plans categories
         const electricity_product_plan_category_id = $('#electricity_product_plan_category_id').val();
         const metre_number = $('#metre_number').val();
@@ -660,8 +660,8 @@
         const pin = $('#pin').val();
         const no_of_slots = $('#no_of_slots').val();
         const utility_amount = $('#utility_amount').val();
-        
-        
+
+
 
         const data = {
           electricity_product_plan_category_id : electricity_product_plan_category_id,
@@ -680,7 +680,7 @@
 
         if (confirm("Are you sure you want to complete this electricity subscription purchase?") == true) {
             // alert('logic happens here')
-          
+
 
             $.ajax({
               type: 'GET',
@@ -715,8 +715,8 @@
           return;
         }
 
-        
-      
+
+
     })
 
     $('#buy_data_btn').click(function(e){
@@ -725,7 +725,7 @@
         $(this).prop('disabled',true);
         $('#cancel_disabling').removeClass('hidden')
 
-      
+
         //display product plans categories
         var network_id = $('#network_id').val();
         if(network_id == undefined){
@@ -743,9 +743,9 @@
           var validatephonenetwork = 1;
         }else{
           var validatephonenetwork = 0;
-          
+
         }
-        
+
 
         const data = {
           network_id : network_id,
@@ -758,7 +758,7 @@
           _token: $('meta[name="csrf-token"]').attr('content')
         };
 
-        
+
 
         // console.log(data);
         // return;
@@ -772,7 +772,7 @@
                   }
               });
 
-          
+
 
             $.ajax({
               type: 'GET',
@@ -805,7 +805,7 @@
             });
         } else {
           return;
-        }   
+        }
     })
 
 
@@ -815,14 +815,14 @@
         $(this).prop('disabled',true);
         $('#cancel_disabling').removeClass('hidden')
 
-      
+
          //display product plans categories
          var network_id = $('#network_id').val();
         if(network_id == undefined){
           var network_id = $("input[name='network_id']:checked").val();
         }
         // alert(network_id);return;
-       
+
         const product_plan_category_id = $('#product_plan_category_id').val();
         const phone_number = $('#phone_number').val();
         const wallet_category = $('#wallet_category').val();
@@ -833,7 +833,7 @@
           var validatephonenetwork = 1;
         }else{
           var validatephonenetwork = 0;
-          
+
         }
 
         if($('#amount_for_airtime_category').val() == ''){
@@ -851,9 +851,9 @@
           sweetAlertDisplay('You need to buy atleast N50 worth of airtime','Airtime purchase error','error');
           // sweetAlertDisplay('You need to buy atleast &#8358;50 worth of airtime','Airtime purchase error','error');
           return;
-        
+
         }
-        
+
 
         const data = {
           network_id : network_id,
@@ -871,7 +871,7 @@
 
         if (confirm("Are you sure you want to complete this airtime purchase?") == true) {
             // alert('logic happens here')
-          
+
 
             $.ajax({
               type: 'GET',
@@ -906,8 +906,8 @@
           return;
         }
 
-        
-      
+
+
     })
 
 
@@ -917,7 +917,7 @@
         $(this).prop('disabled',true);
         $('#cancel_disabling').removeClass('hidden')
 
-      
+
         //display product plans categories
         var cable_product_plan_category_id = $('#cable_product_plan_category_id').val();
         // alert(cable_product_plan_category_id);return;
@@ -931,7 +931,7 @@
         const cable_product_plan_id = $('#cable_product_plan_id').val();
         const pin = $('#pin').val();
         const no_of_slots = $('#no_of_slots').val();
-        
+
         const data = {
           cable_product_plan_category_id : cable_product_plan_category_id,
           smart_card_number : smart_card_number,
@@ -948,7 +948,7 @@
 
         if (confirm("Are you sure you want to complete this cable subscription purchase?") == true) {
             // alert('logic happens here')
-          
+
 
             $.ajax({
               type: 'GET',
@@ -982,7 +982,7 @@
         } else {
           alert('wetinnn')
           return;
-        }      
+        }
     })
 
 
@@ -993,7 +993,7 @@
     $("[data-close]").click(function () {
         $(this).parents(".modal").fadeOut();
     });
-  
+
 
     //reset
     // $('#buy_data_btn').click
@@ -1014,7 +1014,7 @@
       $('#buy_electricity_btn').html('Buy Electricity');
       $('#buy_electricity_btn').prop('disabled',false);
       $(this).addClass('hidden');
-    
+
     })
 
     //reset ends
@@ -1031,7 +1031,7 @@
     //   console.log(catid)
     // });
 
-    
+
     $('#generate_crystalpay_dynamic_account').click(function(e){
         e.preventDefault();
         const amount = $('#amount').val();
@@ -1050,7 +1050,7 @@
         const wallet_type = $(this).val();
     });
 
-  
+
 
     $('#amount').keyup(function(e){
         e.preventDefault();
@@ -1058,13 +1058,13 @@
         var network_id = $("#network_id").val();
         var product_slug = $("#product_slug").val();
         var plan_category_id = $('#product_plan_category_id').val();
-          
+
         if(network_id == ''){
           sweetAlertDisplay('Network is required','Network required','error');
           return;
         }
         var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-  
+
         getProductPlans(network_id,plan_category_id,product_slug,amount);
     });
 
@@ -1074,19 +1074,19 @@
         var network_id = $("#network_id").val();
         var product_slug = $("#product_slug").val();
         var plan_category_id = $('#product_plan_category_id').val();
-          
+
         if(network_id == ''){
           sweetAlertDisplay('Network is required','Network required','error');
           return;
         }
         var amount = product_slug == 'airtime' ? $(this).val() : '';
-      
+
         getSingleAirtimePlan(plan_category_id,amount);
     });
 
-    
 
-    
+
+
 
 
     $('#product_plan_category_id').change(function(){
@@ -1106,7 +1106,7 @@
         return;
       }
       var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-      
+
       getProductPlans(network_id,plan_category_id,product_slug,amount);
     })
 
@@ -1122,18 +1122,18 @@
       getCableProductPlans(plan_category_id,product_slug);
     })
 
-    
-    
-    
+
+
+
     $('#buy_bulk_data_btn').click(function(e){
       e.preventDefault();
-      
+
         //display product plans categories
         const bulk_data_plan_id = $('#bulk_data_plan_id').val();
         const bulk_data_wallet_id = $('#bulk_data_wallet_id').val();
         const pin = $('#pin').val();
         const _token = $('#_token').val();
-      
+
         const data = {
           bulk_data_plan_id : bulk_data_plan_id,
           bulk_data_wallet_id : bulk_data_wallet_id,
@@ -1169,9 +1169,9 @@
           return;
         }
 
-      
-        
-      
+
+
+
     })
 
     $('#bulk_data_plan_id').change(function(e){
@@ -1182,11 +1182,11 @@
       if(bulk_data_plan_id == ''){
         sweetAlertDisplay("Please select a plan",'Plan required','error');
       }
-  
+
       const data = {
           bulk_data_plan_id : bulk_data_plan_id,
-      };  
-      
+      };
+
       $.ajax({
             type: 'GET',
             url: "{{ route('user.data.fetch_bulk_data_plan_details') }}",
@@ -1194,7 +1194,7 @@
             dataType: 'json',
             success: function(response) {
                 console.log(response);
-                
+
                 if(response.status == '1'){
                     var bulk_data_plan_name = response.data.bulk_data_plan_name;
                     var selling_price = numberWithCommas(response.data.selling_price);
@@ -1204,7 +1204,7 @@
                     var data_value_tb = response.data.data_value_tb;
                     var selling_price = numberWithCommas(response.data.selling_price);
                     var mb_data_measurement = numberWithCommas(response.data.mb_data_measurement);
-                    
+
                     var data_content = '<p>Bulk data plan: '+ bulk_data_plan_name+'</p>';
                     data_content += '<p>Measurement per MB: '+ mb_data_measurement+'</p>';
                     data_content += '<p>Data value in TB: '+ data_value_tb+'</p>';
@@ -1217,8 +1217,8 @@
                     $('#bulk_data_plan_details').removeClass('hidden');
                     $('#bulk_data_plan_details').html('');
                     console.log(response);
-                } 
-              
+                }
+
             },
             error: function(xhr, status, error) {
                 // Handle errors if needed
@@ -1236,10 +1236,10 @@
         // $('#bulk_data_plan_details').addClass('hidden');
         $('#bulk_data_plan_details').html('');
       //  alert('testing')
-        
+
         const bulk_data_wallet_id = $(this).val();
         const _token = $('#_token').val();
-        
+
         const data = {
           bulk_data_wallet_id : bulk_data_wallet_id,
           _token : _token
@@ -1253,7 +1253,7 @@
             dataType: 'json',
             success: function(response) {
                 console.log(response);
-                
+
                 if(response.status == '1'){
                   let dataResult = response?.data;
                   $('#bulk_data_plan_id').html('<option value="">Select a plan</option>');
@@ -1271,10 +1271,10 @@
                   });
 
                 }else{
-                  
+
                   console.log(response);
                 }
-              
+
             },
             error: function(xhr, status, error) {
                 // Handle errors if needed
@@ -1289,18 +1289,18 @@
       $('#filter_by_plan_category').prop('checked',false)
       var network_id = $(this).val();
       var product_slug = $('#product_slug').val();
-      
+
       // alert(network_id)
       //here you have to display all plans that are tied to this network but only where tied to the automation tied to each product plan category
       var amount = product_slug == 'airtime' ? $('#amount').val() : '';
-      
+
       getProductPlans(network_id,'',product_slug,amount);
     })
 
     $('#filter_by_plan_category').change(function(e){
       e.preventDefault();
-  
-      
+
+
       if(this.checked){
         $("#product_plan_category_div").removeClass('hidden');
         //display product plans categories
@@ -1362,7 +1362,7 @@
       url = url.replace(':product_plan_id', product_plan_id);
 
       if(wallet_category == ''){
-        sweetAlertDisplay('Wallet category cannot be empty','Wallet selection required','error');        
+        sweetAlertDisplay('Wallet category cannot be empty','Wallet selection required','error');
       }
 
       if(wallet_category == 'data_wallet'){
@@ -1393,10 +1393,10 @@
 
     })
 
-   
-    
 
-  
+
+
+
 
 
   })

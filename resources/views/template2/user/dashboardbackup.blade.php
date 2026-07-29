@@ -27,20 +27,20 @@
 <div class="max-w-screen">
      <!-- NAV  -->
      <div class="grid grid-cols-12 h-20 border-t border-b border-r border-gray-300">
-        
+
         <!-- LOGO -->
         <div class="px-2 md:px-0 md:border-r md:border-gray-300 col-span-6 md:col-span-2 w-full flex items-center justify-between md:justify-start ">
-            
+
             <div class="block md:hidden">
                 <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M26.25 22.5H3.75V20H26.25V22.5ZM26.25 16.25H3.75V13.75H26.25V16.25ZM26.25 10H3.75V7.5H26.25V10Z" fill="#141BD7"/>
                 </svg>
             </div>
-           
 
-            <img class="w-3/4 md:w-1/2" src="{{asset(env('APP_ASSETS_BASE_URL').'template2/images/logonew.png') }}" alt="">
+
+            <img class="w-3/4 md:w-1/2" src="{{asset(config('app.assets_base_url').'template2/images/logonew.png') }}" alt="">
         </div>
-        
+
         <!-- RIGHT NAV -->
         <div class="col-span-6 md:col-span-10 flex items-center justify-between md:justify-between md:pl-10 md:pr-1">
             <!-- HELLO USER -->
@@ -70,7 +70,7 @@
 
                 <!-- dark:bg-[{{$site_primary_color}}] dark:hover:bg-[{{$site_primary_color}}] dark:focus:ring-[{{$site_primary_color}}] -->
                 <button type="button" class=" relative inline-flex items-center p-2 text-sm font-medium text-center text-white bg-transparent rounded-lg hover:bg-[{{$site_primary_color}}] focus:ring-4 focus:outline-none focus:ring-[{{$site_primary_color}}]">
-            
+
                     <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.38056 21C10.0857 21.6224 11.0119 22 12.0264 22C13.0408 22 13.9671 21.6224 14.6722 21M18.0264 8C18.0264 6.4087 17.3942 4.88258 16.269 3.75736C15.1438 2.63214 13.6177 2 12.0264 2C10.4351 2 8.90896 2.63214 7.78375 3.75736C6.65853 4.88258 6.02639 6.4087 6.02639 8C6.02639 11.0902 5.24686 13.206 4.37605 14.6054C3.64151 15.7859 3.27424 16.3761 3.28771 16.5408C3.30262 16.7231 3.34125 16.7926 3.48816 16.9016C3.62084 17 4.21898 17 5.41524 17H18.6375C19.8338 17 20.4319 17 20.5646 16.9016C20.7115 16.7926 20.7501 16.7231 20.7651 16.5408C20.7785 16.3761 20.4113 15.7859 19.6767 14.6054C18.8059 13.206 18.0264 11.0902 18.0264 8Z" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -82,7 +82,7 @@
                     <div class="absolute inline-flex items-center justify-center w-4 h-4 p-2 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full top-0 end-0 ">4</div>
                 </button>
 
-           
+
                   <div class=" flex items-center justify-between md:justify-center space-x-1">
                     <div class="hidden md:block"> <span class="font-bold text-md  text-gray-900">Elizabeth</span></div>
 
@@ -110,7 +110,7 @@
 
      <!-- MAIN NAV -->
      <div class="relative grid grid-cols-12 h-screen ">
-        
+
         <!-- SIDEBAR -->
         <div class="absolute md:block md:relative bg-white mb-2 md:mb-0 shadow-xl md:shadow-none inset-0 h-screen border-r border-l border-gray-300 col-span-6 md:col-span-2 w-full text-sm ">
             <ul class="space-y-4   md:space-y-6 bg-white-100 py-4 md:py-8 px-4">
@@ -145,9 +145,9 @@
                         <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M14.5 12L10.5 8L6.5 12" stroke="#141BD7" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        
+
                     </div>
-                  
+
                     <div class="ml-6  my-4">
                         <ul class="space-y-6 flex flex-col border-l-2 border-gray-300 p-4">
 
@@ -169,7 +169,7 @@
                                     Data
                                     </span>
                                 </li>
-                                    
+
                                 <li class="flex items-center space-x-1.5">
                                         <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M10.4999 14.5834H10.5083M6.49992 18.3334H14.4999C15.4333 18.3334 15.9 18.3334 16.2566 18.1518C16.5702 17.992 16.8251 17.737 16.9849 17.4234C17.1666 17.0669 17.1666 16.6002 17.1666 15.6667V4.33341C17.1666 3.39999 17.1666 2.93328 16.9849 2.57676C16.8251 2.26316 16.5702 2.00819 16.2566 1.8484C15.9 1.66675 15.4333 1.66675 14.4999 1.66675H6.49992C5.5665 1.66675 5.09979 1.66675 4.74327 1.8484C4.42966 2.00819 4.1747 2.26316 4.01491 2.57676C3.83325 2.93328 3.83325 3.39999 3.83325 4.33342V15.6667C3.83325 16.6002 3.83325 17.0669 4.01491 17.4234C4.1747 17.737 4.42966 17.992 4.74327 18.1518C5.09979 18.3334 5.5665 18.3334 6.49992 18.3334ZM10.9166 14.5834C10.9166 14.8135 10.73 15.0001 10.4999 15.0001C10.2698 15.0001 10.0833 14.8135 10.0833 14.5834C10.0833 14.3533 10.2698 14.1667 10.4999 14.1667C10.73 14.1667 10.9166 14.3533 10.9166 14.5834Z" stroke="#0F172A" stroke-linecap="round" stroke-linejoin="round"/>
@@ -189,7 +189,7 @@
                                         </span>
                                 </li>
 
-                               
+
 
                                 <li class="flex items-center space-x-1.5">
                                         <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -265,9 +265,9 @@
 
             </div>
 
-      
+
         </div>
-        
+
         <!-- MAIN AREA -->
         <div class="col-span-12 md:col-span-10">
             <!-- HELLO USER -->
@@ -276,7 +276,7 @@
             </div>
             <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 items-center px-2 md:px-0 py-6 gap-4 md:gap-3 text-sm ">
                 <div class="md:flex items-center p-2 md:p-6 rounded-lg border border-gray-300 space-x-1 md:space-x-4">
-                    <img src="{{asset(env('APP_ASSETS_BASE_URL').'template2/images/total_txns.png') }}" alt="">
+                    <img src="{{asset(config('app.assets_base_url').'template2/images/total_txns.png') }}" alt="">
 
                     <div>
                         <p>Total Transactions</p>
@@ -285,7 +285,7 @@
 
                 </div>
                <div class="md:flex items-center p-2 md:p-6 rounded-lg border border-gray-300 space-x-1 md:space-x-4">
-                        <img src="{{asset(env('APP_ASSETS_BASE_URL').'template2/images/wallet_balance.png') }}" alt="">
+                        <img src="{{asset(config('app.assets_base_url').'template2/images/wallet_balance.png') }}" alt="">
 
                         <div>
                             <p>Wallet Balance</p>
@@ -294,7 +294,7 @@
 
                 </div>
                <div class="md:flex items-center p-2 md:p-6 rounded-lg border border-gray-300 space-x-1 md:space-x-4">
-                        <img src="{{asset(env('APP_ASSETS_BASE_URL').'template2/images/total_txns_count.png') }}" alt="">
+                        <img src="{{asset(config('app.assets_base_url').'template2/images/total_txns_count.png') }}" alt="">
 
                         <div>
                             <p>Total Transactions</p>
@@ -314,7 +314,7 @@
 
 
                 </div>
-                
+
             </div>
 
             <div class="max-w-6xl mx-auto px-4 py-2 gap-1 md:rounded-lg text-sm border border-2 border-gray-300 ">
@@ -324,7 +324,7 @@
                 </div>
 
                 <div class="w-full mx-auto mx-auto grid grid-cols-2 md:grid-cols-5 items-center py-4 gap-4 ">
-                    
+
                     <div class="flex items-center p-4 rounded-lg border border-gray-300 space-x-4">
                         <div class="bg-[{{$site_secondary_color}}] rounded-full p-3">
                             <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -333,7 +333,7 @@
                         </div>
                         <div>
                             <p>Buy Airtime</p>
-                        
+
                         </div>
                     </div>
 
@@ -352,11 +352,11 @@
                         </div>
                         <div>
                             <p>Buy Data</p>
-                        
+
                         </div>
                     </div>
 
-                    
+
                     <div class="flex items-center p-4 rounded-lg border border-gray-300 space-x-4">
                         <div class="bg-[{{$site_secondary_color}}] rounded-full p-3">
                             <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -365,7 +365,7 @@
                         </div>
                         <div>
                             <p>Electricity Bills</p>
-                        
+
                         </div>
                     </div>
 
@@ -377,7 +377,7 @@
                         </div>
                         <div>
                             <p>Cable TV</p>
-                        
+
                         </div>
                     </div>
 
@@ -389,17 +389,17 @@
                         </div>
                         <div>
                             <p>API Docs</p>
-                        
+
                         </div>
                     </div>
 
-        
-                    
+
+
                 </div>
-                
+
             </div>
 
-          
+
 
         </div>
 

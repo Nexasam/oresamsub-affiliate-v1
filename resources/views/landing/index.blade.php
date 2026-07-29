@@ -8,13 +8,13 @@
 
     @php
         $hero1 = isset($hero_image1)
-            ? env('APP_URL').'assets/landing_page_assets/img/hero_image1/'.$hero_image1
-            : env('APP_URL').'assets/landing_page_assets/img/bg_banner1.jpg';
+            ? config('app.url').'assets/landing_page_assets/img/hero_image1/'.$hero_image1
+            : config('app.url').'assets/landing_page_assets/img/bg_banner1.jpg';
         $hero2 = isset($hero_image2)
-            ? env('APP_URL').'assets/landing_page_assets/img/hero_image2/'.$hero_image2
-            : env('APP_URL').'assets/landing_page_assets/img/bg_banner2.jpg';
+            ? config('app.url').'assets/landing_page_assets/img/hero_image2/'.$hero_image2
+            : config('app.url').'assets/landing_page_assets/img/bg_banner2.jpg';
         $logo = isset($site_logo)
-            ? env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo
+            ? config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo
             : null;
 
         // Dynamic affiliate color integration
@@ -121,8 +121,8 @@
     <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 px-6 items-center">
         <div data-aos="fade-right">
             <img src="{{ isset($aboutus_image)
-                ? asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/aboutus_image/'.$aboutus_image)
-                : asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth11.jpg') }}"
+                ? asset(config('app.assets_base_url').'landing_page_assets/img/aboutus_image/'.$aboutus_image)
+                : asset(config('app.assets_base_url').'img/authentication/auth11.jpg') }}"
                 class="rounded-3xl shadow-lg" alt="About Us">
         </div>
         <div data-aos="fade-left">

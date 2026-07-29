@@ -4,8 +4,8 @@
     style="background-color: {{ 'blue'  }}; --}}
     <!-- Start::main-sidebar-header -->
     @php
-       $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first(); 
-       $site_logo =  App\Models\SiteImage::where('image_category','site_logo')->first();   
+       $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first();
+       $site_logo =  App\Models\SiteImage::where('image_category','site_logo')->first();
     @endphp
     <div class="main-sidebar-header " style="background-color: {{ $sidebar_color != NULL && $sidebar_color->color_name != '#000000' ? $sidebar_color->color_value: ''  }} ;">
         <a href="#" class="header-logo mt-3 mb-20" >
@@ -13,24 +13,24 @@
             <img src="../assets/img/brand-logos/toggle-logo.png" alt="logo" class="main-logo toggle-logo">
             <img src="../assets/img/brand-logos/desktop-dark.png" alt="logo" class="main-logo desktop-dark">
             <img src="../assets/img/brand-logos/toggle-dark.png" alt="logo" class="main-logo toggle-dark"> --}}
-            {{-- <img src="{{ asset( env('APP_ASSETS_BASE_URL').'img/logos/logo.png') }}" alt="logo"
+            {{-- <img src="{{ asset( config('app.assets_base_url').'img/logos/logo.png') }}" alt="logo"
             class="w-14 h-16 mx-auto block dark:hidden" > --}}
 
             @if ($site_logo)
-            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo desktop-logo">
-            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo toggle-logo">
-            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo desktop-dark">
-            <img style="max-height: 70px; max-width:75px;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo toggle-dark">
-            {{-- <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" --}}
+            <img style="max-height: 70px; max-width:75px;" src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo desktop-logo">
+            <img style="max-height: 70px; max-width:75px;" src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo toggle-logo">
+            <img style="max-height: 70px; max-width:75px;" src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo desktop-dark">
+            <img style="max-height: 70px; max-width:75px;" src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" class="main-logo toggle-dark">
+            {{-- <img src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo->image_name }}" alt="logo" --}}
             {{-- class="w-14 h-16 mx-auto block dark:hidden" > --}}
             @endif
 
             @if (! $site_logo)
-            <h1 class="block text-2xl font-bold text-white dark:text-gray-900">{{ session('affiliate')->name }}</h1>                
+            <h1 class="block text-2xl font-bold text-white dark:text-gray-900">{{ session('affiliate')->name }}</h1>
             @endif
 
-            
-          
+
+
 
         </a>
     </div>
@@ -73,13 +73,13 @@
                     <ul class="slide-menu child1">
                         <li class="slide side-menu__label1"><a href="#">{{ __('messages.Dashboard') }}</a></li>
                         {{-- <li class="slide"><a href="index.html" class="side-menu__item">Sales</a></li> --}}
-                        
+
                     </ul>
                 </li>
 
 
                 <!-- Start::slide -->
-        
+
                 <!-- Language Switcher -->
                 <li class="slide has-sub" id="languageSwitcher">
                     <a href="#" class="side-menu__item text-yellow-700 dark:text-yellow-300 font-semibold">
@@ -112,8 +112,8 @@
 
 
 
-          
-              
+
+
 
 
 
@@ -175,9 +175,9 @@
                   </li>
                 <!-- End::slide -->
 
-                
 
-             
+
+
 
                 <!-- Start::slide -->
                 {{-- <li class="slide  has-sub">
@@ -187,12 +187,12 @@
                         <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
                     </a>
                     <ul class="slide-menu child1">
-                      
+
                     </ul>
                 </li> --}}
                 <!-- End::slide -->
 
-                
+
 
                 <!-- Start::slide -->
                 <li class="slide  has-sub">
@@ -206,7 +206,7 @@
                     </ul>
                 </li>
                 <!-- End::slide -->
-       
+
                 <!-- Start::slide -->
                 <li class="slide  has-sub">
                     <a href="{{ route('admin.product_plan_categories.index')}}" class="side-menu__item">
@@ -233,9 +233,9 @@
                 </li>
                 <!-- End::slide -->
 
-               
 
-                {{-- @if (env('APP_NAME') == 'OresamSub' || env('APP_NAME') == 'Mega-sub')
+
+                {{-- @if (config('app.name') == 'OresamSub' || config('app.name') == 'Mega-sub')
                 <!-- End::slide -->
                 <li class="slide  has-sub">
                     <a href="{{ route('admin.coupon_codes.index')}}" class="side-menu__item">
@@ -244,13 +244,13 @@
                         <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
                     </a>
                     <ul class="slide-menu child1">
-                     
+
                     </ul>
                 </li>
                 @endif --}}
 
 
-                 {{-- @if (env('APP_NAME') == 'OresamSub') --}}
+                 {{-- @if (config('app.name') == 'OresamSub') --}}
                         {{-- <!-- Start::slide -->
                         <li class="slide  has-sub">
                             <a href="{{ route('admin.wallet_funding_promo.index')}}" class="side-menu__item">
@@ -328,7 +328,7 @@
                 <!-- End::slide -->
 
 
-                
+
 
                   <!-- Start::slide -->
                   {{-- in progress --}}
@@ -343,7 +343,7 @@
                   </li> --}}
                 <!-- End::slide -->
 
-            
+
 
                   <!-- Start::slide -->
                   {{-- in progress --}}
@@ -397,12 +397,12 @@
                     @endif
 
                 @endif
- 
-              
+
+
 
                 <!-- Start::slide -->
                 <li class="slide">
-                
+
                     {{-- <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <a type="button" href="" class="side-menu__item"
@@ -411,7 +411,7 @@
                              <i class="ri-apps-2-line side-menu__icon"></i>
                              <span class="side-menu__label">Logout</span>
                         </a>
-                      
+
                     </form> --}}
 
                     <form method="POST" action="{{ route('logout') }}">
@@ -420,7 +420,7 @@
                         <i class="ti ti-logout text-white mr-3"></i>
                         <a type="button" href="" onclick="event.preventDefault();
                                             this.closest('form').submit();">
-                            
+
                              <span class="side-menu__label text-white">{{ __('messages.Logout') }}</span>
                         </a>
                        </div>

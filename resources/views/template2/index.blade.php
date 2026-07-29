@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ env('APP_NAME') }} - Your number 1 subscription platform</title>
+    <title>{{ config('app.name') }} - Your number 1 subscription platform</title>
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,12 +15,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
     @php
-       $hero1 = isset($hero_image1) ? env('APP_URL').'assets/landing_page_assets/img/hero_image1/'.$hero_image1 : env('APP_URL').'assets/landing_page_assets/img/bg_banner1.jpg';
-       $hero2 = isset($hero_image1) ? env('APP_URL').'assets/landing_page_assets/img/hero_image2/'.$hero_image2 : env('APP_URL').'assets/landing_page_assets/img/bg_banner2.jpg';
-       $logo = isset($site_logo) ? env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo : 'nil';
-       
+       $hero1 = isset($hero_image1) ? config('app.url').'assets/landing_page_assets/img/hero_image1/'.$hero_image1 : config('app.url').'assets/landing_page_assets/img/bg_banner1.jpg';
+       $hero2 = isset($hero_image1) ? config('app.url').'assets/landing_page_assets/img/hero_image2/'.$hero_image2 : config('app.url').'assets/landing_page_assets/img/bg_banner2.jpg';
+       $logo = isset($site_logo) ? config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo : 'nil';
+
     @endphp
-    
+
     <script defer>
         document.addEventListener("DOMContentLoaded", function () {
             // Ensure all nav links scroll smoothly
@@ -77,7 +77,7 @@
          .my-float{
          margin-top:16px;
          }
-    
+
     </style>
 
 </head>
@@ -86,11 +86,11 @@
     {{-- &text=Hola%21%20Quisiera%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Varela%202. --}}
     <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number_template2  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="float" target="_blank">
     <i class="fa fa-whatsapp my-float"></i>
-    </a>       
+    </a>
     <div id="home" class="max-w-full overflow-x-hidden p-0 m-0 h-screen bg-white">
         <!-- <nav class="flex items-center justify-between  px-24 py-6 bg-white">
             <img src="assets/template2/images/logonew.png" alt="">
-           
+
             <ul class="flex space-x-8 text-[#333333] text-lg">
                 <li> <a href="#">About</a></li>
                 <li> <a href="#">Services</a></li>
@@ -102,14 +102,14 @@
                 <a href="#" type="button" class="w-full  text-[{{$site_primary_color}}] bg-[#F0F5FF] hover:bg-[{{$site_primary_color}}]/90 hover:text-white focus:ring-4 focus:outline-none focus:ring-[{{$site_primary_color}}]/50 font-medium rounded-lg text-md px-1 py-2.5 text-center items-center dark:focus:ring-[{{$site_primary_color}}]/55 me-2 mb-2">
                 Login
                 </a>
-                
+
                 <a href="#" type="button" class="w-full  text-white bg-[{{$site_primary_color}}] hover:bg-[{{$site_primary_color}}]/90 hover:text-white focus:ring-4 focus:outline-none focus:ring-[{{$site_primary_color}}]/50 font-medium rounded-lg text-md px-1 py-2.5 text-center items-center dark:focus:ring-[{{$site_primary_color}}]/55 me-2 mb-2">
                 Sign Up
                 </a>
             </div>
         </nav> -->
 
-        
+
 
         <nav class="bg-white  w-full z-1 top-0 start-0 border-b border-[{{$site_secondary_color}}] ">
         <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
@@ -117,11 +117,11 @@
             <!-- <img src="#docs/images/logo.svg" class="h-8" alt="Flowbite Logo"> -->
             @if ($logo != 'nil')
             {{-- <img src="{{ $logo }}" style="max-height: 90px; max-width: 90px;" alt=""> --}}
-            <img src="{{$logo}}" style="height: 75px; width: 75px;"  class="h-12" alt="{{ env('APP_NAME') }}">
+            <img src="{{$logo}}" style="height: 75px; width: 75px;"  class="h-12" alt="{{ config('app.name') }}">
             {{-- <img src="assets/template2/images/logonew.png" class="h-12" alt="Logo"> --}}
 
             @else
-            <a class="navbar-brand" href="#">{{ $site_logo_alt }}<span class="dot">.</span></a>             
+            <a class="navbar-brand" href="#">{{ $site_logo_alt }}<span class="dot">.</span></a>
             @endif
             <!-- <span class="self-center text-2xl font-semibold whitespace-nowrap ">Datahub</span> -->
         </a>
@@ -160,18 +160,18 @@
 
         <!-- hero -->
         <div  class="w-full max-w-full md:max-w-5xl md:mx-auto md:py-16 mt-40 md:mt-32 bg-white text-center space-y-8">
-            <h1 class="w-full md:px-2 md:max-w-4xl md:mx-auto font-bold text-[#333333] text-4xl md:text-7xl">{{$hero_main_text_template2}} 
+            <h1 class="w-full md:px-2 md:max-w-4xl md:mx-auto font-bold text-[#333333] text-4xl md:text-7xl">{{$hero_main_text_template2}}
                 <span class="relative inline-block px-4 py-1 rounded-lg bg-gradient-to-r from-[{{$site_secondary_color}}] via-[{{$site_primary_color}}] to-[{{$site_primary_color}}] text-white">{{ $hero_main_text_stylish_template2 }}</span>
             </h1>
            <p class="font-normal px-4 md:max-w-3xl md:mx-auto text-lg md:text-lg">{{$hero_sub_text_template2}}</p>
-                
+
             <a href="{{route('register')}}" class="text-white bg-[{{$site_primary_color}}] hover:bg-[{{$site_primary_color}}] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center">
                 Get started for free
             <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
             </svg>
             </a>
-        
+
             <div class="w-full md:flex md:items-center md:justify-center md:space-x-4">
                 <div>
                     <!-- image list -->
@@ -179,8 +179,8 @@
                 </div>
                 <div class=" ">
                     <!-- rating -->
-                 
-                        
+
+
 
                         <div class="w-1/2 mt-4 md:mt-0 md:w-full mx-auto block flex items-center">
                             <svg class="w-4 h-4 text-yellow-300 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 20">
@@ -202,7 +202,7 @@
 
 
 
-                  
+
                         <p class="mx-auto mt-4 md:mt-0">Loved by {{$hero_lovers_count_template2}}+ customers</p>
                 </div>
             </div>
@@ -214,13 +214,13 @@
                 <!-- <img class="h-56 md:h-screen object-cover md:object-none w-full" src="assets/template2/images/dashboard_image.png" alt=""> -->
                 <img class="hidden md:block w-3/4 h-3/4 mx-auto" src="{{$hero1}}" alt="">
                 <img class="block md:hidden w-full px-2" src="{{$hero1}}" alt="">
-{{-- 
+{{--
                 <img class="hidden md:block w-3/4 h-3/4 mx-auto" src="assets/template2/images/dashboard_image_small.png" alt="">
                 <img class="block md:hidden w-full px-2" src="assets/template2/images/dashboard_image_small.png" alt=""> --}}
-               
+
             </div>
          <!-- </div> -->
-      
+
 
         <!-- partner section -->
          <div class="bg-[{{$site_primary_color}}] w-full">
@@ -251,12 +251,12 @@
                             <img width="125" height="125" src="assets/template2/images/airtel.png" alt="airtel">
                             <img width="80" height="80" src="assets/template2/images/ninemobile.png" alt="9mobile">
                         </div>
-                      
-                       
+
+
                 </div>
          </div>
-        
-     
+
+
 
         <!-- about us -->
         <div id="about" class="grid md:grid-cols-2  w-full md:max-w-7xl md:mx-auto py-0 px-4 md:py-12  md:space-y-6">
@@ -274,11 +274,11 @@
             </div>
 
             @if (isset($aboutus_image))
-             <img class="px-4 mt-8 md:mt-0 md:px-0 w-full h-[500px] rounded-lg object-cover" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/aboutus_image/'.$aboutus_image) }}"  alt="About us">          
+             <img class="px-4 mt-8 md:mt-0 md:px-0 w-full h-[500px] rounded-lg object-cover" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/aboutus_image/'.$aboutus_image) }}"  alt="About us">
             @else
                 <img src="assets/template2/images/aboutus.png" alt="About us">
             @endif
-         
+
         </div>
 
         <!-- analytics -->
@@ -298,9 +298,9 @@
                             <h4>REFERRAL BONUSES</h4>
                         </div>
                     </div>
-             
+
          </div>
-        
+
 
         <!-- features and services -->
         <div id="services" class="bg-[linear-gradient(-45deg,{{$site_primary_color}}_75%,{{$site_secondary_color}}_25%)] skew-y-4 w-full md:py-16">
@@ -308,7 +308,7 @@
                     <h2 class="max-w-4xl text-[{{$site_primary_color}}] font-extrabold text-3xl md:text-4xl mr-0 md:mr-2">Our Features and Services</h2>
                     <div class="md:max-w-4xl mt-4 md:mt-0 ml-0 md:ml-24">
                         <div class="font-normal  w-3xl text-md md:text-lg text-white">We specialize in selling data, airtime, bill payment services, cable TV subscriptions, e-pins, and much more.</p>
-                        </div>      
+                        </div>
                     </div>
                 </div>
 
@@ -362,7 +362,7 @@
                                                 </div>
                                             </div>
 
-                                        
+
                                         </div>
 
                                         <div class="pb-6 md:pb-0 mt-4 md:mt-6 rounded-xl grid gap-4 px-6 md:grid-cols-3  md:space-x-4">
@@ -413,12 +413,12 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>                            
+                                        </div>
                 </div>
         </div>
-        
 
-         
+
+
        <!-- <div class="w-full py-12 bg-[#F0F5FF]">
             <div class="rounded-xl  max-w-6xl mx-auto">
                                         <div class="mt-4 rounded-xl grid gap-4 grid-cols-3  space-x-4">
@@ -470,7 +470,7 @@
                                                 </div>
                                             </div>
 
-                                        
+
                                         </div>
 
                                         <div class="rounded-xl mt-6 grid gap-4 grid-cols-3  space-x-4">
@@ -522,22 +522,22 @@
                                                 </div>
                                             </div>
 
-                                    
-                                        
+
+
                                         </div>
 
-                                        
+
             </div>
        </div> -->
-        
-       
-      
 
-    
+
+
+
+
         <!-- <div class=" max-w-7xl mx-auto mt-24">
         <h2 class="max-w-4xl mx-auto font-bold text-2xl">Product Plans & Prices</h2>
             <p>Here's a list of all our product plans and the prices.</p>
-            
+
 
                 <div class="relative overflow-x-auto shadow-md md:rounded-lg">
                     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -652,7 +652,7 @@
                         <p class="mt-8 text-[#333333]">
                         Mixed feelings but adequate results. Pros: technical skills & Intuition about colors, fonts, & layout styles. Cons: Communication, English, Detail Orientation, Creativity, Following the Brief (Style guide, sample website, text requested). Off the mark 2 day delivery, and 5-days of revision for one landing (good) page.
                         </p>
-                    
+
                         <div class="flex items-center mt-8">
                             <img class="rounded-full w-16 h-16 mr-4" src="assets/template2/images/testimonial_avata.png" alt="">
                             <div>
@@ -660,7 +660,7 @@
                                 <p class="text-sm">Golio</p>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center mt-8 space-x-2">
                             <a href="#">
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -673,14 +673,14 @@
                                 <rect width="12" height="12" rx="6" fill="#CEE0FA"/>
                                 </svg>
                             </a>
-                           
+
                             <a href="#">
                                 <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="32" height="12" rx="6" fill="#141BD7"/>
                                 </svg>
 
                             </a>
-                          
+
 
                             <a href="#">
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -695,12 +695,12 @@
                             </a>
 
                         </div>
-                        
+
                     </div>
                 </div>
-              
+
             </div>
-            
+
         </div> -->
 
 
@@ -719,7 +719,7 @@
                     </div>
                 </div>
 
-                
+
 
                 <div id="indicators-carousel" class="relative w-full mt-8 md:mt-0 md:w-1/2" data-carousel="static">
                     <!-- Carousel wrapper -->
@@ -748,7 +748,7 @@
                                     <p class="mt-8 text-[#333333]">
                                    {{$testimony1_template2}}
                                     </p>
-                                
+
                                     <div class="flex items-center mt-8">
                                         <img class="rounded-full w-12 h-12 mr-0 md:mr-4" src="assets/template2/images/testimonial_avata.png" alt="">
                                         <div>
@@ -756,7 +756,7 @@
                                             <p class="text-sm"> {{$testimony1_name_template2}}</p>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- <div class="flex items-center mt-8 space-x-2">
                                         <a href="#">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -769,14 +769,14 @@
                                             <rect width="12" height="12" rx="6" fill="#CEE0FA"/>
                                             </svg>
                                         </a>
-                                    
+
                                         <a href="#">
                                             <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect width="32" height="12" rx="6" fill="#141BD7"/>
                                             </svg>
 
                                         </a>
-                                    
+
 
                                         <a href="#">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -791,7 +791,7 @@
                                         </a>
 
                                     </div> -->
-                                    
+
                                 </div>
                             </div>
                         </div>
@@ -821,7 +821,7 @@
                                     <p class="mt-8 text-[#333333]">
                                         {{$testimony2_template2}}
                                          </p>
-                                     
+
                                          <div class="flex items-center mt-8">
                                              <img class="rounded-full w-12 h-12 mr-0 md:mr-4" src="assets/template2/images/testimonial_avata.png" alt="">
                                              <div>
@@ -829,7 +829,7 @@
                                                  <p class="text-sm"> {{$testimony2_name_template2}}</p>
                                              </div>
                                          </div>
-<!--                                     
+<!--
                                     <div class="flex items-center mt-8 space-x-2">
                                         <a href="#">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -842,14 +842,14 @@
                                             <rect width="12" height="12" rx="6" fill="#CEE0FA"/>
                                             </svg>
                                         </a>
-                                    
+
                                         <a href="#">
                                             <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect width="32" height="12" rx="6" fill="#141BD7"/>
                                             </svg>
 
                                         </a>
-                                    
+
 
                                         <a href="#">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -864,7 +864,7 @@
                                         </a>
 
                                     </div> -->
-                                    
+
                                 </div>
                             </div>
                         </div>
@@ -893,7 +893,7 @@
                                     <p class="mt-8 text-[#333333]">
                                         {{$testimony3_template2}}
                                          </p>
-                                     
+
                                          <div class="flex items-center mt-8">
                                              <img class="rounded-full w-12 h-12 mr-0 md:mr-4" src="assets/template2/images/testimonial_avata.png" alt="">
                                              <div>
@@ -901,7 +901,7 @@
                                                  <p class="text-sm"> {{$testimony3_name_template2}}</p>
                                              </div>
                                          </div>
-                                    
+
                                     <!-- <div class="flex items-center mt-8 space-x-2">
                                         <a href="#">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -914,14 +914,14 @@
                                             <rect width="12" height="12" rx="6" fill="#CEE0FA"/>
                                             </svg>
                                         </a>
-                                    
+
                                         <a href="#">
                                             <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect width="32" height="12" rx="6" fill="#141BD7"/>
                                             </svg>
 
                                         </a>
-                                    
+
 
                                         <a href="#">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -936,16 +936,16 @@
                                         </a>
 
                                     </div> -->
-                                    
+
                                 </div>
                             </div>
                         </div>
 
-                     
 
 
 
-                        
+
+
                     </div>
                     <!-- Slider indicators -->
                     <div class="hidden md:block absolute z-30 flex -translate-x-1/2 space-x-3 rtl:space-x-reverse bottom-5 left-1/2">
@@ -994,7 +994,7 @@
                         <p class="mt-8 text-[#333333]">
                         Mixed feelings but adequate results. Pros: technical skills & Intuition about colors, fonts, & layout styles. Cons: Communication, English, Detail Orientation, Creativity, Following the Brief (Style guide, sample website, text requested). Off the mark 2 day delivery, and 5-days of revision for one landing (good) page.
                         </p>
-                    
+
                         <div class="flex items-center mt-8">
                             <img class="rounded-full w-16 h-16 mr-4" src="assets/template2/images/testimonial_avata.png" alt="">
                             <div>
@@ -1002,7 +1002,7 @@
                                 <p class="text-sm">Golio</p>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center mt-8 space-x-2">
                             <a href="#">
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1015,14 +1015,14 @@
                                 <rect width="12" height="12" rx="6" fill="#CEE0FA"/>
                                 </svg>
                             </a>
-                           
+
                             <a href="#">
                                 <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="32" height="12" rx="6" fill="#141BD7"/>
                                 </svg>
 
                             </a>
-                          
+
 
                             <a href="#">
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1037,16 +1037,16 @@
                             </a>
 
                         </div>
-                        
+
                     </div>
                 </div> -->
                 <!-- inside slide -->
-              
+
             </div>
-            
+
           </div>
 
-        
+
 
 
 
@@ -1095,7 +1095,7 @@
                                     <path d="M23.5489 32V22.8777H26.6096L27.0688 19.3216H23.5489V17.0515C23.5489 16.0222 23.8335 15.3208 25.3112 15.3208L27.1927 15.32V12.1392C26.8673 12.0969 25.7504 12 24.4504 12C21.7358 12 19.8773 13.657 19.8773 16.6993V19.3216H16.8073V22.8777H19.8773V32H23.5489Z" fill="white"/>
                                 </svg>
                             </a>
-                           
+
                             <a href="{{$twitter_link_template2}}">
                                 <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="44" height="44" rx="5" fill="white"/>
@@ -1148,23 +1148,23 @@
                                 <path d="M12.5 2C18.023 2 22.5 6.477 22.5 12C22.5 17.523 18.023 22 12.5 22C10.7328 22.003 8.9966 21.5353 7.47002 20.645L2.50402 22L3.85602 17.032C2.96497 15.5049 2.49692 13.768 2.50002 12C2.50002 6.477 6.97702 2 12.5 2ZM9.09202 7.3L8.89201 7.308C8.76271 7.31691 8.63636 7.35087 8.52002 7.408C8.41159 7.46951 8.31258 7.5463 8.22602 7.636C8.10602 7.749 8.03802 7.847 7.96502 7.942C7.59514 8.4229 7.39599 9.01331 7.39902 9.62C7.40102 10.11 7.52902 10.587 7.72902 11.033C8.13802 11.935 8.81102 12.89 9.69902 13.775C9.91302 13.988 10.123 14.202 10.349 14.401C11.4524 15.3724 12.7673 16.073 14.189 16.447L14.757 16.534C14.942 16.544 15.127 16.53 15.313 16.521C15.6042 16.5056 15.8885 16.4268 16.146 16.29C16.2769 16.2223 16.4047 16.1489 16.529 16.07C16.529 16.07 16.5714 16.0413 16.654 15.98C16.789 15.88 16.872 15.809 16.984 15.692C17.068 15.6053 17.138 15.5047 17.194 15.39C17.272 15.227 17.35 14.916 17.382 14.657C17.406 14.459 17.399 14.351 17.396 14.284C17.392 14.177 17.303 14.066 17.206 14.019L16.624 13.758C16.624 13.758 15.754 13.379 15.222 13.137C15.1663 13.1128 15.1067 13.0989 15.046 13.096C14.9776 13.0888 14.9084 13.0965 14.8432 13.1184C14.778 13.1403 14.7182 13.176 14.668 13.223C14.663 13.221 14.596 13.278 13.873 14.154C13.8315 14.2098 13.7744 14.2519 13.7088 14.2751C13.6433 14.2982 13.5723 14.3013 13.505 14.284C13.4398 14.2666 13.376 14.2446 13.314 14.218C13.19 14.166 13.147 14.146 13.062 14.11C12.4879 13.8599 11.9565 13.5215 11.487 13.107C11.361 12.997 11.244 12.877 11.124 12.761C10.7306 12.3842 10.3878 11.958 10.104 11.493L10.045 11.398C10.0033 11.3338 9.96905 11.265 9.94302 11.193C9.90502 11.046 10.004 10.928 10.004 10.928C10.004 10.928 10.247 10.662 10.36 10.518C10.47 10.378 10.563 10.242 10.623 10.145C10.741 9.955 10.778 9.76 10.716 9.609C10.436 8.925 10.1467 8.24467 9.84802 7.568C9.78902 7.434 9.61402 7.338 9.45502 7.319C9.40102 7.31233 9.34701 7.307 9.29302 7.303C9.15874 7.2953 9.02411 7.29664 8.89002 7.307L9.09202 7.3Z" fill="white"/>
                                 </svg>
                             </a>
-                            
+
 
                     </div>
 
 
                 </div>
                 <div class="bg-[#F0F5FF] mt-6 md:mt-0 md:p-4 rounded-2xl w-full md:w-1/2">
-                    
-                  
+
+
                     <div class="w-full max-w-7xl h-96 rounded-lg overflow-hidden shadow-lg">
                     <iframe src="{{$google_map_link}}" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
 
                 </div>
-              
+
             </div>
-            
+
         </div>
 
           <!-- Footer 2-->
@@ -1172,11 +1172,11 @@
             <div class="w-full px-2 mx-auto md:max-w-6xl py-4 md:flex items-center justify-between">
                 @if ($logo != 'nil')
                   <a href="home">
-                    <img src="{{$logo}}" style="height: 75px; width: 75px;"  class="h-12" alt="{{ env('APP_NAME') }}">  
-                  </a> 
-               
+                    <img src="{{$logo}}" style="height: 75px; width: 75px;"  class="h-12" alt="{{ config('app.name') }}">
+                  </a>
+
                 @else
-                <a class="navbar-brand" href="#">{{ $site_logo_alt }}<span class="dot">.</span></a>             
+                <a class="navbar-brand" href="#">{{ $site_logo_alt }}<span class="dot">.</span></a>
                 @endif
                  <div class="text-sm md:text-md  space-x-6 mt-6 md:mt-0">
                     <a href="#home">Home</a>
@@ -1228,25 +1228,25 @@
                                 </svg>
                             </a>
 
-                            
+
                             <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number_template2  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="bg-[{{$site_primary_color}}] p-2 rounded-lg">
                                 <svg width="20" height="19" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12.5 2C18.023 2 22.5 6.477 22.5 12C22.5 17.523 18.023 22 12.5 22C10.7328 22.003 8.9966 21.5353 7.47002 20.645L2.50402 22L3.85602 17.032C2.96497 15.5049 2.49692 13.768 2.50002 12C2.50002 6.477 6.97702 2 12.5 2ZM9.09202 7.3L8.89201 7.308C8.76271 7.31691 8.63636 7.35087 8.52002 7.408C8.41159 7.46951 8.31258 7.5463 8.22602 7.636C8.10602 7.749 8.03802 7.847 7.96502 7.942C7.59514 8.4229 7.39599 9.01331 7.39902 9.62C7.40102 10.11 7.52902 10.587 7.72902 11.033C8.13802 11.935 8.81102 12.89 9.69902 13.775C9.91302 13.988 10.123 14.202 10.349 14.401C11.4524 15.3724 12.7673 16.073 14.189 16.447L14.757 16.534C14.942 16.544 15.127 16.53 15.313 16.521C15.6042 16.5056 15.8885 16.4268 16.146 16.29C16.2769 16.2223 16.4047 16.1489 16.529 16.07C16.529 16.07 16.5714 16.0413 16.654 15.98C16.789 15.88 16.872 15.809 16.984 15.692C17.068 15.6053 17.138 15.5047 17.194 15.39C17.272 15.227 17.35 14.916 17.382 14.657C17.406 14.459 17.399 14.351 17.396 14.284C17.392 14.177 17.303 14.066 17.206 14.019L16.624 13.758C16.624 13.758 15.754 13.379 15.222 13.137C15.1663 13.1128 15.1067 13.0989 15.046 13.096C14.9776 13.0888 14.9084 13.0965 14.8432 13.1184C14.778 13.1403 14.7182 13.176 14.668 13.223C14.663 13.221 14.596 13.278 13.873 14.154C13.8315 14.2098 13.7744 14.2519 13.7088 14.2751C13.6433 14.2982 13.5723 14.3013 13.505 14.284C13.4398 14.2666 13.376 14.2446 13.314 14.218C13.19 14.166 13.147 14.146 13.062 14.11C12.4879 13.8599 11.9565 13.5215 11.487 13.107C11.361 12.997 11.244 12.877 11.124 12.761C10.7306 12.3842 10.3878 11.958 10.104 11.493L10.045 11.398C10.0033 11.3338 9.96905 11.265 9.94302 11.193C9.90502 11.046 10.004 10.928 10.004 10.928C10.004 10.928 10.247 10.662 10.36 10.518C10.47 10.378 10.563 10.242 10.623 10.145C10.741 9.955 10.778 9.76 10.716 9.609C10.436 8.925 10.1467 8.24467 9.84802 7.568C9.78902 7.434 9.61402 7.338 9.45502 7.319C9.40102 7.31233 9.34701 7.307 9.29302 7.303C9.15874 7.2953 9.02411 7.29664 8.89002 7.307L9.09202 7.3Z" fill="white"/>
                                 </svg>
                             </a>
 
-                           
+
                         </div>
                  </div>
             </div>
-            
+
         </div>
 
 
         <!-- divider -->
         <div class="w-full  bg-white">
             <hr class="w-full px-4 md:px-0 md:max-w-4xl mx-auto border-2 border-[{{$site_primary_color}}]">
-            
+
         </div>
 
         <!-- copyright -->
@@ -1282,7 +1282,7 @@
                         <p>© {{ date('Y') }} {{ $site_logo_alt_template2 }}. All rights reserved.</p>
                     </div>
             </div>
-            
+
         </div>
 
     </div>

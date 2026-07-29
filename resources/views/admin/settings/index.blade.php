@@ -10,17 +10,17 @@
                 <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-900 dark:hover:text-white text-2xl font-medium"> Settings</h3>
             </div>
             <ol class="flex items-center whitespace-nowrap min-w-0">
-              
+
                 <li class="text-sm text-gray-500 hover:text-primary dark:text-white/70 " aria-current="page">
                     Home
-                </li> 
+                </li>
             </ol> --}}
         </div>
         <!-- Page Header Close -->
 
         <!-- Start::row-1 -->
         <div class="grid grid-cols-12 gap-1">
-         
+
           <div class="col-span-12">
             @if (Session::has('success'))
               <div class="bg-success/10 border border-success/10 alert text-success" role="alert">
@@ -33,7 +33,7 @@
                 {{ Session::get('failure') }}
               </div>
             @endif
-            
+
             @if ($errors->any())
               <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                 <ul>
@@ -46,7 +46,7 @@
           </div>
 
           <div class="col-span-12">
-          
+
               <div class="box">
                 <div class="box-header">
                   <h5 class="box-title">Admin Settings</h5>
@@ -57,7 +57,7 @@
                     {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500 active" id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
                       Referral Commissions
                     </button> --}}
-                    
+
                     {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500" id="pills-with-brand-color-item-2" data-hs-tab="#pills-with-brand-color-2" aria-controls="pills-with-brand-color-2">
                       Bulk data settings (e.g h)
                     </button> --}}
@@ -88,7 +88,7 @@
                             <form method="POST" action="{{ route('admin.settings.referral_settings')  }}">
                                @csrf
                                 <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                                    
+
                                     <div class="space-y-2">
                                       <label class="ti-form-label mb-0">Manage first crediting feature
                                           <br>
@@ -99,7 +99,7 @@
                                           <option  @if ($referral_setting->first_downline_crediting_feature == 1) selected @endif value="1">Activate flat rate</option>
                                           <option  @if ($referral_setting->first_downline_crediting_feature == 2) selected @endif value="2">Activate percentage rate</option>
                                           <option  @if ($referral_setting->first_downline_crediting_feature == 3) selected @endif value="3">Deactivate both</option>
-                           
+
                                         </select>
                                     </div>
 
@@ -116,7 +116,7 @@
                                       </label>
                                       <input value="{{ $referral_setting->set_first_downline_crediting_percentage_rate }}" name="set_first_downline_crediting_percentage_rate" type="number" required class="my-auto ti-form-input" min="0" max="100" placeholder="first crediting percentage rate">
                                     </div>
-                                
+
 
                                     <div class="space-y-2">
                                         <label class="ti-form-label mb-0">Set cap for first crediting commission <br>
@@ -127,12 +127,12 @@
                                     <div class="space-y-2">
                                         <button type="submit" class="ti-btn ti-btn-primary w-full">Update Referral commission settings</button>
                                     </div>
-                                  
+
                                     <br>
                                 </div>
                             </form>
-                        
-                      </div>                
+
+                      </div>
                     </div> --}}
                     <div id="pills-with-brand-color-2" class="" role="tabpanel" aria-labelledby="pills-with-brand-color-item-2">
                       <div class="overflow-auto">
@@ -143,7 +143,7 @@
                           {{-- <h1><strong>Template 2 Settings Below</strong> 👇👇👇👇👇👇👇👇👇</h1>
 
                           <div class="grid lg:grid-cols-2 gap-6 space-y-4 lg:space-y-0">
-                            
+
                             <div class="space-y-2">
                             <label class="ti-form-label mb-0">Site Title</label>
                             <input type="text" value="{{ $site_title_template2 }}"   name="site_title_template2" class="my-auto ti-form-input" placeholder="">
@@ -162,7 +162,7 @@
                               <label class="ti-form-label mb-0">Hero Main Stylish Word</label>
                               <input value="{{ $hero_main_text_stylish_template2 }}" type="text"  name="hero_main_text_stylish_template2" class="my-auto ti-form-input" placeholder="">
                               </div>
-                            
+
                             <div class="space-y-2">
                             <label class="ti-form-label mb-0">Hero Sub Text</label>
                             <input value="{{ $hero_sub_text_template2 }}" type="text"  name="hero_sub_text_template2" class="my-auto ti-form-input" placeholder="">
@@ -170,31 +170,31 @@
                             <div class="space-y-2">
                             <label class="ti-form-label mb-0">Hero Lovers Count</label>
                             <input value="{{ $hero_lovers_count_template2 }}" type="text"  name="hero_lovers_count_template2" class="my-auto ti-form-input" placeholder="">
-                            </div>  
+                            </div>
                             <div class="space-y-2">
                               <label class="ti-form-label mb-0">About us description</label>
                               <input value="{{ $about_us_description_template2 }}" type="text"  name="about_us_description_template2" class="my-auto ti-form-input" placeholder="">
-                              </div>   
+                              </div>
                             <div class="space-y-2">
                             <label class="ti-form-label mb-0">Data description</label>
                             <input value="{{ $data_description_template2 }}" type="text" name="data_description_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                   
+
                             <div class="space-y-2">
                               <label class="ti-form-label mb-0">Airtime description</label>
                               <input value="{{ $airtime_description_template2 }}" type="text" name="airtime_description_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                   
+
                             <div class="space-y-2">
                                 <label class="ti-form-label mb-0">Cable description</label>
                                 <input value="{{ $cable_description_template2 }}" type="text" name="cable_description_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                   
+
                             <div class="space-y-2">
                               <label class="ti-form-label mb-0">Electricity description</label>
                               <input value="{{ $electricity_description_template2 }}" type="text" name="electricity_description_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                   
+
                             <div class="space-y-2">
                               <label class="ti-form-label mb-0">Epins description</label>
                               <input value="{{ $epins_description_template2 }}" type="text" name="epins_description_template2" class="my-auto ti-form-input" placeholder="">
@@ -255,8 +255,8 @@
                               <label class="ti-form-label mb-0">Google map link</label>
                               <input value="{{ $google_map_link }}" type="text" name="google_map_link" class="my-auto ti-form-input" placeholder="">
                             </div>
-                           
-                            
+
+
 
                             <div class="space-y-2">
                             <label class="ti-form-label mb-0">Topnav email </label>
@@ -286,22 +286,22 @@
                               <label class="ti-form-label mb-0">Support Whatsapp number (format: e.g 2348168509044)</label>
                               <input value="{{ $support_whatsapp_number_template2 }}" type="text"  name="support_whatsapp_number_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                            
+
                               <div class="space-y-2">
                             <label class="ti-form-label mb-0">Instagram link</label>
                             <input value="{{ $instagram_template2 }}" type="text"  name="instagram_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
 
-                           
+
                             <div class="space-y-2">
                               <label class="ti-form-label mb-0">Physical Address</label>
                               <input value="{{ $physical_address_template2 }}" type="text"  name="physical_address_template2" class="my-auto ti-form-input" placeholder="">
                             </div>
-                    
-                          
+
+
                             <br>
                            </div>
-                          
+
                           <br>
                           <br>
                           <br> --}}
@@ -331,7 +331,7 @@
                               <div class="space-y-2">
                               <label class="ti-form-label mb-0">Sub hero 2</label>
                               <input value="{{ $sub_hero2 }}" type="text"  name="sub_hero2" class="my-auto ti-form-input" placeholder="">
-                              </div>   
+                              </div>
                               <div class="space-y-2">
                               <label class="ti-form-label mb-0">Hero2 part 1</label>
                               <input value="{{ $hero2_part1 }}" type="text" name="hero2_part1" class="my-auto ti-form-input" placeholder="">
@@ -345,48 +345,48 @@
                               <label class="ti-form-label mb-0">About us intro</label>
                               <input value="{{ $aboutus_introduction }}" type="text"  name="aboutus_introduction" class="my-auto ti-form-input" placeholder="">
                               </div>
-                              
+
                               <div class="space-y-2">
-                              <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Step 1 title for site usage' : 'Title analytics 1'  }} </label>
+                              <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Step 1 title for site usage' : 'Title analytics 1'  }} </label>
                               <input value="{{ $title_analytics1 }}" type="text"  name="title_analytics1" class="my-auto ti-form-input" placeholder="">
                               </div>
 
                               <div class="space-y-2">
                               <label class="ti-form-label mb-0">Description for title analytics 1</label>
-                              <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Step 1 description for site usage' : 'Description for Title analytics 1'  }} </label>
+                              <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Step 1 description for site usage' : 'Description for Title analytics 1'  }} </label>
 
                               <input value="{{ $value_analytics1 }}" type="text"  name="value_analytics1" class="my-auto ti-form-input" placeholder="">
                               </div>
 
                               <div class="space-y-2">
-                                <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Step 2 title for site usage' : 'itle analytics 2'  }} </label>
+                                <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Step 2 title for site usage' : 'itle analytics 2'  }} </label>
                                 <input value="{{ $title_analytics2 }}" type="text"  name="title_analytics2" class="my-auto ti-form-input" placeholder="">
                                 </div>
-  
+
                                 <div class="space-y-2">
-                                  <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Step 2 description for site usage' : 'Description for Title analytics 2'  }} </label>
+                                  <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Step 2 description for site usage' : 'Description for Title analytics 2'  }} </label>
                                   <input value="{{ $value_analytics2 }}" type="text"  name="value_analytics2" class="my-auto ti-form-input" placeholder="">
                               </div>
 
                               <div class="space-y-2">
-                                  <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Step 3 title for site usage' : 'Title analytics 3'  }} </label>
+                                  <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Step 3 title for site usage' : 'Title analytics 3'  }} </label>
 
                                   <input value="{{ $title_analytics3 }}" type="text"  name="title_analytics3" class="my-auto ti-form-input" placeholder="">
                               </div>
-    
+
                               <div class="space-y-2">
-                                  <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Step 3 description for site usage' : 'Description for Title analytics 3'  }} </label>
+                                  <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Step 3 description for site usage' : 'Description for Title analytics 3'  }} </label>
                                   <input value="{{ $value_analytics3 }}" type="text"  name="value_analytics3" class="my-auto ti-form-input" placeholder="">
                               </div>
 
 
                               <div class="space-y-2">
-                                    <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Disregard this.' : 'Title analytics 4'  }} </label>
+                                    <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Disregard this.' : 'Title analytics 4'  }} </label>
                                     <input value="{{ $title_analytics4 }}" type="text"  name="title_analytics4" class="my-auto ti-form-input" placeholder="">
                               </div>
-      
+
                                 <div class="space-y-2">
-                                    <label class="ti-form-label mb-0">{{ env('APP_NAME') == 'QuickConnect' ? 'Disregard this.' : 'Description for Title analytics 4'  }} </label>
+                                    <label class="ti-form-label mb-0">{{ config('app.name') == 'QuickConnect' ? 'Disregard this.' : 'Description for Title analytics 4'  }} </label>
                                     <input value="{{ $value_analytics4 }}" type="text"  name="value_analytics4" class="my-auto ti-form-input" placeholder="">
                                 </div>
 
@@ -431,7 +431,7 @@
                                 <label class="ti-form-label mb-0">Airtime product description</label>
                                 <input value="{{ $airtime_description }}" type="text"  name="airtime_description" class="my-auto ti-form-input" placeholder="">
                               </div>
-                              
+
                               <div class="space-y-2">
                                 <label class="ti-form-label mb-0">Bills product title</label>
                                 <input value="{{ $bills_title }}" type="text" name="bills_title" class="my-auto ti-form-input" placeholder="">
@@ -440,7 +440,7 @@
                                 <label class="ti-form-label mb-0">Bills product description</label>
                                 <input value="{{ $bills_description }}" type="text"  name="bills_description" class="my-auto ti-form-input" placeholder="">
                               </div>
-                              
+
                               <div class="space-y-2">
                                 <label class="ti-form-label mb-0">Cable TV product title</label>
                                 <input value="{{ $cable_tv_title }}" type="text" name="cable_tv_title" class="my-auto ti-form-input" placeholder="">
@@ -467,7 +467,7 @@
                                 <label class="ti-form-label mb-0">Result checker product description</label>
                                 <input value="{{ $result_checker_description }}" type="text"  name="result_checker_description" class="my-auto ti-form-input" placeholder="">
                               </div>
-                              
+
                               <div class="space-y-2">
                               <label class="ti-form-label mb-0">Reviewer name1</label>
                               <input value="{{ $reviewer_name1 }}" type="text"  name="reviewer_name1" class="my-auto ti-form-input" placeholder="">
@@ -494,7 +494,7 @@
                                   <textarea  name="review2" class="my-auto ti-form-input" placeholder="">{{ $review2 }}</textarea>
                               </div>
 
-                              
+
                               <div class="space-y-2">
                                 <label class="ti-form-label mb-0">Reviewer name3</label>
                                 <input value="{{ $reviewer_name3 }}" type="text"  name="reviewer_name3" class="my-auto ti-form-input" placeholder="">
@@ -531,7 +531,7 @@
                                 <label class="ti-form-label mb-0">Support Whatsapp Community Link</label>
                                 <input value="{{ $support_whatsapp_number_community ?? '' }}" type="text"  name="support_whatsapp_number_community" class="my-auto ti-form-input" placeholder="">
                               </div> --}}
-                              
+
                                 <div class="space-y-2">
                               <label class="ti-form-label mb-0">Instagram link</label>
                               <input value="{{ $instagram_link }}" type="text"  name="instagram_link" class="my-auto ti-form-input" placeholder="">
@@ -541,7 +541,7 @@
                               <label class="ti-form-label mb-0">Twitter link</label>
                               <input value="{{ $twitter_link }}" type="text"  name="twitter_link" class="my-auto ti-form-input" placeholder="">
                               </div>
-                             
+
                               <div class="space-y-2">
                                 <label class="ti-form-label mb-0">Physical Address</label>
                                 <input value="{{ $physical_address }}" type="text"  name="physical_address" class="my-auto ti-form-input" placeholder="">
@@ -551,7 +551,7 @@
                                 <label class="ti-form-label mb-0">Mobile App Link</label>
                                 <input value="{{ $mobile_app_link  }}" type="text"  name="mobile_app_link" class="my-auto ti-form-input" placeholder="">
                               </div>
-                              
+
 
                               {{-- <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0">About Us </label>
@@ -563,43 +563,43 @@
                                 {{-- and 2 --}}
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Update landing page settings</button>
                               </div>
-                            
+
                               <br>
                           </div>
                       </form>
-                      </div>  
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-3" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-3">
                       <div class="overflow-auto">
                         @if (isset($site_logo))
                         {{-- hidden dark:block --}}
-                         <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                         class="w-20 h-20 " alt="logo" class=""> 
+                         <img src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                         class="w-20 h-20 " alt="logo" class="">
                          <a href="{{ route('admin.settings.remove_logo') }}" style="color: red">remove image</a>
                        @else
                            No logo upload found.
-                           <br>  
+                           <br>
                        @endif
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.manage_site_logo')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                               <div class="space-y-2 mt-5">
-                              
-              
+
+
                                 <b>Please ensure the logo is a square dimension to display perfectly on the site</b>
                                 <label class="ti-form-label mb-0">Update site logo (ONLY PNG)  </label>
                                 <input type="file" required class="my-auto ti-form-input" name="site_logo" max="100" placeholder="update site logo">
                               </div>
 
-                              
+
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Update site logo</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form>
-                      </div> 
+                      </div>
                       <hr>
                       <div class="overflow-auto">
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.manage_site_images')  }}">
@@ -608,11 +608,11 @@
                               <div class="space-y-2 mt-5">
                                 @if (isset($hero_image1))
                                   {{-- hidden dark:block --}}
-                                  <img src="{{ env('APP_URL').'assets/landing_page_assets/img/hero_image1/'.$hero_image1 }}" alt="logo"
-                                  class="w-20 h-20 " alt="logo" class=""> 
+                                  <img src="{{ config('app.url').'assets/landing_page_assets/img/hero_image1/'.$hero_image1 }}" alt="logo"
+                                  class="w-20 h-20 " alt="logo" class="">
                                 @else
                                     No upload found.
-                                    <br>  
+                                    <br>
                                 @endif
                                 <label class="ti-form-label mb-0">Update Slider Image 1 (This also works for hero image in Template 2)</label>
                                 <input type="file"  class="my-auto ti-form-input" name="hero_image1" max="100" placeholder="update hero image">
@@ -622,11 +622,11 @@
                             <div class="space-y-2 mt-5">
                               @if (isset($hero_image2))
                                 {{-- hidden dark:block --}}
-                                <img src="{{ env('APP_URL').'assets/landing_page_assets/img/hero_image2/'.$hero_image2 }}" alt="logo"
-                                class="w-20 h-20 " alt="logo" class=""> 
+                                <img src="{{ config('app.url').'assets/landing_page_assets/img/hero_image2/'.$hero_image2 }}" alt="logo"
+                                class="w-20 h-20 " alt="logo" class="">
                               @else
                                   No upload found.
-                                  <br>  
+                                  <br>
                               @endif
                               <label class="ti-form-label mb-0">Update Slider Image 2</label>
                               <input type="file"  class="my-auto ti-form-input" name="hero_image2" max="100" placeholder="update hero image">
@@ -637,11 +637,11 @@
                             <div class="space-y-2 mt-5">
                               @if (isset($aboutus_image))
                                 {{-- hidden dark:block --}}
-                                <img src="{{ env('APP_URL').'assets/landing_page_assets/img/aboutus_image/'.$aboutus_image }}" alt="about us image"
-                                class="w-20 h-20 " alt="logo" class=""> 
+                                <img src="{{ config('app.url').'assets/landing_page_assets/img/aboutus_image/'.$aboutus_image }}" alt="about us image"
+                                class="w-20 h-20 " alt="logo" class="">
                               @else
                                   No upload found.
-                                  <br>  
+                                  <br>
                               @endif
                               <label class="ti-form-label mb-0">Update About Us Image</label>
                               <input type="file"  class="my-auto ti-form-input" name="aboutus_image" max="100" placeholder="update aboutus image">
@@ -651,12 +651,12 @@
                           {{-- <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <div class="space-y-2 mt-5">
                               @if (isset($login_image))
-                             
-                                <img src="{{ env('APP_URL').'assets/landing_page_assets/img/authentication/login/'.$login_image }}" alt="login image"
-                                class="w-20 h-20 "  class=""> 
+
+                                <img src="{{ config('app.url').'assets/landing_page_assets/img/authentication/login/'.$login_image }}" alt="login image"
+                                class="w-20 h-20 "  class="">
                               @else
                                   No upload found.
-                                  <br>  
+                                  <br>
                               @endif
                               <label class="ti-form-label mb-0">Update Login Image</label>
                               <input type="file"  class="my-auto ti-form-input" name="login_image" max="100" placeholder="update login image">
@@ -667,65 +667,65 @@
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <div class="space-y-2 mt-5">
                               @if (isset($signup_image))
-                             
-                                <img src="{{ env('APP_URL').'assets/landing_page_assets/img/authentication/signup/'.$signup_image }}" alt="signup image"
-                                class="w-20 h-20 " class=""> 
+
+                                <img src="{{ config('app.url').'assets/landing_page_assets/img/authentication/signup/'.$signup_image }}" alt="signup image"
+                                class="w-20 h-20 " class="">
                               @else
                                   No upload found.
-                                  <br>  
+                                  <br>
                               @endif
                               <label class="ti-form-label mb-0">Update Signup Image</label>
                               <input type="file"  class="my-auto ti-form-input" name="signup_image" max="100" placeholder="update signup image">
                             </div>
                           </div> --}}
-                          
+
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <button type="submit" class="ti-btn ti-btn-primary w-full">Update Site Images</button>
                           </div>
                         </form>
-                      </div> 
+                      </div>
                       <br>
                       <hr>
                       <div class="overflow-auto">
                         <form method="POST" enctype="multipart/form-data" action="{{ route('admin.settings.manage_site_colors') }}">
                           @csrf
-                      
+
                           <div class="grid w-full lg:w-full lg:grid-cols-1 gap-6 space-y-1 lg:space-y-0">
-                      
+
                             {{-- Landing Page Colors --}}
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">Landing Page Secondary Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="site_secondary_color"
                                 value="{{ $site_secondary_color ?? '#5a66f2' }}"
                                 class="p-1 h-10 w-32 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">Landing Page Hover Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="site_landing_page_hover_color"
                                 value="{{ $site_landing_page_hover_color ?? '#d64022' }}"
                                 class="p-1 h-10 w-10 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">Landing Page Primary Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="site_primary_color"
                                 value="{{ $site_primary_color ?? '#5a66f2' }}"
                                 class="p-1 h-10 w-32 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             {{-- Landing Page Analytics Color (RGB) --}}
                             <div class="box-body space-y-2">
                               <label class="ti-form-label mb-0">Landing Page Analytics Color (RGB)</label>
@@ -735,7 +735,7 @@
                                 <input type="number" name="site_landing_analytics_color_b" value="{{ $site_landing_analytics_color_b ?? 204 }}" class="p-1 h-10 w-20 border border-gray-200 rounded-sm bg-white cursor-pointer dark:bg-bgdark dark:border-white/10">
                               </div>
                             </div>
-                      
+
                             {{-- Admin Site Colors --}}
                             <div class="box-body space-y-2">
                               <label class="ti-form-label mb-0">Admin Site Color (RGB)</label>
@@ -745,70 +745,70 @@
                                 <input type="number" name="admin_site_color_b" value="{{ $admin_site_color_b ?? 241 }}" class="p-1 h-10 w-20 border border-gray-200 rounded-sm bg-white cursor-pointer dark:bg-bgdark dark:border-white/10">
                               </div>
                             </div>
-                      
+
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">Admin Sidebar Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="site_admin_sidebar_color"
                                 value="{{ $site_admin_sidebar_color ?? '' }}"
                                 class="p-1 h-10 w-32 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             {{-- User Dashboard Colors --}}
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">User Dashboard Primary Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="user_dashboard_primary_color"
                                 value="{{ $user_dashboard_primary_color ?? '#5a66f2' }}"
                                 class="p-1 h-10 w-32 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">User Dashboard Secondary Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="user_dashboard_secondary_color"
                                 value="{{ $user_dashboard_secondary_color ?? '#5a66f2' }}"
                                 class="p-1 h-10 w-32 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">User Dashboard Announcement Color</label>
-                              <input 
-                                type="color" 
+                              <input
+                                type="color"
                                 name="user_dashboard_announcement_color"
                                 value="{{ $user_dashboard_announcement_color ?? '#5a66f2' }}"
                                 class="p-1 h-10 w-32 block bg-white border border-gray-200 rounded-sm cursor-pointer dark:bg-bgdark dark:border-white/10"
                                 title="Choose your color"
                               >
                             </div>
-                      
+
                             {{-- Submit Button --}}
                             <div class="space-y-2 mt-4">
                               <button type="submit" class="ti-btn ti-btn-primary w-full">
                                 Update Site Colors
                               </button>
                             </div>
-                      
+
                           </div>
                         </form>
                       </div>
-                       
+
                     </div>
                     <div id="pills-with-brand-color-4" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-4">
                       <div class="overflow-auto">
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.manage_automations_keys')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-2 space-y-4 lg:space-y-0">
-                          
+
                               <br>
                           </div>
                         </form>
@@ -818,38 +818,38 @@
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.update')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-2 space-y-4 lg:space-y-0">
-                             
+
                               <div class="">
                                 <label class="ti-form-label mb-0">Maximum Automatic Crediting Allowed: </label>
                                 <input type="number"  required class="my-auto ti-form-input" name="max_automatic_crediting_allowed" value="{{ $max_automatic_crediting_allowed  ?? '' }}"  placeholder="">
-                              </div> 
-                                  
+                              </div>
+
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Update Setting</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form> --}}
 
                         <br>
-                  
-                      
+
+
                         {{-- <hr>
                         <br>
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.update_api_key')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-2 space-y-4 lg:space-y-0">
-                             
+
                               <div class="">
                                 <label class="ti-form-label mb-0">API key to allow connection to your website: </label>
                                 <input type="text"  required class="my-auto ti-form-input" name="api_key" value="{{ $api_key  ?? '' }}"  placeholder="">
-                              </div> 
-                                  
+                              </div>
+
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Update Api Key</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form>
@@ -860,42 +860,42 @@
                         <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.update_purchase_limit_settings')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-2 space-y-4 lg:space-y-0">
-                             
+
                               <div class="">
                                 <label class="ti-form-label mb-2">Product Purchase Limit (Daily) </label>
                                 <input type="number"  required class="my-auto ti-form-input" name="product_purchase_limit_daily" value="{{ $product_purchase_limit_daily  ?? '' }}"  placeholder="">
-                              </div> 
+                              </div>
 
                               <div class="">
                                 <label class="ti-form-label mb-2">Product Purchase Limit (Last 7 days) </label>
                                 <input type="number"  required class="my-auto ti-form-input" name="product_purchase_limit_last_7_days" value="{{ $product_purchase_limit_last_7_days  ?? '' }}"  placeholder="">
-                              </div> 
+                              </div>
 
-                                 
+
                               <div class="">
                                 <label class="ti-form-label mb-2">Product Purchase Limit (Last 30 days) </label>
                                 <input type="number"  required class="my-auto ti-form-input" name="product_purchase_limit_last_30_days" value="{{ $product_purchase_limit_last_30_days  ?? '' }}"  placeholder="">
-                              </div> 
-                                  
+                              </div>
+
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Update Purchase Limit Setting</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form>
 
                         <br>
-               
-                      
+
+
                         {{-- <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.update_user_authentication_dashboard')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-2 space-y-4 lg:space-y-0">
-                             
+
                               <div class="">
                                 <label class="ti-form-label mb-2">Redirect users to this page after authentication: </label>
                                 <select id="users_redirect_after_authentication" name="users_redirect_after_authentication" required class="my-auto ti-form-select">
-                                 
+
                                   <option @if ($users_redirect_after_authentication != NULL && $users_redirect_after_authentication == 'dashboard') selected @endif value="dashboard">Select</option>
                                   <option @if ($users_redirect_after_authentication != NULL && $users_redirect_after_authentication == 'dashboard') selected @endif  value="dashboard">Main Dashboard Page</option>
                                   <option @if ($users_redirect_after_authentication != NULL && $users_redirect_after_authentication == 'user/data/buy_data') selected @endif value="user/data/buy_data">Buy Data Page</option>
@@ -903,44 +903,44 @@
                                   <option @if ($users_redirect_after_authentication != NULL && $users_redirect_after_authentication == 'user/electricity/buy_electricity') selected @endif value="user/electricity/buy_electricity">Buy Electricity Page</option>
                                   <option @if ($users_redirect_after_authentication != NULL && $users_redirect_after_authentication == 'user/cable_subscription/buy_cable_subscription') selected @endif value="user/cable_subscription/buy_cable_subscription">Buy Cable subscription Page</option>
                                 </select>
-                              </div>   
-                                
+                              </div>
+
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Update Page after authentication</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form> --}}
-                        
+
                         {{-- <hr>
                         <br>
-                        @if (env('APP_NAME') == 'OresamSub')
+                        @if (config('app.name') == 'OresamSub')
                             <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.emails_to_notify_failed_transactions')  }}">
                               @csrf
                               <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-2 space-y-4 lg:space-y-0">
-                                
+
                                     <div class="">
                                       <label class="ti-form-label mb-2">Add list of emails that should be notified when a transaction fails or set to pending. separate with a comma</label>
                                       <input type="text"  required class="my-auto ti-form-input" name="emails_to_notify_failed_transactions" value="{{ $emails_to_notify_failed_transactions  ?? '' }}"  placeholder="">
-                                    </div> 
-                                  
-                                    
+                                    </div>
+
+
                                   <div class="space-y-2">
                                       <button type="submit" class="ti-btn ti-btn-primary w-full">Update Emails to be notified of a failed transaction</button>
                                   </div>
-                                
+
                                   <br>
                               </div>
                             </form>
-                                
+
                         @endif
                         --}}
-                      </div>  
+                      </div>
 
 
 
-                      </div>  
+                      </div>
                   </div>
 
                   <div id="pills-with-brand-color-6" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-6">
@@ -954,7 +954,7 @@
                                       <th>Funding Name</th>
                                       <th>Webhook</th>
                                       <th>Action</th>
-                                     
+
                                   </tr>
                               </thead>
                               <tbody>
@@ -966,13 +966,13 @@
                                         <span class="text-red-600 mt-4"><b>(This must be the same with the webhook set on your {{  $funding_option->funding_option_name }} Dashboard)</b></span></td>
                                       <td>
                                         <div class=" flex items-center justify-start">
-                                          {{-- <a href="#" type="button" data-hs-overlay="#hs-vertically-centered-modal{{$funding_option->id}}"   aria-label="button" type="button" class="hs-dropdown-toggle ti-btn flex-shrink-0 h-[0.070rem] w-[0.070rem] ti-btn-primary text-sm"> 
+                                          {{-- <a href="#" type="button" data-hs-overlay="#hs-vertically-centered-modal{{$funding_option->id}}"   aria-label="button" type="button" class="hs-dropdown-toggle ti-btn flex-shrink-0 h-[0.070rem] w-[0.070rem] ti-btn-primary text-sm">
                                            <span style="font-size: 10px">Update</span>
                                           </a> --}}
 
                                           <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-primary" data-hs-overlay="#hs-vertically-centered-modal{{$funding_option->id}}">
                                             Update keys & Webhook
-                                          </button> 
+                                          </button>
                                           <div id="hs-vertically-centered-modal{{$funding_option->id}}" class="hs-overlay ti-modal hidden">
                                             <div class="ti-modal-box">
                                               <div class="ti-modal-content">
@@ -1023,23 +1023,23 @@
                                                             <input type="hidden" required class="my-auto ti-form-input" name="funding_option_id" value="{{ $funding_option->id }}"  placeholder="">
                                                             <input type="text" required class="my-auto ti-form-input" name="webhook_suffix_string" value="{{ $funding_option?->webhook_string?->webhook_suffix_string  != NULL  ? substr($funding_option->webhook_string->webhook_suffix_string ,0,2).str_repeat('X',5).substr($funding_option->webhook_string->webhook_suffix_string ,-3)  : '' }}"  placeholder="">
                                                           </div>
-                                        
+
                                                           <hr>
                                                           <div class="space-y-2">
                                                             <button type="submit" class="ti-btn ti-btn-primary w-full">Update Webhook Suffix String</button>
 
-  
+
                                                           </div>
                                                       </form>
                                                 </div>
                                                 <div class="ti-modal-footer">
-                                                  
+
                                                   <button type="button"
                                                     class="hs-dropdown-toggle ti-btn ti-border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:ring-offset-white focus:ring-primary dark:bg-bgdark dark:hover:bg-black/20 dark:border-white/10 dark:text-white/70 dark:hover:text-white dark:focus:ring-offset-white/10"
                                                     data-hs-overlay="#hs-vertically-centered-modal{{$funding_option->id}}">
                                                     Close
                                                   </button>
-              
+
                                                 </div>
                                               </div>
                                             </div>
@@ -1049,9 +1049,9 @@
 
                                           <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-warning" data-hs-overlay="#hs-basic-modal{{$funding_option->id}}">
                                             Add bank codes
-                                          </button> 
+                                          </button>
 
-                                          
+
                                           <div id="hs-basic-modal{{$funding_option->id}}" class="hs-overlay ti-modal hidden">
                                             <div class="ti-modal-box">
                                               <div class="ti-modal-content">
@@ -1059,7 +1059,7 @@
                                                   <h3 class="ti-modal-title">
                                                     Add bank codes for {{ $funding_option->funding_option_name }}
                                                   </h3>
-                                                 
+
                                                   <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                                                     data-hs-overlay="#hs-basic-modal">
                                                     <span class="sr-only">Close</span>
@@ -1078,12 +1078,12 @@
                                                     <ul>
                                                       @foreach ($funding_option->bank_codes as $key=>$bank_code)
                                                         SN: {{ $key + 1 }} <br> Bank Code: {{  $bank_code->bank_code }} <br> Bank Name: {{  $bank_code->bank_name }}  <hr>
-                                                     
+
                                                     @endforeach
                                                     </ul>
                                                   @else
                                                     <p>No bank codes added yet</p>
-                                                  @endif                                                 
+                                                  @endif
                                                   <form enctype="multipart/form-data" method="POST" action="{{ route('admin.settings.add_funding_option_bank_code') }}">
                                                     @csrf
                                                     <div>
@@ -1093,13 +1093,13 @@
                                                         <input type="hidden" required class="my-auto ti-form-input" name="funding_option_id" value="{{ $funding_option->id }}">
                                                         <input type="text" required class="my-auto ti-form-input" name="bank_name" placeholder="Enter bank name">
                                                       </div>
-                                                  
+
                                                       <!-- Bank Code -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Bank Code:</label>
                                                         <input type="text" required class="my-auto ti-form-input" name="bank_code" placeholder="Enter bank code">
                                                       </div>
-                                                  
+
                                                       <!-- Rate Category -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Rate Category:</label>
@@ -1108,21 +1108,21 @@
                                                           <option value="percent">Percent</option>
                                                         </select>
                                                       </div>
-                                                  
+
                                                       <!-- Bank Charges -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Bank Charges:</label>
                                                         <input type="number" step="0.01" min="0" required class="my-auto ti-form-input" name="bank_charges" id="bank_charges" placeholder="Enter charges">
                                                         <small class="text-gray-500 dark:text-gray-400">If percentage is selected, value cannot exceed 100</small>
                                                       </div>
-                                                  
+
                                                       <!-- Capped At -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Capped At:</label>
                                                         <input type="number" step="0.01" min="0" class="my-auto ti-form-input" name="capped_at" placeholder="Enter capped amount (optional)">
                                                       </div>
                                                     </div>
-                                                  
+
                                                     <!-- Footer Buttons -->
                                                     <div class="ti-modal-footer mt-6 flex flex-col gap-2">
                                                       <button type="submit" class="ti-btn ti-btn-primary w-full">Add Bank Code</button>
@@ -1132,12 +1132,12 @@
                                                         Close
                                                       </button>
                                                     </div>
-                                                  </form>   
+                                                  </form>
                                                   </div> --}}
 
                                                   <div class="ti-modal-body" x-data="bankCodesHandler({{ $funding_option->bank_codes->toJson() }}, {{ $funding_option->id }})">
                                                     <h3 class="font-bold text-lg">Banks Codes Addition</h3>
-                                                  
+
                                                     <!-- Existing Bank Codes Dropdown -->
                                                     <template x-if="bankCodes.length > 0">
                                                       <div class="mt-4">
@@ -1150,28 +1150,28 @@
                                                         </select>
                                                       </div>
                                                     </template>
-                                                  
+
                                                     <template x-if="bankCodes.length === 0">
                                                       <p class="mt-4 text-gray-500">No bank codes added yet</p>
                                                     </template>
-                                                  
+
                                                     <!-- Bank Code Form -->
                                                     <form @submit.prevent="saveBankCode" class="mt-6">
                                                       @csrf
                                                       <input type="hidden" name="funding_option_id" :value="fundingOptionId">
-                                                  
+
                                                       <!-- Bank Name -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Bank Name:</label>
                                                         <input type="text" required class="ti-form-input" name="bank_name" x-model="form.bank_name">
                                                       </div>
-                                                  
+
                                                       <!-- Bank Code -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Bank Code:</label>
                                                         <input type="text" required class="ti-form-input" name="bank_code" x-model="form.bank_code">
                                                       </div>
-                                                  
+
                                                       <!-- Rate Category -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Rate Category:</label>
@@ -1180,20 +1180,20 @@
                                                           <option value="percent">Percent</option>
                                                         </select>
                                                       </div>
-                                                  
+
                                                       <!-- Bank Charges -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Bank Charges:</label>
                                                         <input type="number" step="0.01" min="0" required class="ti-form-input" name="bank_charges" x-model="form.bank_charges">
                                                         <small class="text-gray-500 dark:text-gray-400">If percentage is selected, value cannot exceed 100</small>
                                                       </div>
-                                                  
+
                                                       <!-- Capped At -->
                                                       <div class="space-y-2 mt-5">
                                                         <label class="ti-form-label mb-0">Capped At:</label>
                                                         <input type="number" step="0.01" min="0" class="ti-form-input" name="capped_at" x-model="form.capped_at">
                                                       </div>
-                                                  
+
                                                       <!-- Buttons -->
                                                       <div class="ti-modal-footer mt-6 flex flex-col gap-2">
                                                         <button type="submit" class="ti-btn ti-btn-primary w-full" x-text="selectedId ? 'Update Bank Code' : 'Add Bank Code'"></button>
@@ -1205,7 +1205,7 @@
                                                       </div>
                                                     </form>
                                                   </div>
-                                                  
+
                                                   <script>
                                                   function bankCodesHandler(initialBankCodes, fundingOptionId) {
                                                     return {
@@ -1239,7 +1239,7 @@
                                                           alert("Bank Charges cannot exceed 100 when Rate Category is percent.");
                                                           return;
                                                         }
-                                                  
+
                                                         try {
                                                           const response = await fetch("{{ route('admin.settings.add_funding_option_bank_code') }}", {
                                                             method: "POST",
@@ -1253,7 +1253,7 @@
                                                               id: this.selectedId // backend can use this to detect update vs create
                                                             })
                                                           });
-                                                  
+
                                                           const data = await response.json();
                                                           if (data.success) {
                                                             alert("Bank Code saved successfully!");
@@ -1277,46 +1277,46 @@
                                                     }
                                                   }
                                                   </script>
-                                                  
+
                                             </div>
-                                          </div>  
                                           </div>
                                           </div>
-                                          
-                                        </div>  
+                                          </div>
+
+                                        </div>
                                       </td>
 
                                      </div>
-                                    
-                                    </tr>     
-                                  @endforeach                
+
+                                    </tr>
+                                  @endforeach
                               </tbody>
-                          </table>  
+                          </table>
 
                               <br>
                           </div>
-                  
-                        
-                      </div>  
+
+
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-5" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-5">
                       <div class="overflow-auto">
-                      
+
                         <form method="POST" action="{{ route('settings.update_password')  }}">
                           @csrf
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                               {{-- <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.Current password')}}</label>
-                                <input type="password" id="current_password" name="current_password" class="my-auto ti-form-input" placeholder="">    
+                                <input type="password" id="current_password" name="current_password" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_password_current">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show password')}}</label>
-                                </div>                        
+                                </div>
                               </div> --}}
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.New password')}}</label>
-                                <input type="password" required id="new_password" name="new_password" class="my-auto ti-form-input" placeholder="">                            
+                                <input type="password" required id="new_password" name="new_password" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_password">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show password')}}</label>
@@ -1326,28 +1326,28 @@
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.Confirm new password')}}</label>
-                                <input type="password" required ="confirm_new_password" name="confirm_new_password" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" required ="confirm_new_password" name="confirm_new_password" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_password2">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show Confirm Password')}}</label>
-                                </div>                           
+                                </div>
                               </div>
-                             
+
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0">PIN</label>
-                                <input type="password" required id="pin5" name="pin5" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" required id="pin5" name="pin5" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin5">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
-                                </div>                                
+                                </div>
                               </div>
 
 
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">{{__('messages.Update Password')}}</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form>
@@ -1357,41 +1357,41 @@
                           <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                               {{-- <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> Current password</label>
-                                <input type="password" id="current_password" name="current_password" class="my-auto ti-form-input" placeholder="enter current password">                            
+                                <input type="password" id="current_password" name="current_password" class="my-auto ti-form-input" placeholder="enter current password">
                               </div> --}}
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.Current PIN')}}</label>
-                                <input type="password" id="current_pin" name="current_pin" class="my-auto ti-form-input" placeholder="">   
+                                <input type="password" id="current_pin" name="current_pin" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin2">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
-                                </div>                          
+                                </div>
                               </div>
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.New PIN')}}</label>
-                                <input type="password" id="new_pin" name="new_pin" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" id="new_pin" name="new_pin" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin3">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
-                                </div>                            
+                                </div>
                               </div>
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0">{{__('messages.Confirm New PIN')}}</label>
-                                <input type="password" id="confirm_new_pin" name="confirm_new_pin" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" id="confirm_new_pin" name="confirm_new_pin" class="my-auto ti-form-input" placeholder="">
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin4">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
-                                </div>                            
+                                </div>
                               </div>
 
 
                               <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">{{__('messages.Update PIN')}}</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form>
@@ -1410,7 +1410,7 @@
                                   </select> <div class="space-y-2">
                                   <button type="submit" class="ti-btn ti-btn-primary w-full">Globally Hide/Show 2fa</button>
                               </div>
-                            
+
                               <br>
                           </div>
                         </form> --}}
@@ -1419,7 +1419,7 @@
 
                         <form method="POST" action="{{ url('/user/two-factor-authentication') }}">
                           @csrf
-              
+
                           @if(auth()->user()->two_factor_secret)
                               <h2 class="mt-2"> <strong>2Factor authentication setup</strong></h2>
                               <p>Two factor authentication is enabled.</p>
@@ -1448,8 +1448,8 @@
                               </div>
                           @endif
                         </form> --}}
-                        
-                      </div>  
+
+                      </div>
                     </div>
 
                     <div id="pills-with-brand-color-7" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-7">
@@ -1457,15 +1457,15 @@
                         <p>Coming soon...</p>
                         <hr>
 
-                        
-                      </div>  
+
+                      </div>
                     </div>
 
                   </div>
                 </div>
-               
+
                 {{-- <div class="box-body">
-                 
+
                 </div> --}}
               </div>
               {{-- <div class="box-body">
@@ -1473,7 +1473,7 @@
                   <table id="basic-table" class="ti-custom-table ti-striped-table ti-custom-table-hover">
                     <thead>
                         <tr>
-                       
+
                             <td>First Name</td>
                             <td>Last Name</td>
                             <td>Action</td>
@@ -1483,10 +1483,10 @@
                     </tbody>
                   </table>
                 </div>
-               
+
               </div> --}}
-               
-                
+
+
             </div>
           </div>
         </div>
@@ -1543,7 +1543,7 @@
       </div>
       <!-- Start::main-content -->
 
-       
+
 @endsection
 
 

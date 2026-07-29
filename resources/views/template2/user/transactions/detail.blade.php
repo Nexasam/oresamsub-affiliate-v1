@@ -3,15 +3,15 @@
 @section('template2_content')
 <div class="grid grid-cols-1">
     <div class="max-w-5xl text-center m-4">
-        @if (Session::has('success')) 
+        @if (Session::has('success'))
         <div class="text-black bg-blue-400 p-1 rounded-lg">
-        {{ Session::get('success') }} 
+        {{ Session::get('success') }}
         </div>
         @endif
 
         @if (Session::has('failure'))
         <div class="text-black bg-red-400 p-1 rounded-lg">
-        {{ Session::get('failure') }}  
+        {{ Session::get('failure') }}
         </div>
         @endif
 
@@ -43,7 +43,7 @@
             </tr> --}}
            {{-- </thead> --}}
            <tbody class="border-collapse border border-gray-300">
-          
+
               @if (strtolower(auth()->user()->role->role_name) == 'admin')
               <tr>
                 <td class="">User:</td>
@@ -51,19 +51,19 @@
                       <p class="text-gray-500 dark:text-white/70">
                         {{  $data->user->first_name  ?? 'nil' }} <br>
                         {{  $data->user->last_name  ?? 'nil' }} <br>
-                        {{  $data->user->phone_number  ?? 'nil' }} 
+                        {{  $data->user->phone_number  ?? 'nil' }}
                       </p>
                   </td>
                 </tr>
               @endif
-                
+
               <tr>
                 <td class="border border-gray-300 p-4">Message:</td>
                 <td class="" style="white-space: normal;word-wrap: break-word;word-break: normal;width:auto;">
                          {{  $data->user_screen_message  }}
                   </td>
               </tr>
-           
+
               <tr>
                 <td class="border border-gray-300 p-4">Status:</td>
                 <td class="border border-gray-300 p-4">
@@ -82,7 +82,7 @@
                           @break
                         @case($data->status == 3)
                           <span class="text-purple-600 font-bold rounded-lg">Processing</span>
-                          @break                                     
+                          @break
                        @default
                           <span class="bg-gray text font-bold rounded-lg">Unknown</span>
                    @endswitch
@@ -90,12 +90,12 @@
               </tr>
               <tr>
                 <td class="border border-gray-300 p-4">Category:</td>
-                <td class="" style="white-space: normal;word-wrap: break-word;word-break: normal;width:auto;"> <p>{{  strtoupper($data->transaction_category)  }}</p> </td>                 
+                <td class="" style="white-space: normal;word-wrap: break-word;word-break: normal;width:auto;"> <p>{{  strtoupper($data->transaction_category)  }}</p> </td>
               </tr>
-            
+
               <tr>
                 <td class="border border-gray-300 p-4">Wallet:</td>
-                <td class="border border-gray-300 p-4">{{   $data->wallet_category == 'main_wallet' ?  'MAIN' : 'DATA_WALLET'  }}</td>                 
+                <td class="border border-gray-300 p-4">{{   $data->wallet_category == 'main_wallet' ?  'MAIN' : 'DATA_WALLET'  }}</td>
               </tr>
               <tr>
                 <td class="border border-gray-300 p-4">Product Details:</td>
@@ -103,8 +103,8 @@
                   @if ($data->product_plan != NULL)
                       {{   $data->product_plan->product_plan_name }}<br>
                       {{   $data->product_plan->product_plan_category->product_plan_category_name }}<br>
-                        
-                     
+
+
                       @if ($data->transaction_category == 'cable_subscription')
                           {{  'Smart Card No: '.$data->smart_card_number }} <br>
                       @endif
@@ -126,40 +126,40 @@
                   @else
                      NIL
                   @endif
-                  
-                </td>                 
+
+                </td>
               </tr>
               <tr>
                 <td class="border border-gray-300 p-4">Phone recharged:</td>
-                <td class="border border-gray-300 p-4">{{  $data->phone_number }}</td>  
+                <td class="border border-gray-300 p-4">{{  $data->phone_number }}</td>
               </tr>
               <tr>
                 <td class="border border-gray-300 p-4">Amount:</td>
-                <td class="border border-gray-300 p-4">&#8358;{{ (number_format($data->amount,2)) }}</td>  
+                <td class="border border-gray-300 p-4">&#8358;{{ (number_format($data->amount,2)) }}</td>
               </tr>
               <tr>
                 <td class="border border-gray-300 p-4">Deducted Amount:</td>
-                <td class="border border-gray-300 p-4">&#8358;{{ (number_format($data->discounted_amount,2)) }}</td>  
+                <td class="border border-gray-300 p-4">&#8358;{{ (number_format($data->discounted_amount,2)) }}</td>
               </tr>
                <tr>
                   <td class="border border-gray-300 p-4">Balance before:</td>
-                  <td class="border border-gray-300 p-4">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_before,2) : number_format($data->balance_before).'MB' }}</td>  
+                  <td class="border border-gray-300 p-4">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_before,2) : number_format($data->balance_before).'MB' }}</td>
               </tr>
               @if ($data->transaction_category == 'data')
                 <tr>
                   <td class="border border-gray-300 p-4">Size:</td>
-                  <td class="border border-gray-300 p-4">{{ number_format($data->product_plan->data_size_in_mb ?? '0') .' MB' }}</td>  
-                </tr>    
+                  <td class="border border-gray-300 p-4">{{ number_format($data->product_plan->data_size_in_mb ?? '0') .' MB' }}</td>
+                </tr>
               @endif
-              
+
               <tr>
                 <td class="border border-gray-300 p-4">Balance after:</td>
-                <td class="border border-gray-300 p-4">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_after,2) : number_format($data->balance_after).'MB' }}</td>  
+                <td class="border border-gray-300 p-4">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_after,2) : number_format($data->balance_after).'MB' }}</td>
               </tr>
-             
+
               <tr>
                 <td class="border border-gray-300 p-4">Created at:</td>
-                <td class="border border-gray-300 p-4">{{ $data->created_at }}</td>  
+                <td class="border border-gray-300 p-4">{{ $data->created_at }}</td>
               </tr>
 
               @if (strtolower(auth()->user()->role->role_name) == 'admin')
@@ -169,10 +169,10 @@
                   @if ($data->status != 2)
                     <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-danger" data-hs-overlay="#hs-basic-modal">
                       Refund
-                    </button> 
+                    </button>
                     @else
-                     <strong>Refunded</strong>     
-                  @endif   
+                     <strong>Refunded</strong>
+                  @endif
                   {{-- <button type="button" class="w-20 !p-1 ti-btn ti-btn-danger">Cancel</button> --}}
                   <div id="hs-basic-modal" class="hs-overlay ti-modal hidden">
                     <div class="ti-modal-box">
@@ -181,7 +181,7 @@
                           <h3 class="ti-modal-title">
                             Transaction Refund
                           </h3>
-                         
+
                           <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                             data-hs-overlay="#hs-basic-modal">
                             <span class="sr-only">Close</span>
@@ -208,8 +208,8 @@
                           </form>
                         </div>
                           <div class="ti-modal-footer">
-                           
-                            
+
+
                           <button type="button"
                             class="hs-dropdown-toggle ti-btn ti-border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:ring-offset-white focus:ring-primary dark:bg-bgdark dark:hover:bg-black/20 dark:border-white/10 dark:text-white/70 dark:hover:text-white dark:focus:ring-offset-white/10"
                             data-hs-overlay="#hs-basic-modal">
@@ -218,8 +218,8 @@
                           </div>
                           </form>
 
-                         
-                          
+
+
                       </div>
                     </div>
                   </div>
@@ -227,7 +227,7 @@
                   {{-- <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-danger" data-hs-overlay="#hs-vertically-centered-modal">
                     Change status
                   </button>   --}}
-                  
+
                   <div id="hs-vertically-centered-modal" class="hs-overlay ti-modal hidden">
                     <div class="ti-modal-box">
                       <div class="ti-modal-content">
@@ -235,7 +235,7 @@
                           <h3 class="ti-modal-title">
                             Transaction status change
                           </h3>
-                         
+
                           <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                             data-hs-overlay="#hs-basic-modal">
                             <span class="sr-only">Close</span>
@@ -258,9 +258,9 @@
                                 <option value="">Select</option>
                                 <option value="">Select</option>
                                 <option value="">Select</option>
-                                  
-                               
-                  
+
+
+
                               </select>
                             </div>
                             <div class="space-y-2">
@@ -274,36 +274,36 @@
                           </div>
                           </form>
 
-                         
-                          
+
+
                       </div>
                     </div>
-                  </div>  
+                  </div>
                   </div>
 
                   </div>
-                </td>  
+                </td>
               </tr>
-                           
+
               @endif
-           
+
            </tbody>
 
-          </table> 
+          </table>
 
-       
+
     </div>
     <div class="hidden"  id="styled-dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
        {{-- <livewire:user-wallet-transactions /> --}}
 
     </div>
-    
+
 </div>
 @endsection
 
 {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-<script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script>
+<script src="{{asset(config('app.assets_base_url').'js/admin_datatables/datatables.js') }}"></script>
 <script>
     $(document).ready(function(){
         alert('oooo')

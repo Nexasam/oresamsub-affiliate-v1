@@ -16,7 +16,7 @@
         </style>
     </head>
     <body class="font-sans antialiased dark:bg-black dark:text-gray-900/50">
-        @if (env('APP_NAME') == 'FoxDataHub')
+        @if (config('app.name') == 'FoxDataHub')
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif

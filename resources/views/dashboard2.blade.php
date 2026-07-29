@@ -8,7 +8,7 @@
         <div>
             <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-900 dark:hover:text-white text-2xl font-medium"> <small style=" font-size: 14px;">Welcome <strong>{{ $user->first_name. ' '. $user->last_name }}</strong></small> </h3>
         </div>
-       
+
     </div>
     <!-- Page Header Close -->
 
@@ -36,7 +36,7 @@
                   <div class="crystal_pay_dynamic_account_details">
 
                   </div>
-                
+
                 </div>
                 <div class="box-footer">
                   <button type="button" class="ti-btn ti-btn-primary">Read More</button>
@@ -46,13 +46,13 @@
         </div>
     </div> --}}
     <div class="grid grid-cols-12 gap-x-3">
-        
+
 
         {{-- <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
             <div class="box">
                 <div class="box-body">
                     <div class="flex space-x-4 rtl:space-x-reverse">
-                       
+
                         <div class="flex items-center justify-center ecommerce-icon px-0">
                             <span class="rounded-sm p-4 bg-danger/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="fill-white svg3" height="24px"
@@ -81,7 +81,7 @@
             <div class="box">
                 <div class="box-body">
                     <div class="flex space-x-4 rtl:space-x-reverse">
-                       
+
                         <div class="flex items-center justify-center ecommerce-icon px-0">
                             <span class="rounded-sm p-4 bg-danger/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="fill-white svg3" height="24px"
@@ -145,7 +145,7 @@
                 </div>
             </div>
         </div>
-      
+
         <div class="col-span-12 xxxl:col-span-3 md:col-span-3">
             <div class="box">
                 <div class="box-body">
@@ -176,9 +176,9 @@
                                     class="text-gray-800 font-semibold text-xl leading-none align-bottom dark:text-gray-900">
                                     &#8358; {{ number_format($user->main_wallet,2) ?? 0  }}
                                 </span>
-                                <div> 
+                                <div>
                                     {{-- data-hs-overlay="#hs-basic-modal" --}}
-                                    {{-- <a href="#" type="button"   aria-label="button" type="button" class="hs-dropdown-toggle ti-btn flex-shrink-0 h-[0.070rem] w-[0.070rem] ti-btn-primary text-sm"> 
+                                    {{-- <a href="#" type="button"   aria-label="button" type="button" class="hs-dropdown-toggle ti-btn flex-shrink-0 h-[0.070rem] w-[0.070rem] ti-btn-primary text-sm">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                           <path d="M5.071 1.243a.5.5 0 0 1 .858.514L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 6h1.717L5.07 1.243zM3.5 10.5a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3z"/>
                                         </svg><span style="font-size: 10px">Fund Wallet</span>
@@ -264,7 +264,7 @@
                                     class="text-gray-800 font-semibold text-xl leading-none align-bottom dark:text-gray-900">
                                     {{ number_format($bulk_data_wallet_sum)  }} MB
                                 </span>
-                               
+
                             </div>
                             <div>
                                 {{-- <span class="text-xs mb-0">Total Sum: <span class="
@@ -276,7 +276,7 @@
             </div>
         </div>
 
-      
+
         <div class="col-span-12 xxl:col-span-12">
             <div class="box">
                 <div class="box-header">
@@ -320,7 +320,7 @@
                 <div class="box-body p-0">
                     <div id="taskactive" class="" role="tabpanel" aria-labelledby="active-item">
                         <div class="overflow-auto">
-                            <table  class="ti-custom-table ti-custom-table-head">    
+                            <table  class="ti-custom-table ti-custom-table-head">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                 <tr>
                                     <th>ID</th>
@@ -373,22 +373,22 @@
                                             echo $status_display;
                                         @endphp  </td>
                                         <td>{{ $transaction->created_at }}</td>
-                                        </tr>   
+                                        </tr>
                                     @endforeach
                               @else
                                   <tr>
                                     <td align="center" colspan="8">No transactions found</td>
                                   </tr>
                               @endif
-                          
-                                
+
+
                             </tbody>
-                            </table> 
+                            </table>
                         </div>
                     </div>
                     <div id="completed" class="hidden" role="tabpanel" aria-labelledby="completed-item">
                         <div class="overflow-auto">
-                        
+
                             {{-- <table class="ti-custom-table ti-custom-table-head">
                                 <tbody>
                                     <tr>
@@ -397,7 +397,7 @@
                                                 <div class="leading-none">
                                                     <div class="relative inline-block">
                                                         <img class="avatar avatar-xs rounded-full"
-                                                            src="{{ asset(env('APP_ASSETS_BASE_URL').'img/users/2.jpg') }}"
+                                                            src="{{ asset(config('app.assets_base_url').'img/users/2.jpg') }}"
                                                             alt="Image Description">
                                                         <span
                                                             class="absolute bottom-0 end-0 block h-1.5 w-1.5 rounded-full ring-2 ring-white bg-gray-400"></span>
@@ -914,7 +914,7 @@
                                 </tr>
                             </thead>
                             <tbody> --}}
-                        <table class="ti-custom-table ti-custom-table-head">    
+                        <table class="ti-custom-table ti-custom-table-head">
                                     <thead>
                                     <tr>
                                         <th><small>ID</small></th>
@@ -930,7 +930,7 @@
                                   @php
                                   $count = 1;
                               @endphp
-                              @foreach ($bulk_data_plans as $bulk_data_plan)                 
+                              @foreach ($bulk_data_plans as $bulk_data_plan)
                                   <tr>
                                   <td><small>{{ $count++ }}</small></td>
                                   <td><small>{{ $bulk_data_plan->bulk_data_plan_name }}</small></td>
@@ -942,10 +942,10 @@
                                   </td>
                                   <td><small>{{ $bulk_data_plan->mb_data_measurement ?? 'nil' }}</small></td>
                                   <td><small>{{ number_format($bulk_data_plan->$user_selling_variable) ?? 'nil' }}</small></td>
-                                 </tr>   
+                                 </tr>
                               @endforeach
                               </tbody>
-                              </table>     
+                              </table>
                             {{-- {{ $bulk_data_plans->links() }}  --}}
                                 {{-- <tr>
                                     <td class="leading-none">
@@ -999,7 +999,7 @@
                                         <span class="text-sm font-semibold">10,234</span>
                                     </td>
                                 </tr> --}}
-                          
+
                     </div>
                 </div>
             </div>
@@ -1008,19 +1008,19 @@
             <div class="box">
                 <div class="box-header">
                     <div class="flex justify-between">
-                        <h5 class="box-title my-auto">Hot sales ({{count($hot_sales)}})</h5>      
+                        <h5 class="box-title my-auto">Hot sales ({{count($hot_sales)}})</h5>
                     </div>
                     <div class="flex items-center">
                         <p>Enjoy at discounted prices</p>
                     </div>
                 </div>
                 <div class="box-body">
-                   
+
                     <div class="flex items-center">
                         @if (count($hot_sales) > 0)
-                            
+
                         <table class="ti-custom-table ti-custom-table-head">
-                           
+
                             <tbody>
                                 @php
                                     $count = 0;
@@ -1041,7 +1041,7 @@
                           <p>No hot sales at the moment.</p>
 
                         @endif
-                        
+
                     </div>
                     {{-- <div class="mt-4">
                         <div class="flex items-center justify-between mb-1 text-sm">
@@ -1078,8 +1078,8 @@
                                 class="ti-btn m-0 rounded-sm p-1 px-3 !border border-gray-200 text-gray-400 hover:text-gray-500 hover:bg-gray-200 hover:border-gray-200 focus:ring-gray-200 dark:text-white/70 dark:hover:text-white dark:hover:bg-bodybg dark:border-white/10 dark:hover:border-white/20 dark:focus:ring-white/10 dark:focus:ring-offset-white/10">
                                 Buy</button>
                     </div> --}}
-                    
-                   
+
+
                 </div>
             </div>
         </div>
@@ -1136,9 +1136,9 @@
                         </a>
                     </div>
                 </div>
-            </div> 
+            </div>
          @endif
-  
+
 
 </div>
 @endsection

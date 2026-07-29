@@ -3,29 +3,29 @@
 
 <head>
 
-    @if (env('APP_NAME') == 'FoxDataHub' )
+    @if (config('app.name') == 'FoxDataHub' )
 
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
      })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-     
-  
-  
+
+
+
      <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
      <script>
      window.dataLayer = window.dataLayer || [];
      function gtag(){dataLayer.push(arguments);}
      gtag('js', new Date());
-  
+
      gtag('config', 'G-NCKP7MH1KN');
      </script>
-  
+
     @endif
 
 
-    @if (env('APP_NAME') == 'OresamSub')
+    @if (config('app.name') == 'OresamSub')
       <!-- Meta Pixel Code -->
       <script>
       !function(f,b,e,v,n,t,s)
@@ -44,29 +44,29 @@
       /></noscript>
       <!-- End Meta Pixel Code -->
      @endif
-    
+
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title> {{env('APP_NAME')}} - Enjoy data at the best rate </title>
+    <title> {{config('app.name')}} - Enjoy data at the best rate </title>
     <meta name="description" content="This is an amazing data website for your special data needs">
 
     <!-- Favicon -->
     {{-- <link rel="shortcut icon" href="../assets/img/brand-logos/favicon.ico"> --}}
-    {{-- <link rel="shortcut icon" href="{{ asset(env('APP_ASSETS_BASE_URL').'img/brand-logos/favicon.ico') }}"> --}}
+    {{-- <link rel="shortcut icon" href="{{ asset(config('app.assets_base_url').'img/brand-logos/favicon.ico') }}"> --}}
 
     <!-- Style Css -->
     {{-- <link rel="stylesheet" href="../assets/css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'css/style.css') }}">
 
     <!-- Simplebar Css -->
     {{-- <link rel="stylesheet" href="../assets/libs/simplebar/simplebar.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/simplebar/simplebar.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/simplebar/simplebar.min.css') }}">
 
     <!-- Color Picker Css -->
     {{-- <link rel="stylesheet" href="../assets/libs/@simonwep/pickr/themes/nano.min.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@simonwep/pickr/themes/nano.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'libs/@simonwep/pickr/themes/nano.min.css') }}">
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,8 +76,8 @@
 
     @php
     $admin_site_color =  App\Models\AdminColorSetting::where('color_name','admin_site_color')->first();
-    $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241'; 
-   //  echo $admin_site_color_value;  
+    $admin_site_color_value = $admin_site_color->color_value ?? (int) '90, 102, 241';
+   //  echo $admin_site_color_value;
    @endphp
 
    <style>
@@ -97,7 +97,7 @@
           font-weight: 400;
           font-style: normal;
         }
-   
+
      :root {
            --color-primary: {{  $admin_site_color_value  }};
            /* --color-primary: 90 102 241; */
@@ -205,17 +205,17 @@
     {{-- &text=Hola%21%20Quisiera%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Varela%202. --}}
     <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="float" target="_blank">
     <i class="fa fa-whatsapp my-float"></i>
-    </a>       
+    </a>
 
 
     <div class="grid grid-cols-12 gap-6 w-full h-full">
         <div class="lg:col-span-6 col-span-12 hidden lg:block relative">
             <div class="cover relative w-full h-full z-[1]">
                 @if (isset($signup_image) && $signup_image != '')
-                <img src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/authentication/signup/'.$signup_image) }}" alt="signup" class="object-cover mx-auto h-full">
-                 
+                <img src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/authentication/signup/'.$signup_image) }}" alt="signup" class="object-cover mx-auto h-full">
+
              @else
-              <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth3.jpg') }}" alt="signup" class="object-cover mx-auto h-full">
+              <img src="{{ asset(config('app.assets_base_url').'img/authentication/auth3.jpg') }}" alt="signup" class="object-cover mx-auto h-full">
 
              @endif
             </div>
@@ -231,12 +231,12 @@
                         <div class="mt-7">
                             <div class="p-4 sm:p-12 rounded-2xl border border-2 border-gray-100 shadow-lg">
                                 @if (  isset($site_logo) && $site_logo != '')
-                    
+
                                     <a href="#" class="header-logo ">
-                                        <img style="background-size: contain;" src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                                        class="w-24 h-24 mx-auto  block dark:hidden" > 
-                                        <img src="{{ env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
-                                            class="w-24 h-24 mx-auto hidden dark:block" alt="logo" class=""> 
+                                        <img style="background-size: contain;" src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                                        class="w-24 h-24 mx-auto  block dark:hidden" >
+                                        <img src="{{ config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo }}" alt="logo"
+                                            class="w-24 h-24 mx-auto hidden dark:block" alt="logo" class="">
                                         {{-- <img src="../assets/img/brand-logos/desktop-dark.png" alt="logo" class="mx-auto hidden dark:block"> --}}
                                     </a>
                                     <br>
@@ -246,7 +246,7 @@
 
                                 <div class="text-center">
                                     @if ( !isset($site_logo) )
-                                    <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ env('APP_NAME') }}</h1>
+                                    <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ config('app.name') }}</h1>
                                     <hr>
                                     @endif
                                     <h3 class="block text-xl text-gray-800 dark:text-gray-900">{{__('messages.Get Started')}}</h3>
@@ -336,14 +336,14 @@
 
                                             </div>
 
-                                          
+
                                             <!-- End Form Group -->
 
 
-                                        
-                                           
+
+
                                             <div class="grid grid-cols-1 gap-6">
-                                                      
+
                                                         <!-- Form Group -->
                                                         <div>
                                                             <label for="upline_referral_phone_number" class="block text-sm mb-2 dark:text-gray-900 font-bold">{{__('messages.Referral phone number (optional)')}}</label>
@@ -351,7 +351,7 @@
                                                                 @if ($upline != '')
                                                                      <x-text-input readonly id="upline_referral_phone_number" class="block mt-1 w-full" type="text" name="upline_referral_phone_number" value="{{$upline}}"  autofocus autocomplete="upline_referral_phone_number" />
                                                                 @else
-                                                                     <x-text-input id="upline_referral_phone_number" class="block mt-1 w-full" type="text" name="upline_referral_phone_number" :value="old('upline_referral_phone_number')" autofocus autocomplete="upline_referral_phone_number" />         
+                                                                     <x-text-input id="upline_referral_phone_number" class="block mt-1 w-full" type="text" name="upline_referral_phone_number" :value="old('upline_referral_phone_number')" autofocus autocomplete="upline_referral_phone_number" />
                                                                 @endif
                                                                 <x-input-error :messages="$errors->get('upline_referral_phone_number')" class="mt-2" />
                                                             </div>
@@ -360,8 +360,8 @@
 
                                             </div>
 
-                                      
-                                            <div class="grid grid-cols-2 gap-6"> 
+
+                                            <div class="grid grid-cols-2 gap-6">
                                                 <!-- Form Group -->
                                                         <div>
                                                             <label for="password" class="block text-sm mb-2 dark:text-gray-900 font-bold">{{__('messages.Password')}}</label>
@@ -375,7 +375,7 @@
                                                             </div>
                                                         </div>
                                                         <!-- End Form Group -->
-            
+
                                                         <!-- Form Group -->
                                                         <div>
                                                             <label for="confirm-password" class="block text-sm mb-2 dark:text-gray-900 font-bold">{{__('messages.Confirm Password')}}</label>
@@ -392,15 +392,15 @@
                                             </div>
 
                                             {{-- <div class="grid grid-cols-1">
-                                                  
+
                                                     <div>
                                                         <label for="last_name" class="block text-sm mb-0 dark:text-gray-900">PIN</label>
                                                         <small>You need to create a 4-digit code so as to ensure a more secure transaction with us</small>
                                                         <div class="relative">
                                                             <x-text-input id="pin" class="block mt-1 w-full" type="password" name="pin" :value="old('pin')" required autofocus autocomplete="pin" />
                                                             <x-input-error :messages="$errors->get('pin')" class="mt-2" />
-                                                                
-                                                                
+
+
                                                         </div>
                                                         <div class="flex items-center mt-1">
                                                             <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin">
@@ -410,7 +410,7 @@
 
                                             </div> --}}
 
-                                        
+
 
                                             <button type="submit" id="registerBtn"
                                                 class="py-2 px-3 inline-flex justify-center items-center gap-2 rounded-sm border border-transparent font-semibold bg-primary text-white hover:bg-primary focus:outline-none focus:ring-0 focus:ring-primary focus:ring-offset-0 transition-all text-sm dark:focus:ring-offset-white/10">{{__('messages.Signup')}}</button>
@@ -428,16 +428,16 @@
 
     <!-- popperjs -->
     {{-- <script src="../assets/libs/@popperjs/core/umd/popper.min.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/@popperjs/core/umd/popper.min.js') }}"></script>
 
 
     <!-- Custom-Switcher JS -->
     {{-- <script src="../assets/js/custom-switcher.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'js/custom-switcher.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'js/custom-switcher.js') }}"></script>
 
     <!-- Preline JS -->
     {{-- <script src="../assets/libs/preline/preline.js"></script> --}}
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'libs/preline/preline.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'libs/preline/preline.js') }}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <script>

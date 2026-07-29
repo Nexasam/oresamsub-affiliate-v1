@@ -6,7 +6,7 @@
 
         <!-- Page Header -->
         <div class="block justify-between page-header md:flex">
-           
+
 
         </div>
         <!-- Page Header Close -->
@@ -26,7 +26,7 @@
               Ops! {{ Session::get('failure') }}
               </div>
             @endif
-            
+
             @if ($errors->any())
               <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                 <ul>
@@ -37,21 +37,21 @@
               </div>
             @endif
           </div>
-          
-         
+
+
           <div class="col-span-12">
-          
+
               <div class="box">
                 <div class="box-header flex items-center space-x-4 justify-between">
                   <h5 class="box-title">Automations</h5>
-                  
+
 
                   {{-- //only for superadmin:  sellingpoint1 --}}
                   @if(auth()->user()->email == 'adebsholey4real@gmail.com')
                     <button class="hs-dropdown-toggle ti-btn ti-btn-success"  data-hs-overlay="#hs-vertically-centered-modal12">Add Automation</button>
                   @endif
                   <div id="hs-vertically-centered-modal12" class="hs-overlay ti-modal hidden">
-                   
+
                     <div class="ti-modal-box">
                       <div class="ti-modal-content">
                         <div class="ti-modal-header">
@@ -80,7 +80,7 @@
                                             <label class="ti-form-label mb-0">Automation Name</label>
                                             <input value="" name="automation_name" type="text" required class="my-auto ti-form-input" min="0" placeholder="automation name">
                                         </div>
-    
+
                                         <div class="">
                                             <label class="ti-form-label mb-0">Public/Api Key</label>
                                             <input value="" name="api_public_key" type="text" class="my-auto ti-form-input" min="0" placeholder="api key">
@@ -92,12 +92,12 @@
                                             <label class="ti-form-label mb-0">Secret Key: (Optional)</label>
                                             <input value="" name="api_secret_key" type="text" class="my-auto ti-form-input" min="0" placeholder="secret key">
                                         </div>
-    
+
                                         <div class="">
                                             <label class="ti-form-label mb-0">Password: (Optional)</label>
                                             <input value="" name="api_password" type="text" class="my-auto ti-form-input" min="0" placeholder="password">
                                         </div>
-    
+
                                     </div>
 
 
@@ -150,16 +150,16 @@
                                              </select>
                                         </div>
                                     </div>
-                                  
+
                                     <div class="space-y-2">
                                         <button type="submit" class="ti-btn ti-btn-primary w-full">Create Automation</button>
                                     </div>
-                                  
+
                                     <br>
                                 </div>
                             </form>
-                        
-                      </div>   
+
+                      </div>
                       </div>
                     </div>
                   </div>
@@ -176,7 +176,7 @@
                     {{-- <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white " id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
                       Products
                     </button> --}}
-                  
+
                   </nav>
 
                   <div class="mt-3">
@@ -187,13 +187,13 @@
                             Great! {{ Session::get('success') }}
                             </div>
                           @endif
-          
+
                           @if (Session::has('failure'))
                             <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                             Ops! {{ Session::get('failure') }}
                             </div>
                           @endif
-                            
+
                         <table  class="ti-custom-table ti-custom-table-head ti-striped-table ti-custom-table-hover ">
                             <thead>
                                 <tr>
@@ -207,20 +207,20 @@
                               @php
                                   $count = 1;
 
-                                 
+
                               @endphp
                               @foreach ($automations as $automation)
-                               
+
                                 <tr>
                                   <td>{{ $count++ }}</td>
                                   <td>{{ $automation->automation_name }} <br>
-                                     @if (env('APP_NAME') == 'OresamSub')
+                                     @if (config('app.name') == 'OresamSub')
                                        <div x-data="{ copied: false }">
                                         <p>
                                           Fund Account:
                                           <span>{{ $automation->bank_name ?? ''  }}</span>
                                           <span x-ref="account">{{ $automation->bank_accounts ?? '' }}</span>
-                                          <button 
+                                          <button
                                               @click="navigator.clipboard.writeText($refs.account.innerText).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
                                               class="ml-2 bg-blue-500 text-white px-2 py-1 rounded"
                                           >
@@ -232,7 +232,7 @@
                                       @endif
                                   </td>
                                   <td>{{ $automation->created_at }}</td>
-                                  <td class="flex items-center"> 
+                                  <td class="flex items-center">
                                     <a href="{{ route('admin.automation.dashboard_view',$automation->slug) }}" class="hs-dropdown-toggle ti-btn ti-btn-info">Manage Plans</a> &nbsp;
                                     {{-- <button class="hs-dropdown-toggle ti-btn ti-btn-warning">Manage Plans</button> &nbsp; --}}
                                     <div>
@@ -240,7 +240,7 @@
                                         {{-- <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-primary" data-hs-overlay="#hs-vertically-centered-modal{{$automation->id}}">
                                             Update
                                           </button>  --}}
-                                           
+
                                           <div id="hs-vertically-centered-modal{{$automation->id}}" class="hs-overlay ti-modal hidden">
                                             <div class="ti-modal-box">
                                               <div class="ti-modal-content">
@@ -261,7 +261,7 @@
                                                 </div>
                                                 <div class="ti-modal-body">
                                                   <div class="overflow-auto">
-        
+
                                                     <form method="POST" action="{{ route('admin.automation.update')  }}">
                                                       @csrf
                                                        <div class="grid w-full lg:w-full lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
@@ -285,34 +285,34 @@
                                                                 <input value="{{ $automation->api_password }}" name="api_password" type="text" class="my-auto ti-form-input" min="0" placeholder="">
                                                                 </div>
                                                            </div>
-                       
-                                            
-                       
+
+
+
                                                            <div class="grid grid-cols-1 gap-2">
                                                                <div class="">
                                                                    <label class="ti-form-label mb-0">Automation Whatsapp Support Url</label>
                                                                    <input value="{{ $automation->whatsapp_support_link }}" name="whatsapp_support_link" type="text" class="my-auto ti-form-input" min="0" placeholder="whatsapp support url">
                                                                </div>
-                       
+
                                                                <div class="">
                                                                  <label class="ti-form-label mb-0">Domain</label>
                                                                  <input value="{{ $automation->domain_url }}" name="domain_url" type="text" class="my-auto ti-form-input" min="0" placeholder="domain url">
                                                                </div>
                                                            </div>
-                       
-                                                     {{-- 
+
+                                                     {{--
                                                            <div class="grid grid-cols-1 gap-2">
                                                              <div class="">
                                                                  <label class="ti-form-label mb-0">Cable Url</label>
                                                                  <input value="{{ $automation->cable_url }}" name="cable_url" type="text" class="my-auto ti-form-input" min="0" placeholder="cable url">
                                                              </div>
-                       
+
                                                              <div class="">
                                                                <label class="ti-form-label mb-0">Electricity Url</label>
                                                                <input value="{{ $automation->electricity_url }}" name="electricity_url" type="text" class="my-auto ti-form-input" min="0" placeholder="electricity url">
                                                              </div>
                                                          </div> --}}
-                       
+
                                                            <div class="grid grid-cols-1 gap-2">
                                                                <div class="">
                                                                    <label class="ti-form-label mb-0">Group</label>
@@ -323,16 +323,16 @@
                                                                      </select>
                                                                </div>
                                                            </div>
-                                                         
+
                                                            <div class="space-y-2">
                                                                <button type="submit" class="ti-btn ti-btn-primary w-full">Update Automation</button>
                                                            </div>
-                                                         
+
                                                            <br>
                                                        </div>
                                                    </form>
-                                                
-                                              </div>   
+
+                                              </div>
                                               </div>
                                             </div>
                                           </div>
@@ -340,33 +340,33 @@
 
                                     </div>
                                   </td>
-                                  
-                                
-                                 </tr>   
+
+
+                                 </tr>
                               @endforeach
-                                
+
                             </tbody>
-                        </table>     
-                      </div>                
+                        </table>
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-2" class="hidden"  role="tabpanel" aria-labelledby="pills-with-brand-color-item-2">
                       <div class="overflow-auto">
                             <!-- Start::row-3 -->
                           <div class="grid grid-cols-12 gap-x-6">
-                              
+
                             <div class="col-span-12">
                               @if (Session::has('success'))
                               <div class="bg-success/10 border border-success/10 alert text-success" role="alert">
                                 Great! {{ Session::get('success') }}
                                 </div>
                               @endif
-              
+
                               @if (Session::has('failure'))
                                 <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                                  Ops! {{ Session::get('failure') }}
                                 </div>
                               @endif
-                              
+
                               @if ($errors->any())
                                 <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                                   <ul>
@@ -381,18 +381,18 @@
                             <div class="col-span-12">
                                 <div class="box">
 
-                                 
+
                                     <div class="box-body">
                                       <form method="POST" action="{{ route('admin.products.store')}}">
                                         @csrf
 
                                             <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                                            
+
                                                 <div class="space-y-2">
                                                   <label class="ti-form-label mb-0">Product Name</label>
                                                   <input type="text" required class="my-auto ti-form-input"  id="product_name" name="product_name" placeholder="Enter product name">
                                                 </div>
-                                        
+
                                                 <div class="space-y-2">
                                                   <label class="ti-form-label mb-0">Visibility</label>
                                                   <select id="visibility" name="visibility" required class="my-auto ti-form-select">
@@ -419,7 +419,7 @@
                                                             </label>
                                                         </div>
                                                     </li>
-            
+
                                                     <li
                                                     class="ti-list-group gap-x-2.5 bg-white border text-gray-800 sm:-ms-px sm:mt-0 sm:first:rounded-se-none sm:first:rounded-ss-none sm:first:rounded-es-sm sm:last:rounded-es-none sm:last:rounded-ee-none sm:last:rounded-se-sm dark:bg-bgdark dark:border-white/10 dark:text-gray-900">
                                                     <div class="relative flex items-start w-full">
@@ -434,15 +434,15 @@
                                                             </label>
                                                         </div>
                                                     </li>
-            
-                                                
+
+
                                                 </ul>
                                                </div>
-                                                
+
                                                 <div class="space-y-2">
                                                     <button type="submit" class="ti-btn ti-btn-primary w-full">Create Product</button>
                                                 </div>
-                                              
+
                                                 <br>
                                             </div>
                                             {{-- <div class="my-5">
@@ -450,13 +450,13 @@
                                             </div> --}}
 
                                         </form>
-                                      
+
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- End::row-3 -->   
-                      </div>  
+                        <!-- End::row-3 -->
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-3" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-3">
                       <p class="text-gray-500 dark:text-white/70 p-5 border rounded-sm dark:border-white/10 border-gray-200">
@@ -465,14 +465,14 @@
                     </div>
                   </div>
                 </div>
-               
+
                 {{-- <div class="box-body">
-                 
+
                 </div> --}}
               </div>
-             
-               
-                
+
+
+
             </div>
           </div>
         </div>
@@ -481,6 +481,6 @@
       </div>
       <!-- Start::main-content -->
 
-       
+
 @endsection
 

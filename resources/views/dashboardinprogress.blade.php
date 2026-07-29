@@ -3,13 +3,13 @@
 @section('content')
 
 {{-- //change it later to reflect other pages: this is just v1 --}}
-@include('partials.announcements')  
+@include('partials.announcements')
 
 
 <div class="main-content">
 
     @php
-    $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first(); 
+    $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first();
     $sidebar_color = $sidebar_color->color_value ?? '#6B21A8';
     //   echo $sidebar_color;
     @endphp
@@ -28,7 +28,7 @@
     </div>
 
     <div class="block justify-between page-header md:flex">
-        <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-900 dark:hover:text-white text-2xl font-medium"> <small style=" font-size: 14px;">{{ __('messages.Welcome') }} <strong>{{ $user->first_name. ' '. $user->last_name }}</strong></small> </h3>       
+        <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-900 dark:hover:text-white text-2xl font-medium"> <small style=" font-size: 14px;">{{ __('messages.Welcome') }} <strong>{{ $user->first_name. ' '. $user->last_name }}</strong></small> </h3>
     </div>
     <!-- Page Header Close -->
 
@@ -44,7 +44,7 @@
             {{ Session::get('failure') }}
           </div>
         @endif
-        
+
         @if ($errors->any())
           <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
             <ul>
@@ -63,12 +63,12 @@
         </div>
 
         <div class="w-3/4 h-56 bg-blue-500">
-            
+
         </div>
     </div> --}}
 
 
-  
+
     <div class="grid grid-cols-12 gap-3">
 
         {{-- <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
@@ -77,11 +77,11 @@
             </p>
         </div> --}}
         <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
-            <div 
-              x-data="{ 
-                referral: '{{ url("/register?ref=" . $user->phone_number) }}', 
-                copied: false 
-              }" 
+            <div
+              x-data="{
+                referral: '{{ url("/register?ref=" . $user->phone_number) }}',
+                copied: false
+              }"
               class="max-w-sm w-full p-4 rounded-2xl shadow-lg bg-gradient-to-r from-green-500 to-green-700 text-white dark:from-green-600 dark:to-green-800 relative space-y-4"
             >
               <!-- Plan Info -->
@@ -100,47 +100,47 @@
                   </p>
                 </div>
               </div>
-          
+
               <!-- Referral -->
-              @if (env('APP_NAME') == 'OresamSub')
+              @if (config('app.name') == 'OresamSub')
                 <div class="bg-white/10 dark:bg-white/5 backdrop-blur-sm p-3 rounded-lg">
                   <p class="text-sm text-white/80 dark:text-white/60 mb-1">{{ __('messages.Enjoy commission using your link') }}:</p>
-          
+
                   <div class="flex items-center space-x-2">
-                    <input 
-                      type="text" 
-                      x-model="referral" 
-                      readonly 
+                    <input
+                      type="text"
+                      x-model="referral"
+                      readonly
                       class="bg-transparent text-white dark:text-white text-sm flex-1 px-2 py-1 border border-white/30 dark:border-white/20 rounded focus:outline-none"
                     >
-                    <button 
-                      @click="navigator.clipboard.writeText(referral); copied = true; setTimeout(() => copied = false, 2000)" 
+                    <button
+                      @click="navigator.clipboard.writeText(referral); copied = true; setTimeout(() => copied = false, 2000)"
                       class="text-sm bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 px-3 py-1 rounded transition"
                     >
                       {{ __('messages.Copy') }}
                     </button>
                   </div>
-          
+
                   <template x-if="copied">
                     <p class="text-green-200 text-xs mt-1">Copied!</p>
                   </template>
-          
+
                   <div class="mt-3 flex flex-wrap gap-2">
-                    <a 
-                      :href="`https://wa.me/?text=Enjoy cheap and affordable data, airtime, cable subscription and electricity bills with {{env('APP_NAME')}} using this link: ${referral}`" 
-                      target="_blank" 
+                    <a
+                      :href="`https://wa.me/?text=Enjoy cheap and affordable data, airtime, cable subscription and electricity bills with {{config('app.name')}} using this link: ${referral}`"
+                      target="_blank"
                       class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-xs text-white"
                     >
                       WhatsApp
                     </a>
-                    <a 
-                      :href="`https://twitter.com/intent/tweet?text=Enjoy cheap and affordable data, airtime, cable subscription and electricity bills with {{env('APP_NAME')}} using this link&url=${referral}`" 
-                      target="_blank" 
+                    <a
+                      :href="`https://twitter.com/intent/tweet?text=Enjoy cheap and affordable data, airtime, cable subscription and electricity bills with {{config('app.name')}} using this link&url=${referral}`"
+                      target="_blank"
                       class="bg-blue-400 hover:bg-blue-500 px-3 py-1 rounded text-xs text-white"
                     >
                       Twitter
                     </a>
-                    <button 
+                    <button
                       @click="
                         if (navigator.share) {
                           navigator.share({
@@ -151,7 +151,7 @@
                         } else {
                           alert('Sharing not supported on this device.');
                         }
-                      " 
+                      "
                       class="bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 px-3 py-1 rounded text-xs text-white"
                     >
                       Share
@@ -160,21 +160,21 @@
                 </div>
               @endif
         </div>
-          
- 
 
-        
+
+
+
         <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
             <a href="{{ route('wallet_creditings.index') }}">
-                <div class="max-w-sm w-full p-6 rounded-2xl shadow-lg 
-                            bg-gradient-to-r from-blue-500 to-blue-700 
-                            dark:from-blue-600 dark:to-blue-800 
+                <div class="max-w-sm w-full p-6 rounded-2xl shadow-lg
+                            bg-gradient-to-r from-blue-500 to-blue-700
+                            dark:from-blue-600 dark:to-blue-800
                             text-white">
                     <div class="flex items-center space-x-4">
                         <div class="p-3 bg-white/20 dark:bg-white/10 rounded-full">
                             <!-- Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M8 7V3m8 4V3M5 11h14M5 19h14M5 15h14M4 5h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
                             </svg>
                         </div>
@@ -183,23 +183,23 @@
                             <p class="text-2xl font-bold">
                                 &#8358; {{ number_format($user->main_wallet, 2) ?? 0 }}
                             </p>
-                            @if ($funding_res != 'nil') 
+                            @if ($funding_res != 'nil')
                                 {!! $funding_res !!}
                             @endif
                         </div>
                     </div>
                 </div>
             </a>
-        
-            <div class="max-w-sm w-full p-6 mt-2 rounded-2xl shadow-lg 
-                        bg-gradient-to-r from-indigo-500 to-indigo-700 
-                        dark:from-indigo-600 dark:to-indigo-800 
+
+            <div class="max-w-sm w-full p-6 mt-2 rounded-2xl shadow-lg
+                        bg-gradient-to-r from-indigo-500 to-indigo-700
+                        dark:from-indigo-600 dark:to-indigo-800
                         text-white">
                 <div class="flex items-center space-x-4">
                     <div class="p-3 bg-white/20 dark:bg-white/10 rounded-full">
                         <!-- Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M8 7V3m8 4V3M5 11h14M5 19h14M5 15h14M4 5h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
                         </svg>
                     </div>
@@ -212,14 +212,14 @@
                 </div>
             </div>
         </div>
-        
+
 
         <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
 
             <!-- Buy Data Card -->
-            <div class="max-w-sm w-full p-6 rounded-2xl shadow-xl relative overflow-hidden 
+            <div class="max-w-sm w-full p-6 rounded-2xl shadow-xl relative overflow-hidden
                         bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
-                        
+
               <!-- SVG Pattern Background -->
               <div class="absolute inset-0 opacity-30 pointer-events-none">
                 <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none">
@@ -235,7 +235,7 @@
                   <rect width="100%" height="100%" class="hidden dark:block" fill="url(#bigger-dots-dark)" />
                 </svg>
               </div>
-          
+
               <!-- Card Content -->
               <div class="relative z-10 flex items-center justify-between">
                 <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
@@ -245,18 +245,18 @@
                           d="M5 20h1v-4H5v4zm4 0h1v-7H9v7zm4 0h1v-10h-1v10zm4 0h1v-13h-1v13z" />
                   </svg>
                 </div>
-          
-                <a href="{{ route('user.data.buy_data') }}" 
+
+                <a href="{{ route('user.data.buy_data') }}"
                    class="bg-[{{ $sidebar_color }}] text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
                   {{ __('messages.Buy Data') }}
                 </a>
               </div>
             </div>
-          
+
             <!-- Buy Airtime Card -->
-            <div class="max-w-sm w-full p-6 mt-3 rounded-2xl shadow-xl relative overflow-hidden 
+            <div class="max-w-sm w-full p-6 mt-3 rounded-2xl shadow-xl relative overflow-hidden
                         bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
-                        
+
               <!-- SVG Pattern Background -->
               <div class="absolute inset-0 opacity-30 pointer-events-none">
                 <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none">
@@ -272,7 +272,7 @@
                   <rect width="100%" height="100%" class="hidden dark:block" fill="url(#bigger-dots-dark2)" />
                 </svg>
               </div>
-          
+
               <!-- Card Content -->
               <div class="relative z-10 flex items-center justify-between">
                 <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
@@ -282,32 +282,32 @@
                           d="M7 4h10a1 1 0 011 1v14a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1zm5 7v4m2-2h-4" />
                   </svg>
                 </div>
-          
-                <a href="{{ route('user.airtime.buy_airtime') }}" 
+
+                <a href="{{ route('user.airtime.buy_airtime') }}"
                    class="bg-[{{ $sidebar_color }}] text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
                   {{ __('messages.Buy Airtime') }}
                 </a>
               </div>
             </div>
-          
+
           </div>
-          
 
 
-  
-      
-        
+
+
+
+
 
         {{-- <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
             <div class="max-w-sm w-full p-4 rounded-2xl shadow-lg bg-gradient-to-r from-yellow-500 to-yellow-700 text-white">
                 <div class="flex items-center space-x-4">
                   <div class="p-3 bg-white/20 rounded-full">
-                  
+
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M8 7V3m8 4V3M5 11h14M5 19h14M5 15h14M4 5h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
                       </svg>
-                      
+
                   </div>
                   <div>
                     <p class="text-sm uppercase tracking-wider text-white/80">Transactions</p>
@@ -317,19 +317,19 @@
                   </div>
                 </div>
               </div>
-              
+
         </div> --}}
 
-     
 
-      
+
+
 
 
         <div class="col-span-12 xxxl:col-span-2 md:col-span-3">
 
             <!-- Cable Subscription Card -->
             <div class="max-w-sm w-full p-6 rounded-2xl shadow-xl relative overflow-hidden bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
-              
+
               <!-- Background Pattern -->
               <div class="absolute inset-0 opacity-30 pointer-events-none">
                 <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none">
@@ -345,28 +345,28 @@
                   <rect width="100%" height="100%" class="hidden dark:block" fill="url(#dots-dark-cable)" />
                 </svg>
               </div>
-          
+
               <!-- Content -->
               <div class="relative z-10 flex items-center justify-between">
                 <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M5 3h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm0 16v2h14v-2H5zm4-5h6m-3 0v4" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M6 17l-2 2m2-2h2" />
                   </svg>
                 </div>
-          
+
                 <a href="{{ route('user.cable_subscription.buy_cable_subscription') }}"
                    class="bg-[{{ $sidebar_color }}] text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
                   {{ __('messages.Cable Subscription') }}
                 </a>
               </div>
             </div>
-          
+
             <!-- Electricity Card -->
             <div class="max-w-sm w-full p-6 mt-3 rounded-2xl shadow-xl relative overflow-hidden bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
-              
+
               <!-- Background Pattern -->
               <div class="absolute inset-0 opacity-30 pointer-events-none">
                 <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none">
@@ -382,16 +382,16 @@
                   <rect width="100%" height="100%" class="hidden dark:block" fill="url(#dots-dark-elec)" />
                 </svg>
               </div>
-          
+
               <!-- Content -->
               <div class="relative z-10 flex items-center justify-between">
                 <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M13 2L10 8h4l-3 6M10 8h4l-3 6m6 2h-4m-2 0H9" />
                   </svg>
                 </div>
-          
+
                 <a href="{{ route('user.electricity.buy_electricity_subscription') }}"
                    class="bg-[{{ $sidebar_color }}] text-white text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
                   {{ __('messages.Buy Electricity') }}
@@ -399,12 +399,12 @@
               </div>
             </div>
           </div>
-          
-          
 
 
 
-       
+
+
+
 
         {{-- <div class="col-span-6 xxxl:col-span-2 md:col-span-3">
             <div class="box">
@@ -427,10 +427,10 @@
                                     class="text-gray-800 font-semibold text-xl leading-none align-bottom dark:text-gray-900">
                                     {{ number_format($bulk_data_wallet_sum)  }} MB
                                 </span>
-                               
+
                             </div>
                             <div>
-                               
+
                             </div>
                         </div>
                     </div>
@@ -438,7 +438,7 @@
             </div>
         </div> --}}
 
-      
+
         <div class="col-span-12 xxl:col-span-12">
             <div class="box">
                 <div class="box-header">
@@ -446,9 +446,9 @@
                         <h5 class="box-title my-auto">{{ __('messages.Recent Transactions') }}</h5>
                         <div class="box-header">
                             <div class="flex">
-                             
+
                               <div class="hs-dropdown ti-dropdown block ms-auto my-auto sm:flex items-center justify-between">
-                               
+
                                     <div id="hs-slide-down-animation-modal" class="hs-overlay hidden ti-modal">
                                       <div class="hs-overlay-open:mt-7 ti-modal-box mt-0 ease-out">
                                         <div class="ti-modal-content">
@@ -476,7 +476,7 @@
                                             <select name="product_plan_category_filter" id="product_plan_category_filter">
                                                 <option value="">Select</option>
                                                 @foreach ($product_plan_categories as $plan_category)
-                                                 <option value="{{ $plan_category->id}}">{{ $plan_category->product_plan_category_name }}</option>   
+                                                 <option value="{{ $plan_category->id}}">{{ $plan_category->product_plan_category_name }}</option>
                                                 @endforeach
                                             </select>
                                             <br>
@@ -497,7 +497,7 @@
                                             </div>
                                           </div>
                                           <div class="ti-modal-footer">
-                                         
+
                                             <a id="filter_user_txn_table" class="ti-btn ti-btn-primary" data-hs-overlay="#hs-slide-down-animation-modal"
                                               href="javascript:void(0);">
                                                {{  __('messages.Save changes') }}
@@ -506,12 +506,12 @@
                                         </div>
                                       </div>
                                     </div>
-                                    
-                                 
-                    
+
+
+
                               </div>
-                            
-                            </div> 
+
+                            </div>
                           </div>
 
                         <div class="hs-dropdown ti-dropdown block ms-auto my-auto">
@@ -523,16 +523,16 @@
                                 <a href="javascript:void(0)" class="ti-dropdown-item hs-dropdown-toggle"
                                 data-hs-overlay="#hs-slide-down-animation-modal">{{ __('messages.Basic filter')  }}</a>
                                 {{-- <a class="ti-dropdown-item"  href="javascript:void(0)">Filter by phone number</a> --}}
-                              
+
                             </div>
                         </div>
-                       
+
                     </div>
                 </div>
                 <div class="box-body px-6">
                     <div id="taskactive" class="" role="tabpanel" aria-labelledby="active-item">
                         <div class="overflow-auto">
-                            <table style="width:100%"  id="user_transactions_table" class="table ti-custom-table ti-custom-table-head">    
+                            <table style="width:100%"  id="user_transactions_table" class="table ti-custom-table ti-custom-table-head">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                 <tr>
                                     <th>ID</th>
@@ -549,16 +549,16 @@
                                     <th>{{ __('messages.Action')  }}</th>
                                 </tr>
                             </thead>
-                           
+
                             <tbody>
 
                            </tbody>
-                            </table> 
+                            </table>
                         </div>
                     </div>
                     <div id="completed" class="hidden" role="tabpanel" aria-labelledby="completed-item">
                         <div class="overflow-auto">
-                        
+
                             {{-- <table class="ti-custom-table ti-custom-table-head">
                                 <tbody>
                                     <tr>
@@ -567,7 +567,7 @@
                                                 <div class="leading-none">
                                                     <div class="relative inline-block">
                                                         <img class="avatar avatar-xs rounded-full"
-                                                            src="{{ asset(env('APP_ASSETS_BASE_URL').'img/users/2.jpg') }}"
+                                                            src="{{ asset(config('app.assets_base_url').'img/users/2.jpg') }}"
                                                             alt="Image Description">
                                                         <span
                                                             class="absolute bottom-0 end-0 block h-1.5 w-1.5 rounded-full ring-2 ring-white bg-gray-400"></span>
@@ -1075,8 +1075,8 @@
                 </div>
                 <div class="box-body p-0 selling-table">
                     <div class="overflow-auto">
-                      
-                        <table class="ti-custom-table ti-custom-table-head">    
+
+                        <table class="ti-custom-table ti-custom-table-head">
                                     <thead>
                                     <tr>
                                         <th><small>ID</small></th>
@@ -1085,14 +1085,14 @@
                                         <th><small>Data value</small></th>
                                         <th><small>Unit(MB)</small></th>
                                         <th><small>Selling price (&#8358;)</small></th>
-                                     
+
                                     </tr>
                                 </thead>
                                 <tbody>
                                   @php
                                   $count = 1;
                               @endphp
-                              @foreach ($bulk_data_plans as $bulk_data_plan)                 
+                              @foreach ($bulk_data_plans as $bulk_data_plan)
                                   <tr>
                                   <td><small>{{ $count++ }}</small></td>
                                   <td><small>{{ $bulk_data_plan->bulk_data_plan_name }}</small></td>
@@ -1104,10 +1104,10 @@
                                   </td>
                                   <td><small>{{ $bulk_data_plan->mb_data_measurement ?? 'nil' }}</small></td>
                                   <td><small>{{ number_format($bulk_data_plan->$user_selling_variable) ?? 'nil' }}</small></td>
-                                 </tr>   
+                                 </tr>
                               @endforeach
                               </tbody>
-                              </table>     
+                              </table>
                             {{-- {{ $bulk_data_plans->links() }}  --}}
                                 {{-- <tr>
                                     <td class="leading-none">
@@ -1160,8 +1160,8 @@
                                     <td>
                                         <span class="text-sm font-semibold">10,234</span>
                                     </td>
-                                </tr> 
-                          
+                                </tr>
+
                     </div>
                 </div>
             </div>
@@ -1172,20 +1172,20 @@
             <div class="box">
                 <div class="box-header">
                     <div class="flex justify-between">
-                        <h5 class="box-title my-auto">{{ __('messages.Hot sales') }} ({{count($hot_sales)}})</h5>      
+                        <h5 class="box-title my-auto">{{ __('messages.Hot sales') }} ({{count($hot_sales)}})</h5>
                     </div>
                     <div class="flex items-center">
                         <p>{{ __('messages.Enjoy at discounted prices')}}</p>
                     </div>
                 </div>
                 <div class="box-body">
-                   
+
                     <div class="flex items-center">
                         {{-- //dont use this for now --}}
                         @if (count($hot_sales) ==  1000000)
-                            
+
                         <table class="ti-custom-table ti-custom-table-head">
-                           
+
                             <tbody>
                                 @php
                                     $count = 0;
@@ -1203,9 +1203,9 @@
 
                         @else
                           <p>{{ __('messages.No hot sales at the moment')}}</p>
-                        @endif              
+                        @endif
                     </div>
-                   
+
                 </div>
             </div>
         </div>
@@ -1262,7 +1262,7 @@
                         </a>
                     </div>
                 </div>
-            </div> 
+            </div>
          @endif
     </div>
 @endsection

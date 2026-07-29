@@ -3,15 +3,15 @@
 
 <head>
     <!-- Google tag (gtag.js) -->
-    
-    @if (env('APP_NAME') == 'FoxDataHub' )
+
+    @if (config('app.name') == 'FoxDataHub' )
 
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
    })(window,document,'script','dataLayer','GTM-NPMMTFT6');</script>
-   
+
 
 
    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NCKP7MH1KN"></script>
@@ -38,10 +38,10 @@
     <link rel="stylesheet" href="css/owl.carousel.min.css">
     <link rel="stylesheet" href="css/owl.theme.default.min.css">
     <link rel="stylesheet" href="css/style.css"> --}}
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/css/owl.carousel.min.css') }}">
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/owl.theme.default.min.css') }}">
-    <link rel="stylesheet" href="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'landing_page_assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'landing_page_assets/css/owl.carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'landing_page_assets/owl.theme.default.min.css') }}">
+    <link rel="stylesheet" href="{{ asset(config('app.assets_base_url').'landing_page_assets/css/style.css') }}">
     <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
 
@@ -54,10 +54,10 @@
     <title>{{ $site_title }}  - Oresamsub</title>
 
     @php
-       $hero1 = isset($hero_image1) ? env('APP_URL').'assets/landing_page_assets/img/hero_image1/'.$hero_image1 : env('APP_URL').'assets/landing_page_assets/img/bg_banner1.jpg';
-       $hero2 = isset($hero_image2) ? env('APP_URL').'assets/landing_page_assets/img/hero_image2/'.$hero_image2 : env('APP_URL').'assets/landing_page_assets/img/bg_banner2.jpg';
-       $logo = isset($site_logo) ? env('APP_URL').'assets/landing_page_assets/img/site_logo/'.$site_logo : 'nil';
-       
+       $hero1 = isset($hero_image1) ? config('app.url').'assets/landing_page_assets/img/hero_image1/'.$hero_image1 : config('app.url').'assets/landing_page_assets/img/bg_banner1.jpg';
+       $hero2 = isset($hero_image2) ? config('app.url').'assets/landing_page_assets/img/hero_image2/'.$hero_image2 : config('app.url').'assets/landing_page_assets/img/bg_banner2.jpg';
+       $logo = isset($site_logo) ? config('app.url').'assets/landing_page_assets/img/site_logo/'.$site_logo : 'nil';
+
     @endphp
 
     <style>
@@ -75,14 +75,14 @@
           font-weight: 400;
           font-style: normal;
         }
-        
+
         :root {
             --brand:   {{ isset($site_primary_color) && $site_primary_color != NULL ? $site_primary_color : "#5a66f2"  }};
             /* --brand: #5a66f1; */
             --dark: #092032;
             --body: #516171;
             --border: rgba(0,0,0,0.08);
-            --shadow: 0px 6px 30px rgba(0, 0, 0, 0.08);    
+            --shadow: 0px 6px 30px rgba(0, 0, 0, 0.08);
         }
 
         .btn-brand:hover {
@@ -121,35 +121,35 @@
         }
 
 
-        
+
         #milestone11 {
-            background: linear-gradient(rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85), rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85)), url({{  env('APP_URL').'assets/landing_page_assets/img/bg_banner1.jpg' }});
+            background: linear-gradient(rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85), rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85)), url({{  config('app.url').'assets/landing_page_assets/img/bg_banner1.jpg' }});
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
 
-            
+
         }
 
         #milestone111 {
-            background: linear-gradient(rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85), rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85)), url({{  env('APP_URL').'assets/landing_page_assets/img/nil.jpg' }});
+            background: linear-gradient(rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85), rgba({{ $site_landing_analytics_color_r ?? 90 }},{{ $site_landing_analytics_color_g ?? 102}},{{ $site_landing_analytics_color_b ?? 204}}, 0.85)), url({{  config('app.url').'assets/landing_page_assets/img/nil.jpg' }});
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
 
-            
+
         }
 
         /* #reviews11 {
 
-        background: linear-gradient(-90deg, rgba({{ $site_landing_review_r ?? 8 }},{{ $site_landing_review_g ?? 32}},{{ $site_landing_review_b ?? 50}}, 0.8), rgba({{ $site_landing_review_r ?? 8 }},{{ $site_landing_review_g ?? 32}},{{ $site_landing_review_b ?? 50}}, 0.8)), url({{  env('APP_URL').'assets/landing_page_assets/img/bg_banner1.jpg' }}), #980123;
+        background: linear-gradient(-90deg, rgba({{ $site_landing_review_r ?? 8 }},{{ $site_landing_review_g ?? 32}},{{ $site_landing_review_b ?? 50}}, 0.8), rgba({{ $site_landing_review_r ?? 8 }},{{ $site_landing_review_g ?? 32}},{{ $site_landing_review_b ?? 50}}, 0.8)), url({{  config('app.url').'assets/landing_page_assets/img/bg_banner1.jpg' }}), #980123;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         } */
-        
-      
-        
+
+
+
 
         .btn-brand:hover {
         background-color: {{ isset($site_landing_page_hover_color) && $site_landing_page_hover_color != NULL ? $site_landing_page_hover_color : "#d64022"  }};
@@ -199,7 +199,7 @@
 </head>
 
 <body class="montserrat2" data-bs-spy="scroll" data-bs-target=".navbar" data-bs-offset="70">
-    @if (env('APP_NAME') == 'FoxDataHub')
+    @if (config('app.name') == 'FoxDataHub')
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NPMMTFT6"
      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @endif
@@ -208,7 +208,7 @@
     {{-- &text=Hola%21%20Quisiera%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Varela%202. --}}
     <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website" class="float" target="_blank">
     <i class="fa fa-whatsapp my-float"></i>
-    </a>       
+    </a>
 
 
     <!-- TOP NAV -->
@@ -217,7 +217,7 @@
             <div class="row justify-content-between">
                 <div class="col-auto">
                     <p> <i class='bx bxs-envelope'></i> {{ $topnav_email  }}</p>
-                     <input value="{{  env('APP_URL') }}" type="hidden" class="root_url2">
+                     <input value="{{  config('app.url') }}" type="hidden" class="root_url2">
 
                     <p>  <a style="text-decoration: none; color:white" href="tel:{{ $topnav_phone  }}"><i class='bx bxs-phone-call'></i>{{ $topnav_phone }}</a> </p>
                 </div>
@@ -238,7 +238,7 @@
             @if ($logo != 'nil')
                 <img src="{{ $logo }}" style="max-height: 90px; max-width: 90px;" alt="">
             @else
-               <a class="navbar-brand" href="#">{{ $site_logo_alt }}<span class="dot">.</span></a>             
+               <a class="navbar-brand" href="#">{{ $site_logo_alt }}<span class="dot">.</span></a>
             @endif
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -259,20 +259,20 @@
                         <a class="nav-link" href="#reviews">{{__('messages.Testimonials')}}</a>
                     </li>
 
-                    
+
                     <li class="nav-item position-relative" x-data="{ open: false }">
                         <!-- Toggle Button -->
                         <a href="#" @click.prevent="open = !open" @click.outside="open = false"
                            class="nav-link fw-bold d-flex align-items-center gap-1 text-warning position-relative">
                             🌍 <span class="d-none d-md-inline">Language</span>
-                    
+
                             <!-- Animated Icon -->
                             <span class="ms-1 animate__animated animate__pulse animate__infinite">
                                 <i class="ri-arrow-down-s-line transition-transform"
                                    :class="{ 'rotate-180': open }"></i>
                             </span>
                         </a>
-                    
+
                         <!-- Dropdown Menu -->
                         <ul x-show="open" x-transition x-cloak
                             class="dropdown-menu show mt-2 start-0 bg-white border border-light shadow rounded z-50"
@@ -283,24 +283,24 @@
                             <li><a href="{{ route('lang.switch', 'ha') }}" class="dropdown-item small px-3 py-2 text-dark hover:bg-light">🟢 Hausa</a></li>
                         </ul>
                     </li>
-                    
-                    
 
-                    
 
-               
+
+
+
+
                 </ul>
                 {{-- data-bs-toggle="modal" data-bs-target="#exampleModal" --}}
-                <a href="{{ url('/register') }}" 
+                <a href="{{ url('/register') }}"
                     class="btn btn-brand ms-lg-3">{{__('messages.Signup')}}</a>
 
-                <a href="{{ url('/login') }}" 
+                <a href="{{ url('/login') }}"
                 class="btn btn-brand ms-lg-3">{{__('messages.Login')}}</a>
 
                 @if (isset($mobile_app_link) && $mobile_app_link != '' && $mobile_app_link != 'nil')
                     <a target="_blank" href="{{ $mobile_app_link ?? '#' }}" class="btn btn-info ms-lg-3">
                     <i class="fas fa-mobile-alt me-2"></i> {{ __('messages.Download Our App') }}
-                    </a>      
+                    </a>
                 @endif
 
             </div>
@@ -309,7 +309,7 @@
 
     <!-- SLIDER -->
     <div class="owl-carousel owl-theme hero-slider">
-        {{-- style=" background-image: 'url( {{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/bg_banner2.jpg')  }} )' " --}}
+        {{-- style=" background-image: 'url( {{ asset(config('app.assets_base_url').'landing_page_assets/img/bg_banner2.jpg')  }} )' " --}}
         <div class="slide slide1">
             <div class="container">
                 <div class="row">
@@ -351,7 +351,7 @@
 
                         <div class="col-12">
                             <div class="info-box">
-                                <img src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/icon6.png') }}" alt="">
+                                <img src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/icon6.png') }}" alt="">
                                 <div class="ms-4">
                                     <h5>Digital Marketing</h5>
                                     <p>It is a long established fact that a reader will be distracted by the readable
@@ -391,15 +391,15 @@
 
     <section class="bg-light" id="about">
         <div class="container">
-            {{-- @if (env('APP_NAME') == 'OresamSusdfjlsdfjlsdfb') --}}
+            {{-- @if (config('app.name') == 'OresamSusdfjlsdfjlsdfb') --}}
                 <div class="row">
                     <div class="col-lg-6">
                         @if (isset($aboutus_image))
-                          {{-- {{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/aboutus_image/'.$aboutus_image) }} --}}
-                          <img src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/aboutus_image/'.$aboutus_image) }}" alt="">
-                            
+                          {{-- {{ asset(config('app.assets_base_url').'landing_page_assets/img/aboutus_image/'.$aboutus_image) }} --}}
+                          <img src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/aboutus_image/'.$aboutus_image) }}" alt="">
+
                         @else
-                          <img src="{{ asset(env('APP_ASSETS_BASE_URL').'img/authentication/auth11.jpg') }}" alt="">
+                          <img src="{{ asset(config('app.assets_base_url').'img/authentication/auth11.jpg') }}" alt="">
                         @endif
                     </div>
                     <div class="col-lg-6 mt-5">
@@ -411,7 +411,7 @@
                     </div>
                 </div>
             {{-- @else
-                <div class="row">    
+                <div class="row">
                     <div class="col-12">
                         <div class="intro">
                             <h6>about us</h6>
@@ -421,8 +421,8 @@
                     </div>
                 </div>
             @endif --}}
-        
-          
+
+
         </div>
 
         {{-- this was hidden - examine later --}}
@@ -472,7 +472,7 @@
 
 
     {{-- FOR THE NOW, WE USE ANALYTICS AS EASY STEPS FOR AYANFE'S WEBSITE --}}
-    @if (env('APP_NAME') == 'QuickConnect')
+    @if (config('app.name') == 'QuickConnect')
             <section id="milestone111"  style="color: white; ">
                 <div class="row">
                     <div class="col-12 -pt-4">
@@ -480,7 +480,7 @@
                     </div>
                 </div>
                 <div class="container mt-3" id="analyti">
-                    
+
                     <div class="row text-center justify-content-start gy-4">
                         <div class="col-lg-4 col-sm-6" >
                             <h1 class="display-7" style="color:white;" >{{ $value_analytics1 }}</h1>
@@ -523,7 +523,7 @@
             </section>
 
     @endif
- 
+
 
 
 
@@ -610,19 +610,19 @@
   <div class="container overflow-hidden">
     <div class="row gy-5 gy-md-6">
       <div class="col-6 col-md-3 align-self-center text-center">
-        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/landing/mtn.jpg') }}" height="200"  alt="">  
+        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/landing/mtn.jpg') }}" height="200"  alt="">
       </div>
       <div class="col-6 col-md-3 align-self-center text-center">
-        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/landing/glo2.jpg') }}" height="200"  alt="">  
-  
-    </div>
-      <div class="col-6 col-md-3 align-self-center text-center">
-        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/landing/9mobile.jpg') }}" height="200"  alt="">  
+        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/landing/glo2.jpg') }}" height="200"  alt="">
 
     </div>
       <div class="col-6 col-md-3 align-self-center text-center">
-        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/img/landing/airtel.png') }}" height="200"  alt="">  
-  
+        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/landing/9mobile.jpg') }}" height="200"  alt="">
+
+    </div>
+      <div class="col-6 col-md-3 align-self-center text-center">
+        <img class="logo_landing" style="object-fit:cover;" src="{{ asset(config('app.assets_base_url').'landing_page_assets/img/landing/airtel.png') }}" height="200"  alt="">
+
      </div>
       {{-- <div class="col-6 col-md-3 align-self-center text-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="125" height="65" viewBox="0 0 125 65" fill="currentColor" class="text-dark"><path d="M122.61,13.9c-1.32,0-2.4,1.13-2.4,2.52s1.07,2.52,2.4,2.52c1.32,0,2.39-1.13,2.39-2.52h0c0-1.4-1.07-2.52-2.39-2.52Zm0,4.74c-1.16,0-2.11-.99-2.11-2.22h0c0-1.23,.94-2.22,2.11-2.22h0c1.16,0,2.1,.99,2.1,2.21,0,1.22-.93,2.22-2.09,2.22h0Zm1.23-2.88c0-.24-.1-.49-.3-.61-.2-.13-.43-.14-.65-.14h-1.17v2.82h.33v-1.3h.6l.77,1.3h.39l-.81-1.3c.48-.01,.85-.22,.85-.77h0Zm-1.29,.5h-.5v-1h.77c.33,0,.7,.05,.7,.49,0,.57-.58,.51-.96,.51ZM42.33,58.01l-15.62-8.02c-.34-.19-.52-.66-.51-.98l.04-4.43c0-.31,.06-.63,.45-.93,1.67-1.12,6.84-4.13,12.19-12.33,7.12-10.93,0-20.1-11.12-17.61-9.88,2.22-19.94,7.85-24.3,10.9C-.43,27.34,.11,30.64,0,33.59c.22,1.25,.65,1.14,1.62-.11,7.24-7.04,18.25-12.38,20.3-13.29s6.91-3.98,12.64-2.61c5.5,1.31,4.16,9.17,2.48,12.49-1.84,3.63-7.07,8.92-9.45,10.22-.9,.5-1.24,0-1.24-.8l.38-17.1c0-1.14-.49-1.65-1.57-1.25l-1.73,.91c-1.19,.74-1.13,1.02-1.24,1.93l-.26,19.71c0,.43-.2,.77-.42,.87l-5.64,3.33c-1.3,.68-.97,1.7,0,2.05l4.54,2.27c1.08,.45,1.4,.79,1.4,1.93l-.16,9.54c4.05-.85,4.32-2.9,4.43-4.26v-2.9c.11-.68,.49-.91,1.03-.79l13.18,6.7c1.19,.57,1.84,.34,2.7-1.25,.86-1.59,.97-2.38-.65-3.18h0Zm23.02-24.07c-1.83,1.11-2.68,3.19-1.96,4.51,.72,1.31,2.9,1.53,4.73,.42,1.83-1.11,2.62-3.14,1.9-4.45-.72-1.31-2.84-1.59-4.68-.48Zm-6.76,1.41c-.5,.64-1.46,2.58-2,3.78-.54,1.19-1.67,3.89-2.81,3.89-1.2,0-1.35-3.12-1.35-4.26s-.65-1.31-.97-1.25-1.24,.4-1.51,1.59c-.27,1.19-1.73,6.36-3.35,6.36-1.03,0-1.78-3.12-1.84-4.09-.05-.96-.49-1.76-1.4-1.76-.65,0-1.46,.34-1.78,.74s-.38,1.02-2.11,.62c-1.57-.06-3.08,.8-4.91,4.03-1.11,1.95-2,5.58-.32,7.04,1.57,1.36,4.32-1.08,5.13-2.1,.81-1.02,1.51-1.76,1.84-2.33,.32-.57,.65-.51,.81,.06,.16,.57,1.08,2.78,2.27,2.73,1.19-.06,2.7-1.02,4.48-4.32,.32-.68,.81-.62,.92-.06,.11,.57,.81,2.44,2,2.44s2.4-1.89,3.02-3.01c.43-.77,1.08-.4,1.08,.34s-.32,18.17-.32,18.17c0,.79,.3,1.02,.84,1.02h2.35c.43,0,.81-.4,.81-1.02l.49-28.26c0-.68-.73-1.16-1.35-.37h0Zm-18.36,11.13c-.49,.85-1.78,3.12-2.92,2.73-.59-.34,.2-2.61,.59-3.41,.59-1.19,2.34-3.09,3.13-2.61,.76,.45-.32,2.44-.81,3.29h0ZM122.52,29.06c-.22,.2-.57,.54-1.35,.17-1.35-.57-1.46-3.24-2.16-5.68-.63-2.19-2.15-2.06-2.7-1.05l-1.65,2.78c-.3,.57-.94,1.87-1.59,1.87-.76,0-.42-1.14-.38-2.27,.03-.77-.43-1.73-1.19-1.73-.86,0-1.78,1.39-2.48,2.98-.49,1.11-1.76,5.37-3.35,5.37-1.03,0-1.13-3.12-1.19-4.09s-.38-2.16-1.3-2.16c-.62,0-1.03,.34-1.35,.74-.32,.4-.38,.74-1.51,.57-1.57-.06-4.16,1.48-5.99,4.71-1.11,1.95-2.44,6.04-.76,7.5,1.57,1.36,4.37-1.82,5.18-2.84,.81-1.02,1.51-1.76,1.84-2.33,.32-.57,.65-.51,.81,.06,.16,.57,1.08,2.78,2.27,2.73,1.19-.06,2.16-.34,3.94-3.64,.32-.68,.92-.77,1.03-.2s.22,2.07,1.35,2.07c1.94,0,4.15-4.97,4.7-6.13,.49-1.02,1.27-.74,1.54,.03,.39,1.1,.73,4.63,2.83,4.63s3.54-2.36,3.97-3.1c.49-.74,.23-1.68-.51-.99h0Zm-22.89,3.41c-.49,.85-1.57,2.73-2.7,2.33-.59-.34,.14-1.99,.54-2.78,.59-1.19,2.33-3.12,3.13-2.64,.75,.45-.49,2.24-.97,3.1h0Zm-10.43-2.98s-4.59-3.52-5.89-5.11c-.87-1.07-.27-1.87,.27-2.33,3.24-2.27,8.31-5.79,10.31-11.25,1.92-5.26-1.08-9.83-3.24-10.56-2.96-1.01-9.23,1.02-12.37,7.16-2.03,3.97-2.97,5.28-3.24,16.07-.05,2.04-.11,4.37-.11,6.93s-.27,9.48-.54,10.79c-1.03,3.07,2.05,1.25,3.46,.06,1.4-1.19,1.3-2.98,1.3-3.75,0-.97,.05-18,.54-21.81,.3-2.37,.65-6.76,3.02-10.56,2.38-3.81,4.81-2.27,5.45-1.65,.65,.62,1.57,2.22,1.08,5.45-.75,5.02-6.26,10.51-7.67,12.21-1.4,1.7-1.08,3.18-.27,4.37,.58,.85,2,2.5,3.46,4.03,1.46,1.53,1.3,2.9,1.08,3.92-.76,3.07-8.64,11.36-8.64,11.36-1.67,1.87,.05,4.94,.65,5.96,.6,1.02,1.35,.68,1.84-.17,1.94-3.8,10.31-13.01,10.31-13.01,2.43-3.24,1.41-6.36-.81-8.12h0Z" fill-rule="evenodd"/></svg>
@@ -643,7 +643,7 @@
 
 <section class="bg-light pb-7 pt-6 py-xl-6">
     <div class="container mb-1 mb-md-6">
-   
+
       <div class="row">
         <div class="col-12">
             <div class="intro">
@@ -656,9 +656,9 @@
     </div>
     <div class="container">
       <div class="row gy-5 gy-md-6 overflow-auto">
-      
-            <table id="public_product_plans" class="ti-custom-table ti-custom-table-head">    
-            <thead class="bg-gray-50 dark:bg-black/20">     
+
+            <table id="public_product_plans" class="ti-custom-table ti-custom-table-head">
+            <thead class="bg-gray-50 dark:bg-black/20">
               <tr>
                 <th>ID</th>
                 <th>Product name</th>
@@ -677,7 +677,7 @@
       </div>
     </div>
   </section>
-  
+
 
 
 
@@ -860,7 +860,7 @@
         </div>
     </section>
 
-    
+
 
     <section class="bg-white" id="portfolio">
         <div class="container">
@@ -873,7 +873,7 @@
                         <span>{{__('messages.Email')}}:  <a href="#">{{ $topnav_email }}</a>  </span> <br>
                         <span>{{__('messages.Reach us on whatsapp by')}} <a href="https://api.whatsapp.com/send?phone={{  $support_whatsapp_number  }}&text=Hello,%20Please%20I%20need%20help%20on%20your%20website">clicking this link</a>  </span> <br>
                         @if ($physical_address != '' && $physical_address != NULL)
-                        <span>{{__('messages.Office Address')}}: {{ $physical_address }}  </span>                            
+                        <span>{{__('messages.Office Address')}}: {{ $physical_address }}  </span>
                         @endif
                     </div>
                 </div>
@@ -1060,20 +1060,20 @@
     </div>
 
 
-    <script src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset(config('app.assets_base_url').'landing_page_assets/js/bootstrap.bundle.min.js') }}"></script>
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-    <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script>
+    <script src="{{asset(config('app.assets_base_url').'js/admin_datatables/datatables.js') }}"></script>
 
 
    {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
        <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script> --}}
-    {{-- <script src="{{asset(env('APP_ASSETS_BASE_URL').'js/admin_datatables/datatables.js') }}"></script> --}}
-   <script src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/js/main.js') }}"></script>
-   <script src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/js/owl.carousel.min.js') }}"></script>
-   <script src="{{ asset(env('APP_ASSETS_BASE_URL').'landing_page_assets/js/app.js') }}"></script>
+    {{-- <script src="{{asset(config('app.assets_base_url').'js/admin_datatables/datatables.js') }}"></script> --}}
+   <script src="{{ asset(config('app.assets_base_url').'landing_page_assets/js/main.js') }}"></script>
+   <script src="{{ asset(config('app.assets_base_url').'landing_page_assets/js/owl.carousel.min.js') }}"></script>
+   <script src="{{ asset(config('app.assets_base_url').'landing_page_assets/js/app.js') }}"></script>
    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 </body>

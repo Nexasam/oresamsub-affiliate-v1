@@ -4,7 +4,7 @@
 <div class="main-content">
 
     @php
-        $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first(); 
+        $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first();
         $sidebar_color = $sidebar_color->color_value ?? '#6B21A8';
         //   echo $sidebar_color;
     @endphp
@@ -15,7 +15,7 @@
             {{-- <p>Current locale: {{ app()->getLocale() }}</p> --}}
             <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-900 dark:hover:text-white text-2xl font-medium"> <small style=" font-size: 14px;">{{ __('messages.Welcome') }} <strong>{{ $user->first_name. ' '. $user->last_name }}</strong></small> </h3>
         </div>
-        
+
     </div>
     <!-- Page Header Close -->
 
@@ -43,7 +43,7 @@
                   <div class="crystal_pay_dynamic_account_details">
 
                   </div>
-                
+
                 </div>
                 <div class="box-footer">
                   <button type="button" class="ti-btn ti-btn-primary">Read More</button>
@@ -59,7 +59,7 @@
         <div class="overflow-x-auto whitespace-nowrap w-full bg-blue-100 mx-auto text-blue-800 px-4 py-1 rounded-sm font-semibold">
             <div class="text-sm inline-block animate-marquee hover:[animation-play-state:paused]">
                 @php
-                   
+
                         $futureDate = new DateTime('2025-12-31'); // Replace with your desired future date
                         $today = new DateTime();
 
@@ -69,8 +69,8 @@
                         $daysRemaining = $interval->days;
 
                         // echo "Number of days remaining: $daysRemaining";
-                @endphp     
-                Next renewal of your domain and hosting is {!! $futureDate }}. You have {!! $daysRemaining !!} remaining. 
+                @endphp
+                Next renewal of your domain and hosting is {!! $futureDate }}. You have {!! $daysRemaining !!} remaining.
             </div>
           </div>
     </div> --}}
@@ -84,7 +84,7 @@
                 @if (config('app.name') == 'OresamSub')
                     <div class="grid">
                         @if (auth()->user()->verification_status != 1)
-                        <b><a class="underline" href="{{route('user.verification.index')}}">{{__('messages.Verify your Account with better opportunities')}} </a></b>                               
+                        <b><a class="underline" href="{{route('user.verification.index')}}">{{__('messages.Verify your Account with better opportunities')}} </a></b>
                         @endif
                         <form action="{{ route('user.virtual_accounts.generate') }}" method="POST">
                             @csrf
@@ -101,13 +101,13 @@
                                <div>
                                    <p class="text-sm uppercase tracking-wider text-gray-900"></p>
                                    <p class="text-2xl font-bold">
-                                       {{ $vaccount->account_number }} 
+                                       {{ $vaccount->account_number }}
                                    </p>
                                </div>
                            </div> --}}
                        @if (in_array($vaccount->bank_code,$active_bankcodes))
                            <div class="max-w-sm w-full p-4 rounded-2xl shadow-xl bg-[{{$sidebar_color}}] text-white">
-                           
+
                                <p>
                                    <span class="text-md font-bold">{{$vaccount->bank_name }}</span> &nbsp; | &nbsp; {{ $vaccount->account_name }} | &nbsp; <span class="text-xl font-bold">{{ $vaccount->account_number }}</span>
                                    <br>
@@ -119,29 +119,29 @@
                                    @endphp
                                    <small>{!! 'charges: '.$bankcodeinfo->bank_charges .$charge_info.'&nbsp;'.$bankcodeinfo->short_description !!}</small>
                                </p>
-                           
-                           </div>     
-                       @endif  
-                      
+
+                           </div>
+                       @endif
+
                    @endforeach
                @else
-                                   
+
                        <div class="max-w-sm w-full p-6 rounded-2xl shadow-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                            <div class="flex items-center justify-between">
                            <!-- Icon (pointing down) -->
                            <div class="p-3 bg-white/20 rounded-full">
                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                    <!-- Wallet Icon -->
-                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                        d="M3 10h18M3 14h18M3 6h18c.553 0 1 .447 1 1v12c0 .553-.447 1-1 1H3c-.553 0-1-.447-1-1V7c0-.553.447-1 1-1z" />
                                    <!-- Naira Symbol (₦) -->
                                    <text x="12" y="15" font-size="8" font-family="Arial" text-anchor="middle" fill="currentColor">₦</text>
                                </svg>
-                               
+
                            </div>
 
-                         
-           
+
+
                            <a href="{{route('user.wallet.index')}}" class="bg-[{{$sidebar_color}}]  text-sm font-medium px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
                                {{ __('messages.Fund Wallet') }}
                            </a>
@@ -149,8 +149,8 @@
                        </div>
 
                @endif
-              
-              
+
+
 
            </div>
         </div>
@@ -158,7 +158,7 @@
             <div class="box">
                 <div class="box-body">
                     <div class="flex space-x-4 rtl:space-x-reverse">
-                       
+
                         <div class="flex items-center justify-center ecommerce-icon px-0">
                             <span class="rounded-sm p-4 bg-danger/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="fill-white svg3" height="24px"
@@ -276,7 +276,7 @@
                                     class="text-gray-800 font-semibold text-xl leading-none align-bottom dark:text-gray-900">
                                     &#8358;{{  number_format(auth()->user()->main_wallet,2) ?? 0  }}
                                 </span>
-                                @if ($funding_res != 'nil') 
+                                @if ($funding_res != 'nil')
                                     {!! $funding_res !!}
                                 @endif
                             </div>
@@ -295,7 +295,7 @@
             <div class="box">
                 <div class="box-body">
                     <div class="flex space-x-4 rtl:space-x-reverse">
-                        
+
                         <!-- Icon -->
                         <div class="flex items-center justify-center ecommerce-icon px-0">
                             <span class="rounded-sm p-4 bg-warning/10">
@@ -307,28 +307,28 @@
                                 </svg>
                             </span>
                         </div>
-        
+
                         <!-- Balance Card -->
-                        <div x-data="walletBalance()" x-init="init()" 
+                        <div x-data="walletBalance()" x-init="init()"
                              class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700 w-full">
-                            
+
                             <!-- Header -->
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="text-sm font-medium text-gray-600 dark:text-gray-300">
                                     Total User Main Balances
                                 </h3>
                                 <!-- Refresh Button -->
-                                <button @click="refreshMainBalances()" 
+                                <button @click="refreshMainBalances()"
                                         class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                         title="Refresh">
-                                    <svg xmlns="http://www.w3.org/2000/svg" 
-                                         fill="none" viewBox="0 0 24 24" 
-                                         stroke-width="2" stroke="currentColor" 
-                                         class="w-5 h-5 text-emerald-600 dark:text-emerald-400" 
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         fill="none" viewBox="0 0 24 24"
+                                         stroke-width="2" stroke="currentColor"
+                                         class="w-5 h-5 text-emerald-600 dark:text-emerald-400"
                                          :class="{ 'animate-spin': loading }">
-                                        <path stroke-linecap="round" stroke-linejoin="round" 
+                                        <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M16.023 9.348h4.992v-.001m-2.495-2.498
-                                                A9.372 9.372 0 0012 3.75 
+                                                A9.372 9.372 0 0012 3.75
                                                 9.372 9.372 0 004.48 6.85m-.002 0H.005v.001
                                                 M3.75 12a9.372 9.372 0 002.493 6.849
                                                 9.372 9.372 0 006.757 2.901
@@ -336,7 +336,7 @@
                                     </svg>
                                 </button>
                             </div>
-        
+
                             <!-- Balance / Skeleton -->
                             <template x-if="loading">
                                 <div class="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse"></div>
@@ -347,7 +347,7 @@
                                     <span class="text-2xl font-bold leading-none" x-text="balance"></span>
                                 </div>
                             </template>
-        
+
                             <!-- Subtext -->
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Updated every 20 seconds
@@ -357,9 +357,9 @@
                 </div>
             </div>
         </div>
-        
 
-       
+
+
 
         <div class="col-span-12 xxxl:col-span-2 md:col-span-4">
             <div class="box">
@@ -391,9 +391,9 @@
                                     class="text-gray-800 font-semibold text-xl leading-none align-bottom dark:text-gray-900">
                                     {{ number_format(count($product_plan_categories))  ?? 0  }}
                                 </span>
-                                <div> 
+                                <div>
                                     {{-- data-hs-overlay="#hs-basic-modal" --}}
-                                    {{-- <a href="#" type="button"   aria-label="button" type="button" class="hs-dropdown-toggle ti-btn flex-shrink-0 h-[0.070rem] w-[0.070rem] ti-btn-primary text-sm"> 
+                                    {{-- <a href="#" type="button"   aria-label="button" type="button" class="hs-dropdown-toggle ti-btn flex-shrink-0 h-[0.070rem] w-[0.070rem] ti-btn-primary text-sm">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                           <path d="M5.071 1.243a.5.5 0 0 1 .858.514L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 6h1.717L5.07 1.243zM3.5 10.5a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3zm2.5 0a.5.5 0 1 0-1 0v3a.5.5 0 0 0 1 0v-3z"/>
                                         </svg><span style="font-size: 10px">Fund Wallet</span>
@@ -489,7 +489,7 @@
                 </div>
             </div>
         </div>
-      
+
         <div class="col-span-12 xxl:col-span-12">
 
             {{-- <div class="box w-full mb-4">
@@ -502,7 +502,7 @@
 
             </div> --}}
 
-        
+
 
             <div class="box">
                 <div class="box-header">
@@ -511,18 +511,18 @@
                         <div class="box-header">
                             <div class="flex items-center">
 
-                              @if (env('APP_NAME') == 'OresamSub')
+                              @if (config('app.name') == 'OresamSub')
                                     <!-- Refresh button -->
                                     <button type="button"
                                         id="reload_txns_tbl"
-                                        class="w-full text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-400 
+                                        class="w-full text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-400
                                             font-medium rounded-lg text-sm px-4 py-2 text-left">
                                         Refresh
                                     </button>
                               @endif
-                             
+
                               <div class="hs-dropdown ti-dropdown block ms-auto my-auto  sm:flex items-center justify-between">
-                               
+
                                     <div id="hs-slide-down-animation-modal" class="hs-overlay hidden ti-modal">
                                       <div class="hs-overlay-open:mt-7 ti-modal-box mt-0 ease-out">
                                         <div class="ti-modal-content">
@@ -550,7 +550,7 @@
                                             <select name="product_plan_category_filter" id="product_plan_category_filter">
                                                 <option value="">Select</option>
                                                 @foreach ($product_plan_categories as $plan_category)
-                                                 <option value="{{ $plan_category->id}}">{{ $plan_category->product_plan_category_name }}</option>   
+                                                 <option value="{{ $plan_category->id}}">{{ $plan_category->product_plan_category_name }}</option>
                                                 @endforeach
                                             </select>
                                             <br>
@@ -571,7 +571,7 @@
                                             </div>
                                           </div>
                                           <div class="ti-modal-footer">
-                                         
+
                                             <a id="filter_user_txn_table" class="ti-btn ti-btn-primary" data-hs-overlay="#hs-slide-down-animation-modal"
                                               href="javascript:void(0);">
                                               Save changes
@@ -580,12 +580,12 @@
                                         </div>
                                       </div>
                                     </div>
-                                    
-                                 
-                    
+
+
+
                               </div>
-                            
-                            </div> 
+
+                            </div>
                           </div>
 
                         <div class="hs-dropdown ti-dropdown block ms-auto my-auto">
@@ -597,21 +597,21 @@
                                 <a href="javascript:void(0)" class="ti-dropdown-item hs-dropdown-toggle"
                                 data-hs-overlay="#hs-slide-down-animation-modal">Basic filter</a>
                                 {{-- <a class="ti-dropdown-item"  href="javascript:void(0)">Filter by phone number</a> --}}
-                              
+
                             </div>
                         </div>
-                       
+
                     </div>
                 </div>
                 <div class="box-body p-0">
                     <div id="taskactive" class="" role="tabpanel" aria-labelledby="active-item">
                         <div class="overflow-auto">
-                            
 
-                            <table  id="admin_transactions_table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">    
+
+                            <table  id="admin_transactions_table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                 <tr>
-                                    
+
                                         <th>ID</th>
                                         <th>User</th>
                                         <th>Wallet</th>
@@ -628,16 +628,16 @@
                                         <th>Status</th>
                                         <th>Date Added</th>
                                         <th>Action</th>
-                                    
+
                                 </tr>
                             </thead>
-                           
+
                             <tbody>
 
                            </tbody>
-                            </table>  
+                            </table>
 
-                            {{-- <table  id="admin_transactions_table" class="ti-custom-table ti-custom-table-head">    
+                            {{-- <table  id="admin_transactions_table" class="ti-custom-table ti-custom-table-head">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                 <tr>
                                     <th>ID</th>
@@ -655,7 +655,7 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                           
+
                             <tbody>
 
                            </tbody>
@@ -663,8 +663,8 @@
 
                         </div>
                     </div>
-                  
-                  
+
+
                 </div>
             </div>
         </div>
@@ -672,21 +672,21 @@
         <div class="col-span-12 xxl:col-span-12">
 
             <div class="grid grid-cols-12 gap-1">
-         
+
                 <div class="col-span-12">
-                
+
                     <div class="box">
                       <div class="box-header">
                         <h5 class="box-title">Wallet Creditings</h5>
                       </div>
-                     
+
                       <div class="box-body">
-      
+
                           <div class="box-header">
                               <div class="flex">
                                 <h5 class="box-title my-auto">{{__('messages.Filter Options')}}</h5>
                                 <div class="hs-dropdown ti-dropdown block ms-auto my-auto s  sm:flex items-center justify-between">
-                                
+
                                       <button type="button"
                                       class="hs-dropdown-toggle ti-dropdown-toggle rounded-sm p-1 px-3 mr-8 !border border-gray-200 text-gray-400 hover:text-gray-500 hover:bg-gray-200 hover:border-gray-200 focus:ring-gray-200  dark:hover:bg-black/30 dark:border-white/10 dark:hover:border-white/20 dark:focus:ring-white/10 dark:focus:ring-offset-white/10">
                                 Filter <i class="ti ti-chevron-down"></i>
@@ -698,7 +698,7 @@
                                   <a id="reload_txns_tbl" class="ti-dropdown-item" href="javascript:void(0)">Refresh</a>
                                   {{-- <a class="ti-dropdown-item" href="javascript:void(0)">Export</a> --}}
                                 </div>
-      
+
                                 <div id="hs-slide-down-animation-modal" class="hs-overlay hidden ti-modal">
                                   <div class="hs-overlay-open:mt-7 ti-modal-box mt-0 ease-out">
                                     <div class="ti-modal-content">
@@ -737,7 +737,7 @@
                                         </div>
                                       </div>
                                       <div class="ti-modal-footer">
-                                      
+
                                         <a id="filter_crystalpay_txn_table" class="ti-btn ti-btn-primary" data-hs-overlay="#hs-slide-down-animation-modal"
                                           href="javascript:void(0);">
                                           Save changes
@@ -745,18 +745,18 @@
                                       </div>
                                     </div>
                                   </div>
-                                </div>   
-                              </div>                       
-                              </div> 
+                                </div>
+                              </div>
+                              </div>
                             </div>
-      
-      
+
+
                           <div class="overflow-auto">
                           {{-- <div id="basic-tablee" class="ti-custom-table ti-striped-table ti-custom-table-hover"> --}}
-                              <table  id="crystal_pay_funding_logs_table" class="ti-custom-table ti-custom-table-head">    
+                              <table  id="crystal_pay_funding_logs_table" class="ti-custom-table ti-custom-table-head">
                                   <thead class="bg-gray-50 dark:bg-black/20">
                                     <tr>
-                            
+
                                       <th>ID</th>
                                       <th>User</th>
                                       <th>Txn Reference</th>
@@ -775,11 +775,11 @@
                                       <th>Action</th>
                                   </tr>
                               </thead>
-                             
+
                               <tbody>
-      
+
                              </tbody>
-                              </table>  
+                              </table>
                           {{-- </div> --}}
                         </div>
                       </div>
@@ -789,7 +789,7 @@
                         <table id="basic-table" class="ti-custom-table ti-striped-table ti-custom-table-hover">
                           <thead>
                               <tr>
-                             
+
                                   <td>First Name</td>
                                   <td>Last Name</td>
                                   <td>Action</td>
@@ -799,17 +799,17 @@
                           </tbody>
                         </table>
                       </div>
-                     
+
                     </div> --}}
-                     
-                      
+
+
                   </div>
                 </div>
               </div>
 
         </div>
-     
-       
+
+
     </div>
     <!-- End::row-1 -->
 

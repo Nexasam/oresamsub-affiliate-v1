@@ -4,19 +4,19 @@
       <!-- Start::main-content -->
       <div class="main-content">
 
-     
+
              <!-- Page Header -->
         <div class="block justify-between page-header md:flex">
 
-       
+
             <div>
 
 
                 <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white text-2xl font-medium"> Transaction details</strong></h3>
-                
+
 
                 <div class="bg-gray-100 dark:bg-gray-900 dark:text-gray-100 border border-gray-300 text-gray-600 alert mt-2" role="alert">
-                  <span class="font-bold"> 
+                  <span class="font-bold">
                     @if (strtolower(auth()->user()->role->role_name) == 'admin')
                       User
                     @endif   Screen Message:</span> {{  $data->user_screen_message  }}
@@ -26,7 +26,7 @@
 
                 @php
                       $automationss = App\Models\Automation::select('id','domain_url','automation_name')->get();
-                    
+
                 @endphp
 
                 <div class="col-span-12">
@@ -35,13 +35,13 @@
                     Great! {{ Session::get('success') }}
                     </div>
                   @endif
-      
+
                   @if (Session::has('failure'))
                     <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                      Ops! {{ Session::get('failure') }}
                     </div>
                   @endif
-                  
+
                   @if ($errors->any())
                     <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                       <ul>
@@ -52,43 +52,43 @@
                     </div>
                   @endif
                 </div>
-      
+
                   <div class="bg-gray-100 dark:bg-gray-900 dark:text-gray-100 border border-gray-300 text-gray-600 alert" role="alert">
-                    <span class="font-bold">Admin Screen Message</span> {{  $data->admin_screen_message  }} 
+                    <span class="font-bold">Admin Screen Message</span> {{  $data->admin_screen_message  }}
                     <br>
                     <br>
-              
-                    
-                  
 
 
-                
-                  
-              
-                   
+
+
+
+
+
+
+
 
                     {{-- <hr> --}}
                  </div>
                 @endif
-               
-                
+
+
                 {{-- <h4><p><b>Response:</b> {{  $data->user_screen_message  }}</p></h4>
                 <hr>
                 <h4><p><b>Admin Response:</b> {{  $data->admin_screen_message  }}</p></h4> --}}
             </div>
-            
-          
+
+
         </div>
         <!-- Page Header Close -->
 
         <!-- Start::row-1 -->
         <div class="grid grid-cols-12 gap-x-6">
-        
+
           <div class="col-span-12">
             <div class="box">
               <div class="box-body">
-                
-                 
+
+
                   <div class="py-5">
                       <div class="overflow-auto">
                           <table class="ti-custom-table !border dark:border-white/10 dark:bg-gray-900">
@@ -98,7 +98,7 @@
                                 <th scope="col" class="px-4 py-3">Description</th>
                               </tr>
                             </thead> --}}
-                            
+
                             <tbody class="">
                               <tr>
                                 <td></td>
@@ -119,29 +119,29 @@
                                         @if (auth()->user()->email == 'adebsholey4real@gmail.com')
 
                                               @if ($data->user->upline  != NULL)
-                                              
+
                                                 @php
                                                     $phonee = $data->user->upline->phone_number ?? 'nil';
                                                     if($phonee == 'nil'){
                                                       $phonee = substr($phonee,0, 11 - 8);
                                                     }
                                                 @endphp
-                                                UPLINE: {{  $data->user->upline != NULL ? $data->user->upline->username.' '.$phonee . str_repeat('*', 6) : 'none'  }} <br> 
-                                              
+                                                UPLINE: {{  $data->user->upline != NULL ? $data->user->upline->username.' '.$phonee . str_repeat('*', 6) : 'none'  }} <br>
+
                                               @endif
-                                                                                   
+
                                         @endif
-                                     
+
                                         @if ($data->user->phone_number != NULL)
                                             {{-- try to call or send a whatsapp message to the user --}}
 
                                             @php
-                                        
+
                                             $rawPhone = $data->user->phone_number;
-                                        
+
                                             // Remove non-digit characters
                                             $phone = preg_replace('/\D+/', '', $rawPhone);
-                                        
+
                                             // Format to 234xxxxxxxxxx
                                             if (Illuminate\Support\Str::startsWith($phone, '0')) {
                                                 $phoneFormatted = '234' . substr($phone, 1);
@@ -154,7 +154,7 @@
                                             } else {
                                                 $phoneFormatted = $phone;
                                             }
-                                        
+
                                             // Predefined message (URL-encoded)
                                             $product_plan_name = $data->product_plan->product_plan_name;
                                             $first_name = $data->user->first_name;
@@ -163,11 +163,11 @@
                                             $message = urlencode("Hello $first_name, I noticed you were having issues with the purchase of this product: $product_plan_name. Please let me know how I can help.");
                                             $message_appreciation = urlencode("Hello $first_name, you recently purchased $product_plan_name. Thank you for choosing $biz_name as your trusted Utility Provider. We're constantly seeking more ways to serve you better. $login_link");
                                         @endphp
-                                        
+
                                         <div class="flex gap-4 mt-4">
                                             <!-- WhatsApp Chat Button -->
                                             @if ($data->status == 1)
-                                              <a href="https://wa.me/{{ $phoneFormatted }}?text={{ $message_appreciation }}" 
+                                              <a href="https://wa.me/{{ $phoneFormatted }}?text={{ $message_appreciation }}"
                                               target="_blank"
                                                 class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
                                                   🟢 Appreciate customer on WhatsApp
@@ -175,23 +175,23 @@
                                             @endif
 
                                             @if ($data->status == -1 || $data->status == 0 || $data->status == 2)
-                                              <a href="https://wa.me/{{ $phoneFormatted }}?text={{ $message }}" 
+                                              <a href="https://wa.me/{{ $phoneFormatted }}?text={{ $message }}"
                                                 target="_blank"
                                                 class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
                                                   Support customer on WhatsApp
                                               </a>
                                             @endif
-                                        
-                                        
+
+
                                             <!-- Call Button -->
-                                            <a href="tel:+{{ $phoneFormatted }}" 
+                                            <a href="tel:+{{ $phoneFormatted }}"
                                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition mt-2">
                                                 📞 Call customer now
                                             </a>
-                                        
+
                                         </div>
-                                        
-                                        
+
+
 
 
                                         @endif
@@ -199,16 +199,16 @@
                                       </p>
 
 
-                                      @if ($data->status == 2 && env('APP_NAME') == 'OresamSub')
+                                      @if ($data->status == 2 && config('app.name') == 'OresamSub')
                                       <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                                          <span class="font-semibold text-red-600">Refund Reason:</span> 
+                                          <span class="font-semibold text-red-600">Refund Reason:</span>
                                           <span class="italic">{{ $data->refund_reason ?? 'Not provided' }}</span>
                                             </p>
                                       @endif
                                   </td>
                                 </tr>
                               @endif
-                           
+
                               {{-- <tr>
                                 <td class="">Status</td>
                                 <td class=""></td>
@@ -231,7 +231,7 @@
                                           @break
                                         @case(3)
                                           <span class="badge bg-gray text-white">Processing</span>
-                                          @break                                     
+                                          @break
                                        @default
                                           <span class="badge bg-gray text-white">Unknown</span>
                                    @endswitch
@@ -239,12 +239,12 @@
                               </tr>
                               <tr>
                                 <td class="">Category:</td>
-                                <td class="" style="white-space: normal;word-wrap: break-word;word-break: normal;width:auto;"> <p>{{  strtoupper($data->transaction_category)  }}</p> </td>                 
+                                <td class="" style="white-space: normal;word-wrap: break-word;word-break: normal;width:auto;"> <p>{{  strtoupper($data->transaction_category)  }}</p> </td>
                               </tr>
-                            
+
                               <tr>
                                 <td class="">Wallet:</td>
-                                <td class="">{{   $data->wallet_category == 'main_wallet' ?  'MAIN' : 'DATA_WALLET'  }}</td>                 
+                                <td class="">{{   $data->wallet_category == 'main_wallet' ?  'MAIN' : 'DATA_WALLET'  }}</td>
                               </tr>
                               <tr>
                                 <td class="">Product Details:</td>
@@ -252,8 +252,8 @@
                                   @if ($data->product_plan != NULL)
                                       {{   $data->product_plan->product_plan_name }}<br>
                                       {{   $data->product_plan->product_plan->product_plan_category->product_plan_category_name }}<br>
-                                        
-                                     
+
+
                                       @if ($data->transaction_category == 'cable_subscription')
                                           {{  'Smart Card No: '.$data->smart_card_number }} <br>
                                       @endif
@@ -277,40 +277,40 @@
                                   @else
                                      NIL
                                   @endif
-                                  
-                                </td>                 
+
+                                </td>
                               </tr>
                               <tr>
                                 <td class="">Phone recharged:</td>
-                                <td class="">{{  $data->phone_number }}</td>  
+                                <td class="">{{  $data->phone_number }}</td>
                               </tr>
                               <tr>
                                 <td class="">Amount:</td>
-                                <td class="">&#8358;{{ (number_format($data->amount,2)) }}</td>  
+                                <td class="">&#8358;{{ (number_format($data->amount,2)) }}</td>
                               </tr>
                               <tr>
                                 <td class="">Deducted Amount:</td>
-                                <td class="">&#8358;{{ (number_format($data->discounted_amount,2)) }}</td>  
+                                <td class="">&#8358;{{ (number_format($data->discounted_amount,2)) }}</td>
                               </tr>
                                <tr>
                                   <td class="">Balance before:</td>
-                                  <td class="">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_before,2) : number_format($data->balance_before).'MB' }}</td>  
+                                  <td class="">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_before,2) : number_format($data->balance_before).'MB' }}</td>
                               </tr>
                               @if ($data->transaction_category == 'data')
                                 <tr>
                                   <td class="">Size:</td>
-                                  <td class="">{{ number_format($data->product_plan->data_size_in_mb ?? '0') .' MB' }}</td>  
-                                </tr>    
+                                  <td class="">{{ number_format($data->product_plan->data_size_in_mb ?? '0') .' MB' }}</td>
+                                </tr>
                               @endif
-                              
+
                               <tr>
                                 <td class="">Balance after:</td>
-                                <td class="">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_after,2) : number_format($data->balance_after).'MB' }}</td>  
+                                <td class="">{{ $data->wallet_category == 'main_wallet' ? '₦'.number_format($data->balance_after,2) : number_format($data->balance_after).'MB' }}</td>
                               </tr>
-                             
+
                               <tr>
                                 <td class="">Created at:</td>
-                                <td class="">{{ $data->created_at }}</td>  
+                                <td class="">{{ $data->created_at }}</td>
                               </tr>
 
                               @if (strtolower(auth()->user()->role->role_name) == 'admin')
@@ -320,9 +320,9 @@
                                   @if ($data->status == 0)
                                     <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-success" data-hs-overlay="#hs-basic-modal">
                                       Mark manually as successful
-                                    </button> 
-                                  @endif   
-                               
+                                    </button>
+                                  @endif
+
                                   <div id="hs-basic-modal" class="hs-overlay ti-modal hidden">
                                     <div class="ti-modal-box">
                                       <div class="ti-modal-content">
@@ -330,7 +330,7 @@
                                           <h3 class="ti-modal-title">
                                             Manually Mark Transaction As Successful
                                           </h3>
-                                         
+
                                           <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                                             data-hs-overlay="#hs-basic-modal">
                                             <span class="sr-only">Close</span>
@@ -343,7 +343,7 @@
                                           </button>
                                         </div>
                                         <div class="ti-modal-body">
-                                         
+
                                           <form class=" space-x-2" method="POST" action="{{ route('transactions.manually_mark_transaction_as_successful') }}">
                                             @csrf
 
@@ -351,7 +351,7 @@
                                                 <label class="ti-form-label mb-0">Select Plan ID Used</label>
                                                 <input type="text" id="pin" name="pin" value="" class="my-auto ti-form-input" placeholder="PIN">
                                             </div>
-                                          
+
                                             <div class="space-y-2 max-w-lg">
                                                 <label class="ti-form-label mb-0">Cost Price</label>
                                                 <input type="text" id="cost_price" name="cost_price" value="" class="my-auto ti-form-input" placeholder="Reenter PIN">
@@ -366,15 +366,15 @@
                                               <input type="hidden" name="transaction_id" id="transaction_id" value="{{  $data->id }}">
                                               <input type="password" required name="pin" id="pin" placeholder="Enter PIN" value="">
                                             </div>
-                                          
+
                                             <div class="space-y-2">
                                               <button type="submit" class="ti-btn ti-btn-danger w-full">Confirm refund</button>
                                             </div>
                                           </form>
                                         </div>
                                           <div class="ti-modal-footer">
-                                           
-                                            
+
+
                                           <button type="button"
                                             class="hs-dropdown-toggle ti-btn ti-border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:ring-offset-white focus:ring-primary dark:bg-bgdark dark:hover:bg-black/20 dark:border-white/10 dark:text-white/70 dark:hover:text-white dark:focus:ring-offset-white/10"
                                             data-hs-overlay="#hs-basic-modal">
@@ -382,14 +382,14 @@
                                           </button>
                                           </div>
                                           </form>
-            
-                                         
-                                          
+
+
+
                                       </div>
                                     </div>
                                   </div>
 
-                                  
+
                                   <div id="hs-vertically-centered-modal" class="hs-overlay ti-modal hidden">
                                     <div class="ti-modal-box">
                                       <div class="ti-modal-content">
@@ -397,7 +397,7 @@
                                           <h3 class="ti-modal-title">
                                             Transaction status change
                                           </h3>
-                                         
+
                                           <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                                             data-hs-overlay="#hs-basic-modal">
                                             <span class="sr-only">Close</span>
@@ -420,9 +420,9 @@
                                                 <option value="">Select</option>
                                                 <option value="">Select</option>
                                                 <option value="">Select</option>
-                                                  
-                                               
-                                  
+
+
+
                                               </select>
                                             </div>
                                             <div class="space-y-2">
@@ -435,35 +435,35 @@
                                           </button>
                                           </div>
                                           </form>
-            
-                                         
-                                          
+
+
+
                                       </div>
                                     </div>
-                                  </div>  
+                                  </div>
                                   </div>
 
                                   </div>
-                                </td>  
+                                </td>
                               </tr> --}}
 
                               <tr>
                                 <td class=""></td>
                                 <td class="">
 
-                                  @if (auth()->user()->email == 'adebsholey4real@gmail.com' || auth()->user()->email == 'mike.e.emmanuel@gmail.com')   
+                                  @if (auth()->user()->email == 'adebsholey4real@gmail.com' || auth()->user()->email == 'mike.e.emmanuel@gmail.com')
                                   <input type="hidden" name="transaction_id" id="transaction_id" value="{{  $data->id }}">
-                                  <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-success" data-hs-overlay="#hs-basic-modal22">Mark As Successful</button>                                                                   
+                                  <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-success" data-hs-overlay="#hs-basic-modal22">Mark As Successful</button>
                                   @endif
 
                                   @if ($data->status != 2)
                                     <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-danger" data-hs-overlay="#hs-basic-modal">
                                       Refund
-                                    </button> 
+                                    </button>
 
                                     @else
-                                     <strong>Refunded</strong>     
-                                  @endif   
+                                     <strong>Refunded</strong>
+                                  @endif
 
                                       {{-- <button type="button" class="w-20 !p-1 ti-btn ti-btn-danger">Cancel</button> --}}
                                       <div id="hs-basic-modal22" class="hs-overlay ti-modal hidden">
@@ -473,7 +473,7 @@
                                               <h3 class="ti-modal-title">
                                                 Mark Transaction As Successful
                                               </h3>
-                                            
+
                                               <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                                                 data-hs-overlay="#hs-basic-modal22">
                                                 <span class="sr-only">Close</span>
@@ -495,14 +495,14 @@
                                                   </div>
 
                                                   <div class="">
-                                                    <label for="">PIN</label>    
+                                                    <label for="">PIN</label>
                                                     <input type="hidden" name="transaction_id" id="transaction_id" value="{{  $data->id }}">
                                                     <input type="password" required name="pin" id="pin" placeholder="Enter PIN" value="">
-                                                  
+
                                                   </div>
 
-                                                  
-      
+
+
                                                 </div>
                                                 <div class="space-y-2">
                                                   <button type="submit" class="ti-btn ti-btn-success w-full">Confirm Mark As Successful</button>
@@ -512,20 +512,20 @@
 
                                               <form class="space-y-4" method="POST" action="{{ route('transactions.manually_mark_transaction_as_successful') }}">
                                                 @csrf
-                                            
+
                                                 <div>
                                                     <label for="success_message" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                                         Success Message
                                                     </label>
-                                                    <input type="text" 
-                                                           required 
-                                                           name="success_message" 
-                                                           id="success_message" 
-                                                           placeholder="Enter success message" 
+                                                    <input type="text"
+                                                           required
+                                                           name="success_message"
+                                                           id="success_message"
+                                                           placeholder="Enter success message"
                                                            value=""
                                                            class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
                                                 </div>
-                                            
+
                                                 <div>
                                                     <label for="automation_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                                         Select Automation
@@ -538,33 +538,33 @@
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                            
+
                                                 <div>
                                                     <label for="pin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                                         PIN
                                                     </label>
                                                     <input type="hidden" name="transaction_id" id="transaction_id" value="{{ $data->id }}">
-                                                    <input type="password" 
-                                                           required 
-                                                           name="pin" 
-                                                           id="pin" 
-                                                           placeholder="Enter PIN" 
+                                                    <input type="password"
+                                                           required
+                                                           name="pin"
+                                                           id="pin"
+                                                           placeholder="Enter PIN"
                                                            value=""
                                                            class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
                                                 </div>
-                                            
+
                                                 <div>
                                                     <button type="submit" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-1 transition">
                                                         Confirm Mark As Successful
                                                     </button>
                                                 </div>
                                             </form>
-                                            
+
 
                                             </div>
                                               <div class="ti-modal-footer">
-                                              
-                                                
+
+
                                               <button type="button"
                                                 class="hs-dropdown-toggle ti-btn ti-border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:ring-offset-white focus:ring-primary dark:bg-bgdark dark:hover:bg-black/20 dark:border-white/10 dark:text-white/70 dark:hover:text-white dark:focus:ring-offset-white/10"
                                                 data-hs-overlay="#hs-basic-modal22">
@@ -572,9 +572,9 @@
                                               </button>
                                               </div>
                                               </form>
-                
-                                            
-                                              
+
+
+
                                           </div>
                                         </div>
                                       </div>
@@ -587,7 +587,7 @@
                                           <h3 class="ti-modal-title">
                                             Transaction Refund
                                           </h3>
-                                         
+
                                           <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                                             data-hs-overlay="#hs-basic-modal">
                                             <span class="sr-only">Close</span>
@@ -604,7 +604,7 @@
                                           <form class=" space-x-2" method="POST" action="{{ route('transactions.transaction_refund') }}">
                                             @csrf
                                             <div class="space-x-2">
-                                              @if ($data->status == 2 && env('APP_NAME') == 'OresamSub')
+                                              @if ($data->status == 2 && config('app.name') == 'OresamSub')
                                                   <input type="text" name="refund_reason" id="refund_reason" value="" placeholder="Enter refund reason">
                                               @endif
                                               <input type="hidden" name="transaction_id" id="transaction_id" value="{{  $data->id }}">
@@ -616,8 +616,8 @@
                                           </form>
                                         </div>
                                           <div class="ti-modal-footer">
-                                           
-                                            
+
+
                                           <button type="button"
                                             class="hs-dropdown-toggle ti-btn ti-border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:ring-offset-white focus:ring-primary dark:bg-bgdark dark:hover:bg-black/20 dark:border-white/10 dark:text-white/70 dark:hover:text-white dark:focus:ring-offset-white/10"
                                             data-hs-overlay="#hs-basic-modal">
@@ -625,9 +625,9 @@
                                           </button>
                                           </div>
                                           </form>
-            
-                                         
-                                          
+
+
+
                                       </div>
                                     </div>
                                   </div>
@@ -635,7 +635,7 @@
                                   {{-- <button type="button" class="hs-dropdown-toggle ti-btn ti-btn-danger" data-hs-overlay="#hs-vertically-centered-modal">
                                     Change status
                                   </button>   --}}
-                                  
+
                                   <div id="hs-vertically-centered-modal" class="hs-overlay ti-modal hidden">
                                     <div class="ti-modal-box">
                                       <div class="ti-modal-content">
@@ -643,7 +643,7 @@
                                           <h3 class="ti-modal-title">
                                             Transaction status change
                                           </h3>
-                                         
+
                                           <button type="button" class="hs-dropdown-toggle ti-modal-clode-btn"
                                             data-hs-overlay="#hs-basic-modal">
                                             <span class="sr-only">Close</span>
@@ -666,9 +666,9 @@
                                                 <option value="">Select</option>
                                                 <option value="">Select</option>
                                                 <option value="">Select</option>
-                                                  
-                                               
-                                  
+
+
+
                                               </select>
                                             </div>
                                             <div class="space-y-2">
@@ -681,28 +681,28 @@
                                           </button>
                                           </div>
                                           </form>
-            
-                                         
-                                          
+
+
+
                                       </div>
                                     </div>
-                                  </div>  
+                                  </div>
                                   </div>
 
                                   </div>
-                                </td>  
+                                </td>
                               </tr>
-                                           
+
                               @endif
-                           
+
                             </tbody>
                           </table>
                       </div>
                   </div>
-               
+
                   <hr class="pb-5 dark:border-t-white/10">
                   <div class="flex justify-end">
-                      
+
                   </div>
               </div>
             </div>
@@ -710,15 +710,15 @@
         </div>
         <!-- End::row-1 -->
 
-                
-                
+
+
                 {{-- <div class="box-body">
-                 
+
                 </div> --}}
               </div>
-             
-               
-                
+
+
+
             </div>
           </div>
         </div>
@@ -775,7 +775,7 @@
       </div>
       <!-- Start::main-content -->
 
-       
+
 @endsection
 
 

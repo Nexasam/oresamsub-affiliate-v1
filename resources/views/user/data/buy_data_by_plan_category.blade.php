@@ -26,10 +26,10 @@
         <!-- Start::row-1 -->
         <div class="grid grid-cols-12 gap-1">
 
-          
-         
+
+
           <div class="col-span-12">
-          
+
               <div class="box">
                 <div class="box-header">
                   <h5 class="box-title">Buy {{ $plan_category->product_plan_category_name }}</h5>
@@ -43,19 +43,19 @@
                     <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-white/70 dark:hover:text-white " id="pills-with-brand-color-item-1" data-hs-tab="#pills-with-brand-color-1" aria-controls="pills-with-brand-color-1">
                       View Data Transactions
                     </button>
-                  
+
                   </nav>
 
                   <div class="mt-3">
                     <div id="pills-with-brand-color-1" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-1">
-                                          
-                      {{-- FILTER STARTS HERE --}} 
-                      <div class="box-body">     
+
+                      {{-- FILTER STARTS HERE --}}
+                      <div class="box-body">
                         <div class="box-header">
                           <div class="flex">
                             <h5 class="box-title my-auto">Filter options</h5>
                             <div class="hs-dropdown ti-dropdown block ms-auto my-auto s  sm:flex items-center justify-between">
-                            
+
                                   <button type="button"
                                   class="hs-dropdown-toggle ti-dropdown-toggle rounded-sm p-1 px-3 mr-8 !border border-gray-200 text-gray-400 hover:text-gray-500 hover:bg-gray-200 hover:border-gray-200 focus:ring-gray-200  dark:hover:bg-black/30 dark:border-white/10 dark:hover:border-white/20 dark:focus:ring-white/10 dark:focus:ring-offset-white/10">
                             Filter <i class="ti ti-chevron-down"></i>
@@ -95,7 +95,7 @@
                                     <select name="product_plan_category_filter" id="product_plan_category_filter">
                                         <option value="">Select</option>
                                         @foreach ($product_plan_categories as $plan_categoryyy)
-                                          <option value="{{ $plan_categoryyy->id}}">{{ $plan_categoryyy->product_plan_category_name }}</option>   
+                                          <option value="{{ $plan_categoryyy->id}}">{{ $plan_categoryyy->product_plan_category_name }}</option>
                                         @endforeach
                                     </select>
                                     <br>
@@ -116,7 +116,7 @@
                                     </div>
                                   </div>
                                   <div class="ti-modal-footer">
-                                  
+
                                     <a id="filter_user_txn_table" class="ti-btn ti-btn-primary" data-hs-overlay="#hs-slide-down-animation-modal"
                                       href="javascript:void(0);">
                                       Save changes
@@ -124,16 +124,16 @@
                                   </div>
                                 </div>
                               </div>
-                            </div>   
-                          </div>                       
-                        </div> 
+                            </div>
+                          </div>
+                        </div>
                           </div>
                         </div>
                         {{-- FILTER ENDS HERE --}}
-                     
+
                       <div class="overflow-auto" style="font-size: 10px;">
-                     
-                              <table  id="data_transactions_table" class="ti-custom-table ti-custom-table-head">    
+
+                              <table  id="data_transactions_table" class="ti-custom-table ti-custom-table-head">
                                 <thead class="bg-gray-50 dark:bg-black/20">
                                   <tr>
                                     <th>ID</th>
@@ -153,31 +153,31 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                           
+
                             <tbody>
 
                            </tbody>
-                            </table> 
-                      </div>                
+                            </table>
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-2"  role="tabpanel" aria-labelledby="pills-with-brand-color-item-2">
                       <div class="overflow-auto">
                             <!-- Start::row-3 -->
                           <div class="grid grid-cols-12 gap-x-6">
-                              
+
                             <div class="col-span-12">
                               @if (Session::has('success'))
                               <div class="bg-success/10 border border-success/10 alert text-success" role="alert">
                                 Great! {{ Session::get('success') }}
                                 </div>
                               @endif
-              
+
                               @if (Session::has('failure'))
                                 <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                                  Ops! {{ Session::get('failure') }}
                                 </div>
                               @endif
-                              
+
                               @if ($errors->any())
                                 <div class="bg-danger/10 border border-danger/10 alert text-danger" role="alert">
                                   <ul>
@@ -191,32 +191,32 @@
 
                             <div class="col-span-12">
                                 <div class="box">
-                                    
+
                                     <div class="box-body">
                                         <form>
                                             <input type="hidden" id="_token" name="_token" value="{{ csrf_token() }}" />
                                             <input type="hidden" id="product_slug" name="product_slug" value="data" />
                                             <input type="hidden" id="network_id" name="network_id" value="{{ $plan_category->network->id }}" />
                                             <input type="hidden" id="product_plan_category_id" name="product_plan_category_id" value="{{ $plan_category->id }}" />
-                                            
+
                                             <div class="grid w-full lg:w-1/2 lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
-                                      
-                                                @if (env('APP_NAME') == 'CrystaltechData' || env('APP_NAME') == 'OresamSub')
+
+                                                @if (config('app.name') == 'CrystaltechData' || config('app.name') == 'OresamSub')
                                                   <input type="hidden" class="my-auto ti-form-input" value="main_wallet" required id="wallet_category" name="wallet_category">
                                                 @else
                                                   <div class="space-y-2">
                                                       <label class="ti-form-label mb-0">Choose Wallet</label>
                                                       <select required id="wallet_category" name="wallet_category" class="my-auto ti-form-select">
                                                           <option value="">Select</option>
-                                                          <option value="main_wallet">Main Wallet - &#8358;{{  number_format($user_details->main_wallet) }}</option>                                        
-                                                          <option value="data_wallet">Data Wallet</option>                                        
-                                                      
+                                                          <option value="main_wallet">Main Wallet - &#8358;{{  number_format($user_details->main_wallet) }}</option>
+                                                          <option value="data_wallet">Data Wallet</option>
+
                                                       </select>
                                                   </div>
                                                 @endif
-                                               
-    
-                    
+
+
+
                                                 <div class="space-y-2">
                                                     <label class="ti-form-label mb-0">Product Plans List</label>
                                                     <select required name="product_plan_id" id="product_plan_id" class="my-auto ti-form-select">
@@ -226,10 +226,10 @@
                                                         @endforeach
                                                       </select>
                                                       <div class="display_wallet_details">
-                                                        
+
                                                       </div>
                                                 </div>
-                                              
+
                                                 <div class="space-y-2">
                                                     <label class="ti-form-label mb-0">Phone Number(s) to recharge</label>
                                                     <textarea id="phone_number" name="phone_number" class="my-auto ti-form-input"
@@ -242,14 +242,14 @@
                                                        <span class="text-sm text-gray-500 ms-2 dark:text-white/70">Validate phone network</span>
                                                      </label>
                                                 </div>
-                    
+
                                                 <div class="space-y-2">
                                                   <label class="ti-form-label mb-0">PIN:</label>
                                                   <input type="password" class="my-auto ti-form-input" id="pin" name="pin" value="" placeholder="Enter your pin to secure transaction">
                                                   <div class="flex items-center">
                                                     <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin1">
                                                     <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">Show PIN</label>
-                                                  </div>  
+                                                  </div>
                                                 </div>
 
                                                 <div class="space-y-2">
@@ -258,21 +258,21 @@
                                                       <a href="#" id="cancel_disabling" class="hidden">Click to reactivate the button and try again</a>
                                                     </p>
                                                 </div>
-                                               
+
                                                 <br>
                                             </div>
                                             {{-- <div class="my-5">
                                                 <button type="submit" class="ti-btn ti-btn-primary w-full">Submit</button>
                                             </div> --}}
-                    
+
                                         </form>
-                                       
+
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- End::row-3 -->   
-                      </div>  
+                        <!-- End::row-3 -->
+                      </div>
                     </div>
                     <div id="pills-with-brand-color-3" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-3">
                       <p class="text-gray-500 dark:text-white/70 p-5 border rounded-sm dark:border-white/10 border-gray-200">
@@ -281,14 +281,14 @@
                     </div>
                   </div>
                 </div>
-               
+
                 {{-- <div class="box-body">
-                 
+
                 </div> --}}
               </div>
-             
-               
-                
+
+
+
             </div>
           </div>
         </div>
@@ -345,6 +345,6 @@
       </div>
       <!-- Start::main-content -->
 
-       
+
 @endsection
 

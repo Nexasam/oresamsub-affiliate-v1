@@ -72,15 +72,29 @@ jobs:
           test -n "$SSH_HOST"
           test -n "$SSH_PRIVATE_KEY"
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/namecheap_deploy
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/namecheap_deploy
           chmod 600 ~/.ssh/namecheap_deploy
+          echo "GitHub deployment key fingerprint:"
+          ssh-keygen -lf ~/.ssh/namecheap_deploy
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Verify Namecheap SSH authentication
+        env:
+          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -i "$HOME/.ssh/namecheap_deploy" \
+            -p "$SSH_PORT" \
+            "$SSH_USER@$SSH_HOST" \
+            "echo 'Namecheap SSH authentication successful'"
 
       - name: Put Laravel in maintenance mode
         env:
           SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
         run: |
-          ssh -i ~/.ssh/namecheap_deploy -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+          ssh -o IdentitiesOnly=yes -i "$HOME/.ssh/namecheap_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "cd '$DEPLOY_PATH' && php artisan down --retry=60" || true
 
       - name: Synchronize application
@@ -95,14 +109,14 @@ jobs:
             --exclude='storage/' \
             --exclude='tests/' \
             --exclude='database/database.sqlite' \
-            -e "ssh -i ~/.ssh/namecheap_deploy -p $SSH_PORT" \
+            -e "ssh -o IdentitiesOnly=yes -i $HOME/.ssh/namecheap_deploy -p $SSH_PORT" \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
 
       - name: Finalize Laravel deployment
         env:
           SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
         run: |
-          ssh -i ~/.ssh/namecheap_deploy -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "bash -se" <<'REMOTE'
+          ssh -o IdentitiesOnly=yes -i "$HOME/.ssh/namecheap_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "bash -se" <<'REMOTE'
             set -e
             cd "/home/emiprbyj/affiliate.emiplug.com"
 
@@ -129,5 +143,5 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
         run: |
-          ssh -i ~/.ssh/namecheap_deploy -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+          ssh -o IdentitiesOnly=yes -i "$HOME/.ssh/namecheap_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "cd '$DEPLOY_PATH' && php artisan up" || true

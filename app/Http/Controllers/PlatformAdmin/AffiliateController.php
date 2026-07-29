@@ -35,7 +35,7 @@ class AffiliateController extends Controller
                     ->orWhere('contact_email', 'like', "%{$search}%");
             }))
             ->latest()
-            ->paginate(4)
+            ->paginate(50)
             ->withQueryString();
 
         return view('platform-admin.affiliates.index', compact('affiliates', 'search'));

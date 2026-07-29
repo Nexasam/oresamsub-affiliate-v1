@@ -13,7 +13,7 @@
         <div class="grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-xl font-black backdrop-blur">O</div>
         <div class="max-w-lg">
             <p class="mb-5 text-sm font-semibold uppercase tracking-[.25em] text-emerald-50">One platform. Every tenant.</p>
-            <h1 class="text-5xl font-bold leading-tight">A clearer view of your entire affiliate network.</h1>
+            <h1 class="text-5xl font-bold leading-tight">A clearer view of your entire affiliate network......</h1>
             <p class="mt-6 text-lg text-white/80">Manage affiliates, their people, transactions and operational settings from one secure workspace.</p>
         </div>
         <p class="text-sm text-white/60">{{ config('app.name') }} platform operations</p>

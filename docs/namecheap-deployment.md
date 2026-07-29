@@ -1,8 +1,16 @@
 # Namecheap production deployment
 
-Pushing to `main` triggers `.github/workflows/deploy-namecheap.yml`. The workflow
-builds the Laravel application on GitHub Actions and synchronizes the resulting
-production package to:
+Namecheap shared hosting pulls updates from GitHub instead of accepting inbound
+SSH from GitHub-hosted runners.
+
+```text
+Push main to GitHub
+→ GitHub Actions validates the build and tests
+→ Namecheap cron pulls main within five minutes
+→ Laravel migrations and caches are finalized
+```
+
+The application path is:
 
 ```text
 /home/emiprbyj/affiliate.emiplug.com
@@ -14,65 +22,38 @@ The domain document root must remain:
 /home/emiprbyj/affiliate.emiplug.com/public
 ```
 
-## One-time SSH setup
+## Production safety
 
-Generate a dedicated deployment key locally. Do not add a passphrase because
-GitHub Actions must use it unattended:
+The pull deployment preserves `.env`, `storage/`, `.well-known`, and untracked
+uploads. It only permits fast-forward updates and uses `flock` to prevent two
+deployments from running at once.
+
+If `composer.json` or `composer.lock` changes, the deployment requires Composer
+and stops before changing production when Composer is unavailable.
+
+Never commit private keys, passwords, or production `.env` files.
+
+## Cron setup
+
+After pulling the script onto Namecheap, make it executable:
 
 ```bash
-ssh-keygen -t ed25519 -C "github-actions-namecheap" -f namecheap_deploy
+chmod 750 /home/emiprbyj/affiliate.emiplug.com/scripts/deploy-namecheap.sh
 ```
 
-Add the contents of `namecheap_deploy.pub` to the Namecheap account's
-`~/.ssh/authorized_keys`. This can be done through cPanel's **SSH Access →
-Manage SSH Keys** interface by importing and authorizing the public key.
+Add this cPanel cron job:
 
-Test the key before enabling automatic deployments:
-
-```bash
-ssh -i namecheap_deploy -p 21098 emiprbyj@YOUR_NAMECHEAP_HOST
+```cron
+*/5 * * * * /bin/bash /home/emiprbyj/affiliate.emiplug.com/scripts/deploy-namecheap.sh >> /home/emiprbyj/affiliate.emiplug.com/storage/logs/deploy.log 2>&1
 ```
 
-## GitHub production secrets
-
-In the GitHub repository, open **Settings → Environments** and create an
-environment named `production`. Add these environment secrets:
-
-| Secret | Value |
-| --- | --- |
-| `NAMECHEAP_HOST` | The external Namecheap SSH hostname from cPanel or the welcome email |
-| `NAMECHEAP_SSH_PRIVATE_KEY` | The complete contents of the private `namecheap_deploy` file |
-
-Never store the server password, private key, or production `.env` in Git.
-
-Optionally restrict the `production` environment so that only the `main` branch
-can deploy.
-
-## First deployment
-
-Before the first automated run, create the production `.env` at:
-
-```text
-/home/emiprbyj/affiliate.emiplug.com/.env
-```
-
-The deployment deliberately preserves `.env` and `storage/`. It uploads the
-Composer `vendor/` directory and compiled `public/build/` assets, so Composer
-and Node.js are not required on Namecheap.
-
-After adding the secrets, run **Actions → Deploy to Namecheap → Run workflow**.
-Subsequent pushes to `main` deploy automatically.
-
-## Scheduler limitation
-
-Namecheap shared hosting restricts cron frequency. Configure the closest
-permitted cPanel cron interval:
+The application scheduler remains a separate cron job:
 
 ```cron
 */5 * * * * cd /home/emiprbyj/affiliate.emiplug.com && php artisan schedule:run >/dev/null 2>&1
 ```
 
-Commands scheduled every 30 seconds or every minute will not achieve their
-intended frequency on this shared-hosting plan. Move those workloads to an
-external scheduler or a server that supports persistent workers if that timing
-is operationally required.
+Namecheap shared hosting does not permit the scheduler frequency required by
+commands configured for every 30 seconds or every minute. Those workloads need
+an external scheduler or a server with persistent worker support when exact
+timing is required.

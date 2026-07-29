@@ -1,51 +1,39 @@
-name: Deploy to Namecheap
+name: Validate main for Namecheap
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: namecheap-production
-  cancel-in-progress: false
+  group: namecheap-main-validation
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
-env:
-  PHP_VERSION: '8.4'
-  NODE_VERSION: '20'
-  SSH_USER: emiprbyj
-  SSH_PORT: '21098'
-  DEPLOY_PATH: /home/emiprbyj/affiliate.emiplug.com
-
 jobs:
-  build-and-deploy:
-    name: Build and deploy production
+  validate:
+    name: Build and test
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://affiliate.emiplug.com
-
     steps:
-      - name: Check out the main branch
+      - name: Check out main
         uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, pdo_mysql
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite
           coverage: none
 
-      - name: Install PHP dependencies for testing
+      - name: Install PHP dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: npm
 
       - name: Install frontend dependencies
@@ -60,88 +48,3 @@ jobs:
           touch database/database.sqlite
           php artisan key:generate
           php artisan test tests/Feature/PlatformAdmin/AuthenticationTest.php
-
-      - name: Prepare production PHP dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
-
-      - name: Configure deployment SSH key
-        env:
-          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
-          SSH_PRIVATE_KEY: ${{ secrets.NAMECHEAP_SSH_PRIVATE_KEY }}
-        run: |
-          test -n "$SSH_HOST"
-          test -n "$SSH_PRIVATE_KEY"
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/namecheap_deploy
-          chmod 600 ~/.ssh/namecheap_deploy
-          echo "GitHub deployment key fingerprint:"
-          ssh-keygen -lf ~/.ssh/namecheap_deploy
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
-
-      - name: Verify Namecheap SSH authentication
-        env:
-          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
-        run: |
-          ssh \
-            -o BatchMode=yes \
-            -o IdentitiesOnly=yes \
-            -i "$HOME/.ssh/namecheap_deploy" \
-            -p "$SSH_PORT" \
-            "$SSH_USER@$SSH_HOST" \
-            "echo 'Namecheap SSH authentication successful'"
-
-      - name: Put Laravel in maintenance mode
-        env:
-          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
-        run: |
-          ssh -o IdentitiesOnly=yes -i "$HOME/.ssh/namecheap_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
-            "cd '$DEPLOY_PATH' && php artisan down --retry=60" || true
-
-      - name: Synchronize application
-        env:
-          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
-        run: |
-          rsync -az --delete \
-            --exclude='.env' \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='node_modules/' \
-            --exclude='storage/' \
-            --exclude='tests/' \
-            --exclude='database/database.sqlite' \
-            -e "ssh -o IdentitiesOnly=yes -i $HOME/.ssh/namecheap_deploy -p $SSH_PORT" \
-            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
-
-      - name: Finalize Laravel deployment
-        env:
-          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
-        run: |
-          ssh -o IdentitiesOnly=yes -i "$HOME/.ssh/namecheap_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "bash -se" <<'REMOTE'
-            set -e
-            cd "/home/emiprbyj/affiliate.emiplug.com"
-
-            mkdir -p \
-              storage/app/public \
-              storage/framework/cache/data \
-              storage/framework/sessions \
-              storage/framework/views \
-              storage/logs \
-              bootstrap/cache
-
-            chmod -R ug+rw storage bootstrap/cache
-
-            php artisan migrate --force
-            php artisan storage:link || true
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-          REMOTE
-
-      - name: Bring application online
-        if: always()
-        env:
-          SSH_HOST: ${{ secrets.NAMECHEAP_HOST }}
-        run: |
-          ssh -o IdentitiesOnly=yes -i "$HOME/.ssh/namecheap_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
-            "cd '$DEPLOY_PATH' && php artisan up" || true

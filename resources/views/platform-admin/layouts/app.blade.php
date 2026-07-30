@@ -26,26 +26,36 @@
             <a href="{{ route('platform-admin.affiliates.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliates.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                 <span>◎</span> Affiliates
             </a>
-            <a href="{{ route('platform-admin.catalog.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.catalog.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                <span>▦</span> Global catalog
-            </a>
-            <a href="{{ route('platform-admin.affiliate-catalog.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-catalog.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                <span>⌘</span> Affiliate catalog
-            </a>
-            <a href="{{ route('platform-admin.affiliate-users.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-users.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                <span>♙</span> Affiliate users
-            </a>
-            <a href="{{ route('platform-admin.operations.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.operations.*') || request()->routeIs('platform-admin.affiliates.operations') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                <span>⚙</span> Operations
-            </a>
+            @if (Route::has('platform-admin.catalog.index'))
+                <a href="{{ route('platform-admin.catalog.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.catalog.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>▦</span> Global catalog
+                </a>
+            @endif
+            @if (Route::has('platform-admin.affiliate-catalog.index'))
+                <a href="{{ route('platform-admin.affiliate-catalog.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-catalog.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>⌘</span> Affiliate catalog
+                </a>
+            @endif
+            @if (Route::has('platform-admin.affiliate-users.index'))
+                <a href="{{ route('platform-admin.affiliate-users.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-users.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>♙</span> Affiliate users
+                </a>
+            @endif
+            @if (Route::has('platform-admin.operations.index'))
+                <a href="{{ route('platform-admin.operations.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.operations.*') || request()->routeIs('platform-admin.affiliates.operations') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>⚙</span> Operations
+                </a>
+            @endif
             @if (Route::has('platform-admin.transactions.index'))
                 <a href="{{ route('platform-admin.transactions.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.transactions.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                     <span>↔</span> Transactions
                 </a>
             @endif
-            <a href="{{ route('platform-admin.reports.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.reports.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                <span>↗</span> Reports & profit
-            </a>
+            @if (Route::has('platform-admin.reports.index'))
+                <a href="{{ route('platform-admin.reports.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.reports.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>↗</span> Reports & profit
+                </a>
+            @endif
         </nav>
         <div class="border-t border-white/10 p-4">
             <div class="mb-3 px-3">

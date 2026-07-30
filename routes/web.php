@@ -79,6 +79,11 @@ Route::get('query_airtime_transaction', [ParentSyncController::class, 'queryAirt
 
 
 Route::middleware(['set_locale','set_affiliate'])->group(function () {
+            Route::get('/platform-impersonation/{token}', [\App\Http\Controllers\PlatformAdmin\ImpersonationController::class, 'consume'])
+                ->name('platform-impersonation.consume');
+            Route::post('/platform-impersonation/exit', [\App\Http\Controllers\PlatformAdmin\ImpersonationController::class, 'destroy'])
+                ->middleware('auth')
+                ->name('platform-impersonation.exit');
 
             //parent synccontroller
 

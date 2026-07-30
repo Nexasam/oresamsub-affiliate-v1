@@ -15,16 +15,20 @@
         bankCodeUrlBase: @js(url('/admin/affiliates/'.$affiliate->id.'/bank-codes')),
         fundingOptionUrlBase: @js(url('/admin/affiliates/'.$affiliate->id.'/funding-options'))
     })"
-    x-init="loadUsers()"
+    x-init="loadFundingOptions(); loadBankCodes()"
 >
+    <div x-show="loading" x-transition class="mb-4 flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800"><span class="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span> Loading affiliate records…</div>
     <div class="mb-6 flex flex-col gap-4 rounded-2xl bg-slate-950 p-6 text-white sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-4">
             <div class="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-400 text-xl font-black text-slate-950">{{ strtoupper(substr($affiliate->name, 0, 1)) }}</div>
             <div><h2 class="text-xl font-bold">{{ $affiliate->name }}</h2><p class="mt-1 text-sm text-slate-400">{{ $affiliate->contact_email }} · {{ $affiliate->slug }}</p></div>
         </div>
-        <button @click="toggleAffiliate()" :disabled="busy" class="rounded-xl px-4 py-2.5 text-sm font-semibold {{ $affiliate->activation_status == 1 ? 'bg-red-400/10 text-red-300 hover:bg-red-400/20' : 'bg-emerald-400 text-slate-950 hover:bg-emerald-300' }}">
-            {{ $affiliate->activation_status == 1 ? 'Deactivate affiliate' : 'Activate affiliate' }}
-        </button>
+        <div class="flex gap-2">
+            <a href="{{ route('platform-admin.operations.index', ['affiliate_id' => $affiliate->id]) }}" class="rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-300">Operations</a>
+            <button @click="toggleAffiliate()" :disabled="busy" class="rounded-xl px-4 py-2.5 text-sm font-semibold {{ $affiliate->activation_status == 1 ? 'bg-red-400/10 text-red-300 hover:bg-red-400/20' : 'bg-emerald-400 text-slate-950 hover:bg-emerald-300' }}">
+                {{ $affiliate->activation_status == 1 ? 'Deactivate affiliate' : 'Activate affiliate' }}
+            </button>
+        </div>
     </div>
 
     <div x-show="notice" x-transition class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" x-text="notice"></div>
@@ -140,7 +144,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('affiliateWorkspace', (config) => ({
         ...config,
-        tab: 'users', tabs: [{id:'users',label:'Users'}, {id:'transactions',label:'Transactions'}, {id:'bank-codes',label:'Bank codes'}, {id:'funding',label:'Funding & API'}, {id:'settings',label:'Affiliate details'}],
+        tab: 'bank-codes', tabs: [{id:'bank-codes',label:'Bank codes'}, {id:'funding',label:'Funding & API'}, {id:'settings',label:'Affiliate details'}],
         users: [], transactions: [], bankCodes: [], fundingOptions: [], customer:null, creditTarget:null, loading: false, busy: false, notice: '', error: '', userSearch: '', showUserModal: false, showCreditModal:false, showCustomerModal:false,
         creditForm:{amount:'',reason:''},
         newBankCode:{funding_option_id:'',bank_name:'',bank_code:'',bank_charges:0,visibility_status:1,rate_category:'Flat',capped_at:100},

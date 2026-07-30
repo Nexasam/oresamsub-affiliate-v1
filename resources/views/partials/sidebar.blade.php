@@ -50,13 +50,17 @@
                 <li class="slide__category"><span class="category-name">Main</span></li>
                 <!-- End::slide__category -->
 
-                @if (session()->has('impersonator'))
+                @if (session()->has('impersonator') || session()->has('platform_impersonation'))
                 <li class="slide  has-sub bg-green-800 p-2 rounded-2xl">
+                    @if(session()->has('platform_impersonation'))
+                    <form method="POST" action="{{ route('platform-impersonation.exit') }}">@csrf<button class="side-menu__item w-full">Exit platform impersonation</button></form>
+                    @else
                     <a href="{{route('admin.exit_impersonate')}}" class="side-menu__item">
                         <i class="ti ti-user-secret side-menu__icon"></i>
                         <span class="side-menu__label">EXIT User Account</span>
                         <i class="ri ri-arrow-right-s-line side-menu__angle"></i>
                     </a>
+                    @endif
                     <ul class="slide-menu child1">
                         {{-- <li class="slide"><a href="#" class="side-menu__item">View Networks</a></li> --}}
                     </ul>

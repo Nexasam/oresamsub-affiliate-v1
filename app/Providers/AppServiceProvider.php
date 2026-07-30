@@ -47,12 +47,15 @@ class AppServiceProvider extends ServiceProvider
             ],
         
             'impersonator' => fn () =>
-                session()->has('impersonator') ? [
+                (session()->has('impersonator') || session()->has('platform_impersonation')) ? [
                     'fname'    => auth()->user()->first_name,
                     'lname'    => auth()->user()->last_name,
                     'username'    => auth()->user()->username,
                     'pin'     => auth()->user()->pin,
-                    'exitUrl' => route('admin.exit_impersonate'),
+                    'exitUrl' => session()->has('platform_impersonation')
+                        ? route('platform-impersonation.exit')
+                        : route('admin.exit_impersonate'),
+                    'platformAdmin' => session()->has('platform_impersonation'),
                 ] : null,
         ]);
         

@@ -10,5 +10,8 @@ class AffiliateUserPlan extends AffiliateScopedModel
     use HasFactory;
     protected $guarded = [];
 
-    
+    public function users()
+    {
+        return $this->hasMany(User::class, 'user_plan_id');
+    }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Services\Transaction\PlatformAdminTransactionStatusService;
 
 class TransactionController extends Controller
 {
@@ -47,6 +48,32 @@ class TransactionController extends Controller
         return response()->json([
             'summary' => ['count' => (clone $query)->count(), 'amount' => (float) (clone $query)->sum('amount')],
             'transactions' => $query->latest()->paginate(20),
+        ]);
+    }
+
+    public function updateStatus(
+        Request $request,
+        int $transaction,
+        PlatformAdminTransactionStatusService $service
+    ): JsonResponse {
+        $data = $request->validate([
+            'status' => ['required', 'integer', 'in:-1,0,1,2,3'],
+            'impact_wallet' => ['required', 'boolean'],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        $transaction = Transaction::withoutGlobalScope('affiliate')->findOrFail($transaction);
+        $result = $service->update(
+            $transaction,
+            (int) $data['status'],
+            (bool) $data['impact_wallet'],
+            $data['reason'],
+            $request->user('platform_admin')
+        );
+
+        return response()->json([
+            'message' => 'Transaction status updated. '.$result['wallet_message'],
+            ...$result,
         ]);
     }
 }

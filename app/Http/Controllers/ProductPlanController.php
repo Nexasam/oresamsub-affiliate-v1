@@ -447,6 +447,8 @@ class ProductPlanController extends Controller
             DB::beginTransaction();
 
             $globalPlans = ProductPlan::get();
+            $affiliate = \App\Models\Affiliate::findOrFail($affiliateId);
+            $marginService = app(\App\Services\AffiliateProductMarginService::class);
 
             $created = 0;
             $updated = 0;
@@ -465,22 +467,25 @@ class ProductPlanController extends Controller
                   'visibility_from_admin' => $plan->visibility,
                   'public_visibility' => $plan->visibility,
                 ]);
+                $updated++;
               }else{
+                $defaultMargin = $marginService->defaultFor($affiliate, $plan);
                 //create
                 AffiliateProductPlan::create([
                   'affiliate_id' => $affiliateId,
                   'product_plan_id' => $plan->id,
                   'product_plan_name' => $plan->product_plan_name,
-                  'user_level_1_profit' => $plan->aff_level_1_max_profit,
-                  'user_level_2_profit' => $plan->aff_level_2_max_profit,
-                  'user_level_3_profit' => $plan->aff_level_3_max_profit,
-                  'user_level_4_profit' => $plan->aff_level_4_max_profit,
-                  'user_level_5_profit' => $plan->aff_level_5_max_profit,
-                  'user_level_6_profit' => $plan->aff_level_6_max_profit,
+                  'user_level_1_profit' => $defaultMargin,
+                  'user_level_2_profit' => $defaultMargin,
+                  'user_level_3_profit' => $defaultMargin,
+                  'user_level_4_profit' => $defaultMargin,
+                  'user_level_5_profit' => $defaultMargin,
+                  'user_level_6_profit' => $defaultMargin,
                   'data_size_in_mb' => $plan->data_size_in_mb,
                   'validity_in_days' => $plan->validity_in_days,
                   'visibility' => $plan->visibility
                 ]);
+                $created++;
               }
                
             }
@@ -529,7 +534,9 @@ class ProductPlanController extends Controller
                 ]);
             }
     
-            $profit_max = $productPlan->profit_category == 'flat' ? 50 : 1;
+            $affiliate = \App\Models\Affiliate::findOrFail($affiliate_id);
+            $profit_max = app(\App\Services\AffiliateProductMarginService::class)
+                ->defaultFor($affiliate, $productPlan);
             $affiliatePlan = AffiliateProductPlan::create([
                 'affiliate_id' => $affiliate_id,
                 'product_plan_name' => $request->product_plan_name ?? $productPlan->product_plan_name,

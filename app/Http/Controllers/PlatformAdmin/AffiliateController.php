@@ -98,20 +98,32 @@ class AffiliateController extends Controller
             'username' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', Rule::unique('users')->where('affiliate_id', $affiliate->id)],
             'phone_number' => ['nullable', 'string', 'max:30', Rule::unique('users')->where('affiliate_id', $affiliate->id)],
-            'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in(['User', 'Admin'])],
+            'other_names' => ['nullable', 'string', 'max:100'],
+            'pin' => ['required', 'digits:6'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', Rule::exists('roles', 'role_name')],
+            'user_plan_id' => [
+                'nullable',
+                Rule::exists('affiliate_user_plans', 'id')->where('affiliate_id', $affiliate->id),
+            ],
+            'customer_category' => ['nullable', 'string', 'max:50'],
+            'customer_landmark' => ['nullable', 'string', 'max:255'],
+            'account_tier' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'default_wallet_setting' => ['required', Rule::in(['main_wallet', 'bulk_data_wallet'])],
+            'active' => ['required', Rule::in([0, 1, '0', '1'])],
+            'email_verified' => ['required', 'boolean'],
         ]);
 
         $roleId = Role::where('role_name', $data['role'])->value('id');
         abort_unless($roleId, 422, 'The selected role is not configured.');
 
         $user = User::withoutGlobalScope('affiliate')->create([
-            ...collect($data)->except(['role'])->all(),
+            ...collect($data)->except(['role', 'password_confirmation', 'email_verified'])->all(),
             'affiliate_id' => $affiliate->id,
             'role_id' => $roleId,
             'password' => Hash::make($data['password']),
-            'active' => 1,
-            'email_verified_at' => now(),
+            'is_deactivated' => $data['active'] ? 0 : 1,
+            'email_verified_at' => $data['email_verified'] ? now() : null,
         ]);
 
         return response()->json(['message' => 'User created.', 'user' => $user->load('role:id,role_name')], 201);

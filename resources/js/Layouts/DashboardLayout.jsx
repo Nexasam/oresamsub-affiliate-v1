@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import Announcements from "@/Components/Announcements";
 import { Head } from "@inertiajs/react";
 import PwaInstallPopup from "@/Components/PwaInstallPopup";
@@ -58,7 +58,8 @@ export default function DashboardLayout({ children , title}) {
     
         {/* Impersonation Banner */}
         {impersonator && (
-          <a href={impersonator.exitUrl}>
+          <div>
+            <button type="button" onClick={() => impersonator.platformAdmin ? router.post(impersonator.exitUrl) : window.location.assign(impersonator.exitUrl)} className="w-full text-left">
             <div
                 className="text-white p-3 mt-2 rounded-xl shadow-md animate-pulse"
                 style={{ backgroundColor: userDashboardPrimaryColor }}
@@ -74,7 +75,8 @@ export default function DashboardLayout({ children , title}) {
                 👉 Click here to EXIT User Account
               </div>
             </div>
-          </a>
+            </button>
+          </div>
         )}
 
       {/* Greeting + Dark mode toggle */}

@@ -38,7 +38,7 @@
             @endif
             @if (Route::has('platform-admin.affiliate-users.index'))
                 <a href="{{ route('platform-admin.affiliate-users.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-users.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                    <span>♙</span> Affiliate users
+                    <span>♙</span> Users
                 </a>
             @endif
             @if (Route::has('platform-admin.operations.index'))

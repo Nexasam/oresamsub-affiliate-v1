@@ -4,7 +4,7 @@
 
 **Goal:** Allow independent VTU API owners to exist as parent businesses, own provider-scoped catalogues, purchase affiliate licences, and route each affiliate's purchases through the correct parent connection without treating OresamSub as the universal parent.
 
-**Architecture:** Keep one Laravel application and one database. Add a parent-business boundary above affiliates, represent each parent's external API as a provider connection backed by an allow-listed adapter class, normalize parent plans into shared provider-scoped tables, and reuse `affiliate_product_plans` as the affiliate's sellable-plan layer. Migrate OresamSub into the new model first and preserve legacy IDs until the new purchase path has passed parity tests.
+**Architecture:** Keep one Laravel application and one database. Add a parent-business boundary above affiliates, represent each parent's external API as a provider connection backed by an allow-listed adapter class, retain `product_plan_categories` as the global category catalogue, and scope existing `product_plans` to their owning parent/provider. Continue using `affiliate_product_plan_categories` and `affiliate_product_plans` as each affiliate's inherited selling catalogue. Migrate OresamSub into the new ownership model first and preserve all existing IDs.
 
 **Tech Stack:** PHP 8.3, Laravel 13, Eloquent, Pest 4, SQLite for automated tests, MySQL-compatible Laravel migrations for shared hosting, Blade/Inertia/Alpine patterns already present in the platform-admin area.
 
@@ -27,13 +27,14 @@
 ```text
 parent_businesses
 ├── provider_connections
+├── parent_product_plan_categories ── product_plan_categories (global)
+│   └── product_plans (owned by parent/provider)
 ├── affiliates
 │   ├── affiliate_licenses
-│   ├── affiliate_product_plans ── provider_plans
+│   ├── affiliate_product_plan_categories ── product_plan_categories
+│   ├── affiliate_product_plans ── product_plans
 │   └── transactions
-└── provider_plan_categories ── canonical_plan_categories
-    └── provider_plans
-        └── provider_transaction_attempts
+└── provider_transaction_attempts
 
 provider_adapters (allow-listed adapter metadata; no executable PHP from DB)
 ```
@@ -46,16 +47,17 @@ provider_adapters (allow-listed adapter metadata; no executable PHP from DB)
 | `provider_adapters` | `id`; unique `key`; `name`; allow-listed `driver`; JSON `capabilities`; boolean `is_active`; timestamps |
 | `provider_connections` | `id`; FK/index `parent_business_id`; FK/index `provider_adapter_id`; `name`; `base_url`; encrypted JSON `credentials`; JSON `settings`; `status`; nullable `last_tested_at`; unique (`parent_business_id`, `name`) |
 | `affiliate_licenses` | `id`; unique FK `affiliate_id`; FK/index `parent_business_id`; `status`; decimal `purchase_amount`; nullable `activated_at`, `expires_at`, `suspended_at`; timestamps |
-| `canonical_plan_categories` | `id`; unique `slug`; FK/index `product_id`; nullable FK/index `network_id`; `name`; nullable `data_type`; boolean `is_active`; timestamps |
-| `provider_plan_categories` | `id`; FK/index `provider_connection_id`; nullable FK/index `canonical_plan_category_id`; `upstream_code`; `name`; `mapping_status`; JSON `raw_metadata`; unique (`provider_connection_id`, `upstream_code`) |
-| `provider_plans` | `id`; FK/index `provider_connection_id`; FK/index `provider_plan_category_id`; `upstream_code`; `name`; decimal `cost_price`; nullable unsigned `data_size_mb`, `validity_days`; `status`; JSON `raw_metadata`; nullable `last_synced_at`; unique (`provider_connection_id`, `upstream_code`) |
-| `provider_transaction_attempts` | `id`; FK/index `transaction_id`; FK/index `provider_connection_id`; FK/index `provider_plan_id`; `attempt_number`; `status`; nullable `upstream_reference`, `http_status`; JSON `sanitized_request`, `sanitized_response`; timestamps; unique (`transaction_id`, `attempt_number`) |
+| `parent_product_plan_categories` | `id`; FK/index `parent_business_id`; FK/index `provider_connection_id`; FK/index `product_plan_category_id` to the global category; `upstream_code`; `upstream_name`; `mapping_status`; JSON `settings`; JSON `raw_metadata`; unique (`provider_connection_id`, `upstream_code`) |
+| `provider_transaction_attempts` | `id`; FK/index `transaction_id`; FK/index `provider_connection_id`; FK/index `product_plan_id`; `attempt_number`; `status`; nullable `upstream_reference`, `http_status`; JSON `sanitized_request`, `sanitized_response`; timestamps; unique (`transaction_id`, `attempt_number`) |
 
 ### Existing-table changes
 
 - `affiliates`: add nullable indexed FKs `parent_business_id` and `provider_connection_id`; make legacy `parent_key` nullable and retain it during the compatibility period.
-- `affiliate_product_plans`: add nullable indexed FK `provider_plan_id`; add unique (`affiliate_id`, `provider_plan_id`); retain `product_plan_id` during compatibility period.
-- `transactions`: add nullable indexed FKs `parent_business_id`, `provider_connection_id`, `provider_plan_id`; add nullable unique `idempotency_key`; nullable `upstream_reference`; nullable `provider_status`; add composite indexes (`affiliate_id`, `status`, `created_at`) and (`provider_connection_id`, `provider_status`, `created_at`).
+- `product_plan_categories`: remain the global/predefined categories. Add unique `slug` if absent; new parent-specific API codes do not belong here.
+- `product_plans`: add indexed FKs `parent_business_id`, `provider_connection_id`, and nullable `parent_product_plan_category_id`; add `upstream_code`, decimal `provider_cost`, `status`, JSON `provider_settings`, JSON `raw_metadata`, and nullable `last_synced_at`; unique (`provider_connection_id`, `upstream_code`). Existing rows are backfilled to OresamSub.
+- `affiliate_product_plan_categories`: retain its FK to global `product_plan_categories`; add unique (`affiliate_id`, `plan_category_id`).
+- `affiliate_product_plans`: retain `product_plan_id` as the link to a parent's plan; add unique (`affiliate_id`, `product_plan_id`).
+- `transactions`: add nullable indexed FKs `parent_business_id`, `provider_connection_id`, `product_plan_id`; add nullable unique `idempotency_key`; nullable `upstream_reference`; nullable `provider_status`; add composite indexes (`affiliate_id`, `status`, `created_at`) and (`provider_connection_id`, `provider_status`, `created_at`).
 
 ---
 
@@ -125,18 +127,19 @@ git add app/Models database/factories database/migrations tests/Feature/MultiPar
 git commit -m "feat: add parent provider foundation schema"
 ```
 
-### Task 2: Canonical and provider-scoped catalogue schema
+### Task 2: Global categories and parent-owned plan schema
 
 **Files:**
-- Create: `database/migrations/2026_08_06_000002_create_provider_catalog_tables.php`
-- Create: `app/Models/CanonicalPlanCategory.php`
-- Create: `app/Models/ProviderPlanCategory.php`
-- Create: `app/Models/ProviderPlan.php`
+- Create: `database/migrations/2026_08_06_000002_add_parent_ownership_to_catalog.php`
+- Create: `app/Models/ParentProductPlanCategory.php`
+- Modify: `app/Models/ProductPlanCategory.php`
+- Modify: `app/Models/ProductPlan.php`
+- Modify: `app/Models/AffiliateProductPlanCategory.php`
 - Modify: `app/Models/AffiliateProductPlan.php`
 - Test: `tests/Feature/MultiParent/ProviderCatalogSchemaTest.php`
 
 **Interfaces:**
-- Produces: `ProviderPlan::connection()`, `ProviderPlan::category()`, `ProviderPlanCategory::canonicalCategory()`, and `AffiliateProductPlan::providerPlan()`.
+- Produces: `ProductPlan::parentBusiness()`, `ProductPlan::providerConnection()`, `ProductPlan::parentCategoryMapping()`, and `ParentProductPlanCategory::globalCategory()`.
 - Enforces: unique provider codes per connection and one affiliate offering per provider plan.
 
 - [ ] **Step 1: Write failing tests for provider-code isolation and affiliate-offering uniqueness**
@@ -146,10 +149,10 @@ it('allows the same upstream plan code on different provider connections', funct
     $first = ProviderConnection::factory()->create();
     $second = ProviderConnection::factory()->create();
 
-    ProviderPlan::factory()->for($first, 'connection')->create(['upstream_code' => 'MTN-1GB']);
-    ProviderPlan::factory()->for($second, 'connection')->create(['upstream_code' => 'MTN-1GB']);
+    ProductPlan::factory()->for($first, 'providerConnection')->create(['upstream_code' => 'MTN-1GB']);
+    ProductPlan::factory()->for($second, 'providerConnection')->create(['upstream_code' => 'MTN-1GB']);
 
-    expect(ProviderPlan::where('upstream_code', 'MTN-1GB')->count())->toBe(2);
+    expect(ProductPlan::where('upstream_code', 'MTN-1GB')->count())->toBe(2);
 });
 
 it('prevents an affiliate from inheriting the same provider plan twice', function () {
@@ -157,7 +160,7 @@ it('prevents an affiliate from inheriting the same provider plan twice', functio
 
     AffiliateProductPlan::factory()->create([
         'affiliate_id' => $offering->affiliate_id,
-        'provider_plan_id' => $offering->provider_plan_id,
+        'product_plan_id' => $offering->product_plan_id,
     ]);
 })->throws(QueryException::class);
 ```
@@ -168,7 +171,7 @@ Run: `php artisan test tests/Feature/MultiParent/ProviderCatalogSchemaTest.php`
 
 - [ ] **Step 3: Implement the catalogue migrations and models**
 
-Store `cost_price` as `decimal(14, 2)`, `data_size_mb` and `validity_days` as nullable unsigned integers, visibility/status as real booleans or constrained strings, and raw provider fields in JSON. Do not copy the current twelve cost and commission columns into `provider_plans`.
+Keep legacy price/commission columns for compatibility, but use the new `provider_cost` decimal for parent-owned upstream cost. Keep global category identity in `product_plan_categories`; store parent API codes and mapping settings only in `parent_product_plan_categories` and `product_plans`.
 
 - [ ] **Step 4: Run schema tests and migrations on both SQLite test DB and configured local DB**
 
@@ -195,7 +198,7 @@ git commit -m "feat: add provider scoped catalog schema"
 - Modify: `routes/console.php`
 
 **Interfaces:**
-- Produces: `OresamsubBackfillService::run(): BackfillResult` with counts for parents, connections, categories, provider plans, affiliate links, offerings, and transactions.
+- Produces: `OresamsubBackfillService::run(): BackfillResult` with counts for parents, connections, category mappings, parent-owned plans, affiliate links, offerings, and transactions.
 - Command: `php artisan multi-parent:backfill-oresamsub --dry-run` and `--commit`.
 
 - [ ] **Step 1: Write a failing idempotent backfill test**
@@ -209,7 +212,7 @@ it('backfills OresamSub twice without duplicates', function () {
 
     expect(ParentBusiness::where('slug', 'oresamsub')->count())->toBe(1)
         ->and(ProviderConnection::count())->toBe(1)
-        ->and(ProviderPlan::count())->toBe(ProductPlan::count())
+        ->and(ProductPlan::whereNotNull('provider_connection_id')->count())->toBe(ProductPlan::count())
         ->and(Affiliate::whereNull('parent_business_id')->count())->toBe(0);
 });
 ```
@@ -220,7 +223,7 @@ Run: `php artisan test tests/Feature/MultiParent/OresamsubBackfillTest.php`
 
 - [ ] **Step 3: Implement chunked, atomic upserts without deleting legacy records**
 
-Map each legacy `product_plan_categories` row into a canonical category plus OresamSub provider category. Map each legacy `product_plans` row into `provider_plans`, populate `affiliate_product_plans.provider_plan_id`, attach every existing affiliate to OresamSub, and populate new transaction FKs from its affiliate/offering. Use chunks of 250 and log counts, not secrets or raw provider payloads.
+Keep every legacy `product_plan_categories` row as a global category. Create its OresamSub `parent_product_plan_categories` mapping, assign every legacy `product_plans` row to the OresamSub parent/connection without changing its ID, attach every existing affiliate to OresamSub, and populate new transaction FKs from its affiliate offering. Use chunks of 250 and log counts, not secrets or raw provider payloads.
 
 - [ ] **Step 4: Run dry-run, test, and committed backfill against a disposable database copy**
 
@@ -307,7 +310,7 @@ git commit -m "security: enforce explicit affiliate tenant context"
 - Test: `tests/Unit/Providers/ProviderAdapterRegistryTest.php`
 
 **Interfaces:**
-- Consumes: `ProviderConnection` and `ProviderPlan` from Tasks 1–2.
+- Consumes: `ProviderConnection` and parent-owned `ProductPlan` from Tasks 1–2.
 - Produces:
 
 ```php
@@ -411,24 +414,24 @@ git commit -m "refactor: route oresamsub through provider adapter"
 ### Task 7: Spreadsheet catalogue import and mapping review
 
 **Files:**
-- Create: `app/Services/Providers/Catalog/ProviderPlanImportService.php`
+- Create: `app/Services/Providers/Catalog/ParentPlanImportService.php`
 - Create: `app/Services/Providers/Catalog/DTO/ImportResult.php`
-- Create: `app/Http/Requests/PlatformAdmin/ImportProviderPlansRequest.php`
+- Create: `app/Http/Requests/PlatformAdmin/ImportParentPlansRequest.php`
 - Create: `app/Http/Controllers/PlatformAdmin/ProviderCatalogImportController.php`
 - Create: `resources/views/platform-admin/providers/import.blade.php`
 - Modify: `routes/platform-admin.php`
-- Test: `tests/Feature/MultiParent/ProviderPlanImportTest.php`
+- Test: `tests/Feature/MultiParent/ParentPlanImportTest.php`
 - Create: `docs/product/provider-plan-import-template.csv`
 
 **Interfaces:**
-- Produces: `ProviderPlanImportService::import(ProviderConnection $connection, UploadedFile $file): ImportResult`.
+- Produces: `ParentPlanImportService::import(ProviderConnection $connection, UploadedFile $file): ImportResult`.
 - Template columns: `provider_plan_code`, `global_category_slug`, `plan_name`, `data_size_mb`, `validity_days`, `provider_cost`, `service_type`, `network`, `status`.
 
 - [ ] **Step 1: Write failing tests for create, update, duplicate, unknown-category, and wrong-parent rows**
 
 ```php
-it('upserts provider plans and queues unknown categories', function () {
-    $result = app(ProviderPlanImportService::class)->import(
+it('upserts parent-owned plans and queues unknown categories', function () {
+    $result = app(ParentPlanImportService::class)->import(
         $connection,
         csvUpload([
             ['MTN-1G', 'mtn-sme', 'MTN 1GB', 1024, 30, 600, 'data', 'mtn', 'active'],
@@ -443,7 +446,7 @@ it('upserts provider plans and queues unknown categories', function () {
 
 - [ ] **Step 2: Run the import tests and confirm missing-service failures**
 
-Run: `php artisan test tests/Feature/MultiParent/ProviderPlanImportTest.php`
+Run: `php artisan test tests/Feature/MultiParent/ParentPlanImportTest.php`
 
 - [ ] **Step 3: Implement validation, transaction-scoped upsert, and review UI**
 
@@ -451,14 +454,14 @@ Reject negative prices, duplicate codes inside one file, unknown service types, 
 
 - [ ] **Step 4: Run import tests and upload the documented sample through the platform-admin route**
 
-Run: `php artisan test tests/Feature/MultiParent/ProviderPlanImportTest.php`
+Run: `php artisan test tests/Feature/MultiParent/ParentPlanImportTest.php`
 
 Expected: valid rows import; invalid rows return row-numbered errors; secrets never appear in responses.
 
 - [ ] **Step 5: Commit catalogue import**
 
 ```bash
-git add app/Services/Providers/Catalog app/Http/Requests/PlatformAdmin app/Http/Controllers/PlatformAdmin/ProviderCatalogImportController.php resources/views/platform-admin/providers routes/platform-admin.php tests/Feature/MultiParent/ProviderPlanImportTest.php docs/product/provider-plan-import-template.csv
+git add app/Services/Providers/Catalog app/Http/Requests/PlatformAdmin app/Http/Controllers/PlatformAdmin/ProviderCatalogImportController.php resources/views/platform-admin/providers routes/platform-admin.php tests/Feature/MultiParent/ParentPlanImportTest.php docs/product/provider-plan-import-template.csv
 git commit -m "feat: import provider scoped plans"
 ```
 
@@ -530,13 +533,13 @@ git commit -m "feat: manage parents connections and affiliate licences"
 ```php
 it('inherits only active mapped plans from the affiliates parent connection', function () {
     [$affiliateA, $affiliateB] = affiliatesForDifferentParents();
-    $planA = ProviderPlan::factory()->for($affiliateA->providerConnection, 'connection')->create();
-    ProviderPlan::factory()->for($affiliateB->providerConnection, 'connection')->create();
+    $planA = ProductPlan::factory()->for($affiliateA->providerConnection, 'providerConnection')->create();
+    ProductPlan::factory()->for($affiliateB->providerConnection, 'providerConnection')->create();
 
     app(AffiliateCatalogService::class)->sync($affiliateA);
 
     expect(AffiliateProductPlan::withoutGlobalScopes()
-        ->where('affiliate_id', $affiliateA->id)->pluck('provider_plan_id')->all())
+        ->where('affiliate_id', $affiliateA->id)->pluck('product_plan_id')->all())
         ->toBe([$planA->id]);
 });
 ```
@@ -594,7 +597,7 @@ it('sends an affiliate purchase only to its assigned parent connection', functio
     );
 
     expect($transaction->provider_connection_id)->toBe($affiliate->provider_connection_id)
-        ->and($transaction->provider_plan_id)->toBe($affiliate->offering->provider_plan_id)
+        ->and($transaction->product_plan_id)->toBe($affiliate->offering->product_plan_id)
         ->and($transaction->status)->toBe('1');
 });
 

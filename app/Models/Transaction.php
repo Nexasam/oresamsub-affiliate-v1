@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends AffiliateScopedModel
 {
@@ -14,6 +15,12 @@ class Transaction extends AffiliateScopedModel
     protected $casts = [
         // 'created_at' => 'datetime:Africa/Lagos',
         'retry_count' => 'integer',
+        'provider_cost_snapshot' => 'decimal:2',
+        'parent_cost_snapshot' => 'decimal:2',
+        'affiliate_cost_snapshot' => 'decimal:2',
+        'customer_price_snapshot' => 'decimal:2',
+        'parent_profit_snapshot' => 'decimal:2',
+        'affiliate_profit_snapshot' => 'decimal:2',
     ];
 
     public function user()
@@ -24,6 +31,21 @@ class Transaction extends AffiliateScopedModel
     public function affiliate()
     {
         return $this->belongsTo(Affiliate::class);
+    }
+
+    public function parentBusiness(): BelongsTo
+    {
+        return $this->belongsTo(ParentBusiness::class);
+    }
+
+    public function parentProviderConnection(): BelongsTo
+    {
+        return $this->belongsTo(ParentProviderConnection::class);
+    }
+
+    public function productPlanProviderRoute(): BelongsTo
+    {
+        return $this->belongsTo(ProductPlanProviderRoute::class);
     }
 
     public function manual_processing_locker()

@@ -4,36 +4,52 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductPlan extends Model
 {
     use HasFactory;
 
-    //TODO: revamp productplan with global scope for visibility in all its instance in the code
+    // TODO: revamp productplan with global scope for visibility in all its instance in the code
 
     protected $guarded = ['id'];
 
+    public function parentBusiness(): BelongsTo
+    {
+        return $this->belongsTo(ParentBusiness::class);
+    }
+
+    public function parentPrices(): HasMany
+    {
+        return $this->hasMany(ProductPlanParentPrice::class);
+    }
+
+    public function providerRoutes(): HasMany
+    {
+        return $this->hasMany(ProductPlanProviderRoute::class);
+    }
+
     /**
-    * each card belongs to a product plan 
-    **/
+     * each card belongs to a product plan
+     **/
     public function affiliate_product_plan()
     {
         return $this->hasOne(AffiliateProductPlan::class, 'product_plan_id', 'id');
     }
 
-    
-     /**
-     * each product plan belongs to a product 
-    **/
+    /**
+     * each product plan belongs to a product
+     **/
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id', 'id');
         // return $this->belongsTo(Product::class, 'product_id', 'id')->where('active_status',1);
     }
 
-     /**
-     * each product plan belongs to a product_plan_category === nullable 
-    **/
+    /**
+     * each product plan belongs to a product_plan_category === nullable
+     **/
     public function product_plan_category()
     {
         return $this->belongsTo(ProductPlanCategory::class, 'product_plan_category_id', 'id');
@@ -51,7 +67,4 @@ class ProductPlan extends Model
         return $this->belongsTo(Automation::class, 'reprocess_automation_id', 'id');
         // return $this->belongsTo(ProductPlanCategory::class, 'product_plan_category_id', 'id')->where('active_status',1);
     }
-    
-
-    
 }

@@ -13,11 +13,13 @@ php artisan about --only=environment
 Stop if the configured database is not a disposable/local database. Before any migration or seed, create a transactional schema/data backup outside the repository. This command refuses non-local application environments and non-loopback database hosts, reads credentials through Laravel without printing them, and creates a run-specific dump:
 
 ```bash
+set -euo pipefail
 REHEARSAL_BACKUP="/private/tmp/oresamsub-parent-foundation-pre-rehearsal-$(date +%Y%m%d-%H%M%S).sql"
 export REHEARSAL_BACKUP
-php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true)){fwrite(STDERR,"Refusing non-local backup.\n"); exit(2);} $cmd=["/Applications/XAMPP/xamppfiles/bin/mysqldump","--host=".$c["host"],"--port=".$c["port"],"--user=".$c["username"],"--single-transaction","--triggers",$c["database"]]; $spec=[0=>["file","/dev/null","r"],1=>["file",getenv("REHEARSAL_BACKUP"),"w"],2=>["pipe","w"]]; $p=proc_open($cmd,$spec,$pipes,null,array_merge($_ENV,["MYSQL_PWD"=>(string)$c["password"]])); $error=stream_get_contents($pipes[2]); fclose($pipes[2]); $code=proc_close($p); if($code!==0){fwrite(STDERR,$error); exit($code);}'
+php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true) || !preg_match("/^[A-Za-z0-9_]+$/",$c["database"])){fwrite(STDERR,"Refusing non-local or invalid backup target.\n"); exit(2);} $cmd=["/Applications/XAMPP/xamppfiles/bin/mysqldump","--host=".$c["host"],"--port=".$c["port"],"--user=".$c["username"],"--single-transaction","--triggers",$c["database"]]; $spec=[0=>["file","/dev/null","r"],1=>["file",getenv("REHEARSAL_BACKUP"),"w"],2=>["pipe","w"]]; $p=proc_open($cmd,$spec,$pipes,null,array_merge($_ENV,["MYSQL_PWD"=>(string)$c["password"]])); $error=stream_get_contents($pipes[2]); fclose($pipes[2]); $code=proc_close($p); if($code!==0){fwrite(STDERR,$error); exit($code);}'
 test -s "$REHEARSAL_BACKUP"
-shasum -a 256 "$REHEARSAL_BACKUP"
+shasum -a 256 "$REHEARSAL_BACKUP" > "$REHEARSAL_BACKUP.sha256"
+shasum -a 256 -c "$REHEARSAL_BACKUP.sha256"
 ```
 
 Record the path and checksum before continuing. The 2026-08-08 rehearsal backup was:
@@ -33,8 +35,12 @@ It was created with the local XAMPP `mysqldump`, using the Laravel MySQL connect
 Verify the backup before continuing:
 
 ```bash
-test -s /private/tmp/oresamsub-parent-foundation-pre-rehearsal-20260808.sql
-shasum -a 256 /private/tmp/oresamsub-parent-foundation-pre-rehearsal-20260808.sql
+set -euo pipefail
+REHEARSAL_BACKUP="/private/tmp/oresamsub-parent-foundation-pre-rehearsal-20260808.sql"
+REHEARSAL_BACKUP_SHA256="2c5749d99f0607e58e75eeb76bea6b582092f10c78a4e121bba9e4c134cfb430"
+test -s "$REHEARSAL_BACKUP"
+printf '%s  %s\n' "$REHEARSAL_BACKUP_SHA256" "$REHEARSAL_BACKUP" > "$REHEARSAL_BACKUP.sha256"
+shasum -a 256 -c "$REHEARSAL_BACKUP.sha256"
 ```
 
 ## Acceptance commands
@@ -42,6 +48,7 @@ shasum -a 256 /private/tmp/oresamsub-parent-foundation-pre-rehearsal-20260808.sq
 Run the focused checks and inspect the generated MySQL SQL before mutation:
 
 ```bash
+set -euo pipefail
 php artisan test tests/Feature/MultiParent tests/Feature/PlatformAdmin
 vendor/bin/pint --test
 git diff --check
@@ -51,6 +58,7 @@ php artisan migrate --pretend
 Then use this exact required order against the confirmed local database:
 
 ```bash
+set -euo pipefail
 php artisan migrate
 php artisan db:seed --class=OresamsubParentSeeder
 php artisan multi-parent:backfill-oresamsub-foundation --dry-run
@@ -147,28 +155,44 @@ All three flags must remain `false`: `ownership_reads`, `normalized_pricing`, an
 
 ## Rollback
 
-Do not use migration rollback alone after a committed backfill: it cannot reconstruct the previous ownership data safely. Restore the pre-rehearsal dump instead.
+Migration rollback removes the new foundation schema but cannot reconstruct the previous ownership data by itself. Roll back the three exact migrations, then import the verified pre-rehearsal table/schema/data dump into the existing database. Do not drop or recreate the database: the backup excludes stored routines and events, so preserving the existing database preserves those unrelated objects.
 
 1. Stop application/worker writes to the local database and copy the backup to a second safe location.
 2. Set the exact verified artifact, verify its checksum, and export it for the guarded restore command:
 
 ```bash
-REHEARSAL_BACKUP=/private/tmp/oresamsub-parent-foundation-pre-rehearsal-20260808.sql
+set -euo pipefail
+REHEARSAL_BACKUP="/private/tmp/oresamsub-parent-foundation-pre-rehearsal-20260808.sql"
+REHEARSAL_BACKUP_SHA256="2c5749d99f0607e58e75eeb76bea6b582092f10c78a4e121bba9e4c134cfb430"
 test -s "$REHEARSAL_BACKUP"
-shasum -a 256 "$REHEARSAL_BACKUP"
-export REHEARSAL_BACKUP
+printf '%s  %s\n' "$REHEARSAL_BACKUP_SHA256" "$REHEARSAL_BACKUP" > "$REHEARSAL_BACKUP.sha256"
+shasum -a 256 -c "$REHEARSAL_BACKUP.sha256"
+export REHEARSAL_BACKUP REHEARSAL_BACKUP_SHA256
 ```
 
 3. First test the configured credentials and local-only guard without changing data:
 
 ```bash
-php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true)){fwrite(STDERR,"Refusing non-local restore.\n"); exit(2);} DB::select("SELECT 1"); echo "Verified local target: ".$c["host"]."/".$c["database"].PHP_EOL;'
+php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true) || !preg_match("/^[A-Za-z0-9_]+$/",$c["database"])){fwrite(STDERR,"Refusing non-local or invalid restore target.\n"); exit(2);} DB::select("SELECT 1"); echo "Verified local target: ".$c["host"]."/".$c["database"].PHP_EOL;'
 ```
 
-4. After visually confirming the printed local target, recreate only that configured local database and restore the verified dump. This is destructive to the named local database:
+4. After visually confirming the printed local target, roll back only the three foundation migrations in reverse order. Each command must succeed before the next command runs:
 
 ```bash
-php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); $file=getenv("REHEARSAL_BACKUP"); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true) || !$file || !is_file($file) || filesize($file)===0 || !preg_match("/^[A-Za-z0-9_]+$/",$c["database"])){fwrite(STDERR,"Refusing unsafe restore.\n"); exit(2);} $base=["/Applications/XAMPP/xamppfiles/bin/mysql","--host=".$c["host"],"--port=".$c["port"],"--user=".$c["username"]]; $env=array_merge($_ENV,["MYSQL_PWD"=>(string)$c["password"]]); $run=function(array $cmd,array $spec)use($env){$p=proc_open($cmd,$spec,$pipes,null,$env); $error=stream_get_contents($pipes[2]); fclose($pipes[2]); $code=proc_close($p); if($code!==0){fwrite(STDERR,$error); exit($code);}}; $run([...$base,"--execute=DROP DATABASE `".$c["database"]."`; CREATE DATABASE `".$c["database"]."` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"],[0=>["file","/dev/null","r"],1=>["file","php://stdout","w"],2=>["pipe","w"]]); $run([...$base,$c["database"]],[0=>["file",$file,"r"],1=>["file","php://stdout","w"],2=>["pipe","w"]]);'
+set -euo pipefail
+php artisan migrate:rollback --path="database/migrations/2026_08_08_100200_enforce_unique_affiliate_user_plan_levels.php" --force
+php artisan migrate:rollback --path="database/migrations/2026_08_08_100100_add_parent_ownership_and_plan_routing.php" --force
+php artisan migrate:rollback --path="database/migrations/2026_08_08_100000_create_parent_provider_foundation_tables.php" --force
 ```
 
-5. Run `php artisan migrate:status` and application smoke checks. Keep the backup until the restored local state is verified.
+The migration rollback removes the new foundation tables, triggers, ownership/routing columns, indexes, and constraints. The dump's table-level `DROP TABLE`/`CREATE TABLE` statements then restore the original application tables and triggers without dropping the database or its pre-existing routines/events.
+
+5. Re-run the checksum check immediately before import, then import into the existing validated database. The wrapper repeats the local-host/database-name guard, uses the quoted backup path directly, and exits non-zero on any client error:
+
+```bash
+set -euo pipefail
+shasum -a 256 -c "$REHEARSAL_BACKUP.sha256"
+php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); $requested=getenv("REHEARSAL_BACKUP"); $expected=strtolower((string)getenv("REHEARSAL_BACKUP_SHA256")); $file=$requested ? realpath($requested) : false; $safePath=$file && preg_match("#^/private/tmp/oresamsub-parent-foundation-pre-rehearsal-[0-9]{8}(?:-[0-9]{6})?\\.sql$#",$file); $validHash=preg_match("/^[a-f0-9]{64}$/",$expected) && $file && hash_equals($expected,hash_file("sha256",$file)); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true) || !preg_match("/^[A-Za-z0-9_]+$/",$c["database"]) || !$safePath || !is_file($file) || filesize($file)===0 || !$validHash){fwrite(STDERR,"Refusing unsafe restore.\n"); exit(2);} $cmd=["/Applications/XAMPP/xamppfiles/bin/mysql","--host=".$c["host"],"--port=".$c["port"],"--user=".$c["username"],$c["database"]]; $spec=[0=>["file",$file,"r"],1=>["file","php://stdout","w"],2=>["pipe","w"]]; $p=proc_open($cmd,$spec,$pipes,null,array_merge($_ENV,["MYSQL_PWD"=>(string)$c["password"]])); $error=stream_get_contents($pipes[2]); fclose($pipes[2]); $code=proc_close($p); if($code!==0){fwrite(STDERR,$error); exit($code);}'
+```
+
+6. Run `php artisan migrate:status` and application smoke checks. Keep the backup and checksum sidecar until the restored local state is verified.

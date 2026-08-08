@@ -57,10 +57,14 @@ class OresamsubParentSeeder extends Seeder
             throw new RuntimeException('The configured OresamSub parent-admin email belongs to another parent.');
         }
 
+        if ($existingAdmin) {
+            return;
+        }
+
         $configuredPassword = $adminConfig['password'];
         $temporaryPassword = filled($configuredPassword)
             ? $configuredPassword
-            : Str::password(24);
+            : $this->generateTemporaryPassword();
 
         $admin = ParentAdmin::query()->firstOrCreate(
             ['email' => $adminConfig['email']],
@@ -76,5 +80,10 @@ class OresamsubParentSeeder extends Seeder
         if ($admin->wasRecentlyCreated && blank($configuredPassword)) {
             $this->command?->warn("Temporary OresamSub parent-admin password: {$temporaryPassword}");
         }
+    }
+
+    protected function generateTemporaryPassword(): string
+    {
+        return Str::password(24);
     }
 }

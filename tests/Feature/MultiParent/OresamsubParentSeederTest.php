@@ -53,6 +53,31 @@ it('reports a temporary password only when creating an admin without a configure
         ->and($admin->must_change_password)->toBeTrue();
 });
 
+it('generates a temporary password only while creating a new admin', function () {
+    config()->set('parent_businesses.oresamsub.admin', [
+        'name' => 'Temporary Owner',
+        'email' => 'temporary-owner@example.test',
+        'password' => null,
+    ]);
+    $seeder = new class extends OresamsubParentSeeder
+    {
+        public int $temporaryPasswordGenerations = 0;
+
+        protected function generateTemporaryPassword(): string
+        {
+            $this->temporaryPasswordGenerations++;
+
+            return 'fixed-temporary-password';
+        }
+    };
+
+    $seeder->run();
+    $seeder->run();
+
+    expect($seeder->temporaryPasswordGenerations)->toBe(1)
+        ->and(Hash::check('fixed-temporary-password', ParentAdmin::sole()->password))->toBeTrue();
+});
+
 it('does not rotate an existing parent admin password', function () {
     config()->set('parent_businesses.oresamsub.admin', [
         'name' => 'Owner Name',

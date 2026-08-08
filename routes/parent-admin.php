@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ParentAdmin\AffiliateProfitCapController;
 use App\Http\Controllers\ParentAdmin\AuthController;
 use App\Http\Controllers\ParentAdmin\DashboardController;
 use App\Http\Controllers\ParentAdmin\PricingController;
@@ -26,5 +27,8 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::post('pricing/levels/generate-six', [PricingController::class, 'generateSix'])->name('pricing.levels.generate-six');
         Route::put('pricing/plans/{plan}', [PricingController::class, 'updatePrices'])->name('pricing.plans.update');
         Route::delete('pricing/plans/{plan}/levels/{level}', [PricingController::class, 'clearOverride'])->name('pricing.plans.overrides.destroy');
+        Route::get('pricing/affiliates', [AffiliateProfitCapController::class, 'index'])->name('pricing.affiliates.index');
+        Route::get('pricing/affiliates/{affiliate}/caps', [AffiliateProfitCapController::class, 'show'])->name('pricing.affiliates.caps.show');
+        Route::put('pricing/affiliates/{affiliate}/caps', [AffiliateProfitCapController::class, 'update'])->name('pricing.affiliates.caps.update');
     });
 });

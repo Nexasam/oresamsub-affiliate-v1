@@ -28,4 +28,9 @@ class ParentBusiness extends Model
     {
         return $this->hasMany(ParentDefaultProfitRule::class);
     }
+
+    public function affiliateServiceProfitCaps(): HasMany
+    {
+        return $this->hasMany(AffiliateServiceProfitCap::class);
+    }
 }

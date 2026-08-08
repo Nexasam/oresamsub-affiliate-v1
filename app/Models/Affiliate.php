@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Affiliate extends Model
 {
@@ -36,5 +37,10 @@ class Affiliate extends Model
     public function parentResellerLevel(): BelongsTo
     {
         return $this->belongsTo(ParentResellerLevel::class);
+    }
+
+    public function serviceProfitCaps(): HasMany
+    {
+        return $this->hasMany(AffiliateServiceProfitCap::class);
     }
 }

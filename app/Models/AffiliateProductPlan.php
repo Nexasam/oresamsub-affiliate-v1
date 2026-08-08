@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ParentAdmin\AffiliateProfitCapService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use InvalidArgumentException;
 
@@ -20,6 +21,8 @@ class AffiliateProductPlan extends AffiliateScopedModel
             if ((int) $affiliateParentId !== (int) $planParentId) {
                 throw new InvalidArgumentException('Affiliate and product plan must belong to the same parent business.');
             }
+
+            app(AffiliateProfitCapService::class)->assertPlanMarginsWithinCaps($affiliatePlan);
         });
     }
 

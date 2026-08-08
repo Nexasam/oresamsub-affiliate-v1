@@ -106,12 +106,12 @@ return new class extends Migration
                 ->references('id')->on('product_plan_provider_routes')->restrictOnDelete();
         });
 
-        $this->addSqliteAffiliateParentTrigger();
+        $this->addAffiliateOwnershipTriggers();
     }
 
     public function down(): void
     {
-        $this->dropSqliteAffiliateParentTrigger();
+        $this->dropAffiliateOwnershipTriggers();
 
         Schema::table('transactions', function (Blueprint $table) {
             if (DB::connection()->getDriverName() === 'sqlite') {
@@ -165,50 +165,60 @@ return new class extends Migration
         });
     }
 
-    private function addSqliteAffiliateParentTrigger(): void
+    private function addAffiliateOwnershipTriggers(): void
     {
         if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::unprepared(<<<'SQL'
+                CREATE TRIGGER affiliates_parent_ownership_insert
+                BEFORE INSERT ON affiliates
+                FOR EACH ROW
+                BEGIN
+                    IF (NEW.parent_business_id IS NULL) <> (NEW.parent_reseller_level_id IS NULL) THEN
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'Affiliate parent and reseller level must both be null or both be set.';
+                    END IF;
+                END
+                SQL);
+
+            DB::unprepared(<<<'SQL'
+                CREATE TRIGGER affiliates_parent_ownership_update
+                BEFORE UPDATE ON affiliates
+                FOR EACH ROW
+                BEGIN
+                    IF (NEW.parent_business_id IS NULL) <> (NEW.parent_reseller_level_id IS NULL) THEN
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'Affiliate parent and reseller level must both be null or both be set.';
+                    END IF;
+                END
+                SQL);
+
             return;
         }
 
         DB::unprepared(<<<'SQL'
-            CREATE TRIGGER affiliates_parent_reseller_level_parent_insert
+            CREATE TRIGGER affiliates_parent_ownership_insert
             BEFORE INSERT ON affiliates
             FOR EACH ROW
-            WHEN NEW.parent_reseller_level_id IS NOT NULL
-              AND NOT EXISTS (
-                SELECT 1 FROM parent_reseller_levels
-                WHERE id = NEW.parent_reseller_level_id
-                  AND parent_business_id = NEW.parent_business_id
-              )
+            WHEN (NEW.parent_business_id IS NULL) <> (NEW.parent_reseller_level_id IS NULL)
             BEGIN
-                SELECT RAISE(ABORT, 'Affiliate reseller level must belong to its parent.');
+                SELECT RAISE(ABORT, 'Affiliate parent and reseller level must both be null or both be set.');
             END
             SQL);
 
         DB::unprepared(<<<'SQL'
-            CREATE TRIGGER affiliates_parent_reseller_level_parent_update
+            CREATE TRIGGER affiliates_parent_ownership_update
             BEFORE UPDATE OF parent_reseller_level_id, parent_business_id ON affiliates
             FOR EACH ROW
-            WHEN NEW.parent_reseller_level_id IS NOT NULL
-              AND NOT EXISTS (
-                SELECT 1 FROM parent_reseller_levels
-                WHERE id = NEW.parent_reseller_level_id
-                  AND parent_business_id = NEW.parent_business_id
-              )
+            WHEN (NEW.parent_business_id IS NULL) <> (NEW.parent_reseller_level_id IS NULL)
             BEGIN
-                SELECT RAISE(ABORT, 'Affiliate reseller level must belong to its parent.');
+                SELECT RAISE(ABORT, 'Affiliate parent and reseller level must both be null or both be set.');
             END
             SQL);
     }
 
-    private function dropSqliteAffiliateParentTrigger(): void
+    private function dropAffiliateOwnershipTriggers(): void
     {
-        if (DB::connection()->getDriverName() !== 'sqlite') {
-            return;
-        }
-
-        DB::unprepared('DROP TRIGGER IF EXISTS affiliates_parent_reseller_level_parent_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS affiliates_parent_reseller_level_parent_insert');
+        DB::unprepared('DROP TRIGGER IF EXISTS affiliates_parent_ownership_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS affiliates_parent_ownership_insert');
     }
 };

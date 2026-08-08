@@ -26,9 +26,9 @@
 
 ```text
 parent_businesses
+├── parent_admins
 ├── provider_connections
-├── parent_product_plan_categories ── product_plan_categories (global)
-│   └── product_plans (owned by parent/provider)
+├── product_plans ── product_plan_categories (global)
 ├── affiliates
 │   ├── affiliate_licenses
 │   ├── affiliate_product_plan_categories ── product_plan_categories
@@ -44,17 +44,17 @@ provider_adapters (allow-listed adapter metadata; no executable PHP from DB)
 | Table | Required columns and constraints |
 |---|---|
 | `parent_businesses` | `id`; unique `slug`; `name`; nullable contact fields; `status` (`active`, `suspended`); timestamps |
+| `parent_admins` | `id`; FK/index `parent_business_id`; `name`; unique `email`; `password`; boolean `active`; nullable `last_login_at`; remember token; timestamps |
 | `provider_adapters` | `id`; unique `key`; `name`; allow-listed `driver`; JSON `capabilities`; boolean `is_active`; timestamps |
 | `provider_connections` | `id`; FK/index `parent_business_id`; FK/index `provider_adapter_id`; `name`; `base_url`; encrypted JSON `credentials`; JSON `settings`; `status`; nullable `last_tested_at`; unique (`parent_business_id`, `name`) |
 | `affiliate_licenses` | `id`; unique FK `affiliate_id`; FK/index `parent_business_id`; `status`; decimal `purchase_amount`; nullable `activated_at`, `expires_at`, `suspended_at`; timestamps |
-| `parent_product_plan_categories` | `id`; FK/index `parent_business_id`; FK/index `provider_connection_id`; FK/index `product_plan_category_id` to the global category; `upstream_code`; `upstream_name`; `mapping_status`; JSON `settings`; JSON `raw_metadata`; unique (`provider_connection_id`, `upstream_code`) |
 | `provider_transaction_attempts` | `id`; FK/index `transaction_id`; FK/index `provider_connection_id`; FK/index `product_plan_id`; `attempt_number`; `status`; nullable `upstream_reference`, `http_status`; JSON `sanitized_request`, `sanitized_response`; timestamps; unique (`transaction_id`, `attempt_number`) |
 
 ### Existing-table changes
 
 - `affiliates`: add nullable indexed FKs `parent_business_id` and `provider_connection_id`; make legacy `parent_key` nullable and retain it during the compatibility period.
 - `product_plan_categories`: remain the global/predefined categories. Add unique `slug` if absent; new parent-specific API codes do not belong here.
-- `product_plans`: add indexed FKs `parent_business_id`, `provider_connection_id`, and nullable `parent_product_plan_category_id`; add `upstream_code`, decimal `provider_cost`, `status`, JSON `provider_settings`, JSON `raw_metadata`, and nullable `last_synced_at`; unique (`provider_connection_id`, `upstream_code`). Existing rows are backfilled to OresamSub.
+- `product_plans`: add indexed FKs `parent_business_id` and `provider_connection_id`; retain `product_plan_category_id` as the direct link to the global category; add `upstream_code`, decimal `provider_cost`, `status`, JSON `provider_settings`, JSON `raw_metadata`, and nullable `last_synced_at`; unique (`provider_connection_id`, `upstream_code`). Existing rows are backfilled to OresamSub.
 - `affiliate_product_plan_categories`: retain its FK to global `product_plan_categories`; add unique (`affiliate_id`, `plan_category_id`).
 - `affiliate_product_plans`: retain `product_plan_id` as the link to a parent's plan; add unique (`affiliate_id`, `product_plan_id`).
 - `transactions`: add nullable indexed FKs `parent_business_id`, `provider_connection_id`, `product_plan_id`; add nullable unique `idempotency_key`; nullable `upstream_reference`; nullable `provider_status`; add composite indexes (`affiliate_id`, `status`, `created_at`) and (`provider_connection_id`, `provider_status`, `created_at`).
@@ -66,6 +66,7 @@ provider_adapters (allow-listed adapter metadata; no executable PHP from DB)
 **Files:**
 - Create: `database/migrations/2026_08_06_000001_create_parent_provider_foundation_tables.php`
 - Create: `app/Models/ParentBusiness.php`
+- Create: `app/Models/ParentAdmin.php`
 - Create: `app/Models/ProviderAdapter.php`
 - Create: `app/Models/ProviderConnection.php`
 - Create: `app/Models/AffiliateLicense.php`
@@ -73,7 +74,7 @@ provider_adapters (allow-listed adapter metadata; no executable PHP from DB)
 - Test: `tests/Feature/MultiParent/ParentProviderSchemaTest.php`
 
 **Interfaces:**
-- Produces: `ParentBusiness::providerConnections()`, `ParentBusiness::affiliates()`, `ProviderConnection::parentBusiness()`, `Affiliate::parentBusiness()`, `Affiliate::providerConnection()`, and `Affiliate::license()`.
+- Produces: `ParentBusiness::admins()`, `ParentBusiness::providerConnections()`, `ParentBusiness::affiliates()`, `ProviderConnection::parentBusiness()`, `Affiliate::parentBusiness()`, `Affiliate::providerConnection()`, and `Affiliate::license()`.
 - Produces: encrypted `ProviderConnection::$casts['credentials'] = 'encrypted:array'` and array cast for `settings`.
 
 - [ ] **Step 1: Write the failing schema and encryption tests**
@@ -87,10 +88,12 @@ it('links an affiliate and licence to one parent and connection', function () {
         'provider_connection_id' => $connection->id,
     ]);
     AffiliateLicense::factory()->for($affiliate)->for($parent)->create();
+    ParentAdmin::factory()->for($parent)->create();
 
     expect($affiliate->parentBusiness->is($parent))->toBeTrue()
         ->and($affiliate->providerConnection->is($connection))->toBeTrue()
-        ->and($affiliate->license->parentBusiness->is($parent))->toBeTrue();
+        ->and($affiliate->license->parentBusiness->is($parent))->toBeTrue()
+        ->and($parent->admins)->toHaveCount(1);
 });
 
 it('encrypts provider credentials at rest', function () {
@@ -131,7 +134,6 @@ git commit -m "feat: add parent provider foundation schema"
 
 **Files:**
 - Create: `database/migrations/2026_08_06_000002_add_parent_ownership_to_catalog.php`
-- Create: `app/Models/ParentProductPlanCategory.php`
 - Modify: `app/Models/ProductPlanCategory.php`
 - Modify: `app/Models/ProductPlan.php`
 - Modify: `app/Models/AffiliateProductPlanCategory.php`
@@ -139,7 +141,7 @@ git commit -m "feat: add parent provider foundation schema"
 - Test: `tests/Feature/MultiParent/ProviderCatalogSchemaTest.php`
 
 **Interfaces:**
-- Produces: `ProductPlan::parentBusiness()`, `ProductPlan::providerConnection()`, `ProductPlan::parentCategoryMapping()`, and `ParentProductPlanCategory::globalCategory()`.
+- Produces: `ProductPlan::parentBusiness()`, `ProductPlan::providerConnection()`, and the existing `ProductPlan::product_plan_category()` direct relationship to the global category.
 - Enforces: unique provider codes per connection and one affiliate offering per provider plan.
 
 - [ ] **Step 1: Write failing tests for provider-code isolation and affiliate-offering uniqueness**
@@ -171,7 +173,7 @@ Run: `php artisan test tests/Feature/MultiParent/ProviderCatalogSchemaTest.php`
 
 - [ ] **Step 3: Implement the catalogue migrations and models**
 
-Keep legacy price/commission columns for compatibility, but use the new `provider_cost` decimal for parent-owned upstream cost. Keep global category identity in `product_plan_categories`; store parent API codes and mapping settings only in `parent_product_plan_categories` and `product_plans`.
+Keep legacy price/commission columns for compatibility, but use the new `provider_cost` decimal for parent-owned upstream cost. Keep global category identity in `product_plan_categories`; store the upstream plan code and parent-specific settings on `product_plans`.
 
 - [ ] **Step 4: Run schema tests and migrations on both SQLite test DB and configured local DB**
 
@@ -223,7 +225,7 @@ Run: `php artisan test tests/Feature/MultiParent/OresamsubBackfillTest.php`
 
 - [ ] **Step 3: Implement chunked, atomic upserts without deleting legacy records**
 
-Keep every legacy `product_plan_categories` row as a global category. Create its OresamSub `parent_product_plan_categories` mapping, assign every legacy `product_plans` row to the OresamSub parent/connection without changing its ID, attach every existing affiliate to OresamSub, and populate new transaction FKs from its affiliate offering. Use chunks of 250 and log counts, not secrets or raw provider payloads.
+Keep every legacy `product_plan_categories` row as a global category. Assign every legacy `product_plans` row to the OresamSub parent/connection without changing its ID, attach every existing affiliate to OresamSub, and populate new transaction FKs from its affiliate offering. Use chunks of 250 and log counts, not secrets or raw provider payloads.
 
 - [ ] **Step 4: Run dry-run, test, and committed backfill against a disposable database copy**
 
@@ -465,20 +467,30 @@ git add app/Services/Providers/Catalog app/Http/Requests/PlatformAdmin app/Http/
 git commit -m "feat: import provider scoped plans"
 ```
 
-### Task 8: Parent and affiliate licence administration
+### Task 8: Parent-admin authentication and scoped administration
 
 **Files:**
 - Create: `app/Http/Controllers/PlatformAdmin/ParentBusinessController.php`
 - Create: `app/Http/Controllers/PlatformAdmin/ProviderConnectionController.php`
 - Create: `app/Http/Controllers/PlatformAdmin/AffiliateLicenseController.php`
+- Create: `app/Http/Controllers/ParentAdmin/AuthController.php`
+- Create: `app/Http/Controllers/ParentAdmin/DashboardController.php`
+- Create: `app/Http/Middleware/EnsureParentResourceOwnership.php`
 - Create: `app/Http/Resources/ProviderConnectionResource.php`
 - Create: `resources/views/platform-admin/parents/index.blade.php`
 - Create: `resources/views/platform-admin/parents/show.blade.php`
+- Create: `resources/views/parent-admin/auth/login.blade.php`
+- Create: `resources/views/parent-admin/dashboard.blade.php`
+- Create: `routes/parent-admin.php`
+- Modify: `config/auth.php`
+- Modify: `routes/web.php`
 - Modify: `routes/platform-admin.php`
 - Test: `tests/Feature/MultiParent/ParentAdministrationTest.php`
+- Test: `tests/Feature/MultiParent/ParentAdminAuthenticationTest.php`
 
 **Interfaces:**
-- Produces CRUD routes under `platform-admin.parents.*`.
+- Produces global CRUD routes under `platform-admin.parents.*` and parent-scoped routes under `parent-admin.*`.
+- Produces a `parent_admin` session guard backed by `ParentAdmin`; authenticated parent admins derive `parent_business_id` from their account, never from request input.
 - `ProviderConnectionResource` returns credential presence/masking only, never decrypted values.
 
 - [ ] **Step 1: Write failing authorization, credential-redaction, attachment, and suspension tests**
@@ -494,25 +506,34 @@ it('never serializes provider credentials', function () {
         ->assertOk()
         ->assertJsonMissing(['api_key' => 'secret-key']);
 });
+
+it('prevents a parent admin from reading another parents resources', function () {
+    $parentAdmin = ParentAdmin::factory()->create();
+    $foreignAffiliate = Affiliate::factory()->create();
+
+    $this->actingAs($parentAdmin, 'parent_admin')
+        ->get(route('parent-admin.affiliates.show', $foreignAffiliate))
+        ->assertNotFound();
+});
 ```
 
 - [ ] **Step 2: Run the tests and confirm missing routes/controllers**
 
-Run: `php artisan test tests/Feature/MultiParent/ParentAdministrationTest.php`
+Run: `php artisan test tests/Feature/MultiParent/ParentAdministrationTest.php tests/Feature/MultiParent/ParentAdminAuthenticationTest.php`
 
-- [ ] **Step 3: Implement parent onboarding, connection test, affiliate attachment, licence activation and suspension**
+- [ ] **Step 3: Implement the three-level administration boundary**
 
-Validate that an affiliate's `parent_business_id` matches its connection and licence. Suspending a licence prevents new purchases but preserves login, reporting, and historical transaction access.
+Keep the existing `admins` table/`platform_admin` guard global. Add the `parent_admins` table/`parent_admin` guard for one parent's network. Keep existing affiliate administrators as `users` with the Admin role and one `affiliate_id`. Validate that an affiliate's `parent_business_id` matches its connection and licence. Parent-admin queries must always derive the parent ID from the authenticated account. Suspending a licence prevents new purchases but preserves login, reporting, and historical transaction access.
 
 - [ ] **Step 4: Run parent-admin and existing platform-admin test suites**
 
-Run: `php artisan test tests/Feature/MultiParent/ParentAdministrationTest.php tests/Feature/PlatformAdmin`
+Run: `php artisan test tests/Feature/MultiParent/ParentAdministrationTest.php tests/Feature/MultiParent/ParentAdminAuthenticationTest.php tests/Feature/PlatformAdmin`
 
 - [ ] **Step 5: Commit parent administration**
 
 ```bash
-git add app/Http/Controllers/PlatformAdmin app/Http/Resources resources/views/platform-admin/parents routes/platform-admin.php tests/Feature/MultiParent/ParentAdministrationTest.php
-git commit -m "feat: manage parents connections and affiliate licences"
+git add app/Http/Controllers/PlatformAdmin app/Http/Controllers/ParentAdmin app/Http/Middleware/EnsureParentResourceOwnership.php app/Http/Resources resources/views/platform-admin/parents resources/views/parent-admin routes/parent-admin.php routes/platform-admin.php routes/web.php config/auth.php tests/Feature/MultiParent/ParentAdministrationTest.php tests/Feature/MultiParent/ParentAdminAuthenticationTest.php
+git commit -m "feat: add scoped parent administration"
 ```
 
 ### Task 9: Affiliate catalogue inheritance and pricing
@@ -756,7 +777,7 @@ git commit -m "test: add multi parent release gate"
 These are deliberately separate because each can be reviewed and released independently:
 
 1. First external parent's concrete adapter, written from its supplied documentation and sandbox.
-2. Parent-owner authentication and self-service dashboard beyond platform-admin management.
+2. Advanced parent-owner self-service reporting and team permissions beyond the initial scoped dashboard.
 3. Automatic API catalogue synchronization and category-suggestion workflow.
 4. Direct multi-provider routing/failover within one parent.
 5. Customer-facing affiliate WhatsApp purchasing bot.

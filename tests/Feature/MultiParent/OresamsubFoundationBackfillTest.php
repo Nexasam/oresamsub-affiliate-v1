@@ -71,6 +71,29 @@ it('reports dry-run work while rolling back every write', function () {
         ->and(DB::table('transactions')->where('id', $fixture['transactionId'])->value('parent_business_id'))->toBeNull();
 });
 
+it('reports duplicate customer plan moves in dry-run while preserving every assignment and plan', function () {
+    $fixture = foundationFixture('dry-duplicates');
+    $canonicalId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $fixture['affiliateId'], 'user_plan_name' => 'Canonical Six',
+        'plan_level' => 6, 'canonical_plan_level' => 6, 'visibility' => 1,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $duplicateId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $fixture['affiliateId'], 'user_plan_name' => 'Duplicate Six',
+        'plan_level' => 6, 'canonical_plan_level' => null, 'visibility' => 1,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('users')->where('id', $fixture['userId'])->update(['user_plan_id' => $duplicateId]);
+
+    $counts = app(OresamsubFoundationBackfillService::class)->run(true);
+
+    expect($counts['customer_plans'])->toBe(1)
+        ->and(DB::table('users')->where('id', $fixture['userId'])->value('user_plan_id'))->toBe($duplicateId)
+        ->and((int) DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('visibility'))->toBe(1)
+        ->and(DB::table('affiliate_user_plans')->whereIn('id', [$canonicalId, $duplicateId])->count())->toBe(2)
+        ->and(DB::table('multi_parent_migration_audits')->count())->toBe(0);
+});
+
 it('commits once, preserves legacy money fields, and is idempotent', function () {
     $first = foundationFixture('first');
     $second = foundationFixture('second');

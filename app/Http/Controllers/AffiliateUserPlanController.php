@@ -48,7 +48,6 @@ class AffiliateUserPlanController extends Controller
     {
         $request->validate([
             'updated_user_plan_name' => 'required|string|max:255',
-            'plan_level' => 'sometimes|integer|between:1,6',
         ]);
 
         $plan = AffiliateUserPlan::findOrFail($id);

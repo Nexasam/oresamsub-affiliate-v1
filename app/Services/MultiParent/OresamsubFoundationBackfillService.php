@@ -12,6 +12,7 @@ class OresamsubFoundationBackfillService
 {
     public function consolidateLegacyCustomerLevels(ParentBusiness $parent, string $batchUuid): int
     {
+        $this->assertNoCrossAffiliateUserPlans($parent);
         $moved = 0;
 
         DB::table('affiliates')->where('parent_business_id', $parent->id)->orderBy('id')
@@ -19,7 +20,7 @@ class OresamsubFoundationBackfillService
                 DB::transaction(function () use ($affiliate, $batchUuid, &$moved): void {
                     $levelSix = DB::table('affiliate_user_plans')
                         ->where('affiliate_id', $affiliate->id)
-                        ->where('plan_level', 6)
+                        ->where('canonical_plan_level', 6)
                         ->lockForUpdate()
                         ->first();
 
@@ -30,6 +31,7 @@ class OresamsubFoundationBackfillService
                             'user_plan_name' => $source?->user_plan_name ?? 'Diamond Plan',
                             'updated_user_plan_name' => $source?->updated_user_plan_name,
                             'plan_level' => 6,
+                            'canonical_plan_level' => 6,
                             'is_default' => $source?->is_default,
                             'visibility' => $source?->visibility ?? 1,
                             'created_at' => now(),
@@ -39,55 +41,65 @@ class OresamsubFoundationBackfillService
                         $levelSixId = $levelSix->id;
                     }
 
-                    $legacyPlans = DB::table('affiliate_user_plans')
+                    $plansToConsolidate = DB::table('affiliate_user_plans')
                         ->where('affiliate_id', $affiliate->id)
-                        ->whereRaw('CAST(plan_level AS UNSIGNED) > 6')
+                        ->where(function ($query): void {
+                            $query->whereRaw('CAST(plan_level AS UNSIGNED) > 6')
+                                ->orWhere(function ($query): void {
+                                    $query->whereRaw('CAST(plan_level AS UNSIGNED) BETWEEN 1 AND 6')
+                                        ->whereNull('canonical_plan_level');
+                                });
+                        })
+                        ->orderBy('id')
                         ->lockForUpdate()
                         ->get();
 
-                    foreach ($legacyPlans as $legacyPlan) {
+                    foreach ($plansToConsolidate as $oldPlan) {
+                        $isLegacy = (int) $oldPlan->plan_level > 6;
+                        $canonicalPlanId = $isLegacy
+                            ? $levelSixId
+                            : DB::table('affiliate_user_plans')
+                                ->where('affiliate_id', $affiliate->id)
+                                ->where('canonical_plan_level', (int) $oldPlan->plan_level)
+                                ->value('id');
+
+                        if (! $canonicalPlanId) {
+                            throw new RuntimeException("Affiliate {$affiliate->id} has no canonical customer plan for level {$oldPlan->plan_level}.");
+                        }
+
                         $users = DB::table('users')
                             ->where('affiliate_id', $affiliate->id)
-                            ->where('user_plan_id', $legacyPlan->id)
+                            ->where('user_plan_id', $oldPlan->id)
                             ->lockForUpdate()
                             ->get();
 
                         foreach ($users as $user) {
-                            $uniquenessKey = "customer-plan-consolidation:{$user->id}:{$legacyPlan->id}";
-                            $alreadyAudited = DB::table('multi_parent_migration_audits')
-                                ->where('action', 'customer_plan_consolidated_to_level_6')
-                                ->where('entity_type', 'user')
-                                ->where('entity_id', $user->id)
-                                ->get(['metadata'])
-                                ->contains(fn (object $audit): bool => data_get(json_decode($audit->metadata, true), 'uniqueness_key') === $uniquenessKey
-                                );
+                            $action = $isLegacy
+                                ? 'customer_plan_consolidated_to_level_6'
+                                : 'duplicate_affiliate_user_plan_consolidated';
+                            $deterministicKey = ($isLegacy ? 'customer-plan-consolidation' : 'customer-plan-canonicalization')
+                                .":{$user->id}:{$oldPlan->id}";
 
                             DB::table('users')->where('id', $user->id)->update([
-                                'user_plan_id' => $levelSixId,
+                                'user_plan_id' => $canonicalPlanId,
                                 'updated_at' => now(),
                             ]);
-
-                            if (! $alreadyAudited) {
-                                DB::table('multi_parent_migration_audits')->insert([
-                                    'batch_uuid' => $batchUuid,
-                                    'action' => 'customer_plan_consolidated_to_level_6',
-                                    'entity_type' => 'user',
-                                    'entity_id' => $user->id,
-                                    'from_value' => json_encode(['user_plan_id' => $legacyPlan->id]),
-                                    'to_value' => json_encode(['user_plan_id' => $levelSixId]),
-                                    'metadata' => json_encode([
-                                        'source' => 'oresamsub_foundation_backfill',
-                                        'uniqueness_key' => $uniquenessKey,
-                                    ]),
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ]);
-                            }
+                            DB::table('multi_parent_migration_audits')->updateOrInsert(
+                                ['deterministic_key' => $deterministicKey],
+                                [
+                                    'batch_uuid' => $batchUuid, 'action' => $action,
+                                    'entity_type' => 'user', 'entity_id' => $user->id,
+                                    'from_value' => json_encode(['user_plan_id' => $oldPlan->id]),
+                                    'to_value' => json_encode(['user_plan_id' => $canonicalPlanId]),
+                                    'metadata' => json_encode(['source' => 'oresamsub_foundation_backfill']),
+                                    'updated_at' => now(), 'created_at' => now(),
+                                ]
+                            );
 
                             $moved++;
                         }
 
-                        DB::table('affiliate_user_plans')->where('id', $legacyPlan->id)->update([
+                        DB::table('affiliate_user_plans')->where('id', $oldPlan->id)->update([
                             'visibility' => 0,
                             'updated_at' => now(),
                         ]);
@@ -98,10 +110,30 @@ class OresamsubFoundationBackfillService
         return $moved;
     }
 
+    private function assertNoCrossAffiliateUserPlans(ParentBusiness $parent): void
+    {
+        $corruptUser = DB::table('users')
+            ->join('affiliates', 'affiliates.id', '=', 'users.affiliate_id')
+            ->join('affiliate_user_plans', 'affiliate_user_plans.id', '=', 'users.user_plan_id')
+            ->where(function ($query) use ($parent): void {
+                $query->where('affiliates.parent_business_id', $parent->id)
+                    ->orWhere(function ($query): void {
+                        $query->whereNull('affiliates.parent_business_id')
+                            ->whereNull('affiliates.parent_reseller_level_id');
+                    });
+            })
+            ->whereColumn('users.affiliate_id', '!=', 'affiliate_user_plans.affiliate_id')
+            ->select('users.id')->orderBy('users.id')->first();
+
+        if ($corruptUser) {
+            throw new RuntimeException("User {$corruptUser->id} references a customer plan owned by another affiliate.");
+        }
+    }
+
     /** @return array<string, int> */
     public function run(bool $dryRun): array
     {
-        $counts = array_fill_keys(['parents', 'affiliates', 'plans', 'prices', 'routes', 'transactions', 'audits'], 0);
+        $counts = array_fill_keys(['parents', 'affiliates', 'customer_plans', 'plans', 'prices', 'routes', 'transactions', 'audits'], 0);
         $batchUuid = (string) Str::uuid();
 
         DB::beginTransaction();
@@ -109,7 +141,14 @@ class OresamsubFoundationBackfillService
         try {
             $context = $this->resolveContext();
             $this->assertNoPartialOwnership();
+            $this->assertNoCrossAffiliateUserPlans(ParentBusiness::findOrFail($context['parent']));
             $this->backfillAffiliates($context, $batchUuid, $counts);
+            $auditCount = DB::table('multi_parent_migration_audits')->count();
+            $counts['customer_plans'] = $this->consolidateLegacyCustomerLevels(
+                ParentBusiness::findOrFail($context['parent']),
+                $batchUuid
+            );
+            $counts['audits'] += DB::table('multi_parent_migration_audits')->count() - $auditCount;
             $this->backfillPlans($context, $batchUuid, $counts);
             $this->backfillTransactions($context, $batchUuid, $counts);
 

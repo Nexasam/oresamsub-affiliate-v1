@@ -27,4 +27,13 @@ Complete. Legacy customer levels are consolidated tenant-safely to level 6, lega
 
 ## Concerns
 
-- None blocking. The uniqueness migration necessarily removes duplicate rows after moving their customers and recording audit rows; this is distinct from legacy levels 7–12, which remain stored and hidden.
+- None blocking. Migration up/down preserves all historical plan rows and user assignments; committed backfill performs the separately audited and reversible-in-dry-run customer reassignment.
+
+## Review round 1
+
+- Replaced the destructive `(affiliate_id, plan_level)` migration with a reversible nullable `canonical_plan_level` slot. Migration up selects the lowest-ID row for each affiliate/level 1–6 without changing users, visibility, or row count; down removes only the auxiliary index and column.
+- Added a nullable unique `deterministic_key` audit column. Customer moves now use database-backed deterministic audit keys instead of scanning JSON metadata.
+- Moved duplicate resolution into the committed/dry-run backfill transaction. Customers move only within their affiliate, duplicate and legacy rows are hidden but retained, and dry-run rolls everything back.
+- Added a preflight that rejects cross-affiliate customer-plan corruption before any candidate affiliate is claimed.
+- Removed the misleading `plan_level` input from the rename-only affiliate controller. The platform-admin editor persists validated levels through the canonical slot.
+- Review verification: focused, Task 4 backfill, and platform-admin suites passed together (29 tests, 220 assertions). A fresh SQLite migration and one-step rollback both completed successfully.

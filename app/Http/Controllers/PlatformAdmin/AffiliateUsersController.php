@@ -164,7 +164,7 @@ class AffiliateUsersController extends Controller
                 'sometimes',
                 'integer',
                 'between:1,6',
-                Rule::unique('affiliate_user_plans', 'plan_level')
+                Rule::unique('affiliate_user_plans', 'canonical_plan_level')
                     ->where('affiliate_id', $affiliate->id)
                     ->ignore($plan->id),
             ],

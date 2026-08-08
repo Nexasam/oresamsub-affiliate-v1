@@ -12,6 +12,7 @@ use App\Services\MultiParent\OresamsubFoundationBackfillService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
@@ -134,4 +135,90 @@ it('rejects a seventh customer plan position and duplicate affiliate positions',
     expect(fn () => AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Duplicate Six', 'plan_level' => 6,
     ]))->toThrow(QueryException::class);
+});
+
+it('moves users from duplicate canonical levels without deleting the duplicate plans', function () {
+    $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'parent']);
+    $affiliate = legacyLevelsAffiliate($parent, 'duplicates');
+    $role = Role::create(['role_name' => 'User']);
+    $canonical = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Canonical Six', 'plan_level' => 6,
+    ]);
+    $duplicateId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Duplicate Six', 'plan_level' => 6,
+        'canonical_plan_level' => null, 'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $user = User::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'username' => 'duplicate-user', 'first_name' => 'Duplicate',
+        'last_name' => 'User', 'email' => 'duplicate-user@example.com', 'password' => 'password123',
+        'role_id' => $role->id, 'user_plan_id' => $duplicateId,
+    ]);
+
+    expect(app(OresamsubFoundationBackfillService::class)->consolidateLegacyCustomerLevels($parent, 'duplicates-one'))->toBe(1)
+        ->and($user->fresh()->user_plan_id)->toBe($canonical->id)
+        ->and(DB::table('affiliate_user_plans')->where('id', $duplicateId)->exists())->toBeTrue()
+        ->and((int) DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('visibility'))->toBe(0)
+        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1);
+
+    expect(app(OresamsubFoundationBackfillService::class)->consolidateLegacyCustomerLevels($parent, 'duplicates-two'))->toBe(0)
+        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1);
+});
+
+it('rejects cross-affiliate plan corruption before changing any plan or user', function () {
+    $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'parent']);
+    $first = legacyLevelsAffiliate($parent, 'corrupt-one');
+    $second = legacyLevelsAffiliate($parent, 'corrupt-two');
+    $role = Role::create(['role_name' => 'User']);
+    $firstLegacy = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $first->id, 'user_plan_name' => 'First Legacy', 'plan_level' => 7,
+    ]);
+    $secondSix = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $second->id, 'user_plan_name' => 'Second Six', 'plan_level' => 6,
+    ]);
+    $user = User::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $first->id, 'username' => 'corrupt-user', 'first_name' => 'Corrupt',
+        'last_name' => 'User', 'email' => 'corrupt-user@example.com', 'password' => 'password123',
+        'role_id' => $role->id, 'user_plan_id' => $secondSix->id,
+    ]);
+
+    expect(fn () => app(OresamsubFoundationBackfillService::class)->consolidateLegacyCustomerLevels($parent, 'corrupt'))
+        ->toThrow(RuntimeException::class, (string) $user->id)
+        ->and($user->fresh()->user_plan_id)->toBe($secondSix->id)
+        ->and((int) $firstLegacy->fresh()->visibility)->toBe(1)
+        ->and(DB::table('multi_parent_migration_audits')->count())->toBe(0);
+});
+
+it('keeps preexisting duplicate rows and assignments through migration up and down', function () {
+    $migration = require database_path('migrations/2026_08_08_100200_enforce_unique_affiliate_user_plan_levels.php');
+    $migration->down();
+
+    $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'parent']);
+    $affiliate = legacyLevelsAffiliate($parent, 'migration');
+    $role = Role::create(['role_name' => 'User']);
+    $firstId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'First', 'plan_level' => 6,
+        'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $secondId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Second', 'plan_level' => 6,
+        'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $user = User::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'username' => 'migration-user', 'first_name' => 'Migration',
+        'last_name' => 'User', 'email' => 'migration-user@example.com', 'password' => 'password123',
+        'role_id' => $role->id, 'user_plan_id' => $secondId,
+    ]);
+
+    $migration->up();
+    expect(DB::table('affiliate_user_plans')->whereIn('id', [$firstId, $secondId])->count())->toBe(2)
+        ->and($user->fresh()->user_plan_id)->toBe($secondId)
+        ->and((int) DB::table('affiliate_user_plans')->where('id', $firstId)->value('canonical_plan_level'))->toBe(6)
+        ->and(DB::table('affiliate_user_plans')->where('id', $secondId)->value('canonical_plan_level'))->toBeNull()
+        ->and(Schema::hasColumn('multi_parent_migration_audits', 'deterministic_key'))->toBeTrue();
+
+    $migration->down();
+    expect(DB::table('affiliate_user_plans')->whereIn('id', [$firstId, $secondId])->count())->toBe(2)
+        ->and($user->fresh()->user_plan_id)->toBe($secondId)
+        ->and(Schema::hasColumn('affiliate_user_plans', 'canonical_plan_level'))->toBeFalse()
+        ->and(Schema::hasColumn('multi_parent_migration_audits', 'deterministic_key'))->toBeFalse();
 });

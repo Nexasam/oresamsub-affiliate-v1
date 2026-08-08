@@ -64,6 +64,7 @@ use Inertia\Inertia;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
 require __DIR__.'/platform-admin.php';
+require __DIR__.'/parent-admin.php';
 
 
    

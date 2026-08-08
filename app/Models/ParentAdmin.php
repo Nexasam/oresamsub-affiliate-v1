@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -12,6 +13,11 @@ class ParentAdmin extends Authenticatable
     protected $guarded = [];
 
     protected $hidden = ['password', 'remember_token'];
+
+    public function parentBusiness(): BelongsTo
+    {
+        return $this->belongsTo(ParentBusiness::class);
+    }
 
     protected function casts(): array
     {

@@ -24,12 +24,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->redirectGuestsTo(fn ($request) => str_starts_with((string) $request->route()?->getName(), 'platform-admin.')
-            ? route('platform-admin.login')
-            : route('login'));
-        $middleware->redirectUsersTo(fn ($request) => str_starts_with((string) $request->route()?->getName(), 'platform-admin.')
-            ? route('platform-admin.dashboard')
-            : route('dashboard'));
+        $middleware->redirectGuestsTo(function ($request) {
+            $routeName = (string) $request->route()?->getName();
+
+            return match (true) {
+                str_starts_with($routeName, 'platform-admin.') => route('platform-admin.login'),
+                str_starts_with($routeName, 'parent-admin.') => route('parent-admin.login'),
+                default => route('login'),
+            };
+        });
+        $middleware->redirectUsersTo(function ($request) {
+            $routeName = (string) $request->route()?->getName();
+
+            return match (true) {
+                str_starts_with($routeName, 'platform-admin.') => route('platform-admin.dashboard'),
+                str_starts_with($routeName, 'parent-admin.') => route('parent-admin.dashboard'),
+                default => route('dashboard'),
+            };
+        });
 
         // $middleware->append(RoleAssess::class);
         $middleware->alias([

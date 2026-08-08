@@ -18,7 +18,7 @@
         </div>
         <nav class="flex-1 space-y-2 p-4">
             <a href="{{ route('parent-admin.product-plans.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.product-plans.*') || request()->routeIs('parent-admin.dashboard') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>▦</span> Product plans</a>
-            <span class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500"><span>₦</span> Pricing <small class="ml-auto">Next</small></span>
+            <a href="{{ route('parent-admin.pricing.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.pricing.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>₦</span> Pricing</a>
         </nav>
         <div class="border-t border-white/10 p-4">
             <div class="mb-3 px-3"><p class="truncate text-sm font-medium">{{ $parentAdmin->name }}</p><p class="truncate text-xs text-slate-400">{{ $parentAdmin->email }}</p></div>

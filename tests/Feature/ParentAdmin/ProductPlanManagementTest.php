@@ -42,6 +42,12 @@ it('renders a functional parent product plan workspace', function () {
     [, $admin] = catalogParent('workspace-parent');
 
     $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin')
+        ->assertOk()
+        ->assertSee('Open product plans')
+        ->assertSee('Open pricing');
+
+    $this->actingAs($admin, 'parent_admin')
         ->get('/parent-admin/product-plans')
         ->assertOk()
         ->assertSee('Manage product plans')

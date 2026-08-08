@@ -446,8 +446,8 @@ class ProductPlanController extends Controller
         try {
             DB::beginTransaction();
 
-            $globalPlans = ProductPlan::get();
             $affiliate = \App\Models\Affiliate::findOrFail($affiliateId);
+            $globalPlans = ProductPlan::where('parent_business_id', $affiliate->parent_business_id)->get();
             $marginService = app(\App\Services\AffiliateProductMarginService::class);
 
             $created = 0;
@@ -535,6 +535,9 @@ class ProductPlanController extends Controller
             }
     
             $affiliate = \App\Models\Affiliate::findOrFail($affiliate_id);
+            if ((int) $affiliate->parent_business_id !== (int) $productPlan->parent_business_id) {
+                abort(404);
+            }
             $profit_max = app(\App\Services\AffiliateProductMarginService::class)
                 ->defaultFor($affiliate, $productPlan);
             $affiliatePlan = AffiliateProductPlan::create([

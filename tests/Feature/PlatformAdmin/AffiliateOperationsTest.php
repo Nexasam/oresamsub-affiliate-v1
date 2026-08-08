@@ -5,6 +5,8 @@ use App\Models\Affiliate;
 use App\Models\AffiliateProductPlan;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\AffiliateUserPlan;
+use App\Models\ParentBusiness;
+use App\Models\ParentResellerLevel;
 use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
@@ -262,7 +264,11 @@ it('lists users across all affiliates and identifies their affiliate', function 
 
 it('generates missing affiliate plans and categories without duplicates', function () {
     $admin = platformOperationsAdmin();
+    $parent = ParentBusiness::create(['name' => 'Generation Parent', 'slug' => 'generation-parent']);
+    $parentLevel = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Basic', 'position' => 1]);
     $affiliate = platformOperationsAffiliate([
+        'parent_business_id' => $parent->id,
+        'parent_reseller_level_id' => $parentLevel->id,
         'default_flat_profit_margin' => 65,
         'default_percent_profit_margin' => 2,
     ]);
@@ -284,6 +290,7 @@ it('generates missing affiliate plans and categories without duplicates', functi
         'product_id' => $product->id,
     ]);
     ProductPlan::create([
+        'parent_business_id' => $parent->id,
         'product_plan_name' => 'Generation 1GB',
         'product_plan_category_id' => $category->id,
         'profit_category' => 'flat',
@@ -302,6 +309,48 @@ it('generates missing affiliate plans and categories without duplicates', functi
         ->and(AffiliateProductPlanCategory::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->count())->toBe(1)
         ->and(AffiliateProductPlan::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->count())->toBe(1)
         ->and((float) AffiliateProductPlan::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->value('user_level_1_profit'))->toBe(65.0);
+});
+
+it('generates only plans and represented categories belonging to the affiliates parent', function () {
+    $admin = platformOperationsAdmin();
+    $firstParent = ParentBusiness::create(['name' => 'First Parent', 'slug' => 'catalog-first-parent']);
+    $secondParent = ParentBusiness::create(['name' => 'Second Parent', 'slug' => 'catalog-second-parent']);
+    $firstLevel = ParentResellerLevel::create(['parent_business_id' => $firstParent->id, 'name' => 'Basic', 'position' => 1]);
+    $affiliate = platformOperationsAffiliate([
+        'parent_business_id' => $firstParent->id,
+        'parent_reseller_level_id' => $firstLevel->id,
+    ]);
+    $product = Product::create(['api_id' => 'scoped-generation-product', 'product_name' => 'Data', 'slug' => 'scoped-generation-data']);
+    $firstCategory = ProductPlanCategory::create(['api_id' => 'scoped-first-category', 'product_id' => $product->id, 'product_plan_category_name' => 'First SME']);
+    $secondCategory = ProductPlanCategory::create(['api_id' => 'scoped-second-category', 'product_id' => $product->id, 'product_plan_category_name' => 'Second SME']);
+    ProductPlan::create(['parent_business_id' => $firstParent->id, 'product_plan_category_id' => $firstCategory->id, 'product_plan_name' => 'First 1GB']);
+    ProductPlan::create(['parent_business_id' => $secondParent->id, 'product_plan_category_id' => $secondCategory->id, 'product_plan_name' => 'Second 1GB']);
+
+    $this->actingAs($admin, 'platform_admin')->postJson("/admin/affiliates/{$affiliate->id}/catalog/categories/generate")
+        ->assertOk()->assertJsonPath('created', 1);
+    $this->actingAs($admin, 'platform_admin')->postJson("/admin/affiliates/{$affiliate->id}/catalog/plans/generate")
+        ->assertOk()->assertJsonPath('created', 1);
+
+    expect(AffiliateProductPlan::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->pluck('product_plan_name')->all())
+        ->toBe(['First 1GB'])
+        ->and(AffiliateProductPlanCategory::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->pluck('product_plan_category_name')->all())
+        ->toBe(['First SME']);
+});
+
+it('rejects attaching another parents product plan to an affiliate', function () {
+    $firstParent = ParentBusiness::create(['name' => 'Guarded First Parent', 'slug' => 'guarded-first-parent']);
+    $secondParent = ParentBusiness::create(['name' => 'Guarded Second Parent', 'slug' => 'guarded-second-parent']);
+    $firstLevel = ParentResellerLevel::create(['parent_business_id' => $firstParent->id, 'name' => 'Basic', 'position' => 1]);
+    $affiliate = platformOperationsAffiliate(['parent_business_id' => $firstParent->id, 'parent_reseller_level_id' => $firstLevel->id]);
+    $product = Product::create(['api_id' => 'guarded-product', 'product_name' => 'Data', 'slug' => 'guarded-data']);
+    $category = ProductPlanCategory::create(['api_id' => 'guarded-category', 'product_id' => $product->id, 'product_plan_category_name' => 'Guarded SME']);
+    $foreignPlan = ProductPlan::create(['parent_business_id' => $secondParent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'Foreign 1GB']);
+
+    expect(fn () => AffiliateProductPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id,
+        'product_plan_id' => $foreignPlan->id,
+        'product_plan_name' => 'Invalid foreign plan',
+    ]))->toThrow(InvalidArgumentException::class, 'Affiliate and product plan must belong to the same parent business.');
 });
 
 it('persists global catalog visibility and profit controls', function () {

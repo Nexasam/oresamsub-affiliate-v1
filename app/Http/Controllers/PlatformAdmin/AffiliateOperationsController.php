@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateProductPlan;
 use App\Models\AffiliateProductPlanCategory;
-use App\Models\WalletLog;
-use App\Services\AffiliateProductMarginService;
-use App\Services\AffiliateCatalogGenerationService;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
+use App\Models\WalletLog;
+use App\Services\AffiliateCatalogGenerationService;
+use App\Services\AffiliateProductMarginService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,8 +70,11 @@ class AffiliateOperationsController extends Controller
             'plans' => $plans,
             'categories' => $categories,
             'source_counts' => [
-                'plans' => ProductPlan::count(),
-                'categories' => ProductPlanCategory::count(),
+                'plans' => ProductPlan::where('parent_business_id', $affiliate->parent_business_id)->count(),
+                'categories' => ProductPlanCategory::whereHas(
+                    'product_plans',
+                    fn (Builder $plans) => $plans->where('parent_business_id', $affiliate->parent_business_id)
+                )->count(),
             ],
             'generated_counts' => [
                 'plans' => AffiliateProductPlan::withoutGlobalScope('affiliate')

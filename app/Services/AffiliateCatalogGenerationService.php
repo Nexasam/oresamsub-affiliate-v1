@@ -45,7 +45,18 @@ class AffiliateCatalogGenerationService
         $existing = 0;
 
         DB::transaction(function () use ($affiliate, &$created, &$existing) {
-            foreach (ProductPlanCategory::all() as $source) {
+            $categories = ProductPlanCategory::query()
+                ->when(
+                    $affiliate->parent_business_id,
+                    fn ($query, $parentId) => $query->whereHas(
+                        'product_plans',
+                        fn ($plans) => $plans->where('parent_business_id', $parentId)
+                    ),
+                    fn ($query) => $query->whereRaw('1 = 0')
+                )
+                ->get();
+
+            foreach ($categories as $source) {
                 $category = AffiliateProductPlanCategory::withoutGlobalScope('affiliate')->firstOrCreate(
                     ['affiliate_id' => $affiliate->id, 'plan_category_id' => $source->id],
                     [
@@ -72,7 +83,15 @@ class AffiliateCatalogGenerationService
         $existing = 0;
 
         DB::transaction(function () use ($affiliate, $marginService, &$created, &$existing) {
-            foreach (ProductPlan::all() as $source) {
+            $plans = ProductPlan::query()
+                ->when(
+                    $affiliate->parent_business_id,
+                    fn ($query, $parentId) => $query->where('parent_business_id', $parentId),
+                    fn ($query) => $query->whereRaw('1 = 0')
+                )
+                ->get();
+
+            foreach ($plans as $source) {
                 $margin = $marginService->defaultFor($affiliate, $source);
                 $plan = AffiliateProductPlan::withoutGlobalScope('affiliate')->firstOrCreate(
                     ['affiliate_id' => $affiliate->id, 'product_plan_id' => $source->id],

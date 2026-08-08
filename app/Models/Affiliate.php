@@ -26,19 +26,4 @@ class Affiliate extends Model
     {
         return $this->hasMany(Transaction::class);
     }
-
-    public function parentBusiness()
-    {
-        return $this->belongsTo(ParentBusiness::class);
-    }
-
-    public function providerConnection()
-    {
-        return $this->belongsTo(ProviderConnection::class);
-    }
-
-    public function license()
-    {
-        return $this->hasOne(AffiliateLicense::class);
-    }
 }

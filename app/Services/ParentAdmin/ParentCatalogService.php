@@ -4,6 +4,7 @@ namespace App\Services\ParentAdmin;
 
 use App\Models\Affiliate;
 use App\Models\ParentBusiness;
+use App\Models\ParentResellerLevel;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanParentPrice;
 use Brick\Math\BigDecimal;
@@ -14,18 +15,34 @@ use Illuminate\Validation\ValidationException;
 
 class ParentCatalogService
 {
-    public function plans(ParentBusiness $parent, int $perPage = 50): LengthAwarePaginator
+    public function plans(ParentBusiness $parent, int $perPage = 50, array $filters = []): LengthAwarePaginator
     {
-        return ProductPlan::query()
+        $query = ProductPlan::query()
             ->where('parent_business_id', $parent->id)
             ->with([
                 'product_plan_category:id,product_id,network_id,product_plan_category_name',
                 'product_plan_category.product:id,product_name',
                 'product_plan_category.network:id,network_name',
                 'parentPrices.parentResellerLevel:id,name,position',
-            ])
-            ->latest()
-            ->paginate($perPage);
+            ]);
+
+        $query->when($filters['search'] ?? null, function ($query, string $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('product_plan_name', 'like', "%{$search}%")
+                    ->orWhereHas('product_plan_category', function ($category) use ($search) {
+                        $category->where('product_plan_category_name', 'like', "%{$search}%")
+                            ->orWhereHas('network', fn ($network) => $network->where('network_name', 'like', "%{$search}%"));
+                    });
+            });
+        });
+        $query->when($filters['product_id'] ?? null, fn ($query, $productId) => $query->whereHas('product_plan_category', fn ($category) => $category->where('product_id', $productId))
+        );
+        $query->when($filters['category_id'] ?? null, fn ($query, $categoryId) => $query->where('product_plan_category_id', $categoryId)
+        );
+        $query->when(($filters['pricing_status'] ?? null) === 'custom', fn ($query) => $query->whereHas('parentPrices'));
+        $query->when(($filters['pricing_status'] ?? null) === 'inherited', fn ($query) => $query->whereDoesntHave('parentPrices'));
+
+        return $query->latest()->paginate($perPage)->withQueryString();
     }
 
     public function createPlan(ParentBusiness $parent, array $attributes): ProductPlan
@@ -75,6 +92,7 @@ class ParentCatalogService
                 if ($isReferenced) {
                     throw ValidationException::withMessages(['levels' => "{$level->name} is already in use and must be retained."]);
                 }
+                $level->defaultProfitRules()->delete();
             }
 
             foreach ($levels as $attributes) {
@@ -132,6 +150,9 @@ class ParentCatalogService
             if (is_numeric($plan->cost_price)) {
                 $providerCost = BigDecimal::of((string) $plan->cost_price);
                 foreach ($prices as $price) {
+                    if ($price['inherit'] ?? false) {
+                        continue;
+                    }
                     if (BigDecimal::of((string) $price['selling_price'])->isLessThan($providerCost)) {
                         throw ValidationException::withMessages(['prices' => 'A reseller price cannot be below the provider cost.']);
                     }
@@ -139,6 +160,14 @@ class ParentCatalogService
             }
 
             foreach ($prices as $price) {
+                if ($price['inherit'] ?? false) {
+                    ProductPlanParentPrice::query()
+                        ->where('product_plan_id', $plan->id)
+                        ->where('parent_reseller_level_id', $price['parent_reseller_level_id'])
+                        ->delete();
+
+                    continue;
+                }
                 ProductPlanParentPrice::query()->updateOrCreate(
                     [
                         'product_plan_id' => $plan->id,
@@ -158,5 +187,16 @@ class ParentCatalogService
                 ->with('parentResellerLevel:id,name,position')
                 ->get();
         });
+    }
+
+    public function clearPriceOverride(ParentBusiness $parent, ProductPlan $plan, ParentResellerLevel $level): void
+    {
+        abort_unless($plan->parent_business_id === $parent->id && $level->parent_business_id === $parent->id, 404);
+
+        ProductPlanParentPrice::query()
+            ->where('parent_business_id', $parent->id)
+            ->where('product_plan_id', $plan->id)
+            ->where('parent_reseller_level_id', $level->id)
+            ->delete();
     }
 }

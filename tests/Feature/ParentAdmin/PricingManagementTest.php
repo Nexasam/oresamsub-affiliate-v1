@@ -42,13 +42,64 @@ it('renders the parent pricing workspace and parent scoped data', function () {
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/pricing')
         ->assertOk()->assertSee('Manage reseller pricing')->assertSee('Complete six levels')
-        ->assertSee('Next page');
+        ->assertSee('Next page')->assertSee('Default profit settings')
+        ->assertSee('Search plans')->assertSee('Pricing status')
+        ->assertSee('Using default')->assertSee('Use default');
 
     $response = $this->actingAs($admin, 'parent_admin')->getJson('/parent-admin/pricing/data')->assertOk();
     expect($response->json('levels'))->toHaveCount(1)
         ->and($response->json('levels.0.name'))->toBe('Starter')
         ->and($response->json('plans.data'))->toHaveCount(1)
         ->and($response->json('plans.data.0.id'))->toBe($plan->id);
+});
+
+it('filters the complete parent pricing catalogue before pagination', function () {
+    [$parent, $admin] = pricingContext('filter-parent');
+    $category = $parent->productPlans()->first()->product_plan_category_id;
+    foreach (range(1, 55) as $number) {
+        ProductPlan::create([
+            'parent_business_id' => $parent->id,
+            'product_plan_category_id' => $category,
+            'product_plan_name' => $number === 55 ? 'Special MTN plan' : "Ordinary {$number}",
+            'cost_price' => 100,
+        ]);
+    }
+
+    $this->actingAs($admin, 'parent_admin')->getJson('/parent-admin/pricing/data?search=Special')
+        ->assertOk()
+        ->assertJsonPath('plans.total', 1)
+        ->assertJsonPath('plans.data.0.product_plan_name', 'Special MTN plan');
+});
+
+it('removes a plan price override so the plan resumes default inheritance', function () {
+    [$parent, $admin, $plan] = pricingContext('clear-override');
+    $level = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Basic', 'position' => 1]);
+    ProductPlanParentPrice::create([
+        'parent_business_id' => $parent->id,
+        'product_plan_id' => $plan->id,
+        'parent_reseller_level_id' => $level->id,
+        'selling_price' => 150,
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->deleteJson("/parent-admin/pricing/plans/{$plan->id}/levels/{$level->id}")
+        ->assertOk()->assertJsonPath('message', 'Plan now uses the default profit setting.');
+
+    expect(ProductPlanParentPrice::count())->toBe(0);
+});
+
+it('can save a mixed matrix without converting inherited levels into overrides', function () {
+    [$parent, $admin, $plan] = pricingContext('mixed-pricing');
+    $basic = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Basic', 'position' => 1]);
+    $gold = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Gold', 'position' => 2]);
+
+    $this->actingAs($admin, 'parent_admin')->putJson("/parent-admin/pricing/plans/{$plan->id}", ['prices' => [
+        ['parent_reseller_level_id' => $basic->id, 'selling_price' => null, 'inherit' => true],
+        ['parent_reseller_level_id' => $gold->id, 'selling_price' => 130, 'max_profit' => 25, 'inherit' => false],
+    ]])->assertOk();
+
+    expect(ProductPlanParentPrice::where('product_plan_id', $plan->id)->count())->toBe(1)
+        ->and(ProductPlanParentPrice::where('product_plan_id', $plan->id)->value('parent_reseller_level_id'))->toBe($gold->id);
 });
 
 it('manages a contiguous set of one through six reseller levels', function () {

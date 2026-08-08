@@ -16,7 +16,8 @@ class UpdateProductPlanPricesRequest extends FormRequest
         return [
             'prices' => ['required', 'array', 'min:1', 'max:6'],
             'prices.*.parent_reseller_level_id' => ['required', 'integer', 'distinct'],
-            'prices.*.selling_price' => ['required', 'numeric', 'min:0'],
+            'prices.*.inherit' => ['sometimes', 'boolean'],
+            'prices.*.selling_price' => ['required_unless:prices.*.inherit,true', 'nullable', 'numeric', 'min:0'],
             'prices.*.max_profit' => ['nullable', 'numeric', 'min:0'],
         ];
     }

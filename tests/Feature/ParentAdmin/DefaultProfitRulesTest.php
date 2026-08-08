@@ -1,11 +1,13 @@
 <?php
 
+use App\Models\ParentAdmin;
 use App\Models\ParentBusiness;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ParentResellerLevel;
 use App\Models\Product;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\ParentAdmin\ParentProfitRuleService;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
@@ -40,4 +42,40 @@ it('stores one typed default profit rule per parent level and product', function
         'calculation_type' => 'flat',
         'value' => 60,
     ]))->toThrow(QueryException::class);
+});
+
+it('idempotently creates the four initial defaults for every active reseller level', function () {
+    $parent = ParentBusiness::create(['name' => 'Default Parent', 'slug' => 'default-parent']);
+    ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Basic', 'position' => 1]);
+    ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Gold', 'position' => 2]);
+    foreach (['Data', 'Cable Subscription', 'Airtime', 'Electricity Bill'] as $index => $name) {
+        Product::create(['api_id' => 'default-'.$index, 'product_name' => $name, 'slug' => 'default-'.$index]);
+    }
+
+    $service = app(ParentProfitRuleService::class);
+    $service->ensureDefaults($parent);
+    $rules = $service->ensureDefaults($parent);
+
+    expect($rules)->toHaveCount(8)
+        ->and($rules->where('calculation_type', 'flat'))->toHaveCount(4)
+        ->and($rules->where('calculation_type', 'percent_discount'))->toHaveCount(4)
+        ->and($rules->where('calculation_type', 'flat')->pluck('value')->unique()->all())->toBe(['50.00'])
+        ->and($rules->where('calculation_type', 'percent_discount')->pluck('value')->unique()->all())->toBe(['1.00']);
+});
+
+it('allows a parent admin to update only its own default rules', function () {
+    $parent = ParentBusiness::create(['name' => 'API Parent', 'slug' => 'api-parent']);
+    $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'rules@example.test', 'password' => 'secret-password', 'active' => true]);
+    $level = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Basic', 'position' => 1]);
+    $data = Product::create(['api_id' => 'api-data', 'product_name' => 'Data', 'slug' => 'api-data']);
+
+    $this->actingAs($admin, 'parent_admin')->getJson('/parent-admin/pricing/data')
+        ->assertOk()->assertJsonPath('defaults.0.value', '50.00');
+
+    $this->actingAs($admin, 'parent_admin')->putJson('/parent-admin/pricing/defaults', ['rules' => [[
+        'parent_reseller_level_id' => $level->id,
+        'product_id' => $data->id,
+        'calculation_type' => 'flat',
+        'value' => 35,
+    ]]])->assertOk()->assertJsonPath('defaults.0.value', '35.00');
 });

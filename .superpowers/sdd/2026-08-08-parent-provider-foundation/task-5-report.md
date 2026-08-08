@@ -49,3 +49,10 @@ Complete. Legacy customer levels are consolidated tenant-safely to level 6, lega
 - Every moved customer's audit is asserted independently for its deterministic key and exact old/new plan IDs.
 - Audit creation now uses `firstOrCreate` on the database-unique deterministic key. Reprocessing retained duplicates leaves the complete plan-audit row byte-for-byte unchanged, including batch UUID, timestamps, values, and metadata.
 - Retained null-slot duplicates may be renamed or kept hidden, but reactivation is rejected by model validation before any database write; the platform endpoint returns 422 without mutation.
+
+## Review round 4
+
+- RED: a focused regression for retained legacy levels 7 and 12 failed because the platform-admin visibility endpoint returned 200 when asked to reactivate level 7.
+- GREEN: reactivation validation now applies to every retained null-canonical-slot row, including legacy levels above 6. Rename/hidden updates remain allowed, and a normal canonical level 6 can still be made visible.
+- The regression covers both the platform endpoint and direct model updates for levels 7 and 12.
+- Verification: Pint passed; Task 5 focused, backfill, and platform-admin suites passed together (31 tests, 250 assertions); `git diff --check` passed.

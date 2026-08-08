@@ -280,3 +280,40 @@ it('edits retained duplicates without promoting them and rejects explicit promot
     expect(fn () => AffiliateUserPlan::withoutGlobalScope('affiliate')->findOrFail($duplicateId)->update(['visibility' => 1]))
         ->toThrow(ValidationException::class);
 });
+
+it('keeps retained legacy levels hidden while canonical levels remain editable', function () {
+    $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'parent']);
+    $affiliate = legacyLevelsAffiliate($parent, 'retained-legacy-edit');
+    $canonical = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Canonical Six', 'plan_level' => 6,
+        'visibility' => 0,
+    ]);
+    $legacyIds = collect([7, 12])->mapWithKeys(fn (int $level) => [$level => DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => "Retained {$level}", 'plan_level' => $level,
+        'canonical_plan_level' => null, 'visibility' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ])]);
+    $admin = Admin::create([
+        'name' => 'Platform Owner', 'email' => 'retained-legacy-owner@example.com',
+        'password' => 'password123', 'active' => true,
+    ]);
+
+    foreach ($legacyIds as $level => $legacyId) {
+        $this->actingAs($admin, 'platform_admin')
+            ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$legacyId}", [
+                'updated_user_plan_name' => "Archived {$level}", 'visibility' => 0,
+            ])->assertOk();
+
+        $this->actingAs($admin, 'platform_admin')
+            ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$legacyId}", ['visibility' => 1])
+            ->assertUnprocessable();
+        expect((int) DB::table('affiliate_user_plans')->where('id', $legacyId)->value('visibility'))->toBe(0);
+
+        expect(fn () => AffiliateUserPlan::withoutGlobalScope('affiliate')->findOrFail($legacyId)->update(['visibility' => 1]))
+            ->toThrow(ValidationException::class);
+    }
+
+    $this->actingAs($admin, 'platform_admin')
+        ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$canonical->id}", ['visibility' => 1])
+        ->assertOk();
+    expect((int) $canonical->fresh()->visibility)->toBe(1);
+});

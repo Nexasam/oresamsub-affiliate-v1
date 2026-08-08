@@ -19,7 +19,6 @@ class AffiliateUserPlan extends AffiliateScopedModel
             $level = filter_var($plan->plan_level, FILTER_VALIDATE_INT);
             if ($plan->exists
                 && $plan->canonical_plan_level === null
-                && $level !== false && $level >= 1 && $level <= 6
                 && $plan->isDirty('visibility') && (int) $plan->visibility === 1) {
                 throw ValidationException::withMessages([
                     'visibility' => 'A retained duplicate customer plan cannot be reactivated.',

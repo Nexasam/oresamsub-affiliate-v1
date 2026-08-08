@@ -160,6 +160,14 @@ class AffiliateUsersController extends Controller
             ->findOrFail($plan);
 
         $data = $request->validate([
+            'plan_level' => [
+                'sometimes',
+                'integer',
+                'between:1,6',
+                Rule::unique('affiliate_user_plans', 'plan_level')
+                    ->where('affiliate_id', $affiliate->id)
+                    ->ignore($plan->id),
+            ],
             'updated_user_plan_name' => ['sometimes', 'nullable', 'string', 'max:100'],
             'visibility' => ['sometimes', Rule::in([0, 1, '0', '1'])],
             'max_profit' => ['sometimes', 'nullable', 'numeric', 'min:0'],

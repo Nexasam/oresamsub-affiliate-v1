@@ -2,6 +2,7 @@
 
 namespace App\Services\MultiParent;
 
+use App\Models\ParentBusiness;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -9,6 +10,94 @@ use Throwable;
 
 class OresamsubFoundationBackfillService
 {
+    public function consolidateLegacyCustomerLevels(ParentBusiness $parent, string $batchUuid): int
+    {
+        $moved = 0;
+
+        DB::table('affiliates')->where('parent_business_id', $parent->id)->orderBy('id')
+            ->each(function (object $affiliate) use ($batchUuid, &$moved): void {
+                DB::transaction(function () use ($affiliate, $batchUuid, &$moved): void {
+                    $levelSix = DB::table('affiliate_user_plans')
+                        ->where('affiliate_id', $affiliate->id)
+                        ->where('plan_level', 6)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $levelSix) {
+                        $source = DB::table('user_plans')->where('plan_level', 6)->first();
+                        $levelSixId = DB::table('affiliate_user_plans')->insertGetId([
+                            'affiliate_id' => $affiliate->id,
+                            'user_plan_name' => $source?->user_plan_name ?? 'Diamond Plan',
+                            'updated_user_plan_name' => $source?->updated_user_plan_name,
+                            'plan_level' => 6,
+                            'is_default' => $source?->is_default,
+                            'visibility' => $source?->visibility ?? 1,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        $levelSixId = $levelSix->id;
+                    }
+
+                    $legacyPlans = DB::table('affiliate_user_plans')
+                        ->where('affiliate_id', $affiliate->id)
+                        ->whereRaw('CAST(plan_level AS UNSIGNED) > 6')
+                        ->lockForUpdate()
+                        ->get();
+
+                    foreach ($legacyPlans as $legacyPlan) {
+                        $users = DB::table('users')
+                            ->where('affiliate_id', $affiliate->id)
+                            ->where('user_plan_id', $legacyPlan->id)
+                            ->lockForUpdate()
+                            ->get();
+
+                        foreach ($users as $user) {
+                            $uniquenessKey = "customer-plan-consolidation:{$user->id}:{$legacyPlan->id}";
+                            $alreadyAudited = DB::table('multi_parent_migration_audits')
+                                ->where('action', 'customer_plan_consolidated_to_level_6')
+                                ->where('entity_type', 'user')
+                                ->where('entity_id', $user->id)
+                                ->get(['metadata'])
+                                ->contains(fn (object $audit): bool => data_get(json_decode($audit->metadata, true), 'uniqueness_key') === $uniquenessKey
+                                );
+
+                            DB::table('users')->where('id', $user->id)->update([
+                                'user_plan_id' => $levelSixId,
+                                'updated_at' => now(),
+                            ]);
+
+                            if (! $alreadyAudited) {
+                                DB::table('multi_parent_migration_audits')->insert([
+                                    'batch_uuid' => $batchUuid,
+                                    'action' => 'customer_plan_consolidated_to_level_6',
+                                    'entity_type' => 'user',
+                                    'entity_id' => $user->id,
+                                    'from_value' => json_encode(['user_plan_id' => $legacyPlan->id]),
+                                    'to_value' => json_encode(['user_plan_id' => $levelSixId]),
+                                    'metadata' => json_encode([
+                                        'source' => 'oresamsub_foundation_backfill',
+                                        'uniqueness_key' => $uniquenessKey,
+                                    ]),
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                            }
+
+                            $moved++;
+                        }
+
+                        DB::table('affiliate_user_plans')->where('id', $legacyPlan->id)->update([
+                            'visibility' => 0,
+                            'updated_at' => now(),
+                        ]);
+                    }
+                });
+            });
+
+        return $moved;
+    }
+
     /** @return array<string, int> */
     public function run(bool $dryRun): array
     {

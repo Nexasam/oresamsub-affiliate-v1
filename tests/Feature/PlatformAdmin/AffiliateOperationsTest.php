@@ -3,12 +3,15 @@
 use App\Models\Admin;
 use App\Models\Affiliate;
 use App\Models\AffiliateProductPlan;
+use App\Models\AffiliateProductPlanCategory;
 use App\Models\AffiliateUserPlan;
 use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
-use App\Models\UserPlan;
+use App\Models\Role;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Models\UserPlan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -168,14 +171,14 @@ it('assigns only user plans owned by the users affiliate', function () {
     $admin = platformOperationsAdmin();
     $first = platformOperationsAffiliate();
     $second = platformOperationsAffiliate();
-    $role = \App\Models\Role::create(['role_name' => 'User']);
+    $role = Role::create(['role_name' => 'User']);
     $firstPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $first->id, 'user_plan_name' => 'Basic', 'plan_level' => 1,
     ]);
     $secondPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $second->id, 'user_plan_name' => 'Gold', 'plan_level' => 2,
     ]);
-    $user = \App\Models\User::withoutGlobalScope('affiliate')->create([
+    $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $first->id, 'username' => 'managed-user', 'first_name' => 'Managed',
         'last_name' => 'User', 'email' => 'managed-user@example.com', 'password' => 'password123',
         'role_id' => $role->id, 'user_plan_id' => $firstPlan->id,
@@ -193,11 +196,11 @@ it('assigns only user plans owned by the users affiliate', function () {
 it('edits an affiliate user and its affiliate user plan', function () {
     $admin = platformOperationsAdmin();
     $affiliate = platformOperationsAffiliate();
-    $role = \App\Models\Role::create(['role_name' => 'User']);
+    $role = Role::create(['role_name' => 'User']);
     $plan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Basic', 'plan_level' => 1,
     ]);
-    $user = \App\Models\User::withoutGlobalScope('affiliate')->create([
+    $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'editable-user', 'first_name' => 'Before',
         'last_name' => 'User', 'email' => 'editable-user@example.com', 'password' => 'password123',
         'role_id' => $role->id,
@@ -238,10 +241,10 @@ it('lists users across all affiliates and identifies their affiliate', function 
     $admin = platformOperationsAdmin();
     $first = platformOperationsAffiliate();
     $second = platformOperationsAffiliate();
-    $role = \App\Models\Role::create(['role_name' => 'User']);
+    $role = Role::create(['role_name' => 'User']);
 
     foreach ([[$first, 'one'], [$second, 'two']] as [$affiliate, $suffix]) {
-        \App\Models\User::withoutGlobalScope('affiliate')->create([
+        User::withoutGlobalScope('affiliate')->create([
             'affiliate_id' => $affiliate->id, 'username' => "user-{$suffix}",
             'first_name' => 'All', 'last_name' => ucfirst($suffix),
             'email' => "all-{$suffix}@example.com", 'password' => 'password123', 'role_id' => $role->id,
@@ -296,7 +299,7 @@ it('generates missing affiliate plans and categories without duplicates', functi
     }
 
     expect(AffiliateUserPlan::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->count())->toBe(1)
-        ->and(\App\Models\AffiliateProductPlanCategory::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->count())->toBe(1)
+        ->and(AffiliateProductPlanCategory::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->count())->toBe(1)
         ->and(AffiliateProductPlan::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->count())->toBe(1)
         ->and((float) AffiliateProductPlan::withoutGlobalScope('affiliate')->where('affiliate_id', $affiliate->id)->value('user_level_1_profit'))->toBe(65.0);
 });
@@ -382,8 +385,8 @@ it('persists affiliate catalog visibility and six profit levels', function () {
 it('updates transaction status with an idempotent wallet impact', function () {
     $admin = platformOperationsAdmin();
     $affiliate = platformOperationsAffiliate();
-    $role = \App\Models\Role::create(['role_name' => 'User']);
-    $user = \App\Models\User::withoutGlobalScope('affiliate')->create([
+    $role = Role::create(['role_name' => 'User']);
+    $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'transaction-user',
         'first_name' => 'Transaction', 'last_name' => 'User',
         'email' => 'transaction-user@example.com', 'password' => 'password123',
@@ -431,8 +434,8 @@ it('updates transaction status with an idempotent wallet impact', function () {
 it('can change transaction status without changing the wallet', function () {
     $admin = platformOperationsAdmin();
     $affiliate = platformOperationsAffiliate();
-    $role = \App\Models\Role::create(['role_name' => 'User']);
-    $user = \App\Models\User::withoutGlobalScope('affiliate')->create([
+    $role = Role::create(['role_name' => 'User']);
+    $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'status-only-user',
         'first_name' => 'Status', 'last_name' => 'Only',
         'email' => 'status-only@example.com', 'password' => 'password123',
@@ -466,8 +469,8 @@ it('creates a short-lived tenant-bound impersonation handoff', function () {
         'activation_status' => 1,
         'domain_url' => 'affiliate-impersonation.test',
     ]);
-    $role = \App\Models\Role::create(['role_name' => 'Admin']);
-    $user = \App\Models\User::withoutGlobalScope('affiliate')->create([
+    $role = Role::create(['role_name' => 'Admin']);
+    $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'affiliate-admin-target',
         'first_name' => 'Affiliate', 'last_name' => 'Administrator',
         'email' => 'affiliate-admin-target@example.com', 'password' => 'password123',
@@ -499,7 +502,7 @@ it('creates a short-lived tenant-bound impersonation handoff', function () {
 it('creates a fully configured affiliate user with a six digit pin', function () {
     $admin = platformOperationsAdmin();
     $affiliate = platformOperationsAffiliate();
-    \App\Models\Role::create(['role_name' => 'User']);
+    Role::create(['role_name' => 'User']);
     $plan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id,
         'user_plan_name' => 'Starter',

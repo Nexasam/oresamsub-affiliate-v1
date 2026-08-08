@@ -19,7 +19,8 @@ class AffiliateCatalogGenerationService
         $existing = 0;
 
         DB::transaction(function () use ($affiliate, &$created, &$existing) {
-            foreach (UserPlan::orderBy('plan_level')->get() as $source) {
+            foreach (UserPlan::whereRaw('CAST(plan_level AS UNSIGNED) BETWEEN 1 AND 6')
+                ->orderByRaw('CAST(plan_level AS UNSIGNED)')->get() as $source) {
                 $plan = AffiliateUserPlan::withoutGlobalScope('affiliate')->firstOrCreate(
                     ['affiliate_id' => $affiliate->id, 'plan_level' => $source->plan_level],
                     [

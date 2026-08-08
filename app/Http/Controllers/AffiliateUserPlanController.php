@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AffiliateUserPlan;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class AffiliateUserPlanController extends Controller
 {
@@ -29,7 +28,7 @@ class AffiliateUserPlanController extends Controller
             foreach ($plans as [$name, $level]) {
                 AffiliateUserPlan::create([
                     // 'affiliate_id' => $affiliate_id,
-                    'user_plan_name' => $name . ' Plan',
+                    'user_plan_name' => $name.' Plan',
                     'plan_level' => $level,
                     'is_default' => 1,
                     'visibility' => 1,
@@ -41,6 +40,7 @@ class AffiliateUserPlanController extends Controller
         $user_plans = AffiliateUserPlan::get();
 
         $data['user_plans'] = $user_plans;
+
         return view('admin.reseller_plans.index')->with($data);
     }
 
@@ -48,6 +48,7 @@ class AffiliateUserPlanController extends Controller
     {
         $request->validate([
             'updated_user_plan_name' => 'required|string|max:255',
+            'plan_level' => 'sometimes|integer|between:1,6',
         ]);
 
         $plan = AffiliateUserPlan::findOrFail($id);

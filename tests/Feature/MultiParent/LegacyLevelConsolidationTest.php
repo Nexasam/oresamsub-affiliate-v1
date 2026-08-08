@@ -81,7 +81,12 @@ it('moves legacy customers to their affiliates level six and hides legacy plans 
         ->where('action', 'customer_plan_consolidated_to_level_6')->orderBy('entity_id')->get();
     expect($audits)->toHaveCount(2)
         ->and(json_decode($audits[0]->from_value, true))->toBe(['user_plan_id' => $plans[7]->id])
-        ->and(json_decode($audits[0]->to_value, true))->toBe(['user_plan_id' => $plans[6]->id]);
+        ->and(json_decode($audits[0]->to_value, true))->toBe(['user_plan_id' => $plans[6]->id])
+        ->and($audits->pluck('deterministic_key')->sort()->values()->all())->toBe(collect([
+            "customer-plan-consolidation:{$users[7]->id}:{$plans[7]->id}",
+            "customer-plan-consolidation:{$users[12]->id}:{$plans[12]->id}",
+        ])->sort()->values()->all())
+        ->and((int) $plans[6]->fresh()->visibility)->toBe(1);
 
     expect($service->consolidateLegacyCustomerLevels($parent, 'batch-two'))->toBe(0)
         ->and(DB::table('multi_parent_migration_audits')->where('action', 'customer_plan_consolidated_to_level_6')->count())->toBe(2)
@@ -148,6 +153,10 @@ it('moves users from duplicate canonical levels without deleting the duplicate p
         'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Duplicate Six', 'plan_level' => 6,
         'canonical_plan_level' => null, 'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
     ]);
+    $userlessDuplicateId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Userless Duplicate Six', 'plan_level' => 6,
+        'canonical_plan_level' => null, 'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
+    ]);
     $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'duplicate-user', 'first_name' => 'Duplicate',
         'last_name' => 'User', 'email' => 'duplicate-user@example.com', 'password' => 'password123',
@@ -158,7 +167,11 @@ it('moves users from duplicate canonical levels without deleting the duplicate p
         ->and($user->fresh()->user_plan_id)->toBe($canonical->id)
         ->and(DB::table('affiliate_user_plans')->where('id', $duplicateId)->exists())->toBeTrue()
         ->and((int) DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('visibility'))->toBe(0)
-        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1);
+        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1)
+        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "affiliate-plan-canonicalization:{$duplicateId}:{$canonical->id}")->count())->toBe(1)
+        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "affiliate-plan-canonicalization:{$userlessDuplicateId}:{$canonical->id}")->count())->toBe(1)
+        ->and(json_decode(DB::table('multi_parent_migration_audits')->where('deterministic_key', "affiliate-plan-canonicalization:{$userlessDuplicateId}:{$canonical->id}")->value('from_value'), true))->toBe(['affiliate_user_plan_id' => $userlessDuplicateId])
+        ->and(json_decode(DB::table('multi_parent_migration_audits')->where('deterministic_key', "affiliate-plan-canonicalization:{$userlessDuplicateId}:{$canonical->id}")->value('to_value'), true))->toBe(['affiliate_user_plan_id' => $canonical->id]);
 
     expect(app(OresamsubFoundationBackfillService::class)->consolidateLegacyCustomerLevels($parent, 'duplicates-two'))->toBe(0)
         ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1);
@@ -197,11 +210,11 @@ it('keeps preexisting duplicate rows and assignments through migration up and do
     $role = Role::create(['role_name' => 'User']);
     $firstId = DB::table('affiliate_user_plans')->insertGetId([
         'affiliate_id' => $affiliate->id, 'user_plan_name' => 'First', 'plan_level' => 6,
-        'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
+        'visibility' => 0, 'is_default' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     $secondId = DB::table('affiliate_user_plans')->insertGetId([
         'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Second', 'plan_level' => 6,
-        'visibility' => 1, 'created_at' => now(), 'updated_at' => now(),
+        'visibility' => 1, 'is_default' => 1, 'created_at' => now(), 'updated_at' => now(),
     ]);
     $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'migration-user', 'first_name' => 'Migration',
@@ -212,8 +225,8 @@ it('keeps preexisting duplicate rows and assignments through migration up and do
     $migration->up();
     expect(DB::table('affiliate_user_plans')->whereIn('id', [$firstId, $secondId])->count())->toBe(2)
         ->and($user->fresh()->user_plan_id)->toBe($secondId)
-        ->and((int) DB::table('affiliate_user_plans')->where('id', $firstId)->value('canonical_plan_level'))->toBe(6)
-        ->and(DB::table('affiliate_user_plans')->where('id', $secondId)->value('canonical_plan_level'))->toBeNull()
+        ->and(DB::table('affiliate_user_plans')->where('id', $firstId)->value('canonical_plan_level'))->toBeNull()
+        ->and((int) DB::table('affiliate_user_plans')->where('id', $secondId)->value('canonical_plan_level'))->toBe(6)
         ->and(Schema::hasColumn('multi_parent_migration_audits', 'deterministic_key'))->toBeTrue();
 
     $migration->down();
@@ -221,4 +234,31 @@ it('keeps preexisting duplicate rows and assignments through migration up and do
         ->and($user->fresh()->user_plan_id)->toBe($secondId)
         ->and(Schema::hasColumn('affiliate_user_plans', 'canonical_plan_level'))->toBeFalse()
         ->and(Schema::hasColumn('multi_parent_migration_audits', 'deterministic_key'))->toBeFalse();
+});
+
+it('edits retained duplicates without promoting them and rejects explicit promotion', function () {
+    $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'parent']);
+    $affiliate = legacyLevelsAffiliate($parent, 'retained-edit');
+    AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Canonical Six', 'plan_level' => 6,
+    ]);
+    $duplicateId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Retained Six', 'plan_level' => 6,
+        'canonical_plan_level' => null, 'visibility' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $admin = Admin::create([
+        'name' => 'Platform Owner', 'email' => 'retained-owner@example.com',
+        'password' => 'password123', 'active' => true,
+    ]);
+
+    $this->actingAs($admin, 'platform_admin')
+        ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$duplicateId}", [
+            'updated_user_plan_name' => 'Archived Six', 'visibility' => 0,
+        ])->assertOk();
+    expect(DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('canonical_plan_level'))->toBeNull();
+
+    $this->actingAs($admin, 'platform_admin')
+        ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$duplicateId}", ['plan_level' => 6])
+        ->assertUnprocessable();
+    expect(DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('canonical_plan_level'))->toBeNull();
 });

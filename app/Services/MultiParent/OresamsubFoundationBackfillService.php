@@ -18,6 +18,30 @@ class OresamsubFoundationBackfillService
         DB::table('affiliates')->where('parent_business_id', $parent->id)->orderBy('id')
             ->each(function (object $affiliate) use ($batchUuid, &$moved): void {
                 DB::transaction(function () use ($affiliate, $batchUuid, &$moved): void {
+                    DB::table('affiliate_user_plans')
+                        ->where('affiliate_id', $affiliate->id)
+                        ->whereRaw('CAST(plan_level AS UNSIGNED) BETWEEN 1 AND 6')
+                        ->lockForUpdate()->get()
+                        ->groupBy(fn (object $plan): int => (int) $plan->plan_level)
+                        ->each(function ($plans): void {
+                            $preferred = $plans->sort(function (object $left, object $right): int {
+                                return ((int) $right->visibility <=> (int) $left->visibility)
+                                    ?: ((int) $right->is_default <=> (int) $left->is_default)
+                                    ?: ($left->id <=> $right->id);
+                            })->first();
+                            $current = $plans->firstWhere('canonical_plan_level', (int) $preferred->plan_level);
+
+                            if ($current && $current->id !== $preferred->id) {
+                                DB::table('affiliate_user_plans')->where('id', $current->id)
+                                    ->update(['canonical_plan_level' => null, 'updated_at' => now()]);
+                            }
+                            DB::table('affiliate_user_plans')->where('id', $preferred->id)->update([
+                                'canonical_plan_level' => (int) $preferred->plan_level,
+                                'visibility' => 1,
+                                'updated_at' => now(),
+                            ]);
+                        });
+
                     $levelSix = DB::table('affiliate_user_plans')
                         ->where('affiliate_id', $affiliate->id)
                         ->where('canonical_plan_level', 6)
@@ -97,6 +121,23 @@ class OresamsubFoundationBackfillService
                             );
 
                             $moved++;
+                        }
+
+                        if (! $isLegacy) {
+                            $planAuditKey = "affiliate-plan-canonicalization:{$oldPlan->id}:{$canonicalPlanId}";
+                            DB::table('multi_parent_migration_audits')->updateOrInsert(
+                                ['deterministic_key' => $planAuditKey],
+                                [
+                                    'batch_uuid' => $batchUuid,
+                                    'action' => 'duplicate_affiliate_user_plan_consolidated',
+                                    'entity_type' => 'affiliate_user_plan',
+                                    'entity_id' => $oldPlan->id,
+                                    'from_value' => json_encode(['affiliate_user_plan_id' => $oldPlan->id]),
+                                    'to_value' => json_encode(['affiliate_user_plan_id' => $canonicalPlanId]),
+                                    'metadata' => json_encode(['source' => 'oresamsub_foundation_backfill']),
+                                    'updated_at' => now(), 'created_at' => now(),
+                                ]
+                            );
                         }
 
                         DB::table('affiliate_user_plans')->where('id', $oldPlan->id)->update([

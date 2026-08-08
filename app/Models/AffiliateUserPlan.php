@@ -15,6 +15,10 @@ class AffiliateUserPlan extends AffiliateScopedModel
         parent::booted();
 
         static::saving(function (AffiliateUserPlan $plan): void {
+            if ($plan->exists && ! $plan->isDirty('plan_level')) {
+                return;
+            }
+
             $level = filter_var($plan->plan_level, FILTER_VALIDATE_INT);
             $plan->canonical_plan_level = $level !== false && $level >= 1 && $level <= 6 ? $level : null;
         });

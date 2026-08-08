@@ -19,10 +19,10 @@ Complete. Legacy customer levels are consolidated tenant-safely to level 6, lega
 ## Implementation notes
 
 - Customer rows and affected plans are locked inside an affiliate-scoped transaction.
-- Audits use `customer_plan_consolidated_to_level_6` and metadata key `customer-plan-consolidation:{user_id}:{old_plan_id}`.
+- Per-user audits use the unique database key `customer-plan-consolidation:{user_id}:{old_plan_id}`; duplicate plan mappings also receive a unique plan-level audit.
 - Re-running consolidation moves no customers and creates no duplicate audits.
 - Levels 7–12 are hidden, never deleted by consolidation.
-- The new composite unique index is added only after duplicate plan rows are reassigned, audited, and removed.
+- The composite unique index covers only the nullable canonical slot; historical duplicate and legacy rows remain stored with a null slot.
 - `generateUserPlans(Affiliate $affiliate): array` and its `created`/`existing` contract are preserved.
 
 ## Concerns
@@ -31,9 +31,15 @@ Complete. Legacy customer levels are consolidated tenant-safely to level 6, lega
 
 ## Review round 1
 
-- Replaced the destructive `(affiliate_id, plan_level)` migration with a reversible nullable `canonical_plan_level` slot. Migration up selects the lowest-ID row for each affiliate/level 1–6 without changing users, visibility, or row count; down removes only the auxiliary index and column.
+- Replaced the destructive `(affiliate_id, plan_level)` migration with a reversible nullable `canonical_plan_level` slot. Migration up selects a visible/default row with lowest-ID tie-breaking for each affiliate/level 1–6 without changing users, visibility, or row count; down removes only the auxiliary index and column.
 - Added a nullable unique `deterministic_key` audit column. Customer moves now use database-backed deterministic audit keys instead of scanning JSON metadata.
 - Moved duplicate resolution into the committed/dry-run backfill transaction. Customers move only within their affiliate, duplicate and legacy rows are hidden but retained, and dry-run rolls everything back.
 - Added a preflight that rejects cross-affiliate customer-plan corruption before any candidate affiliate is claimed.
 - Removed the misleading `plan_level` input from the rename-only affiliate controller. The platform-admin editor persists validated levels through the canonical slot.
 - Review verification: focused, Task 4 backfill, and platform-admin suites passed together (29 tests, 220 assertions). A fresh SQLite migration and one-step rollback both completed successfully.
+
+## Review round 2
+
+- Canonical selection now prefers visible rows, then default rows, then lowest ID. Backfill re-evaluates the same rule under lock and ensures each canonical plan remains visible and usable.
+- Every retained duplicate gets a deterministic plan-level audit mapping its plan ID to the canonical plan ID, including duplicates with no customers. Per-user move audits remain separate.
+- Existing null-slot duplicates retain that slot during rename and visibility edits. Only creation or an explicitly validated level change computes a canonical slot, so promotion conflicts return validation errors instead of database exceptions.

@@ -18,7 +18,10 @@ return new class extends Migration
 
         DB::table('affiliate_user_plans')
             ->whereRaw('CAST(plan_level AS UNSIGNED) BETWEEN 1 AND 6')
-            ->orderBy('affiliate_id')->orderByRaw('CAST(plan_level AS UNSIGNED)')->orderBy('id')
+            ->orderBy('affiliate_id')->orderByRaw('CAST(plan_level AS UNSIGNED)')
+            ->orderByRaw('CAST(visibility AS UNSIGNED) DESC')
+            ->orderByRaw('CAST(is_default AS UNSIGNED) DESC')
+            ->orderBy('id')
             ->get()->groupBy(fn (object $plan): string => "{$plan->affiliate_id}:".(int) $plan->plan_level)
             ->each(function ($plans): void {
                 $canonical = $plans->first();

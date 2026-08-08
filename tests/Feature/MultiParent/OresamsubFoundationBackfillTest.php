@@ -202,6 +202,15 @@ it('requires exactly one command mode', function () {
     $this->artisan('multi-parent:backfill-oresamsub-foundation --dry-run --commit')->assertFailed();
 });
 
+it('calculates snapshot differences with exact decimal arithmetic', function () {
+    $service = app(OresamsubFoundationBackfillService::class);
+    $method = new ReflectionMethod($service, 'difference');
+
+    expect($method->invoke($service, '0.30', '0.20'))->toBe('0.10')
+        ->and($method->invoke($service, '100000000000.30', '99999999999.20'))->toBe('1.10')
+        ->and($method->invoke($service, null, '0.20'))->toBeNull();
+});
+
 it('runs the command in a selected mode and prints every count', function () {
     foundationFixture('command');
 

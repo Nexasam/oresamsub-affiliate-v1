@@ -32,6 +32,8 @@
 
 - `database/migrations/2026_08_08_100000_create_parent_provider_foundation_tables.php` — creates parents, parent admins, provider catalogue, parent connections, and parent reseller levels.
 - `database/migrations/2026_08_08_100100_add_parent_ownership_and_plan_routing.php` — adds nullable ownership snapshots and creates normalized plan prices/routes and migration audits.
+- `database/migrations/2026_08_08_100200_enforce_unique_affiliate_user_plan_levels.php` — selects one reversible canonical customer plan per affiliate and level using bounded queries.
+- `database/migrations/2026_08_08_100300_enforce_transaction_route_snapshot_consistency.php` — hardens already-migrated transaction snapshots so route, parent, and connection must match.
 - `app/Models/ParentBusiness.php` — parent aggregate relationships.
 - `app/Models/ParentAdmin.php` — authenticatable parent administrator.
 - `app/Models/ProviderConnection.php` — global provider catalogue entry.

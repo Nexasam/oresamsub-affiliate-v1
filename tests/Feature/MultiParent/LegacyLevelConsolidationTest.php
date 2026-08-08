@@ -246,6 +246,42 @@ it('keeps preexisting duplicate rows and assignments through migration up and do
         ->and(Schema::hasColumn('multi_parent_migration_audits', 'deterministic_key'))->toBeFalse();
 });
 
+it('selects canonical plans in bounded queries for a populated migration', function () {
+    $migration = require database_path('migrations/2026_08_08_100200_enforce_unique_affiliate_user_plan_levels.php');
+    $migration->down();
+
+    $parent = ParentBusiness::create(['name' => 'Scale Parent', 'slug' => 'scale-parent']);
+    $expectedCanonicalIds = [];
+    foreach (range(1, 251) as $number) {
+        $affiliate = legacyLevelsAffiliate($parent, "scale-{$number}");
+        DB::table('affiliate_user_plans')->insert([
+            'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Hidden default', 'plan_level' => 1,
+            'visibility' => 0, 'is_default' => 1, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $expectedCanonicalIds[] = DB::table('affiliate_user_plans')->insertGetId([
+            'affiliate_id' => $affiliate->id, 'user_plan_name' => 'Visible', 'plan_level' => 1,
+            'visibility' => 1, 'is_default' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    $selects = [];
+    DB::listen(function ($query) use (&$selects): void {
+        if (str_starts_with(strtolower(ltrim($query->sql)), 'select') && str_contains($query->sql, 'affiliate_user_plans')) {
+            $selects[] = strtolower($query->sql);
+        }
+    });
+
+    $migration->up();
+    $migrationSelects = $selects;
+
+    expect(DB::table('affiliate_user_plans')->whereIn('id', $expectedCanonicalIds)
+        ->where('canonical_plan_level', 1)->count())->toBe(251)
+        ->and($migrationSelects)->not->toBeEmpty();
+    foreach ($migrationSelects as $select) {
+        expect($select)->toContain('limit');
+    }
+});
+
 it('edits retained duplicates without promoting them and rejects explicit promotion', function () {
     $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'parent']);
     $affiliate = legacyLevelsAffiliate($parent, 'retained-edit');

@@ -4,6 +4,8 @@ namespace App\Services\MultiParent;
 
 use App\Models\MultiParentMigrationAudit;
 use App\Models\ParentBusiness;
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -369,9 +371,15 @@ class OresamsubFoundationBackfillService
         });
     }
 
-    private function difference(mixed $higher, mixed $lower): ?float
+    private function difference(mixed $higher, mixed $lower): ?string
     {
-        return is_numeric($higher) && is_numeric($lower) ? (float) $higher - (float) $lower : null;
+        if (! is_numeric($higher) || ! is_numeric($lower)) {
+            return null;
+        }
+
+        return (string) BigDecimal::of((string) $higher)
+            ->minus(BigDecimal::of((string) $lower))
+            ->toScale(2, RoundingMode::HalfUp);
     }
 
     private function audit(string $batchUuid, string $action, string $entityType, int $entityId, mixed $from, mixed $to, array &$counts): void

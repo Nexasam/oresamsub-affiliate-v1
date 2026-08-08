@@ -112,3 +112,38 @@ it('rejects an admin email that belongs to another parent', function () {
     expect(fn () => $this->seed(OresamsubParentSeeder::class))
         ->toThrow(RuntimeException::class);
 });
+
+it('holds and releases the scoped seed lock even when seeding fails', function () {
+    $otherParent = ParentBusiness::create(['name' => 'Other Parent', 'slug' => 'locked-other-parent']);
+    ParentAdmin::create([
+        'parent_business_id' => $otherParent->id,
+        'name' => 'Other Owner',
+        'email' => 'locked-shared@example.test',
+        'password' => 'existing-secret',
+    ]);
+    config()->set('parent_businesses.oresamsub.admin', [
+        'name' => 'OresamSub Owner',
+        'email' => 'locked-shared@example.test',
+        'password' => 'new-secret',
+    ]);
+    $seeder = new class extends OresamsubParentSeeder
+    {
+        public int $acquisitions = 0;
+
+        public int $releases = 0;
+
+        protected function acquireSeederLock(): void
+        {
+            $this->acquisitions++;
+        }
+
+        protected function releaseSeederLock(): void
+        {
+            $this->releases++;
+        }
+    };
+
+    expect(fn () => $seeder->run())->toThrow(RuntimeException::class)
+        ->and($seeder->acquisitions)->toBe(1)
+        ->and($seeder->releases)->toBe(1);
+});

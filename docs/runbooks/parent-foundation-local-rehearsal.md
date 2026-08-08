@@ -155,7 +155,7 @@ All three flags must remain `false`: `ownership_reads`, `normalized_pricing`, an
 
 ## Rollback
 
-Migration rollback removes the new foundation schema but cannot reconstruct the previous ownership data by itself. Roll back the three exact migrations, then import the verified pre-rehearsal table/schema/data dump into the existing database. Do not drop or recreate the database: the backup excludes stored routines and events, so preserving the existing database preserves those unrelated objects.
+Migration rollback removes the new foundation schema but cannot reconstruct the previous ownership data by itself. Roll back the four exact migrations, then import the verified pre-rehearsal table/schema/data dump into the existing database. Do not drop or recreate the database: the backup excludes stored routines and events, so preserving the existing database preserves those unrelated objects.
 
 1. Stop application/worker writes to the local database and copy the backup to a second safe location.
 2. Set the exact verified artifact, verify its checksum, and export it for the guarded restore command:
@@ -176,10 +176,11 @@ export REHEARSAL_BACKUP REHEARSAL_BACKUP_SHA256
 php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $c=config("database.connections.mysql"); if(!app()->environment("local") || !in_array($c["host"],["127.0.0.1","localhost","::1"],true) || !preg_match("/^[A-Za-z0-9_]+$/",$c["database"])){fwrite(STDERR,"Refusing non-local or invalid restore target.\n"); exit(2);} DB::select("SELECT 1"); echo "Verified local target: ".$c["host"]."/".$c["database"].PHP_EOL;'
 ```
 
-4. After visually confirming the printed local target, roll back only the three foundation migrations in reverse order. Each command must succeed before the next command runs:
+4. After visually confirming the printed local target, roll back only the four foundation migrations in reverse order. Each command must succeed before the next command runs:
 
 ```bash
 set -euo pipefail
+php artisan migrate:rollback --path="database/migrations/2026_08_08_100300_enforce_transaction_route_snapshot_consistency.php" --force
 php artisan migrate:rollback --path="database/migrations/2026_08_08_100200_enforce_unique_affiliate_user_plan_levels.php" --force
 php artisan migrate:rollback --path="database/migrations/2026_08_08_100100_add_parent_ownership_and_plan_routing.php" --force
 php artisan migrate:rollback --path="database/migrations/2026_08_08_100000_create_parent_provider_foundation_tables.php" --force

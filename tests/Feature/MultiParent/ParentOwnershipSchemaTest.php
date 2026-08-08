@@ -248,6 +248,59 @@ it('retains transaction routing and monetary snapshots with model casts', functi
         ->and($transaction->affiliate_profit_snapshot)->toBe('1.00');
 });
 
+it('requires a transaction route snapshot to match both its parent and connection', function () {
+    $firstParent = ParentBusiness::create(['name' => 'First', 'slug' => 'first-snapshot']);
+    $secondParent = ParentBusiness::create(['name' => 'Second', 'slug' => 'second-snapshot']);
+    $provider = ProviderConnection::create(['name' => 'Provider', 'slug' => 'snapshot-provider', 'adapter' => 'provider']);
+    $firstConnection = ParentProviderConnection::create([
+        'parent_business_id' => $firstParent->id, 'provider_connection_id' => $provider->id, 'name' => 'Primary',
+    ]);
+    $secondConnection = ParentProviderConnection::create([
+        'parent_business_id' => $secondParent->id, 'provider_connection_id' => $provider->id, 'name' => 'Primary',
+    ]);
+    $plan = createOwnershipTestPlan($firstParent, 'snapshot-consistency');
+    $route = ProductPlanProviderRoute::create([
+        'parent_business_id' => $firstParent->id, 'product_plan_id' => $plan->id,
+        'parent_provider_connection_id' => $firstConnection->id, 'provider_plan_id' => 'provider-plan', 'priority' => 1,
+    ]);
+    $affiliateId = DB::table('affiliates')->insertGetId(ownershipTestAffiliateAttributes('7'));
+    $userId = DB::table('users')->insertGetId([
+        'username' => 'consistency-user', 'affiliate_id' => $affiliateId, 'first_name' => 'Consistency',
+        'last_name' => 'User', 'role_id' => '1', 'email' => 'consistency@example.test', 'password' => 'secret',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $affiliateProductPlanId = DB::table('affiliate_product_plans')->insertGetId([
+        'affiliate_id' => $affiliateId, 'product_plan_name' => 'Consistency plan', 'product_plan_id' => $plan->id,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $base = [
+        'affiliate_id' => $affiliateId, 'api_id' => 'snapshot-consistency',
+        'affiliate_product_plan_id' => $affiliateProductPlanId,
+        'user_id' => $userId, 'wallet_category' => 'main_wallet', 'amount' => 10,
+        'balance_before' => 20, 'balance_after' => 10, 'description' => 'Snapshot consistency',
+        'product_plan_provider_route_id' => $route->id, 'created_at' => now(), 'updated_at' => now(),
+    ];
+
+    expect(DB::table('transactions')->insert([
+        ...$base,
+        'parent_business_id' => $firstParent->id,
+        'parent_provider_connection_id' => $firstConnection->id,
+    ]))->toBeTrue()
+        ->and(fn () => DB::table('transactions')->insert([
+            ...$base,
+            'api_id' => 'wrong-parent-snapshot',
+            'parent_business_id' => $secondParent->id,
+            'parent_provider_connection_id' => $firstConnection->id,
+        ]))->toThrow(QueryException::class)
+        ->and(fn () => DB::table('transactions')->insert([
+            ...$base,
+            'api_id' => 'wrong-connection-snapshot',
+            'parent_business_id' => $firstParent->id,
+            'parent_provider_connection_id' => $secondConnection->id,
+        ]))->toThrow(QueryException::class);
+});
+
 it('casts normalized values and exposes plan relationships', function () {
     $plan = new ProductPlan;
     $price = new ProductPlanParentPrice(['selling_price' => 20, 'max_profit' => 3]);

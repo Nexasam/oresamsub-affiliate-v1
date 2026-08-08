@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-
+        $this->call(OresamsubParentSeeder::class);
 
         //create the default list here
         // ReferralSetting::create();

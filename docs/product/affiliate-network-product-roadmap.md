@@ -157,6 +157,140 @@ Prove that one independent parent API owner will pay to connect at least two aff
 
 These remain planned differentiators and upsells. Deferring them protects the first release from becoming too large to validate.
 
+## Remaining multi-parent implementation roadmap
+
+The database foundation is in place: OresamSub is represented as the first parent business, ownership can be parent-scoped, provider connections and routes can be represented, pricing supports up to six reseller levels, and the existing profit history is preserved. The runtime remains on the existing flow until the following work is implemented and enabled deliberately.
+
+### Immediate priorities
+
+Before the 13 follow-on phases, complete these two connected pieces:
+
+1. **Parent-scoped product-plan management:** allow an authorized parent administrator to create, import, edit, publish, disable and inspect only that parent's product plans. OresamSub's existing synchronization remains restricted to the OresamSub parent; other parents manage their catalogues through their supported import or API flow.
+2. **Parent-scoped pricing screens:** allow a parent to configure a variable number of reseller levels, from one to six, and maintain the corresponding prices. Preserve the existing affiliate/customer profit calculations and prevent prices belonging to one parent from appearing in another parent's catalogue.
+
+These screens are complete when parent isolation is enforced by authorization and database-backed tests, all six levels can be managed without changing legacy transaction history, and an affiliate can read the correct inherited catalogue and prices.
+
+### Phase 1: Provider connection management
+
+Give parent administrators a secure workspace for configuring their API base URL, credentials, adapter and connection status. Credentials remain encrypted and excluded from logs and serialized responses. The data model may record primary and backup connections, but only the primary connection participates in processing initially.
+
+**Depends on:** the parent-provider foundation.
+
+**Complete when:** a parent can create, test, update and disable its own connection without accessing another parent's credentials, and a failed connection test cannot alter live routing.
+
+### Phase 2: Affiliate ownership management
+
+Allow a parent administrator to create a new affiliate or attach an eligible existing affiliate to that parent. The parent assigns the affiliate's reseller level and can manage up to six customer/reseller plans for the affiliate. Affiliates may view their assigned level but cannot promote themselves or change their parent.
+
+**Depends on:** parent-scoped pricing.
+
+**Complete when:** ownership changes are audited, cross-parent attachment is rejected, and the parent—not the affiliate—controls reseller-level assignment.
+
+### Phase 3: Plan-to-provider mapping
+
+Map every sellable parent product plan to its parent provider connection, the provider's external plan identifier, a platform global product-plan category and its primary processing route. Provider-specific identifiers must not be treated as globally unique.
+
+**Depends on:** product-plan management and provider connection management.
+
+**Complete when:** no plan can be activated for live processing without one valid same-parent primary route, and invalid cross-parent mappings are rejected.
+
+### Phase 4: Parent-scoped category synchronization
+
+Keep `product_plan_categories` as the platform-wide normalized category catalogue. Synchronize an affiliate's `affiliate_product_plan_categories` from the categories actually used by its parent's plans. Affiliates may rename their local category presentation without changing the platform category or sibling affiliates.
+
+**Depends on:** parent product catalogues and affiliate ownership.
+
+**Complete when:** synchronization is idempotent, parent-scoped and preserves affiliate-defined display names where policy permits.
+
+### Phase 5: Purchase-processing conversion
+
+Remove hard-coded OresamSub selection from the purchase path. Every purchase must resolve the following chain before an upstream request is submitted:
+
+```text
+Affiliate -> Parent business -> Product plan -> Provider route -> Adapter
+```
+
+OresamSub then becomes one parent/provider combination selected by ownership and routing data, not by special global runtime behaviour.
+
+**Depends on:** phases 1-4.
+
+**Complete when:** OresamSub and a simulated second parent can buy the same normalized product category while reaching their own adapters and provider plan identifiers, with the correct price and profit snapshots recorded.
+
+### Phase 6: Failure, refund and reconciliation handling
+
+When a provider returns a conclusive failure, fail the transaction and refund the customer exactly once. A timeout, malformed reply or unknown result is ambiguous: leave it pending for requery or manual reconciliation instead of refunding immediately and risking a double benefit after late provider success.
+
+**Depends on:** the converted purchase flow.
+
+**Complete when:** success, conclusive failure, timeout, duplicate callback and late-success scenarios are covered by tests; refunds and wallet effects are idempotent and auditable.
+
+### Phase 7: Funding and wallet parent scoping
+
+Scope funding records, wallet operations, deductions, refunds, profits, commissions and financial reports to the correct parent business. Preserve existing balances and historical profit behaviour during conversion. Parent-level reporting must reconcile with the underlying affiliate and customer ledger entries.
+
+**Depends on:** affiliate ownership and transaction routing snapshots.
+
+**Complete when:** cross-parent financial reads and writes are rejected, wallet mutations remain atomic, and existing OresamSub profit calculations produce equivalent results under the parent-scoped flow.
+
+### Phase 8: Parent-admin dashboard
+
+Provide each parent with a dashboard for its affiliates, reseller levels, plans and prices, provider balance or status, transactions, profits, funding and wallet activity. All queries and actions must be restricted to the authenticated parent.
+
+**Depends on:** phases 1-7, because the dashboard should expose proven services rather than duplicate unfinished business logic.
+
+**Complete when:** a parent can operate its network from this dashboard and tenant-isolation tests cover every page and action.
+
+### Phase 9: Platform-admin expansion
+
+Expand the platform administrator's current OresamSub-oriented controls to manage all parent businesses. Platform administrators can onboard, inspect, activate, suspend and support parents, while parent administrators remain limited to one parent at a time and cannot access platform-wide controls.
+
+**Depends on:** parent administration and parent-scoped services.
+
+**Complete when:** platform-level and parent-level permissions are explicit, tested and audited, with no reliance on an OresamSub default to determine access.
+
+### Phase 10: Affiliate landing-page simplification
+
+Build a modern, classic and lightweight affiliate storefront. Retain only necessary configurable settings such as identity, colours, logo, contact/support details, available services and essential calls to action. Avoid exposing parent/provider implementation details to retail customers.
+
+**Depends on:** stable affiliate catalogue, branding and pricing reads. It does not block backend transaction conversion.
+
+**Complete when:** the storefront is responsive, accessible, tenant-branded and renders only the affiliate's active parent-scoped catalogue.
+
+### Phase 11: Operational safeguards
+
+Add or complete idempotency keys, sanitized provider request/response logs, callbacks or webhooks, scheduled requery, encrypted credential handling, administrative audit logs, pending-transaction alerts and reconciliation tooling. Sensitive tokens and personal information must never be written to diagnostic logs.
+
+**Depends on:** the provider adapter and purchase-processing contracts.
+
+**Complete when:** each upstream attempt is traceable without exposing secrets, repeated requests cannot duplicate purchases or refunds, and uncertain transactions have a defined recovery path.
+
+### Phase 12: Local end-to-end testing
+
+Exercise OresamSub and at least one simulated second parent from connection and plan setup through affiliate inheritance, customer purchase, provider submission, status handling, profit recording, failure, refund and reconciliation. Include negative tenant-isolation and cross-parent mapping cases.
+
+**Depends on:** all runtime-critical phases, especially 1-7 and 11.
+
+**Complete when:** the documented test matrix passes locally, migration and rollback rehearsals are repeatable, and feature flags remain able to return the application to the legacy flow safely.
+
+### Phase 13: Controlled rollout
+
+Keep the new runtime behind feature flags and enable it progressively:
+
+1. A dedicated test parent.
+2. OresamSub after parity is confirmed.
+3. Selected real parent businesses and affiliates.
+4. All eligible parents and affiliates after monitoring shows acceptable results.
+
+Each stage requires transaction-success, pending-queue, refund, wallet-reconciliation and provider-error checks before expanding exposure. Rollback disables new routing without deleting parent-scoped data or transaction snapshots.
+
+**Depends on:** successful end-to-end testing and operational monitoring.
+
+**Complete when:** the multi-parent flow is the controlled production path for all eligible tenants and the former hard-coded OresamSub route is no longer required.
+
+### Critical milestone
+
+Provider mapping followed by purchase-processing conversion is the most important milestone after plan management and pricing. At the end of Phase 5, the platform becomes functionally multi-parent: an affiliate purchase is resolved through ownership and configuration rather than an OresamSub-specific path. Phases 6-13 make that capability financially safe, operable and suitable for controlled production use.
+
 ## MVP success criteria
 
 The MVP is commercially and technically validated when:
@@ -198,4 +332,3 @@ The initial system can remain on shared hosting if it uses one multi-tenant appl
 - Never report estimated profit as confirmed when provider cost is missing.
 - Never promise automatic refunds, synchronization or failover unless the connected API supports them.
 - Never allow convenience features to weaken tenant isolation, wallet integrity or transaction traceability.
-

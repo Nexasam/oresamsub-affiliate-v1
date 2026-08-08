@@ -17,7 +17,7 @@
             <div class="min-w-0"><p class="truncate font-semibold leading-tight">{{ $parentAdmin->parentBusiness->name }}</p><p class="text-xs text-slate-400">Parent workspace</p></div>
         </div>
         <nav class="flex-1 space-y-2 p-4">
-            <a href="{{ route('parent-admin.dashboard') }}" class="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-white"><span>▦</span> Product plans</a>
+            <a href="{{ route('parent-admin.product-plans.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.product-plans.*') || request()->routeIs('parent-admin.dashboard') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>▦</span> Product plans</a>
             <span class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500"><span>₦</span> Pricing <small class="ml-auto">Next</small></span>
         </nav>
         <div class="border-t border-white/10 p-4">
@@ -34,5 +34,6 @@
         <div class="p-5 lg:p-10">@yield('content')</div>
     </main>
 </div>
+@stack('scripts')
 </body>
 </html>

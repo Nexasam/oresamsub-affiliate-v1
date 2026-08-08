@@ -18,4 +18,9 @@ class ParentBusiness extends Model
     {
         return $this->hasMany(ParentResellerLevel::class);
     }
+
+    public function productPlans(): HasMany
+    {
+        return $this->hasMany(ProductPlan::class);
+    }
 }

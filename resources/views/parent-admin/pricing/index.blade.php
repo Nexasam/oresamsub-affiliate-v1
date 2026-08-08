@@ -15,9 +15,10 @@
     </section>
 
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-100 p-5"><h2 class="font-semibold">Plan price matrix</h2><p class="text-sm text-slate-500">Set the acquisition price and optional maximum profit for every active reseller level.</p></div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h2 class="font-semibold">Plan price matrix</h2><p class="text-sm text-slate-500">Set the acquisition price and optional maximum profit for every active reseller level.</p></div><p class="text-sm text-slate-500" x-text="paginationText"></p></div>
         <div x-show="loading" class="p-8 text-center text-sm text-slate-500">Loading pricing…</div>
         <div x-show="!loading" class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="sticky left-0 bg-slate-50 p-4">Plan / provider cost</th><template x-for="level in levels" :key="level.id"><th class="min-w-48 p-4" x-text="level.name"></th></template><th class="p-4"></th></tr></thead><tbody class="divide-y"><template x-for="plan in plans" :key="plan.id"><tr><td class="sticky left-0 bg-white p-4"><p class="font-semibold" x-text="plan.product_plan_name"></p><p class="text-xs text-slate-500" x-text="`Cost: ₦${plan.cost_price||'—'}`"></p></td><template x-for="level in levels" :key="level.id"><td class="p-3"><label class="block text-[10px] uppercase text-slate-400">Selling price<input x-model="priceFor(plan,level).selling_price" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label><label class="mt-2 block text-[10px] uppercase text-slate-400">Maximum profit<input x-model="priceFor(plan,level).max_profit" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label></td></template><td class="p-4"><button @click="savePrices(plan)" class="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white">Save prices</button></td></tr></template></tbody></table></div>
+        <div class="flex items-center justify-between border-t border-slate-100 p-4"><button @click="load(pagination.current_page-1)" :disabled="loading||pagination.current_page<=1" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold disabled:opacity-40">Previous page</button><span class="text-sm text-slate-500" x-text="`Page ${pagination.current_page} of ${pagination.last_page}`"></span><button @click="load(pagination.current_page+1)" :disabled="loading||pagination.current_page>=pagination.last_page" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold disabled:opacity-40">Next page</button></div>
     </section>
 </div>
 @endsection
@@ -25,9 +26,10 @@
 @push('scripts')
 <script>
 document.addEventListener('alpine:init',()=>Alpine.data('parentPricing',()=>({
-    levels:[],plans:[],loading:false,notice:'',error:'',
+    levels:[],plans:[],loading:false,notice:'',error:'',pagination:{current_page:1,last_page:1,total:0,from:0,to:0},
     urls:{data:@js(route('parent-admin.pricing.data')),levels:@js(route('parent-admin.pricing.levels.update')),generate:@js(route('parent-admin.pricing.levels.generate-six')),base:@js(url('/parent-admin/pricing/plans'))},
-    async load(){this.loading=true;try{const {data}=await axios.get(this.urls.data);this.levels=data.levels;this.plans=data.plans.data;this.prepare()}catch(e){this.fail(e)}finally{this.loading=false}},
+    get paginationText(){return this.pagination.total ? `Showing ${this.pagination.from}–${this.pagination.to} of ${this.pagination.total} plans` : 'No plans found'},
+    async load(page=1){this.loading=true;try{const {data}=await axios.get(this.urls.data,{params:{page}});this.levels=data.levels;this.plans=data.plans.data;this.pagination={current_page:data.plans.current_page,last_page:data.plans.last_page,total:data.plans.total,from:data.plans.from||0,to:data.plans.to||0};this.prepare()}catch(e){this.fail(e)}finally{this.loading=false}},
     prepare(){this.plans.forEach(plan=>{plan.price_matrix={};this.levels.forEach(level=>{const price=(plan.parent_prices||[]).find(row=>Number(row.parent_reseller_level_id)===Number(level.id));plan.price_matrix[level.id]={parent_reseller_level_id:level.id,selling_price:price?.selling_price||'',max_profit:price?.max_profit||''}})})},
     priceFor(plan,level){return plan.price_matrix[level.id]||(plan.price_matrix[level.id]={parent_reseller_level_id:level.id,selling_price:'',max_profit:''})},
     normalizeLevels(){this.levels.forEach((level,index)=>level.position=index+1)},

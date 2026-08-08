@@ -41,7 +41,8 @@ it('renders the parent pricing workspace and parent scoped data', function () {
     ParentResellerLevel::create(['parent_business_id' => $foreignParent->id, 'name' => 'Foreign', 'position' => 1]);
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/pricing')
-        ->assertOk()->assertSee('Manage reseller pricing')->assertSee('Complete six levels');
+        ->assertOk()->assertSee('Manage reseller pricing')->assertSee('Complete six levels')
+        ->assertSee('Next page');
 
     $response = $this->actingAs($admin, 'parent_admin')->getJson('/parent-admin/pricing/data')->assertOk();
     expect($response->json('levels'))->toHaveCount(1)

@@ -21,7 +21,7 @@
     </section>
 
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h2 class="font-semibold">Parent product plans</h2><p class="text-sm text-slate-500" x-text="`${filteredPlans.length} plans shown`"></p></div><input x-model="search" type="search" placeholder="Search plans or categories" class="w-full rounded-xl border-slate-200 sm:w-72"></div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h2 class="font-semibold">Parent product plans</h2><p class="text-sm text-slate-500" x-text="paginationText"></p></div><input x-model="search" type="search" placeholder="Search this page" class="w-full rounded-xl border-slate-200 sm:w-72"></div>
         <div x-show="loading" class="p-8 text-center text-sm text-slate-500">Loading product plans…</div>
         <div x-show="!loading" class="overflow-x-auto"><table class="w-full min-w-[1050px] text-left text-sm"><thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="p-4">Plan</th><th class="p-4">Global category</th><th class="p-4">Provider cost</th><th class="p-4">Profit mode</th><th class="p-4">Availability</th><th class="p-4"></th></tr></thead><tbody class="divide-y"><template x-for="plan in filteredPlans" :key="plan.id"><tr>
             <td class="p-4"><input x-model="plan.product_plan_name" class="w-56 rounded-lg border-slate-200"></td>
@@ -31,6 +31,7 @@
             <td class="p-4"><div class="space-y-1 text-xs"><label class="block"><input x-model="plan.visibility" true-value="1" false-value="0" type="checkbox"> Active</label><label class="block"><input x-model="plan.affiliate_visibility" true-value="1" false-value="0" type="checkbox"> Affiliates</label><label class="block"><input x-model="plan.public_visibility" true-value="1" false-value="0" type="checkbox"> Public</label></div></td>
             <td class="p-4"><button @click="save(plan)" :disabled="saving" class="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Save</button></td>
         </tr></template></tbody></table></div>
+        <div class="flex items-center justify-between border-t border-slate-100 p-4"><button @click="load(pagination.current_page-1)" :disabled="loading||pagination.current_page<=1" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold disabled:opacity-40">Previous page</button><span class="text-sm text-slate-500" x-text="`Page ${pagination.current_page} of ${pagination.last_page}`"></span><button @click="load(pagination.current_page+1)" :disabled="loading||pagination.current_page>=pagination.last_page" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold disabled:opacity-40">Next page</button></div>
     </section>
 </div>
 @endsection
@@ -38,13 +39,14 @@
 @push('scripts')
 <script>
 document.addEventListener('alpine:init',()=>Alpine.data('parentPlans',()=>({
-    plans:[],categories:[],loading:false,saving:false,search:'',notice:'',error:'',
+    plans:[],categories:[],loading:false,saving:false,search:'',notice:'',error:'',pagination:{current_page:1,last_page:1,total:0,from:0,to:0},
     form:{product_plan_name:'',product_plan_category_id:'',cost_price:'',profit_category:'flat',visibility:true,affiliate_visibility:true,public_visibility:true},
     urls:{data:@js(route('parent-admin.product-plans.data')),store:@js(route('parent-admin.product-plans.store')),base:@js(url('/parent-admin/product-plans'))},
     get filteredPlans(){const q=this.search.toLowerCase();return this.plans.filter(p=>`${p.product_plan_name} ${p.product_plan_category?.product_plan_category_name||''}`.toLowerCase().includes(q))},
+    get paginationText(){return this.pagination.total ? `Showing ${this.pagination.from}–${this.pagination.to} of ${this.pagination.total} plans` : 'No plans found'},
     categoryLabel(c){return `${c.product_plan_category_name} · ${c.network?.network_name||c.product?.product_name||'General'}`},
-    async load(){this.loading=true;this.error='';try{const {data}=await axios.get(this.urls.data);this.plans=data.plans.data;this.categories=data.categories}catch(e){this.fail(e)}finally{this.loading=false}},
-    async createPlan(){this.saving=true;this.error='';try{const {data}=await axios.post(this.urls.store,this.form);this.plans.unshift(data.plan);this.form={product_plan_name:'',product_plan_category_id:'',cost_price:'',profit_category:'flat',visibility:true,affiliate_visibility:true,public_visibility:true};this.show(data.message)}catch(e){this.fail(e)}finally{this.saving=false}},
+    async load(page=1){this.loading=true;this.error='';try{const {data}=await axios.get(this.urls.data,{params:{page}});this.plans=data.plans.data;this.categories=data.categories;this.pagination={current_page:data.plans.current_page,last_page:data.plans.last_page,total:data.plans.total,from:data.plans.from||0,to:data.plans.to||0}}catch(e){this.fail(e)}finally{this.loading=false}},
+    async createPlan(){this.saving=true;this.error='';try{const {data}=await axios.post(this.urls.store,this.form);this.form={product_plan_name:'',product_plan_category_id:'',cost_price:'',profit_category:'flat',visibility:true,affiliate_visibility:true,public_visibility:true};await this.load(1);this.show(data.message)}catch(e){this.fail(e)}finally{this.saving=false}},
     async save(plan){this.saving=true;this.error='';try{const {data}=await axios.patch(`${this.urls.base}/${plan.id}`,plan);Object.assign(plan,data.plan);this.show(data.message)}catch(e){this.fail(e)}finally{this.saving=false}},
     show(message){this.notice=message;setTimeout(()=>this.notice='',3500)},
     fail(e){this.error=Object.values(e.response?.data?.errors||{}).flat()[0]||e.response?.data?.message||'Unable to complete this action.'}

@@ -51,7 +51,8 @@ it('renders a functional parent product plan workspace', function () {
         ->get('/parent-admin/product-plans')
         ->assertOk()
         ->assertSee('Manage product plans')
-        ->assertSee('Add product plan');
+        ->assertSee('Add product plan')
+        ->assertSee('Next page');
 });
 
 it('lists only plans owned by the authenticated parent', function () {

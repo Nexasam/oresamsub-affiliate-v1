@@ -168,7 +168,7 @@ class OresamsubFoundationBackfillService
                 }
                 $plan = DB::table('affiliate_product_plans')->join('product_plans', 'product_plans.id', '=', 'affiliate_product_plans.product_plan_id')
                     ->where('affiliate_product_plans.id', $transaction->affiliate_product_plan_id)
-                    ->select('product_plans.*', 'affiliate_product_plans.user_level_1_profit')->first();
+                    ->select('product_plans.*')->first();
                 if (! $plan || (int) $plan->parent_business_id !== $context['parent']) {
                     continue;
                 }

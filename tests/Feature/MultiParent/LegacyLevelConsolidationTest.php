@@ -13,6 +13,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -87,6 +88,12 @@ it('moves legacy customers to their affiliates level six and hides legacy plans 
             "customer-plan-consolidation:{$users[12]->id}:{$plans[12]->id}",
         ])->sort()->values()->all())
         ->and((int) $plans[6]->fresh()->visibility)->toBe(1);
+    foreach ([$users[7]->id => $plans[7]->id, $users[12]->id => $plans[12]->id] as $userId => $oldPlanId) {
+        $audit = $audits->firstWhere('entity_id', $userId);
+        expect($audit->deterministic_key)->toBe("customer-plan-consolidation:{$userId}:{$oldPlanId}")
+            ->and(json_decode($audit->from_value, true))->toBe(['user_plan_id' => $oldPlanId])
+            ->and(json_decode($audit->to_value, true))->toBe(['user_plan_id' => $plans[6]->id]);
+    }
 
     expect($service->consolidateLegacyCustomerLevels($parent, 'batch-two'))->toBe(0)
         ->and(DB::table('multi_parent_migration_audits')->where('action', 'customer_plan_consolidated_to_level_6')->count())->toBe(2)
@@ -173,8 +180,11 @@ it('moves users from duplicate canonical levels without deleting the duplicate p
         ->and(json_decode(DB::table('multi_parent_migration_audits')->where('deterministic_key', "affiliate-plan-canonicalization:{$userlessDuplicateId}:{$canonical->id}")->value('from_value'), true))->toBe(['affiliate_user_plan_id' => $userlessDuplicateId])
         ->and(json_decode(DB::table('multi_parent_migration_audits')->where('deterministic_key', "affiliate-plan-canonicalization:{$userlessDuplicateId}:{$canonical->id}")->value('to_value'), true))->toBe(['affiliate_user_plan_id' => $canonical->id]);
 
+    $planAuditKey = "affiliate-plan-canonicalization:{$userlessDuplicateId}:{$canonical->id}";
+    $planAuditBefore = (array) DB::table('multi_parent_migration_audits')->where('deterministic_key', $planAuditKey)->first();
     expect(app(OresamsubFoundationBackfillService::class)->consolidateLegacyCustomerLevels($parent, 'duplicates-two'))->toBe(0)
-        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1);
+        ->and(DB::table('multi_parent_migration_audits')->where('deterministic_key', "customer-plan-canonicalization:{$user->id}:{$duplicateId}")->count())->toBe(1)
+        ->and((array) DB::table('multi_parent_migration_audits')->where('deterministic_key', $planAuditKey)->first())->toBe($planAuditBefore);
 });
 
 it('rejects cross-affiliate plan corruption before changing any plan or user', function () {
@@ -261,4 +271,12 @@ it('edits retained duplicates without promoting them and rejects explicit promot
         ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$duplicateId}", ['plan_level' => 6])
         ->assertUnprocessable();
     expect(DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('canonical_plan_level'))->toBeNull();
+
+    $this->actingAs($admin, 'platform_admin')
+        ->patchJson("/admin/affiliates/{$affiliate->id}/management-user-plans/{$duplicateId}", ['visibility' => 1])
+        ->assertUnprocessable();
+    expect((int) DB::table('affiliate_user_plans')->where('id', $duplicateId)->value('visibility'))->toBe(0);
+
+    expect(fn () => AffiliateUserPlan::withoutGlobalScope('affiliate')->findOrFail($duplicateId)->update(['visibility' => 1]))
+        ->toThrow(ValidationException::class);
 });

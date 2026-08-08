@@ -43,3 +43,9 @@ Complete. Legacy customer levels are consolidated tenant-safely to level 6, lega
 - Canonical selection now prefers visible rows, then default rows, then lowest ID. Backfill re-evaluates the same rule under lock and ensures each canonical plan remains visible and usable.
 - Every retained duplicate gets a deterministic plan-level audit mapping its plan ID to the canonical plan ID, including duplicates with no customers. Per-user move audits remain separate.
 - Existing null-slot duplicates retain that slot during rename and visibility edits. Only creation or an explicitly validated level change computes a canonical slot, so promotion conflicts return validation errors instead of database exceptions.
+
+## Review round 3
+
+- Every moved customer's audit is asserted independently for its deterministic key and exact old/new plan IDs.
+- Audit creation now uses `firstOrCreate` on the database-unique deterministic key. Reprocessing retained duplicates leaves the complete plan-audit row byte-for-byte unchanged, including batch UUID, timestamps, values, and metadata.
+- Retained null-slot duplicates may be renamed or kept hidden, but reactivation is rejected by model validation before any database write; the platform endpoint returns 422 without mutation.

@@ -2,6 +2,7 @@
 
 namespace App\Services\MultiParent;
 
+use App\Models\MultiParentMigrationAudit;
 use App\Models\ParentBusiness;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -108,15 +109,14 @@ class OresamsubFoundationBackfillService
                                 'user_plan_id' => $canonicalPlanId,
                                 'updated_at' => now(),
                             ]);
-                            DB::table('multi_parent_migration_audits')->updateOrInsert(
+                            MultiParentMigrationAudit::firstOrCreate(
                                 ['deterministic_key' => $deterministicKey],
                                 [
                                     'batch_uuid' => $batchUuid, 'action' => $action,
                                     'entity_type' => 'user', 'entity_id' => $user->id,
                                     'from_value' => json_encode(['user_plan_id' => $oldPlan->id]),
                                     'to_value' => json_encode(['user_plan_id' => $canonicalPlanId]),
-                                    'metadata' => json_encode(['source' => 'oresamsub_foundation_backfill']),
-                                    'updated_at' => now(), 'created_at' => now(),
+                                    'metadata' => ['source' => 'oresamsub_foundation_backfill'],
                                 ]
                             );
 
@@ -125,7 +125,7 @@ class OresamsubFoundationBackfillService
 
                         if (! $isLegacy) {
                             $planAuditKey = "affiliate-plan-canonicalization:{$oldPlan->id}:{$canonicalPlanId}";
-                            DB::table('multi_parent_migration_audits')->updateOrInsert(
+                            MultiParentMigrationAudit::firstOrCreate(
                                 ['deterministic_key' => $planAuditKey],
                                 [
                                     'batch_uuid' => $batchUuid,
@@ -134,8 +134,7 @@ class OresamsubFoundationBackfillService
                                     'entity_id' => $oldPlan->id,
                                     'from_value' => json_encode(['affiliate_user_plan_id' => $oldPlan->id]),
                                     'to_value' => json_encode(['affiliate_user_plan_id' => $canonicalPlanId]),
-                                    'metadata' => json_encode(['source' => 'oresamsub_foundation_backfill']),
-                                    'updated_at' => now(), 'created_at' => now(),
+                                    'metadata' => ['source' => 'oresamsub_foundation_backfill'],
                                 ]
                             );
                         }

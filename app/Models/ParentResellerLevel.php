@@ -29,4 +29,9 @@ class ParentResellerLevel extends Model
     {
         return $this->hasMany(ProductPlanParentPrice::class);
     }
+
+    public function defaultProfitRules(): HasMany
+    {
+        return $this->hasMany(ParentDefaultProfitRule::class);
+    }
 }

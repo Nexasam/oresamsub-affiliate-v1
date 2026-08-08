@@ -23,4 +23,9 @@ class ParentBusiness extends Model
     {
         return $this->hasMany(ProductPlan::class);
     }
+
+    public function defaultProfitRules(): HasMany
+    {
+        return $this->hasMany(ParentDefaultProfitRule::class);
+    }
 }

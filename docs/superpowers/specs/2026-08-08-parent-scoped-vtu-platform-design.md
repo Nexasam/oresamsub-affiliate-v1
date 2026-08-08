@@ -115,13 +115,14 @@ Add `parent_business_id` to `product_plans`. All existing plans are assigned to 
 
 Create `product_plan_parent_prices`:
 
+- `parent_business_id`
 - `product_plan_id`
 - `parent_reseller_level_id`
 - decimal `selling_price`
 - nullable maximum-profit setting
 - timestamps
 
-The product plan and reseller level must belong to the same parent. The pair `product_plan_id + parent_reseller_level_id` is unique.
+The product plan and reseller level must belong to the same parent. Composite foreign keys enforce both relationships against `parent_business_id`; the pair `product_plan_id + parent_reseller_level_id` is unique.
 
 Seed OresamSub levels:
 
@@ -166,6 +167,7 @@ Do not place a single provider ID directly on a plan because provider plan ident
 Create `product_plan_provider_routes`:
 
 - `id`
+- `parent_business_id`
 - `product_plan_id`
 - `parent_provider_connection_id`
 - provider-specific `provider_plan_id`
@@ -173,7 +175,7 @@ Create `product_plan_provider_routes`:
 - `is_active`
 - timestamps
 
-The product plan and connection must belong to the same parent. Priority is unique per product plan. Priority 1 is primary. Backup routes may be configured and tested, but the first runtime release processes only priority 1.
+The product plan and connection must belong to the same parent. Composite foreign keys enforce both relationships against `parent_business_id`. Priority is unique per product plan. Priority 1 is primary. Backup routes may be configured and tested, but the first runtime release processes only priority 1.
 
 Purchase routing is customer → affiliate → parent → parent-owned plan → priority-1 route → parent provider connection → adapter → provider API. There is no general OresamSub fallback. Missing or inconsistent ownership fails safely before processing.
 

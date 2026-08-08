@@ -201,7 +201,8 @@ git commit -m "feat: add provider scoped catalog schema"
 
 **Interfaces:**
 - Produces: `OresamsubBackfillService::run(): BackfillResult` with counts for parents, connections, category mappings, parent-owned plans, affiliate links, offerings, and transactions.
-- Command: `php artisan multi-parent:backfill-oresamsub --dry-run` and `--commit`.
+- Command: `php artisan multi-parent:backfill-oresamsub --source-affiliate=1 --migrate-admins --dry-run` and `--commit`.
+- `--source-affiliate` is required when `--migrate-admins` is present; it identifies the current OresamSub website whose `users` with the Admin role are eligible for promotion.
 
 - [ ] **Step 1: Write a failing idempotent backfill test**
 
@@ -217,6 +218,20 @@ it('backfills OresamSub twice without duplicates', function () {
         ->and(ProductPlan::whereNotNull('provider_connection_id')->count())->toBe(ProductPlan::count())
         ->and(Affiliate::whereNull('parent_business_id')->count())->toBe(0);
 });
+
+it('copies only admins from the selected OresamSub source affiliate', function () {
+    [$oresamsub, $otherAffiliate] = seedLegacyAffiliates();
+    $sourceAdmin = User::factory()->for($oresamsub)->admin()->create();
+    User::factory()->for($otherAffiliate)->admin()->create();
+
+    app(OresamsubBackfillService::class)->run(
+        sourceAffiliateId: $oresamsub->id,
+        migrateAdmins: true,
+    );
+
+    expect(ParentAdmin::pluck('email')->all())->toBe([$sourceAdmin->email])
+        ->and($sourceAdmin->fresh())->not->toBeNull();
+});
 ```
 
 - [ ] **Step 2: Run the test and confirm the service is missing**
@@ -225,11 +240,11 @@ Run: `php artisan test tests/Feature/MultiParent/OresamsubBackfillTest.php`
 
 - [ ] **Step 3: Implement chunked, atomic upserts without deleting legacy records**
 
-Keep every legacy `product_plan_categories` row as a global category. Assign every legacy `product_plans` row to the OresamSub parent/connection without changing its ID, attach every existing affiliate to OresamSub, and populate new transaction FKs from its affiliate offering. Use chunks of 250 and log counts, not secrets or raw provider payloads.
+Keep every legacy `product_plan_categories` row as a global category. Assign every legacy `product_plans` row to the OresamSub parent/connection without changing its ID, attach every existing affiliate to OresamSub, and populate new transaction FKs from its affiliate offering. When `--migrate-admins` is supplied, copy only Admin-role users belonging to `--source-affiliate` into `parent_admins`, preserve their existing password hashes and active status, and leave the source users unchanged for rollback. Abort on an email collision with a parent admin belonging to another parent. Never copy affiliate admins from other affiliate IDs and never modify the global `admins` table. Use chunks of 250 and log counts, not secrets or raw provider payloads.
 
 - [ ] **Step 4: Run dry-run, test, and committed backfill against a disposable database copy**
 
-Run: `php artisan multi-parent:backfill-oresamsub --dry-run`
+Run: `php artisan multi-parent:backfill-oresamsub --source-affiliate=1 --migrate-admins --dry-run`
 
 Run: `php artisan test tests/Feature/MultiParent/OresamsubBackfillTest.php`
 

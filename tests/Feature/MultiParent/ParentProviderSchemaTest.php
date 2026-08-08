@@ -106,9 +106,11 @@ it('requires unique reseller level positions within a parent', function () {
 it('rejects reseller level positions outside one through six', function (int $position) {
     $parent = ParentBusiness::create(['name' => 'Acme', 'slug' => 'acme']);
 
-    expect(fn () => ParentResellerLevel::create([
+    expect(fn () => DB::table('parent_reseller_levels')->insert([
         'parent_business_id' => $parent->id,
         'name' => 'Invalid',
         'position' => $position,
-    ]))->toThrow(InvalidArgumentException::class);
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
 })->with([0, 7]);

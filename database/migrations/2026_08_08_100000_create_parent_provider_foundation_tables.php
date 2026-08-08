@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -70,6 +71,8 @@ return new class extends Migration
             $table->unique(['parent_business_id', 'position']);
             $table->unique(['id', 'parent_business_id']);
         });
+
+        $this->addResellerLevelPositionConstraints();
     }
 
     public function down(): void
@@ -79,5 +82,56 @@ return new class extends Migration
         Schema::dropIfExists('provider_connections');
         Schema::dropIfExists('parent_admins');
         Schema::dropIfExists('parent_businesses');
+    }
+
+    private function addResellerLevelPositionConstraints(): void
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::unprepared(<<<'SQL'
+                CREATE TRIGGER parent_reseller_level_position_insert
+                BEFORE INSERT ON parent_reseller_levels
+                FOR EACH ROW
+                WHEN NEW.position < 1 OR NEW.position > 6
+                BEGIN
+                    SELECT RAISE(ABORT, 'Reseller level position must be between 1 and 6.');
+                END
+                SQL);
+
+            DB::unprepared(<<<'SQL'
+                CREATE TRIGGER parent_reseller_level_position_update
+                BEFORE UPDATE OF position ON parent_reseller_levels
+                FOR EACH ROW
+                WHEN NEW.position < 1 OR NEW.position > 6
+                BEGIN
+                    SELECT RAISE(ABORT, 'Reseller level position must be between 1 and 6.');
+                END
+                SQL);
+
+            return;
+        }
+
+        DB::unprepared(<<<'SQL'
+            CREATE TRIGGER parent_reseller_level_position_insert
+            BEFORE INSERT ON parent_reseller_levels
+            FOR EACH ROW
+            BEGIN
+                IF NEW.position < 1 OR NEW.position > 6 THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Reseller level position must be between 1 and 6.';
+                END IF;
+            END
+            SQL);
+
+        DB::unprepared(<<<'SQL'
+            CREATE TRIGGER parent_reseller_level_position_update
+            BEFORE UPDATE ON parent_reseller_levels
+            FOR EACH ROW
+            BEGIN
+                IF NEW.position < 1 OR NEW.position > 6 THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Reseller level position must be between 1 and 6.';
+                END IF;
+            END
+            SQL);
     }
 };

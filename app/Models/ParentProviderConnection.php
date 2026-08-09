@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParentProviderConnection extends Model
 {
@@ -17,5 +18,15 @@ class ParentProviderConnection extends Model
             'settings' => 'array',
             'last_tested_at' => 'datetime',
         ];
+    }
+
+    public function parentBusiness(): BelongsTo
+    {
+        return $this->belongsTo(ParentBusiness::class);
+    }
+
+    public function providerConnection(): BelongsTo
+    {
+        return $this->belongsTo(ProviderConnection::class);
     }
 }

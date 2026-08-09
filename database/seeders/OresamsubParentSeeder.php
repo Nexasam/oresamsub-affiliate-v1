@@ -32,6 +32,20 @@ class OresamsubParentSeeder extends Seeder
     {
         $config = config('parent_businesses.oresamsub');
 
+        ProviderConnection::query()->updateOrCreate(
+            ['slug' => 'configurable-http'],
+            [
+                'name' => 'Configurable HTTP Provider',
+                'adapter' => 'configurable_http',
+                'capabilities' => [
+                    'services' => ['data', 'airtime', 'cable', 'electricity'],
+                    'http_methods' => ['GET', 'POST'],
+                    'credential_fields' => ['api_public_key', 'api_secret_key', 'api_password'],
+                ],
+                'status' => 'active',
+            ],
+        );
+
         $parent = ParentBusiness::query()->updateOrCreate(
             ['slug' => $config['slug']],
             ['name' => $config['name']],

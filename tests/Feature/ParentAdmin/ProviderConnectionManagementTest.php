@@ -43,6 +43,22 @@ function providerPayload(int $adapterId, array $overrides = []): array
             'network_mapping' => ['MTN' => '1'],
             'success_conditions' => [['key' => 'status', 'value' => 'success']],
             'success_message_path' => 'data.message', 'failure_message_path' => 'error.message',
+            'product_configs' => [
+                'data' => [
+                    'request_parameters' => [['key' => 'data_phone', 'type' => 'runtime', 'value' => 'phone_number']],
+                    'request_headers' => [['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key']],
+                    'network_mapping' => ['MTN' => 'DATA-1'],
+                    'success_conditions' => [['key' => 'data.status', 'value' => 'success']],
+                    'success_message_path' => 'data.message', 'failure_message_path' => 'data.error',
+                ],
+                'airtime' => [
+                    'request_parameters' => [['key' => 'airtime_phone', 'type' => 'runtime', 'value' => 'phone_number']],
+                    'request_headers' => [],
+                    'network_mapping' => ['MTN' => 'AIRTIME-1'],
+                    'success_conditions' => [['key' => 'airtime.status', 'value' => 'success']],
+                    'success_message_path' => 'airtime.message', 'failure_message_path' => 'airtime.error',
+                ],
+            ],
         ],
     ], $overrides);
 }
@@ -51,7 +67,8 @@ it('renders the parent provider connection workspace', function () {
     [, $admin] = providerWorkspace();
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections')
-        ->assertOk()->assertSee('Provider connections')->assertSee('Request mapping')->assertSee('Success conditions');
+        ->assertOk()->assertSee('Provider connections')->assertSee('Product request configuration')
+        ->assertSee('Each product has its own payload, headers, network IDs and response rules.');
 });
 
 it('creates a parent scoped connection with encrypted masked credentials', function () {
@@ -199,14 +216,53 @@ it('configures endpoints for every supported global product', function () {
         'services' => ['result_checker'], 'methods' => ['POST'], 'credential_fields' => ['api_public_key'],
     ]]);
 
-    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id, [
+    $payload = providerPayload($adapter->id, [
         'settings' => ['endpoints' => [
             'data' => null, 'airtime' => null, 'cable' => null, 'electricity' => null,
             'result_checker' => 'https://provider.example/api/result-checker',
         ]],
         'credentials' => ['api_public_key' => 'allowed', 'api_secret_key' => null, 'api_password' => null],
-    ]))->assertCreated();
+    ]);
+    $payload['settings']['product_configs'] = [
+        'result_checker' => [
+            'request_parameters' => [['key' => 'exam', 'type' => 'runtime', 'value' => 'exam_type']],
+            'request_headers' => [],
+            'network_mapping' => [],
+            'success_conditions' => [['key' => 'status', 'value' => 'success']],
+            'success_message_path' => 'data.message',
+            'failure_message_path' => 'error.message',
+        ],
+    ];
+
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', $payload)->assertCreated();
 
     $this->actingAs($admin, 'parent_admin')->getJson('/parent-admin/provider-connections/data')
         ->assertOk()->assertJsonPath('products.0.slug', 'result_checker');
+});
+
+it('stores independent mapping and response configuration for every product', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('per-product-configuration');
+
+    $this->actingAs($admin, 'parent_admin')->postJson(
+        '/parent-admin/provider-connections',
+        providerPayload($adapter->id)
+    )->assertCreated();
+
+    $configs = $parent->providerConnections()->sole()->settings['product_configs'];
+    expect($configs['data']['request_parameters'][0]['key'])->toBe('data_phone')
+        ->and($configs['airtime']['request_parameters'][0]['key'])->toBe('airtime_phone')
+        ->and($configs['data']['network_mapping']['MTN'])->toBe('DATA-1')
+        ->and($configs['airtime']['network_mapping']['MTN'])->toBe('AIRTIME-1')
+        ->and($configs['data']['success_conditions'][0]['key'])->toBe('data.status')
+        ->and($configs['airtime']['success_conditions'][0]['key'])->toBe('airtime.status');
+});
+
+it('rejects an unsafe mapping inside an individual product configuration', function () {
+    [, $admin, $adapter] = providerWorkspace('unsafe-product-configuration');
+
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id, [
+        'settings' => ['product_configs' => ['data' => [
+            'request_parameters' => [['key' => 'phone', 'type' => 'runtime', 'value' => 'unknown_runtime']],
+        ]]],
+    ]))->assertUnprocessable()->assertJsonValidationErrors('settings.product_configs.data.request_parameters');
 });

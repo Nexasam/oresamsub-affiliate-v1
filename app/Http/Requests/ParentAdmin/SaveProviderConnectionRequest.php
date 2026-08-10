@@ -68,6 +68,27 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.bank_name' => ['nullable', 'string', 'max:255'],
             'settings.bank_accounts' => ['nullable', 'string', 'max:2000'],
             'settings.support_url' => ['nullable', 'url:http,https', 'max:2048'],
+            'settings.product_configs' => ['nullable', 'array'],
+            'settings.product_configs.*' => ['array'],
+            'settings.product_configs.*.request_parameters' => ['required', 'array', 'min:1'],
+            'settings.product_configs.*.request_parameters.*.key' => ['required', 'string', 'max:255', 'distinct'],
+            'settings.product_configs.*.request_parameters.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
+            'settings.product_configs.*.request_parameters.*.value' => ['present', 'nullable', 'string', 'max:4096'],
+            'settings.product_configs.*.request_headers' => ['nullable', 'array'],
+            'settings.product_configs.*.request_headers.*.key' => ['required', 'string', 'max:255', 'distinct'],
+            'settings.product_configs.*.request_headers.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
+            'settings.product_configs.*.request_headers.*.value' => ['present', 'nullable', 'string', 'max:4096'],
+            'settings.product_configs.*.request_headers.*.prefix' => ['nullable', 'string', 'max:255'],
+            'settings.product_configs.*.request_headers.*.suffix' => ['nullable', 'string', 'max:255'],
+            'settings.product_configs.*.network_mapping' => ['nullable', 'array'],
+            'settings.product_configs.*.network_mapping.*' => ['nullable', 'string', 'max:255'],
+            'settings.product_configs.*.success_conditions' => ['required', 'array', 'min:1'],
+            'settings.product_configs.*.success_conditions.*.key' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.success_conditions.*.value' => ['present'],
+            'settings.product_configs.*.success_message_path' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.failure_message_path' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.expected_success_code' => ['nullable', 'integer', 'between:100,599'],
+            'settings.product_configs.*.expected_failure_code' => ['nullable', 'integer', 'between:100,599'],
         ];
     }
 
@@ -94,6 +115,26 @@ class SaveProviderConnectionRequest extends FormRequest
                     $validator->errors()->add("settings.endpoints.{$service}", 'The selected adapter does not support this service.');
                 }
             }
+            foreach ($settings['product_configs'] ?? [] as $service => $productConfig) {
+                $normalizedService = $products->normalize($service);
+                $path = "settings.product_configs.{$service}";
+                if (! in_array($normalizedService, $services, true)) {
+                    $validator->errors()->add($path, 'The selected adapter does not support this service.');
+
+                    continue;
+                }
+                $this->validateMappings(
+                    $validator,
+                    array_merge($productConfig['request_parameters'] ?? [], $productConfig['request_headers'] ?? []),
+                    $credentialFields,
+                    $path
+                );
+                foreach ($productConfig['request_headers'] ?? [] as $header) {
+                    if (strtolower($header['key'] ?? '') === 'authorization' && ($header['type'] ?? null) === 'literal') {
+                        $validator->errors()->add("{$path}.request_headers", 'Authorization headers must use a credential placeholder.');
+                    }
+                }
+            }
             foreach ($this->input('credentials', []) ?? [] as $field => $value) {
                 if (filled($value) && ! in_array($field, $credentialFields, true)) {
                     $validator->errors()->add("credentials.{$field}", 'The selected adapter does not permit this credential field.');
@@ -116,5 +157,20 @@ class SaveProviderConnectionRequest extends FormRequest
                 }
             }
         }];
+    }
+
+    private function validateMappings(Validator $validator, array $mappings, array $credentialFields, string $path): void
+    {
+        foreach ($mappings as $mapping) {
+            if (($mapping['type'] ?? null) === 'runtime' && ! in_array($mapping['value'] ?? null, self::RUNTIME_FIELDS, true)) {
+                $validator->errors()->add("{$path}.request_parameters", 'A runtime mapping contains an unsupported internal field.');
+            }
+            if (($mapping['type'] ?? null) === 'credential' && ! in_array($mapping['value'] ?? null, self::CREDENTIAL_FIELDS, true)) {
+                $validator->errors()->add("{$path}.request_parameters", 'A credential mapping contains an unsupported credential field.');
+            }
+            if (($mapping['type'] ?? null) === 'credential' && ! in_array($mapping['value'] ?? null, $credentialFields, true)) {
+                $validator->errors()->add("{$path}.request_headers", 'A credential mapping is not permitted by the selected adapter.');
+            }
+        }
     }
 }

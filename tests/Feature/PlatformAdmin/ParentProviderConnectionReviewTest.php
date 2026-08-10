@@ -59,6 +59,9 @@ it('renders a redacted pending connection review queue', function () {
     $connection->update(['settings' => [
         ...$connection->settings,
         'request_headers' => [['key' => 'Authorization', 'type' => 'literal', 'value' => 'legacy-plain-secret']],
+        'product_configs' => ['data' => [
+            'request_headers' => [['key' => 'Authorization', 'type' => 'literal', 'value' => 'nested-legacy-secret']],
+        ]],
     ]]);
     $admin = connectionReviewer();
 
@@ -71,10 +74,12 @@ it('renders a redacted pending connection review queue', function () {
         ->assertJsonPath('connections.0.parent_business.name', 'Review Parent')
         ->assertJsonPath('connections.0.credential_status.api_public_key', true)
         ->assertJsonMissing(['never-show-this-secret'])
-        ->assertJsonMissing(['legacy-plain-secret']);
+        ->assertJsonMissing(['legacy-plain-secret'])
+        ->assertJsonMissing(['nested-legacy-secret']);
 
     expect(json_encode($response->json()))->not->toContain('never-show-this-secret')
         ->and(json_encode($response->json()))->not->toContain('legacy-plain-secret')
+        ->and(json_encode($response->json()))->not->toContain('nested-legacy-secret')
         ->and(DB::table('parent_provider_connections')->value('credentials'))->not->toContain('never-show-this-secret');
 });
 

@@ -99,14 +99,23 @@ class ParentProviderConnectionController extends Controller
 
     private function redactedSettings(array $settings): array
     {
-        $settings['request_headers'] = collect($settings['request_headers'] ?? [])->map(function ($header) {
+        $settings['request_headers'] = $this->redactedHeaders($settings['request_headers'] ?? []);
+
+        foreach ($settings['product_configs'] ?? [] as $product => $config) {
+            $settings['product_configs'][$product]['request_headers'] = $this->redactedHeaders($config['request_headers'] ?? []);
+        }
+
+        return $settings;
+    }
+
+    private function redactedHeaders(array $headers): array
+    {
+        return collect($headers)->map(function ($header) {
             if (strtolower((string) ($header['key'] ?? '')) === 'authorization' && ($header['type'] ?? null) === 'literal') {
                 $header['value'] = '[redacted]';
             }
 
             return $header;
         })->all();
-
-        return $settings;
     }
 }

@@ -34,19 +34,20 @@ class ConfigurableProviderClient
         if (! $endpoint) {
             return $this->failure("No endpoint is configured for {$productSlug}.");
         }
+        $productSettings = $this->productSettings($settings, $productSlug);
 
         try {
             $payload = $this->mapValues(
-                $settings['request_parameters'] ?? [],
+                $productSettings['request_parameters'] ?? [],
                 $runtime,
                 $connection->credentials ?? [],
-                $settings['network_mapping'] ?? []
+                $productSettings['network_mapping'] ?? []
             );
             $headers = $this->mapHeaders(
-                $settings['request_headers'] ?? [],
+                $productSettings['request_headers'] ?? [],
                 $runtime,
                 $connection->credentials ?? [],
-                $settings['network_mapping'] ?? []
+                $productSettings['network_mapping'] ?? []
             );
 
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
@@ -54,7 +55,7 @@ class ConfigurableProviderClient
             $method = strtoupper($settings['http_method'] ?? 'POST');
             $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
 
-            return $this->interpret($response, $settings);
+            return $this->interpret($response, $productSettings);
         } catch (ConnectionException) {
             return $this->failure('The provider response is uncertain and requires reconciliation.', ambiguous: true);
         } catch (Throwable $exception) {
@@ -62,6 +63,19 @@ class ConfigurableProviderClient
 
             return $this->failure($this->safeConfigurationMessage($exception));
         }
+    }
+
+    private function productSettings(array $settings, string $productSlug): array
+    {
+        $productConfigs = $settings['product_configs'] ?? [];
+        $productConfig = $productConfigs[$productSlug] ?? null;
+
+        if (! $productConfig) {
+            $legacyKey = array_search($productSlug, ProviderProductRegistry::LEGACY_ALIASES, true);
+            $productConfig = $legacyKey ? ($productConfigs[$legacyKey] ?? null) : null;
+        }
+
+        return is_array($productConfig) ? $productConfig : $settings;
     }
 
     private function endpoint(ParentProviderConnection $connection, array $settings, string $productSlug): ?string

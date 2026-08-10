@@ -58,6 +58,32 @@ function executableProviderConnection(array $overrides = []): ParentProviderConn
             'success_message_path' => 'data.message',
             'failure_message_path' => 'error.message',
             'expected_success_code' => 200,
+            'product_configs' => [
+                'data' => [
+                    'request_parameters' => [
+                        ['key' => 'data_phone', 'type' => 'runtime', 'value' => 'phone_number'],
+                    ],
+                    'request_headers' => [],
+                    'network_mapping' => ['MTN' => 'DATA-MTN'],
+                    'success_conditions' => [['key' => 'data_status', 'value' => 'delivered']],
+                    'success_message_path' => 'data.message',
+                    'failure_message_path' => 'error.message',
+                    'expected_success_code' => 200,
+                ],
+                'airtime' => [
+                    'request_parameters' => [
+                        ['key' => 'airtime_mobile', 'type' => 'runtime', 'value' => 'phone_number'],
+                    ],
+                    'request_headers' => [
+                        ['key' => 'X-Airtime-Key', 'type' => 'credential', 'value' => 'api_public_key'],
+                    ],
+                    'network_mapping' => ['MTN' => 'AIRTIME-MTN'],
+                    'success_conditions' => [['key' => 'airtime.ok', 'value' => 'true']],
+                    'success_message_path' => 'airtime.message',
+                    'failure_message_path' => 'airtime.error',
+                    'expected_success_code' => 201,
+                ],
+            ],
         ],
         'status' => 'active',
         'approval_status' => 'approved',
@@ -90,6 +116,42 @@ it('executes any configured product endpoint with mapped runtime values and cred
     });
 });
 
+it('uses mappings headers network IDs and response rules from the selected product only', function () {
+    $connection = executableProviderConnection();
+    Http::fake(['provider.example/*' => Http::response([
+        'airtime' => ['ok' => true, 'message' => 'Airtime delivered'],
+    ], 201)]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'airtime', [
+        'phone_number' => '08030000000', 'network' => 'MTN', 'reference' => 'ORDER-AIRTIME',
+    ]);
+
+    expect($result)->toMatchArray([
+        'successful' => true,
+        'message' => 'Airtime delivered',
+        'http_status' => 201,
+    ]);
+    Http::assertSent(fn (Request $request) => $request->url() === 'https://provider.example/airtime'
+        && $request['airtime_mobile'] === '08030000000'
+        && ! isset($request['data_phone'])
+        && $request->header('X-Airtime-Key')[0] === 'provider-secret-token');
+});
+
+it('falls back to legacy shared mappings when a product configuration has not been migrated', function () {
+    $connection = executableProviderConnection(['settings' => ['product_configs' => []]]);
+    Http::fake(['provider.example/*' => Http::response([
+        'status' => true,
+        'data' => ['state' => 'completed', 'message' => 'Legacy configuration worked'],
+    ], 200)]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'result_checker', [
+        'phone_number' => '08030000000', 'plan' => 'WAEC', 'reference' => 'ORDER-LEGACY',
+    ]);
+
+    expect($result)->toMatchArray(['successful' => true, 'message' => 'Legacy configuration worked']);
+    Http::assertSent(fn (Request $request) => $request['phone'] === '08030000000');
+});
+
 it('supports configured get requests and legacy product endpoint aliases', function () {
     $connection = executableProviderConnection([
         'settings' => [
@@ -112,7 +174,9 @@ it('supports configured get requests and legacy product endpoint aliases', funct
 it('maps provider network identifiers and fails safely when a required mapping is missing', function () {
     $connection = executableProviderConnection([
         'settings' => [
-            'request_parameters' => [['key' => 'network_id', 'type' => 'runtime', 'value' => 'network']],
+            'product_configs' => ['data' => [
+                'request_parameters' => [['key' => 'network_id', 'type' => 'runtime', 'value' => 'network']],
+            ]],
         ],
     ]);
     Http::fake();

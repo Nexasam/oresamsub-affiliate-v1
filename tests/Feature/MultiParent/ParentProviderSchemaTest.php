@@ -13,6 +13,7 @@ it('creates the parent provider foundation schema', function () {
         ->and(Schema::hasColumns('parent_admins', ['parent_business_id', 'email', 'password', 'must_change_password']))->toBeTrue()
         ->and(Schema::hasColumns('provider_connections', ['name', 'slug', 'adapter', 'capabilities', 'status']))->toBeTrue()
         ->and(Schema::hasColumns('parent_provider_connections', ['parent_business_id', 'provider_connection_id', 'base_url', 'credentials', 'settings']))->toBeTrue()
+        ->and(Schema::hasColumns('parent_provider_connections', ['approval_status', 'submitted_at', 'approved_at', 'approved_by_admin_id', 'rejection_reason']))->toBeTrue()
         ->and(Schema::hasColumns('parent_reseller_levels', ['parent_business_id', 'name', 'position', 'status']))->toBeTrue();
 });
 

@@ -1,0 +1,176 @@
+<?php
+
+use App\Models\ParentBusiness;
+use App\Models\ParentProviderConnection;
+use App\Models\ProviderConnection;
+use App\Services\Providers\ConfigurableProviderClient;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
+
+uses(RefreshDatabase::class);
+
+function executableProviderConnection(array $overrides = []): ParentProviderConnection
+{
+    $parent = ParentBusiness::create(['name' => 'Execution Parent', 'slug' => 'execution-parent']);
+    $adapter = ProviderConnection::create([
+        'name' => 'Configurable HTTP', 'slug' => 'execution-http', 'adapter' => 'execution_http',
+        'capabilities' => [
+            'services' => ['data', 'airtime', 'utility_bills', 'cable_subscription', 'e_pins', 'result_checker'],
+            'methods' => ['GET', 'POST'],
+            'credential_fields' => ['api_public_key'],
+        ],
+        'status' => 'active',
+    ]);
+
+    $attributes = array_replace_recursive([
+        'parent_business_id' => $parent->id,
+        'provider_connection_id' => $adapter->id,
+        'name' => 'Execution primary',
+        'base_url' => null,
+        'credentials' => ['api_public_key' => 'provider-secret-token'],
+        'settings' => [
+            'http_method' => 'POST',
+            'timeout_seconds' => 20,
+            'endpoints' => [
+                'data' => 'https://provider.example/data',
+                'airtime' => 'https://provider.example/airtime',
+                'utility_bills' => 'https://provider.example/electricity',
+                'cable_subscription' => 'https://provider.example/cable',
+                'e_pins' => 'https://provider.example/epins',
+                'result_checker' => 'https://provider.example/results',
+            ],
+            'request_parameters' => [
+                ['key' => 'phone', 'type' => 'runtime', 'value' => 'phone_number'],
+                ['key' => 'plan_id', 'type' => 'runtime', 'value' => 'plan'],
+                ['key' => 'request_id', 'type' => 'runtime', 'value' => 'reference'],
+            ],
+            'request_headers' => [
+                ['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer '],
+                ['key' => 'Accept', 'type' => 'literal', 'value' => 'application/json'],
+            ],
+            'network_mapping' => ['MTN' => '1'],
+            'success_conditions' => [
+                ['key' => 'status', 'value' => 'true'],
+                ['key' => 'data.state', 'value' => 'completed'],
+            ],
+            'success_message_path' => 'data.message',
+            'failure_message_path' => 'error.message',
+            'expected_success_code' => 200,
+        ],
+        'status' => 'active',
+        'approval_status' => 'approved',
+        'submitted_at' => now(),
+        'approved_at' => now(),
+    ], $overrides);
+
+    return ParentProviderConnection::create($attributes);
+}
+
+it('executes any configured product endpoint with mapped runtime values and credential headers', function () {
+    $connection = executableProviderConnection();
+    Http::fake(['provider.example/*' => Http::response([
+        'status' => true,
+        'data' => ['state' => 'completed', 'message' => 'PIN generated', 'reference' => 'VENDOR-55'],
+    ], 200)]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'e_pins', [
+        'phone_number' => '08030000000', 'plan' => 'WAEC-1', 'reference' => 'ORDER-10001',
+    ]);
+
+    expect($result)->toMatchArray([
+        'successful' => true, 'ambiguous' => false, 'message' => 'PIN generated',
+        'provider_reference' => 'VENDOR-55', 'http_status' => 200,
+    ]);
+    Http::assertSent(function (Request $request) {
+        return $request->url() === 'https://provider.example/epins'
+            && $request['request_id'] === 'ORDER-10001'
+            && $request->header('Authorization')[0] === 'Bearer provider-secret-token';
+    });
+});
+
+it('supports configured get requests and legacy product endpoint aliases', function () {
+    $connection = executableProviderConnection([
+        'settings' => [
+            'http_method' => 'GET',
+            'endpoints' => ['utility_bills' => null, 'electricity' => 'https://provider.example/legacy-electricity'],
+        ],
+    ]);
+    Http::fake(['provider.example/*' => Http::response([
+        'status' => true, 'data' => ['state' => 'completed', 'message' => 'Token generated'],
+    ])]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'utility_bills', [
+        'phone_number' => '08030000000', 'plan' => 'IKEDC', 'reference' => 'ORDER-2',
+    ]);
+
+    expect($result['successful'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request->method() === 'GET' && str_contains($request->url(), 'legacy-electricity'));
+});
+
+it('maps provider network identifiers and fails safely when a required mapping is missing', function () {
+    $connection = executableProviderConnection([
+        'settings' => [
+            'request_parameters' => [['key' => 'network_id', 'type' => 'runtime', 'value' => 'network']],
+        ],
+    ]);
+    Http::fake();
+
+    $missing = app(ConfigurableProviderClient::class)->execute($connection, 'data', [
+        'network' => 'GLO', 'reference' => 'ORDER-3',
+    ]);
+
+    expect($missing)->toMatchArray(['successful' => false, 'ambiguous' => false])
+        ->and($missing['message'])->toContain('network mapping');
+    Http::assertNothingSent();
+});
+
+it('does not execute inactive unapproved or unsupported provider connections', function (array $override, string $message) {
+    $connection = executableProviderConnection($override);
+    Http::fake();
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'data', ['reference' => 'ORDER-4']);
+
+    expect($result)->toMatchArray(['successful' => false, 'ambiguous' => false])
+        ->and($result['message'])->toContain($message);
+    Http::assertNothingSent();
+})->with([
+    'pending approval' => [['approval_status' => 'pending'], 'approved'],
+    'inactive parent connection' => [['status' => 'inactive'], 'inactive'],
+    'unsupported product' => [['settings' => ['endpoints' => ['data' => null]]], 'endpoint'],
+]);
+
+it('returns an ambiguous result when the provider connection times out', function () {
+    $connection = executableProviderConnection();
+    Http::fake(fn () => throw new ConnectionException('Timed out'));
+
+    $timeout = app(ConfigurableProviderClient::class)->execute($connection, 'data', [
+        'phone_number' => '08030000000', 'plan' => '1GB', 'reference' => 'ORDER-5',
+    ]);
+    expect($timeout)->toMatchArray(['successful' => false, 'ambiguous' => true, 'http_status' => null]);
+});
+
+it('returns a conclusive failure for provider business errors', function () {
+    $connection = executableProviderConnection();
+
+    Http::fake(['provider.example/*' => Http::response(['status' => false, 'error' => ['message' => 'Insufficient balance']], 200)]);
+    $failure = app(ConfigurableProviderClient::class)->execute($connection, 'data', [
+        'phone_number' => '08030000000', 'plan' => '1GB', 'reference' => 'ORDER-6',
+    ]);
+    expect($failure)->toMatchArray([
+        'successful' => false, 'ambiguous' => false, 'message' => 'Insufficient balance', 'http_status' => 200,
+    ]);
+});
+
+it('fails safely for invalid json responses', function () {
+    $connection = executableProviderConnection();
+    Http::fake(['provider.example/*' => Http::response('<html>bad gateway</html>', 502)]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'result_checker', [
+        'phone_number' => '08030000000', 'plan' => 'NECO', 'reference' => 'ORDER-7',
+    ]);
+
+    expect($result)->toMatchArray(['successful' => false, 'ambiguous' => false, 'http_status' => 502])
+        ->and($result['provider_response'])->toBeNull();
+});

@@ -4,6 +4,7 @@ use App\Models\Admin;
 use App\Models\ParentAdmin;
 use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
+use App\Models\Product;
 use App\Models\ProviderConnection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -59,7 +60,26 @@ it('renders the provider adapter catalogue and lists existing definitions', func
         ->getJson('/admin/provider-adapters/data')
         ->assertOk()
         ->assertJsonPath('adapters.0.id', $adapter->id)
-        ->assertJsonPath('allowed.services.0', 'data');
+        ->assertJsonPath('allowed.services.0.slug', 'data');
+});
+
+it('uses every global product as an available adapter service', function () {
+    Product::create([
+        'api_id' => 'epin-service', 'product_name' => 'E-Pins', 'slug' => 'e_pins',
+        'visibility' => 1, 'active_status' => 1,
+    ]);
+    $admin = platformAdapterAdmin();
+
+    $this->actingAs($admin, 'platform_admin')->getJson('/admin/provider-adapters/data')
+        ->assertOk()->assertJsonPath('allowed.services.0.slug', 'e_pins');
+
+    $payload = platformAdapterPayload();
+    $payload['capabilities'] = [
+        'services' => ['e_pins'], 'methods' => ['POST'], 'credential_fields' => ['api_public_key'],
+    ];
+
+    $this->actingAs($admin, 'platform_admin')->postJson('/admin/provider-adapters', $payload)
+        ->assertCreated()->assertJsonPath('adapter.capabilities.services.0', 'e_pins');
 });
 
 it('creates a normalized approved adapter definition', function () {

@@ -7,13 +7,17 @@ use App\Http\Requests\ParentAdmin\SaveProviderConnectionRequest;
 use App\Models\ParentProviderConnection;
 use App\Models\ProviderConnection;
 use App\Services\ParentAdmin\ProviderConnectionService;
+use App\Support\ProviderProductRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ProviderConnectionController extends Controller
 {
-    public function __construct(private readonly ProviderConnectionService $connections) {}
+    public function __construct(
+        private readonly ProviderConnectionService $connections,
+        private readonly ProviderProductRegistry $products,
+    ) {}
 
     public function index(): View
     {
@@ -26,11 +30,15 @@ class ProviderConnectionController extends Controller
         $connections = $parent->providerConnections()->with('providerConnection')->latest()->get()
             ->map(fn ($connection) => $this->connections->present($connection));
 
+        $adapters = ProviderConnection::where('status', 'active')->orderBy('name')->get()
+            ->each(fn (ProviderConnection $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities));
+
         return response()->json([
             'connections' => $connections,
-            'adapters' => ProviderConnection::where('status', 'active')->orderBy('name')->get(),
+            'adapters' => $adapters,
             'runtime_fields' => SaveProviderConnectionRequest::RUNTIME_FIELDS,
             'credential_fields' => SaveProviderConnectionRequest::CREDENTIAL_FIELDS,
+            'products' => $this->products->products(),
         ]);
     }
 

@@ -5,11 +5,14 @@ namespace App\Http\Controllers\PlatformAdmin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PlatformAdmin\SaveProviderAdapterRequest;
 use App\Models\ProviderConnection;
+use App\Support\ProviderProductRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class ProviderAdapterController extends Controller
 {
+    public function __construct(private readonly ProviderProductRegistry $products) {}
+
     public function index(): View
     {
         return view('platform-admin.provider-adapters.index');
@@ -18,9 +21,10 @@ class ProviderAdapterController extends Controller
     public function data(): JsonResponse
     {
         return response()->json([
-            'adapters' => ProviderConnection::query()->withCount('parentConnections')->orderBy('name')->get(),
+            'adapters' => ProviderConnection::query()->withCount('parentConnections')->orderBy('name')->get()
+                ->each(fn (ProviderConnection $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities)),
             'allowed' => [
-                'services' => SaveProviderAdapterRequest::SERVICES,
+                'services' => $this->products->products(),
                 'methods' => SaveProviderAdapterRequest::METHODS,
                 'credential_fields' => SaveProviderAdapterRequest::CREDENTIAL_FIELDS,
             ],

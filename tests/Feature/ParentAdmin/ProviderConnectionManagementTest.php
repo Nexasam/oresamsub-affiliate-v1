@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\Admin;
 use App\Models\ParentAdmin;
 use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
+use App\Models\Product;
 use App\Models\ProviderConnection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -60,12 +62,65 @@ it('creates a parent scoped connection with encrypted masked credentials', funct
 
     $connection = ParentProviderConnection::sole();
     expect($connection->parent_business_id)->toBe($parent->id)
+        ->and($connection->approval_status)->toBe('pending')
+        ->and($connection->submitted_at)->not->toBeNull()
         ->and($connection->credentials['api_public_key'])->toBe('public-secret')
         ->and(DB::table('parent_provider_connections')->value('credentials'))->not->toContain('private-secret')
         ->and($response->json('connection.credential_status.api_public_key'))->toBeTrue();
 });
 
-it('preserves masked credentials and enforces one primary connection per parent', function () {
+it('keeps approval for non-sensitive connection changes', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('approved-display-edit');
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id))->assertCreated();
+    $connection = $parent->providerConnections()->sole();
+    $connection->update(['approval_status' => 'approved', 'approved_at' => now(), 'rejection_reason' => null]);
+
+    $this->actingAs($admin, 'parent_admin')->putJson("/parent-admin/provider-connections/{$connection->id}", providerPayload($adapter->id, [
+        'name' => 'Renamed connection',
+        'status' => 'inactive',
+        'is_primary' => false,
+        'credentials' => ['api_public_key' => null, 'api_secret_key' => null, 'api_password' => null],
+    ]))->assertOk()->assertJsonPath('connection.approval_status', 'approved');
+});
+
+it('returns sensitive connection changes to pending approval', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('approved-sensitive-edit');
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id))->assertCreated();
+    $connection = $parent->providerConnections()->sole();
+    $connection->update([
+        'approval_status' => 'approved', 'approved_at' => now(),
+        'approved_by_admin_id' => Admin::create([
+            'name' => 'Reviewer', 'email' => 'reviewer@example.test', 'password' => 'secret-password', 'active' => true,
+        ])->id,
+        'rejection_reason' => null,
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->putJson("/parent-admin/provider-connections/{$connection->id}", providerPayload($adapter->id, [
+        'base_url' => 'https://changed-provider.example/api',
+        'credentials' => ['api_public_key' => null, 'api_secret_key' => null, 'api_password' => null],
+    ]))->assertOk()->assertJsonPath('connection.approval_status', 'pending');
+
+    $connection->refresh();
+    expect($connection->approved_at)->toBeNull()
+        ->and($connection->approved_by_admin_id)->toBeNull()
+        ->and($connection->rejection_reason)->toBeNull();
+});
+
+it('resubmits a rejected connection as pending when the parent corrects it', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('rejected-resubmit');
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id))->assertCreated();
+    $connection = $parent->providerConnections()->sole();
+    $connection->update(['approval_status' => 'rejected', 'rejection_reason' => 'Endpoint ownership could not be confirmed.']);
+
+    $this->actingAs($admin, 'parent_admin')->putJson("/parent-admin/provider-connections/{$connection->id}", providerPayload($adapter->id, [
+        'base_url' => 'https://corrected-provider.example/api',
+        'credentials' => ['api_public_key' => null, 'api_secret_key' => null, 'api_password' => null],
+    ]))->assertOk()->assertJsonPath('connection.approval_status', 'pending');
+
+    expect($connection->fresh()->rejection_reason)->toBeNull();
+});
+
+it('preserves masked credentials without displacing an approved primary before reapproval', function () {
     [$parent, $admin, $adapter] = providerWorkspace('primary-provider');
     $first = $parent->providerConnections()->create([
         'provider_connection_id' => $adapter->id, 'name' => 'First', 'credentials' => ['api_public_key' => 'keep-me'],
@@ -81,8 +136,9 @@ it('preserves masked credentials and enforces one primary connection per parent'
     ]))->assertOk();
 
     expect($second->fresh()->credentials['api_public_key'])->toBe('preserve-me')
-        ->and($first->fresh()->settings['is_primary'])->toBeFalse()
-        ->and($second->fresh()->settings['is_primary'])->toBeTrue();
+        ->and($first->fresh()->settings['is_primary'])->toBeTrue()
+        ->and($second->fresh()->settings['is_primary'])->toBeTrue()
+        ->and($second->fresh()->approval_status)->toBe('pending');
 });
 
 it('rejects cross parent connection access and unsafe mappings', function () {
@@ -131,4 +187,26 @@ it('allows an existing connection to retain its deactivated adapter while being 
     )->assertOk();
 
     expect($connection->fresh()->name)->toBe('Updated legacy connection');
+});
+
+it('configures endpoints for every supported global product', function () {
+    Product::create([
+        'api_id' => 'result-service', 'product_name' => 'Result checker', 'slug' => 'result_checker',
+        'visibility' => 1, 'active_status' => 1,
+    ]);
+    [, $admin, $adapter] = providerWorkspace('all-product-provider');
+    $adapter->update(['capabilities' => [
+        'services' => ['result_checker'], 'methods' => ['POST'], 'credential_fields' => ['api_public_key'],
+    ]]);
+
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id, [
+        'settings' => ['endpoints' => [
+            'data' => null, 'airtime' => null, 'cable' => null, 'electricity' => null,
+            'result_checker' => 'https://provider.example/api/result-checker',
+        ]],
+        'credentials' => ['api_public_key' => 'allowed', 'api_secret_key' => null, 'api_password' => null],
+    ]))->assertCreated();
+
+    $this->actingAs($admin, 'parent_admin')->getJson('/parent-admin/provider-connections/data')
+        ->assertOk()->assertJsonPath('products.0.slug', 'result_checker');
 });

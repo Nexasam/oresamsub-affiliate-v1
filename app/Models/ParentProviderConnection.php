@@ -17,6 +17,8 @@ class ParentProviderConnection extends Model
             'credentials' => 'encrypted:array',
             'settings' => 'array',
             'last_tested_at' => 'datetime',
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -28,5 +30,10 @@ class ParentProviderConnection extends Model
     public function providerConnection(): BelongsTo
     {
         return $this->belongsTo(ProviderConnection::class);
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'approved_by_admin_id');
     }
 }

@@ -38,8 +38,8 @@ class OresamsubParentSeeder extends Seeder
                 'name' => 'Configurable HTTP Provider',
                 'adapter' => 'configurable_http',
                 'capabilities' => [
-                    'services' => ['data', 'airtime', 'cable', 'electricity'],
-                    'http_methods' => ['GET', 'POST'],
+                    'services' => ['data', 'airtime', 'utility_bills', 'cable_subscription', 'e_pins', 'result_checker'],
+                    'methods' => ['GET', 'POST'],
                     'credential_fields' => ['api_public_key', 'api_secret_key', 'api_password'],
                 ],
                 'status' => 'active',

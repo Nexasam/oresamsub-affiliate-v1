@@ -86,7 +86,7 @@
                         <legend class="text-sm font-semibold text-slate-800">Supported services</legend>
                         <p class="mt-1 text-xs text-slate-500">Parents can configure endpoints only for selected services.</p>
                         <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <template x-for="service in allowed.services" :key="service"><label class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm capitalize"><input type="checkbox" :value="service" x-model="form.capabilities.services" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"><span x-text="service"></span></label></template>
+                            <template x-for="service in allowed.services" :key="service.slug"><label class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm"><input type="checkbox" :value="service.slug" x-model="form.capabilities.services" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"><span x-text="service.name"></span></label></template>
                         </div>
                         <span x-show="errors['capabilities.services']" class="mt-2 block text-xs text-rose-600" x-text="firstError('capabilities.services')"></span>
                     </fieldset>

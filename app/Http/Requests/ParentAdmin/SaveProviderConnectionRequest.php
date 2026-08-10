@@ -3,13 +3,17 @@
 namespace App\Http\Requests\ParentAdmin;
 
 use App\Models\ProviderConnection;
+use App\Support\ProviderProductRegistry;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class SaveProviderConnectionRequest extends FormRequest
 {
-    public const RUNTIME_FIELDS = ['phone_number', 'network', 'plan', 'amount', 'email', 'user', 'ported_number', 'reference', 'action'];
+    public const RUNTIME_FIELDS = [
+        'phone_number', 'network', 'plan', 'amount', 'email', 'user', 'ported_number', 'reference', 'action',
+        'meter_number', 'meter_type', 'smartcard_number', 'customer_name', 'quantity', 'exam_type', 'service_provider',
+    ];
 
     public const CREDENTIAL_FIELDS = ['api_public_key', 'api_secret_key', 'api_password'];
 
@@ -41,10 +45,7 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.http_method' => ['required', Rule::in(['GET', 'POST'])],
             'settings.timeout_seconds' => ['required', 'integer', 'between:5,120'],
             'settings.endpoints' => ['required', 'array'],
-            'settings.endpoints.data' => ['nullable', 'url:http,https', 'max:2048'],
-            'settings.endpoints.airtime' => ['nullable', 'url:http,https', 'max:2048'],
-            'settings.endpoints.cable' => ['nullable', 'url:http,https', 'max:2048'],
-            'settings.endpoints.electricity' => ['nullable', 'url:http,https', 'max:2048'],
+            'settings.endpoints.*' => ['nullable', 'url:http,https', 'max:2048'],
             'settings.request_parameters' => ['required', 'array', 'min:1'],
             'settings.request_parameters.*.key' => ['required', 'string', 'max:255', 'distinct'],
             'settings.request_parameters.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
@@ -53,6 +54,8 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.request_headers.*.key' => ['required', 'string', 'max:255', 'distinct'],
             'settings.request_headers.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
             'settings.request_headers.*.value' => ['present', 'nullable', 'string', 'max:4096'],
+            'settings.request_headers.*.prefix' => ['nullable', 'string', 'max:255'],
+            'settings.request_headers.*.suffix' => ['nullable', 'string', 'max:255'],
             'settings.network_mapping' => ['nullable', 'array'],
             'settings.network_mapping.*' => ['nullable', 'string', 'max:255'],
             'settings.success_conditions' => ['required', 'array', 'min:1'],
@@ -72,9 +75,11 @@ class SaveProviderConnectionRequest extends FormRequest
     {
         return [function (Validator $validator) {
             $settings = $this->input('settings', []);
+            $products = app(ProviderProductRegistry::class);
             $adapter = ProviderConnection::find($this->integer('provider_connection_id'));
             $capabilities = $adapter?->capabilities ?? [];
-            $services = $capabilities['services'] ?? ['data', 'airtime', 'cable', 'electricity'];
+            $services = collect($capabilities['services'] ?? $products->slugs(includeLegacy: true))
+                ->map(fn ($service) => $products->normalize($service))->all();
             $methods = $capabilities['methods'] ?? ['GET', 'POST'];
             $credentialFields = $capabilities['credential_fields'] ?? self::CREDENTIAL_FIELDS;
 
@@ -85,7 +90,7 @@ class SaveProviderConnectionRequest extends FormRequest
                 $validator->errors()->add('settings.http_method', 'The selected adapter does not support this HTTP method.');
             }
             foreach ($settings['endpoints'] ?? [] as $service => $endpoint) {
-                if (filled($endpoint) && ! in_array($service, $services, true)) {
+                if (filled($endpoint) && ! in_array($products->normalize($service), $services, true)) {
                     $validator->errors()->add("settings.endpoints.{$service}", 'The selected adapter does not support this service.');
                 }
             }

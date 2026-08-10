@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\PlatformAdmin\AffiliateController;
-use App\Http\Controllers\PlatformAdmin\AuthController;
-use App\Http\Controllers\PlatformAdmin\DashboardController;
-use App\Http\Controllers\PlatformAdmin\AffiliateOperationsController;
-use App\Http\Controllers\PlatformAdmin\ReportController;
-use App\Http\Controllers\PlatformAdmin\CatalogController;
 use App\Http\Controllers\PlatformAdmin\AffiliateCatalogController;
+use App\Http\Controllers\PlatformAdmin\AffiliateController;
+use App\Http\Controllers\PlatformAdmin\AffiliateOperationsController;
 use App\Http\Controllers\PlatformAdmin\AffiliateUsersController;
+use App\Http\Controllers\PlatformAdmin\AuthController;
+use App\Http\Controllers\PlatformAdmin\CatalogController;
+use App\Http\Controllers\PlatformAdmin\DashboardController;
 use App\Http\Controllers\PlatformAdmin\ImpersonationController;
+use App\Http\Controllers\PlatformAdmin\ProviderAdapterController;
+use App\Http\Controllers\PlatformAdmin\ReportController;
 use App\Http\Controllers\PlatformAdmin\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,10 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
         Route::patch('all-transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status.update');
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/data', [ReportController::class, 'data'])->name('reports.data');
+        Route::get('provider-adapters', [ProviderAdapterController::class, 'index'])->name('provider-adapters.index');
+        Route::get('provider-adapters/data', [ProviderAdapterController::class, 'data'])->name('provider-adapters.data');
+        Route::post('provider-adapters', [ProviderAdapterController::class, 'store'])->name('provider-adapters.store');
+        Route::put('provider-adapters/{providerAdapter}', [ProviderAdapterController::class, 'update'])->name('provider-adapters.update');
         Route::get('catalog', [CatalogController::class, 'index'])->name('catalog.index');
         Route::get('catalog/data', [CatalogController::class, 'data'])->name('catalog.data');
         Route::patch('catalog/categories/{category}', [CatalogController::class, 'updateCategory'])->name('catalog.categories.update');

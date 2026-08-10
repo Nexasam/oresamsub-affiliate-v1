@@ -17,7 +17,7 @@ function providerWorkspace(string $slug = 'provider-parent'): array
         'email' => "{$slug}@example.test", 'password' => 'secret-password', 'active' => true,
     ]);
     $adapter = ProviderConnection::create([
-        'name' => 'Configurable HTTP', 'slug' => "http-{$slug}", 'adapter' => 'configurable_http',
+        'name' => 'Configurable HTTP', 'slug' => "http-{$slug}", 'adapter' => 'configurable_http_'.str_replace('-', '_', $slug),
         'capabilities' => ['services' => ['data', 'airtime', 'cable', 'electricity']], 'status' => 'active',
     ]);
 
@@ -94,4 +94,41 @@ it('rejects cross parent connection access and unsafe mappings', function () {
     $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id, [
         'settings' => ['request_parameters' => [['key' => 'phone', 'type' => 'runtime', 'value' => 'unknown_runtime']]],
     ]))->assertUnprocessable();
+});
+
+it('enforces the selected adapter capabilities on a new parent connection', function () {
+    [, $admin, $adapter] = providerWorkspace('capability-provider');
+    $adapter->update(['capabilities' => [
+        'services' => ['data'],
+        'methods' => ['POST'],
+        'credential_fields' => ['api_public_key'],
+    ]]);
+
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', providerPayload($adapter->id, [
+        'credentials' => ['api_secret_key' => 'not-allowed'],
+        'settings' => [
+            'http_method' => 'GET',
+            'endpoints' => ['airtime' => 'https://affatech.example/api/airtime'],
+            'request_headers' => [['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_secret_key']],
+        ],
+    ]))->assertUnprocessable()->assertJsonValidationErrors([
+        'settings.http_method', 'settings.endpoints.airtime', 'credentials.api_secret_key', 'settings.request_headers',
+    ]);
+});
+
+it('allows an existing connection to retain its deactivated adapter while being edited', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('inactive-edit-provider');
+    $connection = $parent->providerConnections()->create([
+        'provider_connection_id' => $adapter->id,
+        'name' => 'Legacy connection',
+        'settings' => ['is_primary' => false],
+    ]);
+    $adapter->update(['status' => 'inactive']);
+
+    $this->actingAs($admin, 'parent_admin')->putJson(
+        "/parent-admin/provider-connections/{$connection->id}",
+        providerPayload($adapter->id, ['name' => 'Updated legacy connection'])
+    )->assertOk();
+
+    expect($connection->fresh()->name)->toBe('Updated legacy connection');
 });

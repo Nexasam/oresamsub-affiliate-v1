@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\ParentAdmin;
 
+use App\Models\ProviderConnection;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -19,8 +20,15 @@ class SaveProviderConnectionRequest extends FormRequest
 
     public function rules(): array
     {
+        $existingProviderId = $this->route('connection')?->provider_connection_id;
+
         return [
-            'provider_connection_id' => ['required', 'integer', Rule::exists('provider_connections', 'id')->where('status', 'active')],
+            'provider_connection_id' => ['required', 'integer', Rule::exists('provider_connections', 'id')->where(
+                fn ($query) => $query->where('status', 'active')->when(
+                    $existingProviderId,
+                    fn ($query) => $query->orWhere('id', $existingProviderId)
+                )
+            )],
             'name' => ['required', 'string', 'max:255'],
             'base_url' => ['nullable', 'url:http,https', 'max:2048'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
@@ -64,8 +72,27 @@ class SaveProviderConnectionRequest extends FormRequest
     {
         return [function (Validator $validator) {
             $settings = $this->input('settings', []);
+            $adapter = ProviderConnection::find($this->integer('provider_connection_id'));
+            $capabilities = $adapter?->capabilities ?? [];
+            $services = $capabilities['services'] ?? ['data', 'airtime', 'cable', 'electricity'];
+            $methods = $capabilities['methods'] ?? ['GET', 'POST'];
+            $credentialFields = $capabilities['credential_fields'] ?? self::CREDENTIAL_FIELDS;
+
             if (collect($settings['endpoints'] ?? [])->filter()->isEmpty() && blank($this->input('base_url'))) {
                 $validator->errors()->add('settings.endpoints', 'Provide a base URL or at least one service endpoint.');
+            }
+            if (! in_array($settings['http_method'] ?? null, $methods, true)) {
+                $validator->errors()->add('settings.http_method', 'The selected adapter does not support this HTTP method.');
+            }
+            foreach ($settings['endpoints'] ?? [] as $service => $endpoint) {
+                if (filled($endpoint) && ! in_array($service, $services, true)) {
+                    $validator->errors()->add("settings.endpoints.{$service}", 'The selected adapter does not support this service.');
+                }
+            }
+            foreach ($this->input('credentials', []) ?? [] as $field => $value) {
+                if (filled($value) && ! in_array($field, $credentialFields, true)) {
+                    $validator->errors()->add("credentials.{$field}", 'The selected adapter does not permit this credential field.');
+                }
             }
             foreach (array_merge($settings['request_parameters'] ?? [], $settings['request_headers'] ?? []) as $mapping) {
                 if (($mapping['type'] ?? null) === 'runtime' && ! in_array($mapping['value'] ?? null, self::RUNTIME_FIELDS, true)) {
@@ -73,6 +100,9 @@ class SaveProviderConnectionRequest extends FormRequest
                 }
                 if (($mapping['type'] ?? null) === 'credential' && ! in_array($mapping['value'] ?? null, self::CREDENTIAL_FIELDS, true)) {
                     $validator->errors()->add('settings.request_parameters', 'A credential mapping contains an unsupported credential field.');
+                }
+                if (($mapping['type'] ?? null) === 'credential' && ! in_array($mapping['value'] ?? null, $credentialFields, true)) {
+                    $validator->errors()->add('settings.request_headers', 'A credential mapping is not permitted by the selected adapter.');
                 }
             }
             foreach ($settings['request_headers'] ?? [] as $header) {

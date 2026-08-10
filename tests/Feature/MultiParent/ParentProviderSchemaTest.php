@@ -76,6 +76,20 @@ it('requires unique provider slugs', function () {
         ->toThrow(QueryException::class);
 });
 
+it('requires unique executable provider adapter keys', function () {
+    ProviderConnection::create([
+        'name' => 'First HTTP adapter',
+        'slug' => 'first-http-adapter',
+        'adapter' => 'configurable_http',
+    ]);
+
+    expect(fn () => ProviderConnection::create([
+        'name' => 'Second HTTP adapter',
+        'slug' => 'second-http-adapter',
+        'adapter' => 'configurable_http',
+    ]))->toThrow(QueryException::class);
+});
+
 it('requires unique provider connection identities within a parent', function () {
     $parent = ParentBusiness::create(['name' => 'Acme', 'slug' => 'acme']);
     $provider = ProviderConnection::create(['name' => 'One', 'slug' => 'one', 'adapter' => 'one']);

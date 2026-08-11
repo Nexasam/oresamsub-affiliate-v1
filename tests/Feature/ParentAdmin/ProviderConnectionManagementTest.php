@@ -66,11 +66,41 @@ function providerPayload(int $adapterId, array $overrides = []): array
 it('renders the parent provider connection workspace', function () {
     [, $admin] = providerWorkspace();
 
-    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections')
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections?create=1')
         ->assertOk()->assertSee('Provider connections')->assertSee('Product request configuration')
         ->assertSee('Each product has its own payload, headers, network IDs and response rules.')
         ->assertDontSee('structuredClone(this.form)', false)
-        ->assertSee('JSON.parse(JSON.stringify(this.form))', false);
+        ->assertDontSee('axios({method,url,data:this.payload()})', false);
+});
+
+it('uses a blade form for parent connection submission and redirects with feedback', function () {
+    [, $admin, $adapter] = providerWorkspace('blade-provider');
+
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections?create=1')
+        ->assertOk()
+        ->assertSee('<form method="POST"', false)
+        ->assertDontSee('@submit.prevent="save"', false)
+        ->assertDontSee('axios({method,url,data:this.payload()})', false);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->post('/parent-admin/provider-connections', providerPayload($adapter->id))
+        ->assertRedirect(route('parent-admin.provider-connections.index'))
+        ->assertSessionHas('success', 'Provider connection created and submitted for platform approval.');
+});
+
+it('server renders an owned connection for editing through a normal put form', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('blade-edit-provider');
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', providerPayload($adapter->id))
+        ->assertCreated();
+    $connection = $parent->providerConnections()->sole();
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get("/parent-admin/provider-connections?edit={$connection->id}")
+        ->assertOk()
+        ->assertSee('Affatech Primary')
+        ->assertSee('name="_method" value="PUT"', false)
+        ->assertSee(route('parent-admin.provider-connections.update', $connection), false);
 });
 
 it('creates a parent scoped connection with encrypted masked credentials', function () {

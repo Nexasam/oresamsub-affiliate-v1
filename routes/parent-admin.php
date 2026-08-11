@@ -9,6 +9,7 @@ use App\Http\Controllers\ParentAdmin\FundingProviderController;
 use App\Http\Controllers\ParentAdmin\PricingController;
 use App\Http\Controllers\ParentAdmin\ProductPlanController;
 use App\Http\Controllers\ParentAdmin\ProviderConnectionController;
+use App\Http\Controllers\ParentAdmin\TransactionController;
 use App\Http\Controllers\PlatformAdmin\AffiliateController as PlatformAffiliateController;
 use App\Http\Controllers\PlatformAdmin\AffiliateOperationsController as PlatformAffiliateOperationsController;
 use App\Http\Controllers\PlatformAdmin\AffiliateUsersController as PlatformAffiliateUsersController;
@@ -53,6 +54,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
             Route::get('affiliates/{affiliate}/transactions', [PlatformAffiliateController::class, 'transactions'])->name('affiliates.transactions');
         });
         Route::get('provider-connections', [ProviderConnectionController::class, 'index'])->name('provider-connections.index');
+        Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
         Route::get('provider-connections/data', [ProviderConnectionController::class, 'data'])->name('provider-connections.data');
         Route::post('provider-connections', [ProviderConnectionController::class, 'store'])->name('provider-connections.store');
         Route::put('provider-connections/{connection}', [ProviderConnectionController::class, 'update'])->name('provider-connections.update');

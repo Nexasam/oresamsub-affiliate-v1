@@ -27,6 +27,8 @@ use App\Models\AffiliateProductPlanCategory;
 use App\Services\Automation\AutomationLogic;
 use App\Services\Automation\VtpassAutomation;
 use App\Services\Automation\PaultechsAutomation;
+use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubCableTV;
@@ -453,59 +455,58 @@ class CableSubscriptionController extends Controller
                                     'validation_customer_name' => $request->validation_customer_name,
                                     // 'validated_address' => $validated,
                                     'smart_card_number' => $smart_card_number,
+                                    'smartcard_number' => $smart_card_number,
                                     'reference' => $txn_reference
                                 ];
-                                $arrrequest_json = json_encode($arrrequest);
-                                logger('REQ: '.$arrrequest_json);
-
-
-                                $key = session('affiliate')->parent_key;
-
-
-                                $curl = curl_init();
-                                curl_setopt_array($curl, array(
-                                CURLOPT_URL => 'https://oresamsub.com/api/v1/user/buy_cable_tv',
-                                CURLOPT_RETURNTRANSFER => true,
-                                CURLOPT_ENCODING => '',
-                                CURLOPT_MAXREDIRS => 10,
-                                CURLOPT_TIMEOUT => 0,
-                                CURLOPT_FOLLOWLOCATION => true,
-                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                CURLOPT_CUSTOMREQUEST => 'POST',
-                                CURLOPT_POSTFIELDS =>$arrrequest_json,
-                                CURLOPT_HTTPHEADER => array(
-                                    'Authorization: Token '.$key,
-                                    'Content-Type: application/json',
-                                    'Accept: application/json'
-                                ),
-                                ));
-                                $response = curl_exec($curl);
-                                curl_close($curl);
-                                $buy_electricity_subscription =  $response;
-                                $purchase_dec = json_decode($buy_electricity_subscription,true);
-                                $status = $purchase_dec['status'];
-                                
-                                if($status == 1){
-                                   
-                                    return [
-                                        'status' => 1,
-                                        'retry_count' => 0,
-                                        'user_message' => $purchase_dec['data']['user_message'] ?? $purchase_dec['message'],
-                                        'admin_message' => $purchase_dec['data']['admin_message'] ?? $purchase_dec['message']
+                                $providerResult = null;
+                                if (app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)) {
+                                    $providerResult = app(ParentPurchaseExecutor::class)->execute($plan_details, $arrrequest);
+                                    $purchase_dec = [
+                                        'status' => $providerResult['status'],
+                                        'message' => $providerResult['user_message'],
+                                        'data' => ['user_message' => $providerResult['user_message'], 'admin_message' => $providerResult['admin_message']],
                                     ];
-                        
+                                } else {
+                                    $arrrequest_json = json_encode($arrrequest);
+                                    $key = session('affiliate')->parent_key;
+                                    $curl = curl_init();
+                                    curl_setopt_array($curl, array(
+                                    CURLOPT_URL => 'https://oresamsub.com/api/v1/user/buy_cable_tv',
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    CURLOPT_ENCODING => '',
+                                    CURLOPT_MAXREDIRS => 10,
+                                    CURLOPT_TIMEOUT => 0,
+                                    CURLOPT_FOLLOWLOCATION => true,
+                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                    CURLOPT_CUSTOMREQUEST => 'POST',
+                                    CURLOPT_POSTFIELDS =>$arrrequest_json,
+                                    CURLOPT_HTTPHEADER => array(
+                                        'Authorization: Token '.$key,
+                                        'Content-Type: application/json',
+                                        'Accept: application/json'
+                                    ),
+                                    ));
+                                    $response = curl_exec($curl);
+                                    curl_close($curl);
+                                    $purchase_dec = json_decode($response,true);
+                                    if (($purchase_dec['status'] ?? null) == 1) {
+                                        return ['status' => 1, 'retry_count' => 0,
+                                            'user_message' => $purchase_dec['data']['user_message'] ?? $purchase_dec['message'],
+                                            'admin_message' => $purchase_dec['data']['admin_message'] ?? $purchase_dec['message']];
+                                    }
                                 }
-                                logger('CABLE: '.json_encode($buy_electricity_subscription));
 
-                                if($purchase_dec['status']){
+                                if($purchase_dec['status'] == 1){
                                     $success++;
                                     $status = 1;
                                     $wallet_before = User::where('id',$user_id)->first()->main_wallet;
                                     $wallet_after = $wallet_before - $amount;
-
+                                } elseif ($purchase_dec['status'] == 0) {
+                                    $status = 0;
+                                    $wallet_before = User::where('id',$user_id)->first()->main_wallet;
+                                    $wallet_after = $wallet_before - $amount;
                                 }else{
-                                    //it might be processing or it failed
-                                    $status = -1;
+                                    $status = $providerResult ? 2 : -1;
                                     $failure++;
                                     $wallet_before = User::where('id',$user_id)->first()->main_wallet;
                                     $wallet_after = $wallet_before;
@@ -553,6 +554,11 @@ class CableSubscriptionController extends Controller
                                 $creationData['description'] = $description;
                                 $creationData['user_screen_message'] = $user_message;
                                 $creationData['admin_screen_message'] = $admin_message;
+                                if ($providerResult) {
+                                    foreach (['parent_business_id', 'parent_provider_connection_id', 'product_plan_provider_route_id', 'provider_plan_id_snapshot', 'provider_reference', 'routing_status'] as $routingField) {
+                                        $creationData[$routingField] = $providerResult[$routingField] ?? null;
+                                    }
+                                }
                                 $transaction = Transaction::create($creationData);
 
                                 $walletLog['user_id'] = $user_id;

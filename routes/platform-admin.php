@@ -13,6 +13,7 @@ use App\Http\Controllers\PlatformAdmin\ImpersonationController;
 use App\Http\Controllers\PlatformAdmin\ParentBusinessController;
 use App\Http\Controllers\PlatformAdmin\ParentProviderConnectionController;
 use App\Http\Controllers\PlatformAdmin\ProviderAdapterController;
+use App\Http\Controllers\PlatformAdmin\ProviderRoutingRolloutController;
 use App\Http\Controllers\PlatformAdmin\ReportController;
 use App\Http\Controllers\PlatformAdmin\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,8 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
         Route::get('provider-connections', [ParentProviderConnectionController::class, 'index'])->name('provider-connections.index');
         Route::get('provider-connections/data', [ParentProviderConnectionController::class, 'data'])->name('provider-connections.data');
         Route::patch('provider-connections/{connection}/review', [ParentProviderConnectionController::class, 'review'])->name('provider-connections.review');
+        Route::get('provider-routing-rollouts', [ProviderRoutingRolloutController::class, 'index'])->name('provider-routing-rollouts.index');
+        Route::put('provider-routing-rollouts', [ProviderRoutingRolloutController::class, 'update'])->name('provider-routing-rollouts.update');
         Route::get('catalog', [CatalogController::class, 'index'])->name('catalog.index');
         Route::get('catalog/data', [CatalogController::class, 'data'])->name('catalog.data');
         Route::patch('catalog/categories/{category}', [CatalogController::class, 'updateCategory'])->name('catalog.categories.update');

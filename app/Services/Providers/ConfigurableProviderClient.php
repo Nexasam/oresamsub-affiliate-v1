@@ -134,11 +134,14 @@ class ConfigurableProviderClient
         }
 
         $network = (string) $runtime[$field];
-        if (! array_key_exists($network, $networkMapping) || blank($networkMapping[$network])) {
+        $mappedKey = collect(array_keys($networkMapping))->first(
+            fn ($configuredNetwork) => strcasecmp((string) $configuredNetwork, $network) === 0
+        );
+        if ($mappedKey === null || blank($networkMapping[$mappedKey])) {
             throw new \InvalidArgumentException("No provider network mapping exists for {$network}.");
         }
 
-        return $networkMapping[$network];
+        return $networkMapping[$mappedKey];
     }
 
     private function credentialValue(string $field, array $credentials): string

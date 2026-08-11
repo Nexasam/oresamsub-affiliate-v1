@@ -190,6 +190,22 @@ it('maps provider network identifiers and fails safely when a required mapping i
     Http::assertNothingSent();
 });
 
+it('matches configured network names without case sensitivity', function () {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['data' => [
+            'request_parameters' => [['key' => 'network_id', 'type' => 'runtime', 'value' => 'network']],
+            'network_mapping' => ['MTN' => '1'],
+            'success_conditions' => [['key' => 'status', 'value' => 'success']],
+        ]]],
+    ]);
+    Http::fake(['provider.example/*' => Http::response(['status' => 'success'])]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'data', ['network' => 'mtn']);
+
+    expect($result['successful'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request['network_id'] === '1');
+});
+
 it('does not execute inactive unapproved or unsupported provider connections', function (array $override, string $message) {
     $connection = executableProviderConnection($override);
     Http::fake();

@@ -22,6 +22,8 @@ use App\Models\UserPlan;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendAirtime;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendData;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
+use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Services\Utils\UtilService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use Exception;
@@ -503,40 +505,44 @@ class AirtimeController extends Controller
                                 $postarr = [
                                     "amount"=>$actual_amount,
                                     "mobile_number"=>$phone_numbers_array[$i],
+                                    "phone_number"=>$phone_numbers_array[$i],
+                                    "network"=>$plan_details->product_plan->product_plan_category->network?->network_name ?? (string) $request->network_id,
                                     "plan"=>$api_id,
                                     "reference"=>$reference
                                 ];
-                                $postfieldsjson = json_encode($postarr);
-                                // logger('Airtime request payload: '.$postfieldsjson);
-
-                                $key = session('affiliate')->parent_key;
-
-                                $curl = curl_init();
-                                curl_setopt_array($curl, array(
-                                CURLOPT_URL => 'https://oresamsub.com/api/v1/user/buy_airtime',
-                                CURLOPT_RETURNTRANSFER => true,
-                                CURLOPT_ENCODING => '',
-                                CURLOPT_MAXREDIRS => 10,
-                                CURLOPT_TIMEOUT => 0,
-                                CURLOPT_FOLLOWLOCATION => true,
-                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                CURLOPT_CUSTOMREQUEST => 'POST',
-                                CURLOPT_POSTFIELDS =>$postfieldsjson,
-                                CURLOPT_HTTPHEADER => array(
-                                    'Authorization: '.$key,
-                                    'Content-Type: application/json',
-                                    'Accept: application/json'
-                                ),
-                                ));
-
-                                $response = curl_exec($curl);
-                                logger('Airtime check: '.$response);
-
-                                curl_close($curl);
-                                $decores = json_decode($response,true);
-
-                                //FOR NOW: FORCE STATUS AS TRUE AND SORT IT OUT AT THEE PARENT LEVEL. ONLY FOR AIRTIME
-                                $decores['status'] = 1; //force success for now and sort it out at the parent level. only for airtime   
+                                $providerResult = null;
+                                if (app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)) {
+                                    $providerResult = app(ParentPurchaseExecutor::class)->execute($plan_details, $postarr);
+                                    $decores = [
+                                        'status' => $providerResult['status'],
+                                        'message' => $providerResult['user_message'],
+                                        'data' => ['user_message' => $providerResult['user_message'], 'admin_message' => $providerResult['admin_message']],
+                                    ];
+                                } else {
+                                    $postfieldsjson = json_encode($postarr);
+                                    $key = session('affiliate')->parent_key;
+                                    $curl = curl_init();
+                                    curl_setopt_array($curl, array(
+                                    CURLOPT_URL => 'https://oresamsub.com/api/v1/user/buy_airtime',
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    CURLOPT_ENCODING => '',
+                                    CURLOPT_MAXREDIRS => 10,
+                                    CURLOPT_TIMEOUT => 0,
+                                    CURLOPT_FOLLOWLOCATION => true,
+                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                    CURLOPT_CUSTOMREQUEST => 'POST',
+                                    CURLOPT_POSTFIELDS =>$postfieldsjson,
+                                    CURLOPT_HTTPHEADER => array(
+                                        'Authorization: '.$key,
+                                        'Content-Type: application/json',
+                                        'Accept: application/json'
+                                    ),
+                                    ));
+                                    $response = curl_exec($curl);
+                                    curl_close($curl);
+                                    $decores = json_decode($response,true);
+                                    $decores['status'] = 1;
+                                }
 
 
                             //     else{
@@ -567,6 +573,10 @@ class AirtimeController extends Controller
                                     //no issues
                                     //for now just leave it as success and sort out the pending issue at the parent level. only for airtime
                                     $status = 1; //on the affiliate side: db then query script gets the actual update
+                                    $user_message = $decores['data']['user_message'] ?? $decores['message'];
+                                    $admin_message = $decores['data']['admin_message'] ?? $decores['message'];
+                                }else if($decores['status'] == 0 || $decores['status'] == '0'){
+                                    $status = 0;
                                     $user_message = $decores['data']['user_message'] ?? $decores['message'];
                                     $admin_message = $decores['data']['admin_message'] ?? $decores['message'];
                                 }else{
@@ -601,10 +611,15 @@ class AirtimeController extends Controller
                                 $creationData['description'] = $description;
                                 $creationData['user_screen_message'] = $user_message;
                                 $creationData['admin_screen_message'] = $admin_message;
+                                if ($providerResult) {
+                                    foreach (['parent_business_id', 'parent_provider_connection_id', 'product_plan_provider_route_id', 'provider_plan_id_snapshot', 'provider_reference', 'routing_status'] as $routingField) {
+                                        $creationData[$routingField] = $providerResult[$routingField] ?? null;
+                                    }
+                                }
                                 $transaction =  Transaction::create($creationData);
 
                                 //log only pending transactions
-                                if($status == 1){
+                                if(in_array($status, [0, 1], true)){
                                     $walletLog['user_id'] = $user_id;
                                     $walletLog['transaction_category'] = 'AIRTIME';
                                     $walletLog['balance_before'] = $wallet_before;

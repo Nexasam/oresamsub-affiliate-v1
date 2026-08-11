@@ -36,6 +36,8 @@ use App\Models\ProductPlanCustomPricing;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AffiliateProductPlanCategory;
 use App\Services\Automation\AutomationLogic;
+use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
 use App\Services\Automation\OgdamsAutomation\OgdamsVendData;
@@ -572,12 +574,15 @@ class DataController extends Controller
 
                                 $phone_number = $phone_numbers_array[$i];
                                 $dataa['mobile_number'] = $phone_number;
+                                $dataa['phone_number'] = $phone_number;
+                                $dataa['network'] = $plan_details->product_plan->product_plan_category->network?->network_name
+                                    ?? (string) $request->network_id;
                                 $dataa['plan'] = $plan_details->product_plan->api_id;
                                 $reference = $this->generateTxnReference('DATA',$user_details->id);
                                 $dataa['reference'] = $reference;
 
                                 $retry_count = 0;
-                                $sell_data = $this->processDataViaParent($dataa);
+                                $sell_data = $this->processDataViaParent($dataa, $plan_details);
                                 $retry_count = 0;
 
                                  $set_for_manual = $sell_data['set_for_manual'] ?? 0;
@@ -676,6 +681,11 @@ class DataController extends Controller
                                 $creationData['description'] = $description;
                                 $creationData['user_screen_message'] = $user_message;
                                 $creationData['admin_screen_message'] = $admin_message;
+                                foreach (['parent_business_id', 'parent_provider_connection_id', 'product_plan_provider_route_id', 'provider_plan_id_snapshot', 'provider_reference', 'routing_status'] as $routingField) {
+                                    if (array_key_exists($routingField, $sell_data)) {
+                                        $creationData[$routingField] = $sell_data[$routingField];
+                                    }
+                                }
                                 $transaction = Transaction::create($creationData);
 
 
@@ -1274,7 +1284,11 @@ class DataController extends Controller
 
 
 
-    public function processDataViaParent($data){
+    public function processDataViaParent($data, ?AffiliateProductPlan $affiliatePlan = null){
+
+        if ($affiliatePlan && app(ProviderRoutingRolloutService::class)->enabledFor($affiliatePlan)) {
+            return app(ParentPurchaseExecutor::class)->execute($affiliatePlan, $data);
+        }
 
         $mobile_number = $data['mobile_number'];
         $plan = $data['plan'];

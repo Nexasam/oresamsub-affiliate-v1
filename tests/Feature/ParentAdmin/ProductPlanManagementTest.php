@@ -337,6 +337,12 @@ it('fully edits an owned plan route settings and reseller prices', function () {
         ->get("/parent-admin/product-plans/{$plan->id}/edit")
         ->assertOk()->assertSee('Edit product plan')->assertSee('Provider external plan ID');
 
+    $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/product-plans')
+        ->assertOk()
+        ->assertSee(route('parent-admin.product-plans.edit', $plan), false)
+        ->assertDontSee('Full configuration editor');
+
     $payload = comprehensivePlanPayload($category, $connection, $levels, [
         'product_plan_name' => 'Edited MTN 1GB',
         'route' => ['provider_plan_id' => 'PAUL-EDITED-1GB'],

@@ -22,10 +22,11 @@ it('lets only platform admins manage the approved funding provider catalogue', f
 
     $this->actingAs($admin, 'platform_admin')->post('/admin/funding-providers', [
         'name' => 'New Pay', 'slug' => 'new-pay', 'adapter_key' => 'new_pay',
-        'credential_fields' => ['api_key', 'secret_key'], 'active' => '1',
+        'credential_fields' => 'api_key, secret_key', 'active' => '1',
     ])->assertRedirect('/admin/funding-providers');
 
     $provider = FundingProvider::where('slug', 'new-pay')->sole();
+    expect($provider->credential_fields)->toBe(['api_key', 'secret_key']);
     $this->actingAs($admin, 'platform_admin')->put("/admin/funding-providers/{$provider->id}", [
         'name' => 'New Pay', 'slug' => 'new-pay', 'adapter_key' => 'new_pay',
         'credential_fields' => ['api_key'], 'active' => '0',

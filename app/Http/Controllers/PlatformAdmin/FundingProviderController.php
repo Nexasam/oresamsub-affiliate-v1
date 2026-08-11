@@ -35,7 +35,7 @@ class FundingProviderController extends Controller
     private function validated(Request $request, ?FundingProvider $provider = null): array
     {
         if (is_string($request->input('credential_fields'))) {
-            $request->merge(['credential_fields' => collect(explode(',', $request->input('credential_fields')))->map->trim()->filter()->values()->all()]);
+            $request->merge(['credential_fields' => collect(explode(',', $request->input('credential_fields')))->map(fn (string $field) => trim($field))->filter()->values()->all()]);
         }
 
         return $request->validate([

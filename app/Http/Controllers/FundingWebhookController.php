@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\AffiliateFundingProviderConfig;
 use App\Models\FundingProvider;
 use App\Models\ParentFundingProvider;
+use App\Services\Funding\FundingWebhookAdapter;
+use App\Services\Funding\FundingWebhookProcessor;
 use App\Services\Funding\FundingWebhookRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FundingWebhookController extends Controller
 {
-    public function __construct(private readonly FundingWebhookRecorder $recorder) {}
+    public function __construct(
+        private readonly FundingWebhookRecorder $recorder,
+        private readonly FundingWebhookAdapter $adapter,
+        private readonly FundingWebhookProcessor $processor,
+    ) {}
 
     public function __invoke(Request $request, FundingProvider $provider, string $webhookKey): JsonResponse
     {
@@ -27,14 +33,24 @@ class FundingWebhookController extends Controller
         $secret = $affiliateConfig?->webhook_secret ?? $parentProvider?->webhook_secret;
         abort_unless(filled($secret), 404);
 
-        $signature = (string) $request->header('X-Webhook-Signature');
+        $signature = $this->adapter->signature($request, $provider);
         abort_unless(hash_equals(hash_hmac('sha256', $request->getContent(), $secret), $signature), 401);
 
         $payload = $request->json()->all();
-        $externalId = (string) ($request->header('X-Webhook-Id') ?: data_get($payload, 'reference'));
+        $normalized = $this->adapter->normalize($provider, $payload);
+        $externalId = (string) ($request->header('X-Webhook-Id') ?: $normalized['external_id']);
         abort_if($externalId === '', 422, 'A provider event ID is required.');
         $recorded = $this->recorder->record($provider, $externalId, $payload, $affiliateConfig);
+        if ($recorded['duplicate']) {
+            $status = $recorded['event']->status;
 
-        return response()->json(['accepted' => true, 'duplicate' => $recorded['duplicate']], 202);
+            return response()->json(['accepted' => true, 'duplicate' => true, 'status' => $status], $status === 'processed' ? 200 : 202);
+        }
+
+        $status = $affiliateConfig
+            ? $this->processor->process($recorded['event'], $affiliateConfig, $normalized)
+            : 'received';
+
+        return response()->json(['accepted' => true, 'duplicate' => false, 'status' => $status], $status === 'processed' ? 200 : 202);
     }
 }

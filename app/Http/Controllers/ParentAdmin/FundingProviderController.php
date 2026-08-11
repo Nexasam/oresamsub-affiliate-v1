@@ -96,7 +96,7 @@ class FundingProviderController extends Controller
         $data = $request->validate([
             'management_mode' => ['required', Rule::in(['parent_managed', 'affiliate_managed'])],
             'active' => ['required', 'boolean'], 'generation_enabled' => ['required', 'boolean'],
-            'bank_codes' => ['nullable', 'array'], 'bank_codes.*' => ['required', 'string', 'max:100', 'distinct'],
+            'bank_codes' => ['nullable', 'array'], 'bank_codes.*' => ['nullable', 'string', 'max:100', 'distinct'],
         ]);
         $config = AffiliateFundingProviderConfig::firstOrNew(['affiliate_id' => $affiliate->id, 'parent_funding_provider_id' => $parentProvider->id]);
         if ($config->exists && $config->management_mode !== $data['management_mode']) {

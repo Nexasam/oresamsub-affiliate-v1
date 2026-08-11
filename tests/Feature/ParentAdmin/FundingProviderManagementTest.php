@@ -11,6 +11,47 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
+it('stacks funding providers in one full-width row each', function () {
+    $parent = ParentBusiness::create(['name' => 'Funding Parent', 'slug' => 'funding-layout']);
+    $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'funding-layout@example.test', 'password' => 'password', 'active' => true]);
+    FundingProvider::create(['name' => 'Xixapay', 'slug' => 'xixapay', 'adapter_key' => 'xixapay', 'active' => true]);
+    FundingProvider::create(['name' => 'SecurewaveNG', 'slug' => 'securewaveng', 'adapter_key' => 'securewaveng', 'active' => true]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/funding-providers')
+        ->assertOk()
+        ->assertSee('Xixapay')
+        ->assertSee('SecurewaveNG')
+        ->assertDontSee('xl:grid-cols-2', false);
+});
+
+it('saves an affiliate configuration from the funding affiliates table', function () {
+    $parent = ParentBusiness::create(['name' => 'Funding Parent', 'slug' => 'funding-save']);
+    $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'funding-save@example.test', 'password' => 'password', 'active' => true]);
+    $level = $parent->resellerLevels()->create(['name' => 'Basic', 'position' => 1, 'status' => 'active']);
+    $affiliate = Affiliate::create(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $level->id, 'name' => 'Child', 'slug' => 'funding-save-child', 'affiliate_plan_id' => 1, 'ip_address' => '127.9.0.2', 'contact_phone' => '08090000002', 'contact_email' => 'save-child@example.test', 'parent_key' => 'save-child-key', 'parent_email' => 'parent@example.test']);
+    $provider = FundingProvider::create(['name' => 'Xixapay', 'slug' => 'xixapay', 'adapter_key' => 'xixapay', 'active' => true]);
+    $parentProvider = $parent->fundingProviders()->create(['funding_provider_id' => $provider->id, 'active' => true, 'generation_enabled' => true]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->put("/parent-admin/funding-providers/{$parentProvider->id}/affiliates/{$affiliate->id}", [
+            'management_mode' => 'parent_managed',
+            'active' => '1',
+            'generation_enabled' => '1',
+            'bank_codes' => [''],
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect("/parent-admin/funding-providers/{$parentProvider->id}/affiliates");
+
+    $this->assertDatabaseHas('affiliate_funding_provider_configs', [
+        'affiliate_id' => $affiliate->id,
+        'parent_funding_provider_id' => $parentProvider->id,
+        'management_mode' => 'parent_managed',
+        'active' => 1,
+        'generation_enabled' => 1,
+    ]);
+});
+
 it('lets a parent enable providers configure credentials and approve affiliate mode changes', function () {
     $parent = ParentBusiness::create(['name' => 'Funding Parent', 'slug' => 'funding-workspace']);
     $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'funding-parent@example.test', 'password' => 'password', 'active' => true]);

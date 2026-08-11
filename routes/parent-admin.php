@@ -20,6 +20,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('product-plans', [ProductPlanController::class, 'index'])->name('product-plans.index');
         Route::get('product-plans/data', [ProductPlanController::class, 'data'])->name('product-plans.data');
         Route::post('product-plans', [ProductPlanController::class, 'store'])->name('product-plans.store');
+        Route::post('product-plans/bulk', [ProductPlanController::class, 'bulkStore'])->name('product-plans.bulk-store');
         Route::patch('product-plans/{plan}', [ProductPlanController::class, 'update'])->name('product-plans.update');
         Route::get('provider-connections', [ProviderConnectionController::class, 'index'])->name('provider-connections.index');
         Route::get('provider-connections/data', [ProviderConnectionController::class, 'data'])->name('provider-connections.data');

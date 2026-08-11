@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ParentAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ParentAdmin\BulkStoreProductPlansRequest;
 use App\Http\Requests\ParentAdmin\StoreProductPlanRequest;
 use App\Http\Requests\ParentAdmin\UpdateProductPlanRequest;
 use App\Models\ProductPlan;
@@ -31,6 +32,14 @@ class ProductPlanController extends Controller
                 ->orderBy('product_plan_category_name')
                 ->get(),
             'plans' => $this->catalog->plans($parent),
+            'levels' => $parent->resellerLevels()->where('status', 'active')->orderBy('position')->get(['id', 'name', 'position']),
+            'connections' => $parent->providerConnections()
+                ->where('status', 'active')
+                ->where('approval_status', 'approved')
+                ->whereHas('providerConnection', fn ($query) => $query->where('status', 'active'))
+                ->with('providerConnection:id,name,slug')
+                ->orderBy('name')
+                ->get(['id', 'provider_connection_id', 'name']),
         ]);
     }
 
@@ -43,7 +52,21 @@ class ProductPlanController extends Controller
 
         return response()->json([
             'message' => 'Product plan added.',
-            'plan' => $plan->fresh(['product_plan_category.product', 'product_plan_category.network']),
+            'plan' => $plan,
+        ], 201);
+    }
+
+    public function bulkStore(BulkStoreProductPlansRequest $request): JsonResponse
+    {
+        $plans = $this->catalog->createPlans(
+            $request->user('parent_admin')->parentBusiness,
+            $request->validated('plans'),
+        );
+
+        return response()->json([
+            'message' => "{$plans->count()} product plans added.",
+            'created_count' => $plans->count(),
+            'plans' => $plans,
         ], 201);
     }
 

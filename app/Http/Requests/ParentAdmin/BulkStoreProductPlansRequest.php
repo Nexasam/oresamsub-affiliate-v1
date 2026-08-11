@@ -6,7 +6,7 @@ use App\Http\Requests\ParentAdmin\Concerns\ValidatesParentProductPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-class StoreProductPlanRequest extends FormRequest
+class BulkStoreProductPlansRequest extends FormRequest
 {
     use ValidatesParentProductPlan;
 
@@ -17,11 +17,18 @@ class StoreProductPlanRequest extends FormRequest
 
     public function rules(): array
     {
-        return $this->productPlanRules();
+        return [
+            'plans' => ['required', 'array', 'min:1', 'max:100'],
+            ...$this->productPlanRules('plans.*.'),
+        ];
     }
 
     public function after(): array
     {
-        return [fn (Validator $validator) => $this->validateProductPlanPayload($validator, $this->all())];
+        return [function (Validator $validator) {
+            foreach ($this->input('plans', []) as $index => $plan) {
+                $this->validateProductPlanPayload($validator, $plan, "plans.{$index}");
+            }
+        }];
     }
 }

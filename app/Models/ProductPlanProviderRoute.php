@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductPlanProviderRoute extends Model
 {
@@ -14,5 +15,10 @@ class ProductPlanProviderRoute extends Model
             'priority' => 'integer',
             'active' => 'boolean',
         ];
+    }
+
+    public function parentProviderConnection(): BelongsTo
+    {
+        return $this->belongsTo(ParentProviderConnection::class);
     }
 }

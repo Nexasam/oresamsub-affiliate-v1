@@ -23,6 +23,8 @@ class ParentCatalogService
                 'product_plan_category:id,product_id,network_id,product_plan_category_name',
                 'product_plan_category.product:id,product_name',
                 'product_plan_category.network:id,network_name',
+                'providerRoutes' => fn ($query) => $query->where('priority', 1)->orderBy('id'),
+                'providerRoutes.parentProviderConnection:id,name',
                 'parentPrices.parentResellerLevel:id,name,position',
             ]);
 
@@ -47,7 +49,46 @@ class ParentCatalogService
 
     public function createPlan(ParentBusiness $parent, array $attributes): ProductPlan
     {
-        return $parent->productPlans()->create($attributes);
+        return DB::transaction(function () use ($parent, $attributes) {
+            $route = $attributes['route'] ?? null;
+            $prices = $attributes['prices'] ?? [];
+            unset($attributes['route'], $attributes['prices']);
+
+            $plan = $parent->productPlans()->create($attributes);
+
+            if ($route && filled($route['parent_provider_connection_id'] ?? null) && filled($route['provider_plan_id'] ?? null)) {
+                $plan->providerRoutes()->create([
+                    'parent_business_id' => $parent->id,
+                    'parent_provider_connection_id' => $route['parent_provider_connection_id'],
+                    'provider_plan_id' => $route['provider_plan_id'],
+                    'priority' => 1,
+                    'active' => (bool) ($attributes['visibility'] ?? false),
+                ]);
+            }
+
+            if ($prices !== []) {
+                $this->updatePrices($parent, $plan, $prices);
+            }
+
+            return $this->hydratePlan($plan);
+        });
+    }
+
+    public function createPlans(ParentBusiness $parent, array $plans): Collection
+    {
+        return DB::transaction(fn () => collect($plans)->map(
+            fn (array $attributes) => $this->createPlan($parent, $attributes)
+        ));
+    }
+
+    private function hydratePlan(ProductPlan $plan): ProductPlan
+    {
+        return $plan->fresh([
+            'product_plan_category.product',
+            'product_plan_category.network',
+            'providerRoutes.parentProviderConnection:id,name',
+            'parentPrices.parentResellerLevel:id,name,position',
+        ]);
     }
 
     public function updatePlan(ParentBusiness $parent, ProductPlan $plan, array $attributes): ProductPlan
@@ -56,7 +97,13 @@ class ParentCatalogService
 
         $plan->update($attributes);
 
-        return $plan->fresh(['product_plan_category.product', 'product_plan_category.network']);
+        if (array_key_exists('visibility', $attributes)) {
+            $plan->providerRoutes()->where('priority', 1)->update([
+                'active' => (bool) $attributes['visibility'],
+            ]);
+        }
+
+        return $this->hydratePlan($plan);
     }
 
     public function replaceLevels(ParentBusiness $parent, array $levels): Collection

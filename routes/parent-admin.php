@@ -4,6 +4,7 @@ use App\Http\Controllers\ParentAdmin\AffiliateController;
 use App\Http\Controllers\ParentAdmin\AffiliateProfitCapController;
 use App\Http\Controllers\ParentAdmin\AuthController;
 use App\Http\Controllers\ParentAdmin\DashboardController;
+use App\Http\Controllers\ParentAdmin\FundingProviderController;
 use App\Http\Controllers\ParentAdmin\PricingController;
 use App\Http\Controllers\ParentAdmin\ProductPlanController;
 use App\Http\Controllers\ParentAdmin\ProviderConnectionController;
@@ -36,6 +37,10 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('provider-connections/data', [ProviderConnectionController::class, 'data'])->name('provider-connections.data');
         Route::post('provider-connections', [ProviderConnectionController::class, 'store'])->name('provider-connections.store');
         Route::put('provider-connections/{connection}', [ProviderConnectionController::class, 'update'])->name('provider-connections.update');
+        Route::get('funding-providers', [FundingProviderController::class, 'index'])->name('funding-providers.index');
+        Route::post('funding-providers/{fundingProvider}/enable', [FundingProviderController::class, 'enable'])->name('funding-providers.enable');
+        Route::put('funding-providers/{parentProvider}/affiliates/{affiliate}', [FundingProviderController::class, 'configureAffiliate'])->name('funding-providers.affiliates.update');
+        Route::patch('funding-mode-requests/{modeRequest}', [FundingProviderController::class, 'reviewMode'])->name('funding-mode-requests.review');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/data', [PricingController::class, 'data'])->name('pricing.data');
         Route::put('pricing/defaults', [PricingController::class, 'updateDefaults'])->name('pricing.defaults.update');

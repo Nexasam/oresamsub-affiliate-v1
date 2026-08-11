@@ -1,0 +1,13 @@
+@extends('platform-admin.layouts.app')
+@section('title','Funding providers')
+@section('heading','Funding providers')
+@section('content')
+<div class="space-y-6">
+    @if(session('success'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</div>@endif
+    @if($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><ul class="list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    <section class="rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-semibold">Approved funding catalogue</h2><p class="mt-1 text-sm text-slate-500">Parents can enable only active providers from this catalogue.</p>
+        <form method="POST" action="{{ route('platform-admin.funding-providers.store') }}" class="mt-5 grid gap-3 md:grid-cols-5">@csrf<input name="name" required placeholder="Provider name" class="rounded-xl border-slate-200"><input name="slug" required placeholder="provider-slug" class="rounded-xl border-slate-200"><input name="adapter_key" required placeholder="adapter_key" class="rounded-xl border-slate-200"><input name="credential_fields" placeholder="api_public_key, api_secret_key" class="rounded-xl border-slate-200"><input type="hidden" name="active" value="1"><button class="rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white">Add provider</button></form>
+    </section>
+    <section class="overflow-hidden rounded-2xl border bg-white shadow-sm"><div class="divide-y">@foreach($providers as $provider)<form method="POST" action="{{ route('platform-admin.funding-providers.update',$provider) }}" class="grid items-end gap-3 p-5 md:grid-cols-6">@csrf @method('PUT')<label class="grid gap-1 text-xs font-semibold">Name<input name="name" value="{{ $provider->name }}" class="rounded-lg border-slate-200"></label><label class="grid gap-1 text-xs font-semibold">Slug<input name="slug" value="{{ $provider->slug }}" class="rounded-lg border-slate-200"></label><label class="grid gap-1 text-xs font-semibold">Adapter<input name="adapter_key" value="{{ $provider->adapter_key }}" class="rounded-lg border-slate-200"></label><label class="grid gap-1 text-xs font-semibold">Credential fields<input name="credential_fields" value="{{ implode(', ', $provider->credential_fields ?? []) }}" class="rounded-lg border-slate-200"></label><label class="flex items-center gap-2 pb-3 text-sm"><input type="hidden" name="active" value="0"><input type="checkbox" name="active" value="1" @checked($provider->active)> Active</label><button class="rounded-lg border px-3 py-2 font-semibold">Save</button></form>@endforeach</div></section>
+</div>
+@endsection

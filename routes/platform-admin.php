@@ -7,6 +7,7 @@ use App\Http\Controllers\PlatformAdmin\AffiliateUsersController;
 use App\Http\Controllers\PlatformAdmin\AuthController;
 use App\Http\Controllers\PlatformAdmin\CatalogController;
 use App\Http\Controllers\PlatformAdmin\DashboardController;
+use App\Http\Controllers\PlatformAdmin\FundingProviderController;
 use App\Http\Controllers\PlatformAdmin\ImpersonationController;
 use App\Http\Controllers\PlatformAdmin\ParentBusinessController;
 use App\Http\Controllers\PlatformAdmin\ParentProviderConnectionController;
@@ -36,6 +37,9 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
         Route::get('provider-adapters/data', [ProviderAdapterController::class, 'data'])->name('provider-adapters.data');
         Route::post('provider-adapters', [ProviderAdapterController::class, 'store'])->name('provider-adapters.store');
         Route::put('provider-adapters/{providerAdapter}', [ProviderAdapterController::class, 'update'])->name('provider-adapters.update');
+        Route::get('funding-providers', [FundingProviderController::class, 'index'])->name('funding-providers.index');
+        Route::post('funding-providers', [FundingProviderController::class, 'store'])->name('funding-providers.store');
+        Route::put('funding-providers/{fundingProvider}', [FundingProviderController::class, 'update'])->name('funding-providers.update');
         Route::get('provider-connections', [ParentProviderConnectionController::class, 'index'])->name('provider-connections.index');
         Route::get('provider-connections/data', [ParentProviderConnectionController::class, 'data'])->name('provider-connections.data');
         Route::patch('provider-connections/{connection}/review', [ParentProviderConnectionController::class, 'review'])->name('provider-connections.review');

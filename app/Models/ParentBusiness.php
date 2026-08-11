@@ -43,4 +43,9 @@ class ParentBusiness extends Model
     {
         return $this->hasMany(AffiliateServiceProfitCap::class);
     }
+
+    public function fundingProviders(): HasMany
+    {
+        return $this->hasMany(ParentFundingProvider::class);
+    }
 }

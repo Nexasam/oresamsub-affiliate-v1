@@ -61,6 +61,11 @@
                     <span>✓</span> Connection reviews
                 </a>
             @endif
+            @if (Route::has('platform-admin.funding-providers.index'))
+                <a href="{{ route('platform-admin.funding-providers.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.funding-providers.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>₦</span> Funding providers
+                </a>
+            @endif
             @if (Route::has('platform-admin.transactions.index'))
                 <a href="{{ route('platform-admin.transactions.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.transactions.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                     <span>↔</span> Transactions

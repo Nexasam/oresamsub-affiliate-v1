@@ -3,6 +3,7 @@
 use App\Http\Controllers\AddonController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AffiliateController;
+use App\Http\Controllers\AffiliateFundingProviderController;
 use App\Http\Controllers\AffiliateUserPlanController;
 use App\Http\Controllers\AirtimeController;
 use App\Http\Controllers\AnnouncementsController;
@@ -733,6 +734,9 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
             //funding page
             Route::middleware(['auth','verified','admin'])->get('wallet_funding_promo/index', [AdminSettingsController::class, 'funding_index'])->name('admin.funding_settings.index');
+            Route::middleware(['auth','verified','admin'])->get('admin/affiliate-funding-providers', [AffiliateFundingProviderController::class, 'index'])->name('admin.affiliate-funding-providers.index');
+            Route::middleware(['auth','verified','admin'])->put('admin/affiliate-funding-providers/{config}', [AffiliateFundingProviderController::class, 'update'])->name('admin.affiliate-funding-providers.update');
+            Route::middleware(['auth','verified','admin'])->post('admin/affiliate-funding-providers/{config}/mode-request', [AffiliateFundingProviderController::class, 'requestMode'])->name('admin.affiliate-funding-providers.mode-request');
 
 
             Route::middleware(['auth','verified','admin'])->post('admin/settings/emails_to_notify_failed_transactions', [AdminSettingsController::class, 'emails_to_notify_failed_transactions'])->name('admin.settings.emails_to_notify_failed_transactions');

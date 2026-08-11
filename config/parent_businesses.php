@@ -5,6 +5,7 @@ return [
         'ownership_reads' => env('PARENT_OWNERSHIP_READS', false),
         'normalized_pricing' => env('PARENT_NORMALIZED_PRICING', false),
         'provider_routing' => env('PARENT_PROVIDER_ROUTING', false),
+        'multi_parent_funding' => env('MULTI_PARENT_FUNDING_ENABLED', false),
     ],
     'oresamsub' => [
         'name' => 'OresamSub',

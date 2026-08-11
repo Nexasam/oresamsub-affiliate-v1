@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ParentAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ParentAdmin\BulkStoreProductPlansRequest;
+use App\Http\Requests\ParentAdmin\SaveProductPlanConfigurationRequest;
 use App\Http\Requests\ParentAdmin\StoreProductPlanRequest;
 use App\Http\Requests\ParentAdmin\UpdateProductPlanRequest;
 use App\Models\ProductPlan;
@@ -55,6 +56,28 @@ class ProductPlanController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'provider_connection_id', 'name']),
         ]);
+    }
+
+    public function edit(Request $request, ProductPlan $plan): View
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        abort_unless($plan->parent_business_id === $parent->id, 404);
+
+        return view('parent-admin.product-plans.edit', [
+            'plan' => $plan->load(['providerRoutes', 'parentPrices']),
+            'categories' => ProductPlanCategory::query()->with(['product:id,product_name', 'network:id,network_name'])->orderBy('product_plan_category_name')->get(),
+            'levels' => $parent->resellerLevels()->where('status', 'active')->orderBy('position')->get(['id', 'name', 'position']),
+            'connections' => $parent->providerConnections()->where('status', 'active')->where('approval_status', 'approved')
+                ->whereHas('providerConnection', fn ($query) => $query->where('status', 'active'))
+                ->with('providerConnection:id,name')->orderBy('name')->get(['id', 'provider_connection_id', 'name']),
+        ]);
+    }
+
+    public function updateConfiguration(SaveProductPlanConfigurationRequest $request, ProductPlan $plan): RedirectResponse
+    {
+        $this->catalog->updateConfiguration($request->user('parent_admin')->parentBusiness, $plan, $request->validated());
+
+        return redirect()->route('parent-admin.product-plans.index')->with('success', 'Product plan configuration updated.');
     }
 
     public function store(StoreProductPlanRequest $request): JsonResponse|RedirectResponse

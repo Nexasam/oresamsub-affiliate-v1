@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ParentAdmin\AffiliateController;
 use App\Http\Controllers\ParentAdmin\AffiliateProfitCapController;
 use App\Http\Controllers\ParentAdmin\AuthController;
 use App\Http\Controllers\ParentAdmin\DashboardController;
@@ -21,7 +22,14 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('product-plans/data', [ProductPlanController::class, 'data'])->name('product-plans.data');
         Route::post('product-plans', [ProductPlanController::class, 'store'])->name('product-plans.store');
         Route::post('product-plans/bulk', [ProductPlanController::class, 'bulkStore'])->name('product-plans.bulk-store');
+        Route::get('product-plans/{plan}/edit', [ProductPlanController::class, 'edit'])->name('product-plans.edit');
+        Route::put('product-plans/{plan}/configuration', [ProductPlanController::class, 'updateConfiguration'])->name('product-plans.configuration.update');
         Route::patch('product-plans/{plan}', [ProductPlanController::class, 'update'])->name('product-plans.update');
+        Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
+        Route::post('affiliates', [AffiliateController::class, 'store'])->name('affiliates.store');
+        Route::post('affiliates/{affiliate}/attach', [AffiliateController::class, 'attach'])->name('affiliates.attach');
+        Route::patch('affiliates/{affiliate}/level', [AffiliateController::class, 'updateLevel'])->name('affiliates.level.update');
+        Route::post('affiliates/{affiliate}/categories/sync', [AffiliateController::class, 'syncCategories'])->name('affiliates.categories.sync');
         Route::get('provider-connections', [ProviderConnectionController::class, 'index'])->name('provider-connections.index');
         Route::get('provider-connections/data', [ProviderConnectionController::class, 'data'])->name('provider-connections.data');
         Route::post('provider-connections', [ProviderConnectionController::class, 'store'])->name('provider-connections.store');

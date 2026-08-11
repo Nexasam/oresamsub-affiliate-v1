@@ -106,6 +106,35 @@ class ParentCatalogService
         return $this->hydratePlan($plan);
     }
 
+    public function updateConfiguration(ParentBusiness $parent, ProductPlan $plan, array $attributes): ProductPlan
+    {
+        abort_unless($plan->parent_business_id === $parent->id, 404);
+
+        return DB::transaction(function () use ($parent, $plan, $attributes) {
+            $route = $attributes['route'] ?? null;
+            $prices = $attributes['prices'] ?? [];
+            unset($attributes['route'], $attributes['prices']);
+            $plan->update($attributes);
+
+            if ($route && filled($route['parent_provider_connection_id'] ?? null) && filled($route['provider_plan_id'] ?? null)) {
+                $plan->providerRoutes()->updateOrCreate(['priority' => 1], [
+                    'parent_business_id' => $parent->id,
+                    'parent_provider_connection_id' => $route['parent_provider_connection_id'],
+                    'provider_plan_id' => $route['provider_plan_id'],
+                    'active' => (bool) $attributes['visibility'],
+                ]);
+            } elseif (! $attributes['visibility']) {
+                $plan->providerRoutes()->where('priority', 1)->delete();
+            }
+
+            if ($prices !== []) {
+                $this->updatePrices($parent, $plan, $prices);
+            }
+
+            return $this->hydratePlan($plan);
+        });
+    }
+
     public function replaceLevels(ParentBusiness $parent, array $levels): Collection
     {
         return DB::transaction(function () use ($parent, $levels) {

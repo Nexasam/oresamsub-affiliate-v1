@@ -322,6 +322,41 @@ it('does not activate an external parent draft without a valid route and complet
     expect((bool) $draft->fresh()->visibility)->toBeFalse();
 });
 
+it('fully edits an owned plan route settings and reseller prices', function () {
+    [$parent, $admin] = catalogParent('full-edit-parent');
+    $category = catalogCategory();
+    $connection = catalogRouting($parent);
+    $levels = catalogLevels($parent);
+    $plan = ProductPlan::create([
+        'parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id,
+        'product_plan_name' => 'Draft', 'cost_price' => 100, 'profit_category' => 'flat',
+        'visibility' => false, 'affiliate_visibility' => false, 'public_visibility' => false,
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get("/parent-admin/product-plans/{$plan->id}/edit")
+        ->assertOk()->assertSee('Edit product plan')->assertSee('Provider external plan ID');
+
+    $payload = comprehensivePlanPayload($category, $connection, $levels, [
+        'product_plan_name' => 'Edited MTN 1GB',
+        'route' => ['provider_plan_id' => 'PAUL-EDITED-1GB'],
+        'prices' => [
+            ['selling_price' => 240, 'max_profit' => 60],
+            ['selling_price' => 250, 'max_profit' => 70],
+        ],
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->put("/parent-admin/product-plans/{$plan->id}/configuration", $payload)
+        ->assertRedirect(route('parent-admin.product-plans.index'));
+
+    expect($plan->fresh()->product_plan_name)->toBe('Edited MTN 1GB')
+        ->and($plan->providerRoutes()->sole()->provider_plan_id)->toBe('PAUL-EDITED-1GB')
+        ->and($plan->providerRoutes()->sole()->active)->toBeTrue()
+        ->and($plan->parentPrices()->orderBy('parent_reseller_level_id')->pluck('selling_price')->all())
+        ->toBe(['240.00', '250.00']);
+});
+
 it('validates product plan fields without creating partial records', function () {
     [, $admin] = catalogParent('validating-parent');
 

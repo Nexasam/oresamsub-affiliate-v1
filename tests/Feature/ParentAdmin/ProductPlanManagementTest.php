@@ -115,7 +115,31 @@ it('renders a functional parent product plan workspace', function () {
         ->assertSee('Bulk addition')
         ->assertSee('Provider external plan ID')
         ->assertSee('Reseller acquisition prices')
-        ->assertSee('Next page');
+        ->assertSee('Parent product plans');
+});
+
+it('uses blade forms instead of alpine requests for product plan creation', function () {
+    [, $admin] = catalogParent('blade-plan-parent');
+    $category = catalogCategory();
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/product-plans')
+        ->assertOk()
+        ->assertSee('<form method="POST"', false)
+        ->assertDontSee('@submit.prevent="createPlan"', false)
+        ->assertDontSee('axios.post(this.urls.store', false)
+        ->assertDontSee('x-init="load()"', false);
+
+    $this->actingAs($admin, 'parent_admin')->post('/parent-admin/product-plans', [
+        'product_plan_name' => 'Blade draft plan',
+        'product_plan_category_id' => $category->id,
+        'cost_price' => 100,
+        'profit_category' => 'flat',
+        'visibility' => false,
+        'affiliate_visibility' => false,
+        'public_visibility' => false,
+    ])->assertRedirect(route('parent-admin.product-plans.index'))
+        ->assertSessionHas('success', 'Product plan added.');
 });
 
 it('lists only plans owned by the authenticated parent', function () {

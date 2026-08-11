@@ -16,13 +16,39 @@
             <div class="grid h-10 w-10 place-items-center rounded-2xl bg-blue-400 font-black text-slate-950">P</div>
             <div class="min-w-0"><p class="truncate font-semibold leading-tight">{{ $parentAdmin->parentBusiness->name }}</p><p class="text-xs text-slate-400">Parent workspace</p></div>
         </div>
-        <nav class="flex-1 space-y-2 p-4">
-            <a href="{{ route('parent-admin.product-plans.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.product-plans.*') || request()->routeIs('parent-admin.dashboard') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>▦</span> Product plans</a>
-            <a href="{{ route('parent-admin.pricing.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.pricing.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>₦</span> Pricing</a>
-            <a href="{{ route('parent-admin.provider-connections.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.provider-connections.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>⇄</span> Providers</a>
-            <a href="{{ route('parent-admin.funding-providers.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.funding-providers.*') || request()->routeIs('parent-admin.funding-mode-requests.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>₦</span> Funding</a>
-            <a href="{{ route('parent-admin.affiliates.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.affiliates.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>◎</span> Affiliates</a>
-            <a href="{{ route('parent-admin.operations.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.operations.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>⌘</span> Operations</a>
+        @php($navigation = [
+            ['label' => 'Overview', 'items' => [
+                ['label' => 'Dashboard', 'route' => 'parent-admin.dashboard', 'match' => 'parent-admin.dashboard', 'icon' => 'DB'],
+                ['label' => 'Operations', 'route' => 'parent-admin.operations.index', 'match' => 'parent-admin.operations.*', 'icon' => 'OP'],
+            ]],
+            ['label' => 'Affiliate network', 'items' => [
+                ['label' => 'Affiliates', 'route' => 'parent-admin.affiliates.index', 'match' => 'parent-admin.affiliates.*', 'icon' => 'AF'],
+                ['label' => 'Affiliate profit limits', 'route' => 'parent-admin.pricing.affiliates.index', 'match' => 'parent-admin.pricing.affiliates.*', 'icon' => 'PL'],
+            ]],
+            ['label' => 'Products & pricing', 'items' => [
+                ['label' => 'Product plans', 'route' => 'parent-admin.product-plans.index', 'match' => 'parent-admin.product-plans.*', 'icon' => 'PP'],
+                ['label' => 'Pricing levels', 'route' => 'parent-admin.pricing.index', 'match' => ['parent-admin.pricing.index', 'parent-admin.pricing.data', 'parent-admin.pricing.defaults.*', 'parent-admin.pricing.levels.*', 'parent-admin.pricing.plans.*'], 'icon' => '₦'],
+            ]],
+            ['label' => 'Integrations', 'items' => [
+                ['label' => 'Provider connections', 'route' => 'parent-admin.provider-connections.index', 'match' => 'parent-admin.provider-connections.*', 'icon' => 'PC'],
+                ['label' => 'Funding providers', 'route' => 'parent-admin.funding-providers.index', 'match' => ['parent-admin.funding-providers.*', 'parent-admin.funding-mode-requests.*'], 'icon' => 'FP'],
+            ]],
+        ])
+        <nav class="flex-1 space-y-6 overflow-y-auto px-4 py-5">
+            @foreach($navigation as $group)
+            <section>
+                <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">{{ $group['label'] }}</p>
+                <div class="space-y-1">
+                    @foreach($group['items'] as $item)
+                    @php($active = request()->routeIs($item['match']))
+                    <a href="{{ route($item['route']) }}" class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {{ $active ? 'bg-blue-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[10px] font-black {{ $active ? 'bg-slate-950/10' : 'bg-white/5 text-slate-300 group-hover:bg-white/10' }}">{{ $item['icon'] }}</span>
+                        <span class="truncate">{{ $item['label'] }}</span>
+                    </a>
+                    @endforeach
+                </div>
+            </section>
+            @endforeach
         </nav>
         <div class="border-t border-white/10 p-4">
             <div class="mb-3 px-3"><p class="truncate text-sm font-medium">{{ $parentAdmin->name }}</p><p class="truncate text-xs text-slate-400">{{ $parentAdmin->email }}</p></div>

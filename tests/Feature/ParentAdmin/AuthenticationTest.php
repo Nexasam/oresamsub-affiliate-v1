@@ -44,10 +44,7 @@ it('allows an active parent administrator to sign in to its business workspace',
     $this->get('/parent-admin')
         ->assertOk()
         ->assertSee('OresamSub')
-        ->assertSee('Overview')
-        ->assertSee('Affiliate network')
-        ->assertSee('Products & pricing')
-        ->assertSee('Integrations')
+        ->assertDontSee('Affiliate profit limits')
         ->assertSee('Product plans')
         ->assertSee('Pricing');
 });

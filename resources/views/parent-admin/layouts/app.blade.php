@@ -17,37 +17,21 @@
             <div class="min-w-0"><p class="truncate font-semibold leading-tight">{{ $parentAdmin->parentBusiness->name }}</p><p class="text-xs text-slate-400">Parent workspace</p></div>
         </div>
         @php($navigation = [
-            ['label' => 'Overview', 'items' => [
-                ['label' => 'Dashboard', 'route' => 'parent-admin.dashboard', 'match' => 'parent-admin.dashboard', 'icon' => 'DB'],
-                ['label' => 'Operations', 'route' => 'parent-admin.operations.index', 'match' => 'parent-admin.operations.*', 'icon' => 'OP'],
-            ]],
-            ['label' => 'Affiliate network', 'items' => [
-                ['label' => 'Affiliates', 'route' => 'parent-admin.affiliates.index', 'match' => 'parent-admin.affiliates.*', 'icon' => 'AF'],
-                ['label' => 'Affiliate profit limits', 'route' => 'parent-admin.pricing.affiliates.index', 'match' => 'parent-admin.pricing.affiliates.*', 'icon' => 'PL'],
-            ]],
-            ['label' => 'Products & pricing', 'items' => [
-                ['label' => 'Product plans', 'route' => 'parent-admin.product-plans.index', 'match' => 'parent-admin.product-plans.*', 'icon' => 'PP'],
-                ['label' => 'Pricing levels', 'route' => 'parent-admin.pricing.index', 'match' => ['parent-admin.pricing.index', 'parent-admin.pricing.data', 'parent-admin.pricing.defaults.*', 'parent-admin.pricing.levels.*', 'parent-admin.pricing.plans.*'], 'icon' => '₦'],
-            ]],
-            ['label' => 'Integrations', 'items' => [
-                ['label' => 'Provider connections', 'route' => 'parent-admin.provider-connections.index', 'match' => 'parent-admin.provider-connections.*', 'icon' => 'PC'],
-                ['label' => 'Funding providers', 'route' => 'parent-admin.funding-providers.index', 'match' => ['parent-admin.funding-providers.*', 'parent-admin.funding-mode-requests.*'], 'icon' => 'FP'],
-            ]],
+            ['label' => 'Dashboard', 'route' => 'parent-admin.dashboard', 'match' => 'parent-admin.dashboard', 'icon' => 'DB'],
+            ['label' => 'Operations', 'route' => 'parent-admin.operations.index', 'match' => 'parent-admin.operations.*', 'icon' => 'OP'],
+            ['label' => 'Affiliates', 'route' => 'parent-admin.affiliates.index', 'match' => 'parent-admin.affiliates.*', 'icon' => 'AF'],
+            ['label' => 'Product plans', 'route' => 'parent-admin.product-plans.index', 'match' => 'parent-admin.product-plans.*', 'icon' => 'PP'],
+            ['label' => 'Pricing levels', 'route' => 'parent-admin.pricing.index', 'match' => ['parent-admin.pricing.index', 'parent-admin.pricing.data', 'parent-admin.pricing.defaults.*', 'parent-admin.pricing.levels.*', 'parent-admin.pricing.plans.*', 'parent-admin.pricing.affiliates.*'], 'icon' => '₦'],
+            ['label' => 'Provider connections', 'route' => 'parent-admin.provider-connections.index', 'match' => 'parent-admin.provider-connections.*', 'icon' => 'PC'],
+            ['label' => 'Funding providers', 'route' => 'parent-admin.funding-providers.index', 'match' => ['parent-admin.funding-providers.*', 'parent-admin.funding-mode-requests.*'], 'icon' => 'FP'],
         ])
-        <nav class="flex-1 space-y-6 overflow-y-auto px-4 py-5">
-            @foreach($navigation as $group)
-            <section>
-                <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-500">{{ $group['label'] }}</p>
-                <div class="space-y-1">
-                    @foreach($group['items'] as $item)
-                    @php($active = request()->routeIs($item['match']))
-                    <a href="{{ route($item['route']) }}" class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {{ $active ? 'bg-blue-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
-                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[10px] font-black {{ $active ? 'bg-slate-950/10' : 'bg-white/5 text-slate-300 group-hover:bg-white/10' }}">{{ $item['icon'] }}</span>
-                        <span class="truncate">{{ $item['label'] }}</span>
-                    </a>
-                    @endforeach
-                </div>
-            </section>
+        <nav class="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+            @foreach($navigation as $item)
+            @php($active = request()->routeIs($item['match']))
+            <a href="{{ route($item['route']) }}" class="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition {{ $active ? 'bg-blue-400 text-slate-950' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                <span class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[9px] font-black {{ $active ? 'bg-slate-950/10' : 'bg-white/5 text-slate-300' }}">{{ $item['icon'] }}</span>
+                <span class="truncate">{{ $item['label'] }}</span>
+            </a>
             @endforeach
         </nav>
         <div class="border-t border-white/10 p-4">

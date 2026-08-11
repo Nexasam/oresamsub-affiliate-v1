@@ -68,7 +68,9 @@ it('renders the parent provider connection workspace', function () {
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections')
         ->assertOk()->assertSee('Provider connections')->assertSee('Product request configuration')
-        ->assertSee('Each product has its own payload, headers, network IDs and response rules.');
+        ->assertSee('Each product has its own payload, headers, network IDs and response rules.')
+        ->assertDontSee('structuredClone(this.form)', false)
+        ->assertSee('JSON.parse(JSON.stringify(this.form))', false);
 });
 
 it('creates a parent scoped connection with encrypted masked credentials', function () {

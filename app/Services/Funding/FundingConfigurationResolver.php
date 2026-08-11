@@ -23,7 +23,11 @@ class FundingConfigurationResolver
                 ->where('active', true)
                 ->where('generation_enabled', true)
                 ->whereHas('fundingProvider', fn ($provider) => $provider->where('slug', $providerSlug)->where('active', true)))
-            ->with('parentFundingProvider.fundingProvider')
+            ->with([
+                'parentFundingProvider.fundingProvider',
+                'parentFundingProvider.banks' => fn ($query) => $query->where('active', true)->where('generation_enabled', true),
+                'banks' => fn ($query) => $query->where('active', true)->where('generation_enabled', true)->with('parentBank'),
+            ])
             ->first();
 
         if (! $config) {
@@ -38,6 +42,10 @@ class FundingConfigurationResolver
             throw ValidationException::withMessages(['funding_provider' => 'The active funding configuration has no usable credentials.']);
         }
 
+        $banks = $config->management_mode === 'affiliate_managed'
+            ? $config->banks->filter(fn ($bank) => $bank->parentBank?->active && $bank->parentBank?->generation_enabled)->values()
+            : $config->parentFundingProvider->banks;
+
         return [
             'affiliate' => $affiliate,
             'parent' => $affiliate->parentBusiness,
@@ -46,7 +54,8 @@ class FundingConfigurationResolver
             'affiliate_config' => $config,
             'management_mode' => $config->management_mode,
             'credentials' => $credentials,
-            'bank_codes' => $config->bank_codes ?? [],
+            'banks' => $banks,
+            'bank_codes' => $banks->map(fn ($bank) => $config->management_mode === 'affiliate_managed' ? $bank->parentBank->bank_code : $bank->bank_code)->values()->all(),
             'settings' => $config->settings ?? [],
         ];
     }

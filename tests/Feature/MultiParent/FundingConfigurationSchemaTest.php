@@ -17,6 +17,10 @@ it('creates the additive multi-parent funding foundation', function () {
     expect(Schema::hasColumns('funding_providers', ['name', 'slug', 'adapter_key', 'credential_fields', 'active']))->toBeTrue()
         ->and(Schema::hasColumns('parent_funding_providers', ['parent_business_id', 'funding_provider_id', 'credentials', 'active', 'generation_enabled']))->toBeTrue()
         ->and(Schema::hasColumns('affiliate_funding_provider_configs', ['affiliate_id', 'parent_funding_provider_id', 'management_mode', 'credentials', 'bank_codes', 'active', 'generation_enabled']))->toBeTrue()
+        ->and(Schema::hasColumns('parent_funding_provider_banks', ['parent_funding_provider_id', 'name', 'bank_code', 'rate_type', 'rate_value', 'percentage_cap', 'active', 'generation_enabled']))->toBeTrue()
+        ->and(Schema::hasColumns('affiliate_funding_provider_banks', ['affiliate_funding_provider_config_id', 'parent_funding_provider_bank_id', 'rate_type', 'rate_value', 'percentage_cap', 'active', 'generation_enabled']))->toBeTrue()
+        ->and(Schema::hasColumns('parent_funding_providers', ['webhook_key', 'webhook_secret', 'webhook_active']))->toBeTrue()
+        ->and(Schema::hasColumns('affiliate_funding_provider_configs', ['webhook_key', 'webhook_secret', 'webhook_active']))->toBeTrue()
         ->and(Schema::hasColumns('funding_mode_change_requests', ['affiliate_funding_provider_config_id', 'requested_mode', 'status', 'reviewed_by_parent_admin_id']))->toBeTrue()
         ->and(Schema::hasColumns('funding_webhook_events', ['funding_provider_id', 'external_event_id', 'payload', 'status']))->toBeTrue()
         ->and(Schema::hasColumns('user_virtual_accounts', ['parent_business_id', 'parent_funding_provider_id', 'affiliate_funding_provider_config_id']))->toBeTrue();

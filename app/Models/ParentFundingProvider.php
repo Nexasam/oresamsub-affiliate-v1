@@ -10,11 +10,11 @@ class ParentFundingProvider extends Model
 {
     protected $guarded = [];
 
-    protected $hidden = ['credentials'];
+    protected $hidden = ['credentials', 'webhook_secret'];
 
     protected function casts(): array
     {
-        return ['credentials' => 'encrypted:array', 'settings' => 'array', 'active' => 'boolean', 'generation_enabled' => 'boolean'];
+        return ['credentials' => 'encrypted:array', 'settings' => 'array', 'webhook_secret' => 'encrypted', 'webhook_active' => 'boolean', 'active' => 'boolean', 'generation_enabled' => 'boolean'];
     }
 
     public function parentBusiness(): BelongsTo
@@ -30,5 +30,10 @@ class ParentFundingProvider extends Model
     public function affiliateConfigurations(): HasMany
     {
         return $this->hasMany(AffiliateFundingProviderConfig::class);
+    }
+
+    public function banks(): HasMany
+    {
+        return $this->hasMany(ParentFundingProviderBank::class);
     }
 }

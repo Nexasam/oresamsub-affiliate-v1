@@ -4,13 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\AffiliateFundingProviderConfig;
 use App\Models\FundingModeChangeRequest;
+use App\Models\ParentFundingProviderBank;
+use App\Services\Funding\FundingChargeCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AffiliateFundingProviderController extends Controller
 {
+    public function __construct(private readonly FundingChargeCalculator $charges) {}
+
     public function index(): View
     {
         $affiliate = session('affiliate');
@@ -20,7 +26,7 @@ class AffiliateFundingProviderController extends Controller
             'configs' => AffiliateFundingProviderConfig::query()
                 ->where('affiliate_id', $affiliate->id)
                 ->whereHas('parentFundingProvider', fn ($query) => $query->where('active', true))
-                ->with(['parentFundingProvider.fundingProvider', 'modeChangeRequests' => fn ($query) => $query->where('status', 'pending')])
+                ->with(['parentFundingProvider.fundingProvider', 'parentFundingProvider.banks' => fn ($query) => $query->where('active', true)->orderBy('name'), 'banks', 'modeChangeRequests' => fn ($query) => $query->where('status', 'pending')])
                 ->get(),
         ]);
     }
@@ -31,15 +37,35 @@ class AffiliateFundingProviderController extends Controller
         $data = $request->validate([
             'credentials' => ['nullable', 'array'],
             'credentials.*' => ['nullable', 'string', 'max:2000'],
-            'bank_codes' => ['nullable', 'array'],
-            'bank_codes.*' => ['required', 'string', 'max:100', 'distinct'],
+            'webhook_secret' => ['nullable', 'string', 'max:2000'],
+            'webhook_active' => ['required', 'boolean'],
+            'banks' => ['nullable', 'array'],
+            'banks.*.parent_funding_provider_bank_id' => ['required', 'integer'],
+            'banks.*.rate_type' => ['required', Rule::in(['flat', 'percentage'])],
+            'banks.*.rate_value' => ['required', 'numeric', 'min:0'],
+            'banks.*.percentage_cap' => ['nullable', 'numeric', 'min:0'],
+            'banks.*.active' => ['required', 'boolean'],
+            'banks.*.generation_enabled' => ['required', 'boolean'],
         ]);
 
         if (! filled(array_filter($data['credentials'] ?? []))) {
             unset($data['credentials']);
         }
-        $data['bank_codes'] = collect($data['bank_codes'] ?? [])->flatMap(fn ($value) => explode(',', $value))->map(fn ($value) => trim($value))->filter()->unique()->values()->all();
-        $config->update($data);
+        if (! filled($data['webhook_secret'] ?? null)) {
+            unset($data['webhook_secret']);
+        }
+        $banks = $data['banks'] ?? [];
+        unset($data['banks']);
+        $data['webhook_key'] = $config->webhook_key ?? (string) Str::uuid();
+
+        DB::transaction(function () use ($config, $data, $banks) {
+            $config->update($data);
+            foreach ($banks as $bank) {
+                $parentBank = ParentFundingProviderBank::where('parent_funding_provider_id', $config->parent_funding_provider_id)->findOrFail($bank['parent_funding_provider_bank_id']);
+                $this->charges->validate($bank['rate_type'], (string) $bank['rate_value'], isset($bank['percentage_cap']) ? (string) $bank['percentage_cap'] : null);
+                $config->banks()->updateOrCreate(['parent_funding_provider_bank_id' => $parentBank->id], $bank);
+            }
+        });
 
         return redirect('/admin/affiliate-funding-providers')->with('success', 'Funding details saved.');
     }

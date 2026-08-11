@@ -5,6 +5,7 @@ use App\Models\AffiliateFundingProviderConfig;
 use App\Models\FundingProvider;
 use App\Models\ParentBusiness;
 use App\Models\ParentFundingProvider;
+use App\Models\ParentFundingProviderBank;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,16 +22,25 @@ it('lets an affiliate admin save own credentials and request an approved mode sw
     $provider = FundingProvider::create(['name' => 'Xixapay', 'slug' => 'xixapay', 'adapter_key' => 'xixapay', 'credential_fields' => ['api_key'], 'active' => true]);
     $parentProvider = ParentFundingProvider::create(['parent_business_id' => $parent->id, 'funding_provider_id' => $provider->id, 'credentials' => ['api_key' => 'parent-secret'], 'active' => true, 'generation_enabled' => true]);
     $config = AffiliateFundingProviderConfig::create(['affiliate_id' => $affiliate->id, 'parent_funding_provider_id' => $parentProvider->id, 'management_mode' => 'parent_managed', 'active' => true, 'generation_enabled' => true]);
+    $bank = ParentFundingProviderBank::create(['parent_funding_provider_id' => $parentProvider->id, 'name' => '9PSB', 'bank_code' => '9PSB', 'rate_type' => 'flat', 'rate_value' => 50, 'active' => true, 'generation_enabled' => true]);
 
     $this->withSession(['affiliate' => $affiliate])->actingAs($admin)
         ->get('/admin/affiliate-funding-providers')->assertOk()->assertSee('Affiliate funding providers')->assertDontSee('parent-secret');
 
     $this->withSession(['affiliate' => $affiliate])->actingAs($admin)
         ->put("/admin/affiliate-funding-providers/{$config->id}", [
-            'credentials' => ['api_key' => 'affiliate-secret'], 'bank_codes' => ['9PSB'],
+            'credentials' => ['api_key' => 'affiliate-secret'], 'webhook_secret' => 'webhook-secret', 'webhook_active' => '1',
+            'banks' => [[
+                'parent_funding_provider_bank_id' => $bank->id, 'rate_type' => 'percentage',
+                'rate_value' => '1.5', 'percentage_cap' => '100', 'active' => '1', 'generation_enabled' => '1',
+            ]],
         ])->assertRedirect('/admin/affiliate-funding-providers');
 
-    expect(DB::table('affiliate_funding_provider_configs')->where('id', $config->id)->value('credentials'))->not->toContain('affiliate-secret');
+    expect(DB::table('affiliate_funding_provider_configs')->where('id', $config->id)->value('credentials'))->not->toContain('affiliate-secret')
+        ->and(DB::table('affiliate_funding_provider_configs')->where('id', $config->id)->value('webhook_secret'))->not->toContain('webhook-secret')
+        ->and($config->banks()->sole()->parent_funding_provider_bank_id)->toBe($bank->id)
+        ->and($config->banks()->sole()->rate_type)->toBe('percentage')
+        ->and($config->banks()->sole()->percentage_cap)->toBe('100.00');
 
     $this->withSession(['affiliate' => $affiliate])->actingAs($admin)
         ->post("/admin/affiliate-funding-providers/{$config->id}/mode-request", ['requested_mode' => 'affiliate_managed'])

@@ -8,6 +8,7 @@ use App\Http\Controllers\ExternalIntegration\Wallets\FundingOptionsController;
 use App\Http\Controllers\NetworkController;
 use App\Http\Controllers\ProductWebhookController;
 use App\Http\Controllers\SecurewaveWebhookController;
+use App\Http\Controllers\FundingWebhookController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\WalletsController;
@@ -51,6 +52,7 @@ Route::post('admin/products/oresamsub', [ProductWebhookController::class, 'produ
 Route::get('admin/fetch_addons', [AddonController::class, 'fetch_addons'])->name('admin.addons.fetch_addons');
 Route::post('admin/wallets/xixapayhook/{id}', [WalletsController::class, 'xixapayhook'])->name('admin.wallet.xixapay.webhook');
 Route::post('admin/wallets/securewaveng_webhook/{id}',[SecurewaveWebhookController::class, 'securewavehook'])->name('admin.wallet.securewaveng.webhook');
+Route::post('funding/webhooks/{provider:slug}/{webhookKey}', FundingWebhookController::class)->name('funding.webhooks.receive');
 
 //WEBHOOK
 

@@ -59,3 +59,13 @@
 - [ ] Implement `MULTI_PARENT_FUNDING_ENABLED=false` default and fail-closed resolution.
 - [ ] Implement idempotent event recording and historical configuration lookup.
 - [ ] Run focused and regression suites, then commit the feature.
+
+### Task 6: Normalized bank configuration and managed webhooks
+
+**Files:** Create parent and affiliate funding-bank models, parent provider detail screens, affiliate bank pricing controls and the signed webhook receiver.
+
+- [ ] Add normalized parent bank and affiliate bank settings without removing legacy JSON bank codes.
+- [ ] Add parent provider summary, searchable affiliate management and reusable bank catalogue screens.
+- [ ] Add flat and capped-percentage charge calculation with exact decimal arithmetic.
+- [ ] Add encrypted parent/affiliate webhook secrets, generated URLs and idempotent signed event intake.
+- [ ] Resolve effective credentials, banks and charges from the approved management mode.

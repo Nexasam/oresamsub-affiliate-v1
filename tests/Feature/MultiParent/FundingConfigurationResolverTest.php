@@ -1,10 +1,12 @@
 <?php
 
 use App\Models\Affiliate;
+use App\Models\AffiliateFundingProviderBank;
 use App\Models\AffiliateFundingProviderConfig;
 use App\Models\FundingProvider;
 use App\Models\ParentBusiness;
 use App\Models\ParentFundingProvider;
+use App\Models\ParentFundingProviderBank;
 use App\Services\Funding\FundingConfigurationResolver;
 use App\Services\Funding\FundingWebhookRecorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,8 +22,9 @@ function resolvableFunding(): array
     $provider = FundingProvider::create(['name' => 'Xixapay', 'slug' => 'xixapay', 'adapter_key' => 'xixapay', 'credential_fields' => ['api_key'], 'active' => true]);
     $parentProvider = ParentFundingProvider::create(['parent_business_id' => $parent->id, 'funding_provider_id' => $provider->id, 'credentials' => ['api_key' => 'parent-key'], 'active' => true, 'generation_enabled' => true]);
     $config = AffiliateFundingProviderConfig::create(['affiliate_id' => $affiliate->id, 'parent_funding_provider_id' => $parentProvider->id, 'management_mode' => 'parent_managed', 'active' => true, 'generation_enabled' => true]);
+    $bank = ParentFundingProviderBank::create(['parent_funding_provider_id' => $parentProvider->id, 'name' => '9PSB', 'bank_code' => '9PSB', 'rate_type' => 'flat', 'rate_value' => 50, 'active' => true, 'generation_enabled' => true]);
 
-    return compact('parent', 'affiliate', 'provider', 'parentProvider', 'config');
+    return compact('parent', 'affiliate', 'provider', 'parentProvider', 'config', 'bank');
 }
 
 it('keeps legacy funding authoritative until the feature flag is enabled', function () {
@@ -33,7 +36,21 @@ it('keeps legacy funding authoritative until the feature flag is enabled', funct
     config(['parent_businesses.features.multi_parent_funding' => true]);
     $resolved = app(FundingConfigurationResolver::class)->resolveForGeneration($fixture['affiliate'], 'xixapay');
     expect($resolved['credentials'])->toBe(['api_key' => 'parent-key'])
-        ->and($resolved['management_mode'])->toBe('parent_managed');
+        ->and($resolved['management_mode'])->toBe('parent_managed')
+        ->and($resolved['banks']->first()->bank_code)->toBe('9PSB')
+        ->and($resolved['banks']->first()->rate_value)->toBe('50.00');
+});
+
+it('uses affiliate bank pricing only in affiliate-managed mode', function () {
+    $fixture = resolvableFunding();
+    AffiliateFundingProviderBank::create(['affiliate_funding_provider_config_id' => $fixture['config']->id, 'parent_funding_provider_bank_id' => $fixture['bank']->id, 'rate_type' => 'percentage', 'rate_value' => 1, 'percentage_cap' => 100, 'active' => true, 'generation_enabled' => true]);
+    $fixture['config']->update(['management_mode' => 'affiliate_managed', 'credentials' => ['api_key' => 'affiliate-key']]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $resolved = app(FundingConfigurationResolver::class)->resolveForGeneration($fixture['affiliate'], 'xixapay');
+    expect($resolved['credentials'])->toBe(['api_key' => 'affiliate-key'])
+        ->and($resolved['banks']->first()->rate_type)->toBe('percentage')
+        ->and($resolved['banks']->first()->parentBank->bank_code)->toBe('9PSB');
 });
 
 it('blocks new generation when disabled but records duplicate webhooks only once', function () {

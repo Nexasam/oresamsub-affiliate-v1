@@ -43,4 +43,9 @@ class Affiliate extends Model
     {
         return $this->hasMany(AffiliateServiceProfitCap::class);
     }
+
+    public function fundingProviderConfigurations(): HasMany
+    {
+        return $this->hasMany(AffiliateFundingProviderConfig::class);
+    }
 }

@@ -20,16 +20,26 @@ it('lets a parent enable providers configure credentials and approve affiliate m
 
     $this->actingAs($admin, 'parent_admin')->post("/parent-admin/funding-providers/{$provider->id}/enable", [
         'credentials' => ['api_key' => 'parent-key', 'secret_key' => 'parent-secret'],
+        'webhook_secret' => 'parent-webhook-secret', 'webhook_active' => '1',
         'active' => '1', 'generation_enabled' => '1',
     ])->assertRedirect('/parent-admin/funding-providers');
 
     $parentProvider = $parent->fundingProviders()->sole();
     expect(DB::table('parent_funding_providers')->where('id', $parentProvider->id)->value('credentials'))->not->toContain('parent-secret');
 
+    $this->actingAs($admin, 'parent_admin')->post("/parent-admin/funding-providers/{$parentProvider->id}/banks", [
+        'name' => '9PSB', 'bank_code' => '9PSB', 'rate_type' => 'percentage', 'rate_value' => '1.5',
+        'percentage_cap' => '100', 'active' => '1', 'generation_enabled' => '1',
+    ])->assertRedirect();
+    expect($parentProvider->banks()->sole()->percentage_cap)->toBe('100.00');
+
+    $this->actingAs($admin, 'parent_admin')->get("/parent-admin/funding-providers/{$parentProvider->id}/banks")
+        ->assertOk()->assertSee('9PSB')->assertSee('Percentage');
+
     $this->actingAs($admin, 'parent_admin')->put("/parent-admin/funding-providers/{$parentProvider->id}/affiliates/{$affiliate->id}", [
         'management_mode' => 'parent_managed', 'active' => '1', 'generation_enabled' => '1',
         'bank_codes' => ['9PSB', 'SAFEHAVEN'],
-    ])->assertRedirect('/parent-admin/funding-providers');
+    ])->assertRedirect("/parent-admin/funding-providers/{$parentProvider->id}/affiliates");
 
     $config = AffiliateFundingProviderConfig::sole();
     FundingModeChangeRequest::create(['affiliate_funding_provider_config_id' => $config->id, 'requested_mode' => 'affiliate_managed', 'status' => 'pending']);
@@ -40,4 +50,7 @@ it('lets a parent enable providers configure credentials and approve affiliate m
 
     expect($config->fresh()->management_mode)->toBe('affiliate_managed')
         ->and($config->modeChangeRequests()->sole()->status)->toBe('approved');
+
+    $this->actingAs($admin, 'parent_admin')->get("/parent-admin/funding-providers/{$parentProvider->id}/affiliates?q=Child")
+        ->assertOk()->assertSee('Child')->assertSee('Affiliate managed');
 });

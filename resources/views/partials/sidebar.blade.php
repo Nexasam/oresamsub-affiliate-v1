@@ -375,6 +375,15 @@
                 </li>
                 <!-- End::slide -->
 
+                @if(Route::has('admin.affiliate-funding-providers.index'))
+                <li class="slide">
+                    <a href="{{ route('admin.affiliate-funding-providers.index') }}" class="side-menu__item">
+                        <i class="ti ti-building-bank side-menu__icon"></i>
+                        <span class="side-menu__label">Funding Providers</span>
+                    </a>
+                </li>
+                @endif
+
                 <!-- Update Affiliate -->
                 <li class="slide">
                     <a href="{{ route('affiliate.edit') }}" class="side-menu__item">

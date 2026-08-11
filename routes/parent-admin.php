@@ -39,6 +39,10 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::put('provider-connections/{connection}', [ProviderConnectionController::class, 'update'])->name('provider-connections.update');
         Route::get('funding-providers', [FundingProviderController::class, 'index'])->name('funding-providers.index');
         Route::post('funding-providers/{fundingProvider}/enable', [FundingProviderController::class, 'enable'])->name('funding-providers.enable');
+        Route::get('funding-providers/{parentProvider}/banks', [FundingProviderController::class, 'banks'])->name('funding-providers.banks.index');
+        Route::post('funding-providers/{parentProvider}/banks', [FundingProviderController::class, 'storeBank'])->name('funding-providers.banks.store');
+        Route::put('funding-providers/{parentProvider}/banks/{bank}', [FundingProviderController::class, 'updateBank'])->name('funding-providers.banks.update');
+        Route::get('funding-providers/{parentProvider}/affiliates', [FundingProviderController::class, 'affiliates'])->name('funding-providers.affiliates.index');
         Route::put('funding-providers/{parentProvider}/affiliates/{affiliate}', [FundingProviderController::class, 'configureAffiliate'])->name('funding-providers.affiliates.update');
         Route::patch('funding-mode-requests/{modeRequest}', [FundingProviderController::class, 'reviewMode'])->name('funding-mode-requests.review');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');

@@ -10,11 +10,11 @@ class AffiliateFundingProviderConfig extends Model
 {
     protected $guarded = [];
 
-    protected $hidden = ['credentials'];
+    protected $hidden = ['credentials', 'webhook_secret'];
 
     protected function casts(): array
     {
-        return ['credentials' => 'encrypted:array', 'settings' => 'array', 'bank_codes' => 'array', 'active' => 'boolean', 'generation_enabled' => 'boolean'];
+        return ['credentials' => 'encrypted:array', 'settings' => 'array', 'bank_codes' => 'array', 'webhook_secret' => 'encrypted', 'webhook_active' => 'boolean', 'active' => 'boolean', 'generation_enabled' => 'boolean'];
     }
 
     public function affiliate(): BelongsTo
@@ -30,5 +30,10 @@ class AffiliateFundingProviderConfig extends Model
     public function modeChangeRequests(): HasMany
     {
         return $this->hasMany(FundingModeChangeRequest::class);
+    }
+
+    public function banks(): HasMany
+    {
+        return $this->hasMany(AffiliateFundingProviderBank::class);
     }
 }

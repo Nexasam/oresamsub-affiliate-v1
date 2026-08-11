@@ -88,6 +88,19 @@ it('uses a blade form for parent connection submission and redirects with feedba
         ->assertSessionHas('success', 'Provider connection created and submitted for platform approval.');
 });
 
+it('renders typed header values with bearer prefix and suffix controls', function () {
+    [, $admin] = providerWorkspace('typed-header-provider');
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/provider-connections?create=1')
+        ->assertOk()
+        ->assertSee('Prefix (optional)')
+        ->assertSee('Suffix (optional)')
+        ->assertSee('headerTypeChanged(row)', false)
+        ->assertSee('request_headers][${index}][prefix]', false)
+        ->assertSee('request_headers][${index}][suffix]', false);
+});
+
 it('server renders an owned connection for editing through a normal put form', function () {
     [$parent, $admin, $adapter] = providerWorkspace('blade-edit-provider');
     $this->actingAs($admin, 'parent_admin')

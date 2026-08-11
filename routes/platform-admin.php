@@ -8,6 +8,7 @@ use App\Http\Controllers\PlatformAdmin\AuthController;
 use App\Http\Controllers\PlatformAdmin\CatalogController;
 use App\Http\Controllers\PlatformAdmin\DashboardController;
 use App\Http\Controllers\PlatformAdmin\ImpersonationController;
+use App\Http\Controllers\PlatformAdmin\ParentBusinessController;
 use App\Http\Controllers\PlatformAdmin\ParentProviderConnectionController;
 use App\Http\Controllers\PlatformAdmin\ProviderAdapterController;
 use App\Http\Controllers\PlatformAdmin\ReportController;
@@ -23,6 +24,9 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
     Route::middleware('auth:platform_admin')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
+        Route::get('parent-businesses', [ParentBusinessController::class, 'index'])->name('parent-businesses.index');
+        Route::get('parent-businesses/data', [ParentBusinessController::class, 'data'])->name('parent-businesses.data');
+        Route::post('parent-businesses', [ParentBusinessController::class, 'store'])->name('parent-businesses.store');
         Route::get('all-transactions', [TransactionController::class, 'index'])->name('transactions.index');
         Route::get('all-transactions/data', [TransactionController::class, 'data'])->name('transactions.data');
         Route::patch('all-transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status.update');

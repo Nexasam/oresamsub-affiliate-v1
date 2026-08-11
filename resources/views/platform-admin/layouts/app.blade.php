@@ -26,6 +26,11 @@
             <a href="{{ route('platform-admin.affiliates.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliates.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                 <span>◎</span> Affiliates
             </a>
+            @if (Route::has('platform-admin.parent-businesses.index'))
+                <a href="{{ route('platform-admin.parent-businesses.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.parent-businesses.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>▣</span> Parent businesses
+                </a>
+            @endif
             @if (Route::has('platform-admin.catalog.index'))
                 <a href="{{ route('platform-admin.catalog.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.catalog.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                     <span>▦</span> Global catalog

@@ -14,6 +14,16 @@ class ParentBusiness extends Model
         return $this->hasMany(ParentProviderConnection::class);
     }
 
+    public function parentAdmins(): HasMany
+    {
+        return $this->hasMany(ParentAdmin::class);
+    }
+
+    public function affiliates(): HasMany
+    {
+        return $this->hasMany(Affiliate::class);
+    }
+
     public function resellerLevels(): HasMany
     {
         return $this->hasMany(ParentResellerLevel::class);

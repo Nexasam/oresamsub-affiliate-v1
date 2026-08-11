@@ -3,6 +3,8 @@
 use App\Http\Controllers\ParentAdmin\AffiliateController;
 use App\Http\Controllers\ParentAdmin\AffiliateOperationsController;
 use App\Http\Controllers\ParentAdmin\AffiliateProfitCapController;
+use App\Http\Controllers\ParentAdmin\AffiliateProcessingController;
+use App\Http\Controllers\ParentAdmin\AffiliateSettlementWalletController;
 use App\Http\Controllers\ParentAdmin\AuthController;
 use App\Http\Controllers\ParentAdmin\DashboardController;
 use App\Http\Controllers\ParentAdmin\FundingProviderController;
@@ -32,6 +34,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::put('product-plans/{plan}/configuration', [ProductPlanController::class, 'updateConfiguration'])->name('product-plans.configuration.update');
         Route::patch('product-plans/{plan}', [ProductPlanController::class, 'update'])->name('product-plans.update');
         Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
+        Route::get('settlement-wallets', [AffiliateSettlementWalletController::class, 'index'])->name('settlement-wallets.index');
         Route::get('operations', [AffiliateOperationsController::class, 'index'])->name('operations.index');
         Route::post('affiliates', [AffiliateController::class, 'store'])->name('affiliates.store');
         Route::get('affiliates/{affiliate}/edit', [AffiliateController::class, 'edit'])->name('affiliates.edit');
@@ -40,6 +43,9 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::patch('affiliates/{affiliate}/level', [AffiliateController::class, 'updateLevel'])->name('affiliates.level.update');
         Route::post('affiliates/{affiliate}/categories/sync', [AffiliateController::class, 'syncCategories'])->name('affiliates.categories.sync');
         Route::middleware('parent.affiliate')->group(function () {
+            Route::get('affiliates/{affiliate}/settlement-wallet', [AffiliateSettlementWalletController::class, 'show'])->name('affiliates.settlement-wallet.show');
+            Route::post('affiliates/{affiliate}/settlement-wallet/credits', [AffiliateSettlementWalletController::class, 'credit'])->name('affiliates.settlement-wallet.credit');
+            Route::post('affiliates/{affiliate}/processing/change-requests', [AffiliateProcessingController::class, 'requestChange'])->name('affiliates.processing.change-requests.store');
             Route::get('affiliates/{affiliate}/catalog', [PlatformAffiliateOperationsController::class, 'catalog'])->name('affiliates.catalog');
             Route::patch('affiliates/{affiliate}/catalog/plans/{plan}', [PlatformAffiliateOperationsController::class, 'updatePlan'])->name('affiliates.catalog.plans.update');
             Route::patch('affiliates/{affiliate}/catalog/categories/{category}', [PlatformAffiliateOperationsController::class, 'updateCategory'])->name('affiliates.catalog.categories.update');

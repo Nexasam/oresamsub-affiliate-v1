@@ -254,3 +254,24 @@ it('fails safely for invalid json responses', function () {
     expect($result)->toMatchArray(['successful' => false, 'ambiguous' => false, 'http_status' => 502])
         ->and($result['provider_response'])->toBeNull();
 });
+
+it('requeries an uncertain purchase through the separately configured status endpoint', function () {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['data' => [
+            'requery_endpoint' => 'https://provider.example/data/status',
+            'requery_http_method' => 'POST',
+            'requery_parameters' => [['key' => 'request_id', 'type' => 'runtime', 'value' => 'reference']],
+        ]]],
+    ]);
+    Http::fake(['provider.example/data/status' => Http::response([
+        'data_status' => 'delivered', 'data' => ['message' => 'Confirmed', 'reference' => 'UPSTREAM-9'],
+    ], 200)]);
+
+    $result = app(ConfigurableProviderClient::class)->requery($connection, 'data', [
+        'reference' => 'ORDER-REQUERY-1', 'provider_reference' => 'UPSTREAM-9',
+    ]);
+
+    expect($result)->toMatchArray(['successful' => true, 'ambiguous' => false, 'message' => 'Confirmed']);
+    Http::assertSent(fn (Request $request) => $request->url() === 'https://provider.example/data/status'
+        && $request['request_id'] === 'ORDER-REQUERY-1');
+});

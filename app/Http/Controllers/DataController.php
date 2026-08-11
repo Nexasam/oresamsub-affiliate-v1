@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Models\User;
+use App\Models\Affiliate;
 use App\Models\Network;
 use App\Models\Product;
 use App\Models\UserPlan;
@@ -37,6 +38,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\AffiliateProductPlanCategory;
 use App\Services\Automation\AutomationLogic;
 use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ParentManagedPurchaseOrchestrator;
 use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
@@ -550,8 +552,38 @@ class DataController extends Controller
                 $dat['network_id'] = $plan_details->product_plan->product_plan_category->network->id;
                 $dat['user'] = $user_details;
                 $dat['plan_details'] = $plan_details;
-                $amount = (new DataPlansService())->get_customer_price_per_plan($dat)['message'];
+        $amount = (new DataPlansService())->get_customer_price_per_plan($dat)['message'];
         // }
+
+        $profile = Affiliate::query()->find($plan_details->affiliate_id)?->processingProfile;
+        if (config('parent_businesses.features.parent_managed_purchases')
+            && app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)
+            && $profile?->status === 'active'
+            && $profile->processing_engine === 'multi_parent'
+            && $profile->management_mode === 'parent_managed') {
+            if ($request->wallet_category !== 'main_wallet' || $phone_numbers_count !== 1) {
+                return response()->json(['status' => -1, 'message' => 'The controlled parent-managed rollout currently supports one Data number from the main wallet per request.']);
+            }
+
+            try {
+                $reference = $this->generateTxnReference('DATA', $user_details->id);
+                $purchase = app(ParentManagedPurchaseOrchestrator::class)->purchase($user_details, $plan_details, [
+                    'mobile_number' => $phone_numbers_array[0],
+                    'phone_number' => $phone_numbers_array[0],
+                    'network' => $plan_details->product_plan->product_plan_category->network?->network_name ?? (string) $request->network_id,
+                    'reference' => $reference,
+                ], (int) $plan_level);
+                $transaction = $purchase['transaction'];
+
+                return response()->json([
+                    'status' => (int) $transaction->status,
+                    'message' => $transaction->user_screen_message ?: 'Transaction submitted.',
+                    'data' => [['reference' => $transaction->txn_reference, 'status' => (int) $transaction->status]],
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                return response()->json(['status' => -1, 'message' => collect($exception->errors())->flatten()->first()]);
+            }
+        }
 
 
      
@@ -1286,7 +1318,9 @@ class DataController extends Controller
 
     public function processDataViaParent($data, ?AffiliateProductPlan $affiliatePlan = null){
 
-        if ($affiliatePlan && app(ProviderRoutingRolloutService::class)->enabledFor($affiliatePlan)) {
+        if ($affiliatePlan
+            && config('parent_businesses.features.parent_managed_purchases')
+            && app(ProviderRoutingRolloutService::class)->enabledFor($affiliatePlan)) {
             return app(ParentPurchaseExecutor::class)->execute($affiliatePlan, $data);
         }
 

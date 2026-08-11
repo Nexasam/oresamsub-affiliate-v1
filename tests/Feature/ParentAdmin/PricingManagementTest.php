@@ -42,6 +42,7 @@ it('renders the parent pricing workspace and parent scoped data', function () {
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/pricing')
         ->assertOk()->assertSee('Manage reseller pricing')->assertSee('Complete six levels')
+        ->assertSee('Plans owned by this parent')->assertSee('Reseller prices · levels 1–6')
         ->assertSee('Next page')->assertSee('Default profit settings')
         ->assertSee('Search plans')->assertSee('Pricing status')
         ->assertSee('Using default')->assertSee('Use default');

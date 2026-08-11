@@ -65,6 +65,38 @@ class ConfigurableProviderClient
         }
     }
 
+    /** Requery an uncertain purchase without repeating the vending request. */
+    public function requery(ParentProviderConnection $connection, string $productSlug, array $runtime): array
+    {
+        $connection->loadMissing('providerConnection');
+        $settings = $connection->settings ?? [];
+        $productSlug = $this->products->normalize($productSlug);
+        $productSettings = $this->productSettings($settings, $productSlug);
+        $endpoint = $productSettings['requery_endpoint'] ?? $settings['requery_endpoint'] ?? null;
+        if (! $endpoint) {
+            return $this->failure('No provider requery endpoint is configured.', ambiguous: true);
+        }
+
+        try {
+            $mappings = $productSettings['requery_parameters'] ?? [
+                ['key' => 'reference', 'type' => 'runtime', 'value' => 'reference'],
+            ];
+            $payload = $this->mapValues($mappings, $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
+            $headers = $this->mapHeaders($productSettings['request_headers'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
+            $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
+            $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
+            $method = strtoupper($productSettings['requery_http_method'] ?? $settings['requery_http_method'] ?? 'POST');
+            $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
+
+            return $this->interpret($response, $productSettings);
+        } catch (ConnectionException) {
+            return $this->failure('The provider requery response remains uncertain.', ambiguous: true);
+        } catch (Throwable $exception) {
+            report($exception);
+            return $this->failure($this->safeConfigurationMessage($exception), ambiguous: true);
+        }
+    }
+
     private function productSettings(array $settings, string $productSlug): array
     {
         $productConfigs = $settings['product_configs'] ?? [];

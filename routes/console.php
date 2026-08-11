@@ -14,6 +14,7 @@ use App\Console\Commands\SendFailedTransactionEmail;
 use App\Console\Commands\ReprocessPendingTransaction;
 use App\Console\Commands\SendPendingTransactionEmail;
 use App\Console\Commands\ProcessPendingAirtimeTransactions;
+use App\Console\Commands\ReconcileParentManagedPurchases;
 
 // Artisan::command('inspire', function () {
 //     $this->comment(Inspiring::quote());
@@ -24,6 +25,7 @@ use App\Console\Commands\ProcessPendingAirtimeTransactions;
 // Schedule::command('migrate --force')->everyMinute();
 Schedule::command(ProcessPendingAirtimeTransactions::class)->everyThirtySeconds();
 Schedule::command(SyncPlans::class)->everyMinute();
+Schedule::command(ReconcileParentManagedPurchases::class)->everyMinute()->withoutOverlapping();
 
 // Schedule::command(ZerorizeNegativeBalances::class)->everyTwoMinutes()->withoutOverlapping();
 // Schedule::command(ComputeReferralCommission::class)->everyMinute();
@@ -39,5 +41,4 @@ Schedule::command(SyncPlans::class)->everyMinute();
 
 
 // Schedule::command(ClearErrorLogs::class)->everyThirtyMinutes()->withoutOverlapping();
-
 

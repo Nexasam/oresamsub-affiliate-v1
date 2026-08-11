@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Affiliate extends Model
 {
@@ -47,5 +48,15 @@ class Affiliate extends Model
     public function fundingProviderConfigurations(): HasMany
     {
         return $this->hasMany(AffiliateFundingProviderConfig::class);
+    }
+
+    public function settlementWallet(): HasOne
+    {
+        return $this->hasOne(AffiliateSettlementWallet::class);
+    }
+
+    public function processingProfile(): HasOne
+    {
+        return $this->hasOne(AffiliateProcessingProfile::class);
     }
 }

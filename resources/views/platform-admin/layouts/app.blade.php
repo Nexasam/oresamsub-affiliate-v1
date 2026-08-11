@@ -19,7 +19,7 @@
                 <p class="text-xs text-slate-400">All affiliate systems</p>
             </div>
         </div>
-        <nav class="flex-1 space-y-2 p-4">
+        <nav class="flex-1 space-y-2 overflow-y-auto p-4">
             <a href="{{ route('platform-admin.dashboard') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.dashboard') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                 <span>◫</span> Overview
             </a>
@@ -28,6 +28,9 @@
             </a>
             <a href="{{ route('platform-admin.affiliate-onboarding.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-onboarding.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                 <span>✓</span> Affiliate approvals
+            </a>
+            <a href="{{ route('platform-admin.affiliate-processing.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.affiliate-processing.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                <span>⇄</span> Processing approvals
             </a>
             @if (Route::has('platform-admin.parent-businesses.index'))
                 <a href="{{ route('platform-admin.parent-businesses.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.parent-businesses.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">

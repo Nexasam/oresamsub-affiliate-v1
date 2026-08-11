@@ -21,6 +21,7 @@
             ['label' => 'Operations', 'route' => 'parent-admin.operations.index', 'match' => 'parent-admin.operations.*', 'icon' => 'activity'],
             ['label' => 'Transactions', 'route' => 'parent-admin.transactions.index', 'match' => 'parent-admin.transactions.*', 'icon' => 'activity'],
             ['label' => 'Affiliates', 'route' => 'parent-admin.affiliates.index', 'match' => 'parent-admin.affiliates.*', 'icon' => 'users'],
+            ['label' => 'Settlement wallets', 'route' => 'parent-admin.settlement-wallets.index', 'match' => 'parent-admin.settlement-wallets.*', 'icon' => 'wallet'],
             ['label' => 'Product plans', 'route' => 'parent-admin.product-plans.index', 'match' => 'parent-admin.product-plans.*', 'icon' => 'catalog'],
             ['label' => 'Pricing levels', 'route' => 'parent-admin.pricing.index', 'match' => ['parent-admin.pricing.index', 'parent-admin.pricing.data', 'parent-admin.pricing.defaults.*', 'parent-admin.pricing.levels.*', 'parent-admin.pricing.plans.*', 'parent-admin.pricing.affiliates.*'], 'icon' => 'pricing'],
             ['label' => 'Provider connections', 'route' => 'parent-admin.provider-connections.index', 'match' => 'parent-admin.provider-connections.*', 'icon' => 'connection'],

@@ -47,11 +47,11 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.endpoints' => ['required', 'array'],
             'settings.endpoints.*' => ['nullable', 'url:http,https', 'max:2048'],
             'settings.request_parameters' => ['required', 'array', 'min:1'],
-            'settings.request_parameters.*.key' => ['required', 'string', 'max:255', 'distinct'],
+            'settings.request_parameters.*.key' => ['required', 'string', 'max:255'],
             'settings.request_parameters.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
             'settings.request_parameters.*.value' => ['present', 'nullable', 'string', 'max:4096'],
             'settings.request_headers' => ['nullable', 'array'],
-            'settings.request_headers.*.key' => ['required', 'string', 'max:255', 'distinct'],
+            'settings.request_headers.*.key' => ['required', 'string', 'max:255'],
             'settings.request_headers.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
             'settings.request_headers.*.value' => ['present', 'nullable', 'string', 'max:4096'],
             'settings.request_headers.*.prefix' => ['nullable', 'string', 'max:255'],
@@ -71,11 +71,11 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.product_configs' => ['nullable', 'array'],
             'settings.product_configs.*' => ['array'],
             'settings.product_configs.*.request_parameters' => ['required', 'array', 'min:1'],
-            'settings.product_configs.*.request_parameters.*.key' => ['required', 'string', 'max:255', 'distinct'],
+            'settings.product_configs.*.request_parameters.*.key' => ['required', 'string', 'max:255'],
             'settings.product_configs.*.request_parameters.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
             'settings.product_configs.*.request_parameters.*.value' => ['present', 'nullable', 'string', 'max:4096'],
             'settings.product_configs.*.request_headers' => ['nullable', 'array'],
-            'settings.product_configs.*.request_headers.*.key' => ['required', 'string', 'max:255', 'distinct'],
+            'settings.product_configs.*.request_headers.*.key' => ['required', 'string', 'max:255'],
             'settings.product_configs.*.request_headers.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
             'settings.product_configs.*.request_headers.*.value' => ['present', 'nullable', 'string', 'max:4096'],
             'settings.product_configs.*.request_headers.*.prefix' => ['nullable', 'string', 'max:255'],
@@ -104,6 +104,9 @@ class SaveProviderConnectionRequest extends FormRequest
             $methods = $capabilities['methods'] ?? ['GET', 'POST'];
             $credentialFields = $capabilities['credential_fields'] ?? self::CREDENTIAL_FIELDS;
 
+            $this->validateUniqueKeys($validator, $settings['request_parameters'] ?? [], 'settings.request_parameters', false);
+            $this->validateUniqueKeys($validator, $settings['request_headers'] ?? [], 'settings.request_headers', true);
+
             if (collect($settings['endpoints'] ?? [])->filter()->isEmpty() && blank($this->input('base_url'))) {
                 $validator->errors()->add('settings.endpoints', 'Provide a base URL or at least one service endpoint.');
             }
@@ -123,6 +126,8 @@ class SaveProviderConnectionRequest extends FormRequest
 
                     continue;
                 }
+                $this->validateUniqueKeys($validator, $productConfig['request_parameters'] ?? [], "{$path}.request_parameters", false);
+                $this->validateUniqueKeys($validator, $productConfig['request_headers'] ?? [], "{$path}.request_headers", true);
                 $this->validateMappings(
                     $validator,
                     array_merge($productConfig['request_parameters'] ?? [], $productConfig['request_headers'] ?? []),
@@ -171,6 +176,18 @@ class SaveProviderConnectionRequest extends FormRequest
             if (($mapping['type'] ?? null) === 'credential' && ! in_array($mapping['value'] ?? null, $credentialFields, true)) {
                 $validator->errors()->add("{$path}.request_headers", 'A credential mapping is not permitted by the selected adapter.');
             }
+        }
+    }
+
+    private function validateUniqueKeys(Validator $validator, array $mappings, string $path, bool $caseInsensitive): void
+    {
+        $keys = collect($mappings)->pluck('key')->filter(fn ($key) => filled($key));
+        if ($caseInsensitive) {
+            $keys = $keys->map(fn ($key) => strtolower((string) $key));
+        }
+
+        if ($keys->duplicates()->isNotEmpty()) {
+            $validator->errors()->add($path, 'Each key may appear only once within a product configuration.');
         }
     }
 }

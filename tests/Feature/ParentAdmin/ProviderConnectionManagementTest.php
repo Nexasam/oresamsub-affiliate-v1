@@ -302,6 +302,30 @@ it('stores independent mapping and response configuration for every product', fu
         ->and($configs['airtime']['success_conditions'][0]['key'])->toBe('airtime.status');
 });
 
+it('allows the same mapping and header keys across products but not within one product', function () {
+    [, $admin, $adapter] = providerWorkspace('per-product-distinct-keys');
+    $payload = providerPayload($adapter->id);
+    $config = [
+        'request_parameters' => [['key' => 'mobile_number', 'type' => 'runtime', 'value' => 'phone_number']],
+        'request_headers' => [['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer ']],
+        'network_mapping' => [],
+        'success_conditions' => [['key' => 'status', 'value' => 'success']],
+        'success_message_path' => 'data.message',
+        'failure_message_path' => 'error.message',
+    ];
+    $payload['settings']['product_configs'] = ['data' => $config, 'airtime' => $config];
+
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertCreated();
+
+    $payload['settings']['product_configs']['data']['request_headers'][] = $config['request_headers'][0];
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('settings.product_configs.data.request_headers');
+});
+
 it('rejects an unsafe mapping inside an individual product configuration', function () {
     [, $admin, $adapter] = providerWorkspace('unsafe-product-configuration');
 

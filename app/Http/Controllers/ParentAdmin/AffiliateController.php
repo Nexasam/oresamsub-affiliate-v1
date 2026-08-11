@@ -54,6 +54,34 @@ class AffiliateController extends Controller
         return to_route('parent-admin.affiliates.index')->with('success', 'Affiliate attached.');
     }
 
+    public function edit(Request $request, Affiliate $affiliate): View
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        abort_unless($affiliate->parent_business_id === $parent->id, 404);
+
+        return view('parent-admin.affiliates.edit', [
+            'affiliate' => $affiliate,
+            'levels' => $parent->resellerLevels()->where('status', 'active')->orderBy('position')->get(['id', 'name', 'position']),
+        ]);
+    }
+
+    public function update(Request $request, Affiliate $affiliate): RedirectResponse
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        abort_unless($affiliate->parent_business_id === $parent->id, 404);
+
+        $affiliate->update($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('affiliates', 'slug')->ignore($affiliate->id)],
+            'contact_email' => ['required', 'email', 'max:255'],
+            'contact_phone' => ['required', 'string', 'max:50', Rule::unique('affiliates', 'contact_phone')->ignore($affiliate->id)],
+            'domain_url' => ['nullable', 'string', 'max:255'],
+            'parent_reseller_level_id' => $this->levelRule($parent->id),
+        ]));
+
+        return to_route('parent-admin.affiliates.index')->with('success', 'Affiliate details updated.');
+    }
+
     public function updateLevel(Request $request, Affiliate $affiliate): RedirectResponse
     {
         $parent = $request->user('parent_admin')->parentBusiness;

@@ -27,6 +27,8 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::patch('product-plans/{plan}', [ProductPlanController::class, 'update'])->name('product-plans.update');
         Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
         Route::post('affiliates', [AffiliateController::class, 'store'])->name('affiliates.store');
+        Route::get('affiliates/{affiliate}/edit', [AffiliateController::class, 'edit'])->name('affiliates.edit');
+        Route::put('affiliates/{affiliate}', [AffiliateController::class, 'update'])->name('affiliates.update');
         Route::post('affiliates/{affiliate}/attach', [AffiliateController::class, 'attach'])->name('affiliates.attach');
         Route::patch('affiliates/{affiliate}/level', [AffiliateController::class, 'updateLevel'])->name('affiliates.level.update');
         Route::post('affiliates/{affiliate}/categories/sync', [AffiliateController::class, 'syncCategories'])->name('affiliates.categories.sync');

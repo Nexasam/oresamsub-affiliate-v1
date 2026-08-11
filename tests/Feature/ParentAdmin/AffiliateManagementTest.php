@@ -89,3 +89,51 @@ it('syncs only parent categories and preserves affiliate display names', functio
         ->and($local->fresh()->plan_category_id)->toBe($ownedCategory->id)
         ->and($local->fresh()->product_plan_category_name)->toBe('My Cheap SME');
 });
+
+it('lets only the owning parent edit affiliate details and reseller level', function () {
+    [$parent, $admin, $levels] = managedParent('editing-parent');
+    [$foreign, $foreignAdmin] = managedParent('editing-foreign');
+    $affiliate = unattachedAffiliate('editable-affiliate');
+    $affiliate->update([
+        'parent_business_id' => $parent->id,
+        'parent_reseller_level_id' => $levels[0]->id,
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get("/parent-admin/affiliates/{$affiliate->id}/edit")
+        ->assertOk()
+        ->assertSee('Edit affiliate')
+        ->assertSee('Editable-affiliate');
+
+    $this->actingAs($admin, 'parent_admin')
+        ->put("/parent-admin/affiliates/{$affiliate->id}", [
+            'name' => 'Updated Affiliate',
+            'slug' => 'updated-affiliate',
+            'contact_email' => 'updated@example.test',
+            'contact_phone' => '08031112222',
+            'domain_url' => 'https://updated.example.test',
+            'parent_reseller_level_id' => $levels[1]->id,
+        ])->assertRedirect('/parent-admin/affiliates');
+
+    expect($affiliate->fresh())
+        ->name->toBe('Updated Affiliate')
+        ->slug->toBe('updated-affiliate')
+        ->contact_email->toBe('updated@example.test')
+        ->contact_phone->toBe('08031112222')
+        ->domain_url->toBe('https://updated.example.test')
+        ->parent_reseller_level_id->toBe($levels[1]->id)
+        ->parent_business_id->toBe($parent->id);
+
+    $this->actingAs($foreignAdmin, 'parent_admin')
+        ->get("/parent-admin/affiliates/{$affiliate->id}/edit")
+        ->assertNotFound();
+
+    $this->actingAs($foreignAdmin, 'parent_admin')
+        ->put("/parent-admin/affiliates/{$affiliate->id}", [
+            'name' => 'Stolen Affiliate',
+            'slug' => 'stolen-affiliate',
+            'contact_email' => 'stolen@example.test',
+            'contact_phone' => '08032223333',
+            'parent_reseller_level_id' => $levels[0]->id,
+        ])->assertNotFound();
+});

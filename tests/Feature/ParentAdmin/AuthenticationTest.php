@@ -45,6 +45,8 @@ it('allows an active parent administrator to sign in to its business workspace',
         ->assertOk()
         ->assertSee('OresamSub')
         ->assertDontSee('Affiliate profit limits')
+        ->assertSee('aria-hidden="true"', false)
+        ->assertDontSee('>DB<', false)
         ->assertSee('Product plans')
         ->assertSee('Pricing');
 });

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ParentAdmin\AffiliateController;
+use App\Http\Controllers\ParentAdmin\AffiliateOperationsController;
 use App\Http\Controllers\ParentAdmin\AffiliateProfitCapController;
 use App\Http\Controllers\ParentAdmin\AuthController;
 use App\Http\Controllers\ParentAdmin\DashboardController;
@@ -8,6 +9,9 @@ use App\Http\Controllers\ParentAdmin\FundingProviderController;
 use App\Http\Controllers\ParentAdmin\PricingController;
 use App\Http\Controllers\ParentAdmin\ProductPlanController;
 use App\Http\Controllers\ParentAdmin\ProviderConnectionController;
+use App\Http\Controllers\PlatformAdmin\AffiliateController as PlatformAffiliateController;
+use App\Http\Controllers\PlatformAdmin\AffiliateOperationsController as PlatformAffiliateOperationsController;
+use App\Http\Controllers\PlatformAdmin\AffiliateUsersController as PlatformAffiliateUsersController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
@@ -27,12 +31,27 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::put('product-plans/{plan}/configuration', [ProductPlanController::class, 'updateConfiguration'])->name('product-plans.configuration.update');
         Route::patch('product-plans/{plan}', [ProductPlanController::class, 'update'])->name('product-plans.update');
         Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
+        Route::get('operations', [AffiliateOperationsController::class, 'index'])->name('operations.index');
         Route::post('affiliates', [AffiliateController::class, 'store'])->name('affiliates.store');
         Route::get('affiliates/{affiliate}/edit', [AffiliateController::class, 'edit'])->name('affiliates.edit');
         Route::put('affiliates/{affiliate}', [AffiliateController::class, 'update'])->name('affiliates.update');
         Route::post('affiliates/{affiliate}/attach', [AffiliateController::class, 'attach'])->name('affiliates.attach');
         Route::patch('affiliates/{affiliate}/level', [AffiliateController::class, 'updateLevel'])->name('affiliates.level.update');
         Route::post('affiliates/{affiliate}/categories/sync', [AffiliateController::class, 'syncCategories'])->name('affiliates.categories.sync');
+        Route::middleware('parent.affiliate')->group(function () {
+            Route::get('affiliates/{affiliate}/catalog', [PlatformAffiliateOperationsController::class, 'catalog'])->name('affiliates.catalog');
+            Route::patch('affiliates/{affiliate}/catalog/plans/{plan}', [PlatformAffiliateOperationsController::class, 'updatePlan'])->name('affiliates.catalog.plans.update');
+            Route::patch('affiliates/{affiliate}/catalog/categories/{category}', [PlatformAffiliateOperationsController::class, 'updateCategory'])->name('affiliates.catalog.categories.update');
+            Route::get('affiliates/{affiliate}/wallet-logs', [PlatformAffiliateOperationsController::class, 'walletLogs'])->name('affiliates.wallet-logs');
+            Route::patch('affiliates/{affiliate}/margin-defaults', [PlatformAffiliateOperationsController::class, 'updateMargins'])->name('affiliates.margin-defaults.update');
+            Route::post('affiliates/{affiliate}/catalog/categories/generate', [PlatformAffiliateOperationsController::class, 'generateCategories'])->name('affiliates.catalog.categories.generate');
+            Route::post('affiliates/{affiliate}/catalog/plans/generate', [PlatformAffiliateOperationsController::class, 'generatePlans'])->name('affiliates.catalog.plans.generate');
+            Route::get('affiliates/{affiliate}/management-users', [PlatformAffiliateUsersController::class, 'data'])->name('affiliate-users.data');
+            Route::patch('affiliates/{affiliate}/management-users/{user}', [PlatformAffiliateUsersController::class, 'updateUser'])->name('affiliate-users.update');
+            Route::patch('affiliates/{affiliate}/management-user-plans/{plan}', [PlatformAffiliateUsersController::class, 'updatePlan'])->name('affiliate-users.plans.update');
+            Route::post('affiliates/{affiliate}/management-user-plans/generate', [PlatformAffiliateUsersController::class, 'generatePlans'])->name('affiliate-users.plans.generate');
+            Route::get('affiliates/{affiliate}/transactions', [PlatformAffiliateController::class, 'transactions'])->name('affiliates.transactions');
+        });
         Route::get('provider-connections', [ProviderConnectionController::class, 'index'])->name('provider-connections.index');
         Route::get('provider-connections/data', [ProviderConnectionController::class, 'data'])->name('provider-connections.data');
         Route::post('provider-connections', [ProviderConnectionController::class, 'store'])->name('provider-connections.store');

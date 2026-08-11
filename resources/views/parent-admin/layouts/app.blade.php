@@ -22,6 +22,7 @@
             <a href="{{ route('parent-admin.provider-connections.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.provider-connections.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>⇄</span> Providers</a>
             <a href="{{ route('parent-admin.funding-providers.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.funding-providers.*') || request()->routeIs('parent-admin.funding-mode-requests.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>₦</span> Funding</a>
             <a href="{{ route('parent-admin.affiliates.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.affiliates.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>◎</span> Affiliates</a>
+            <a href="{{ route('parent-admin.operations.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('parent-admin.operations.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}"><span>⌘</span> Operations</a>
         </nav>
         <div class="border-t border-white/10 p-4">
             <div class="mb-3 px-3"><p class="truncate text-sm font-medium">{{ $parentAdmin->name }}</p><p class="truncate text-xs text-slate-400">{{ $parentAdmin->email }}</p></div>

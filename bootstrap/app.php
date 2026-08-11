@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateExternalIntegration;
+use App\Http\Middleware\EnsureParentOwnsAffiliate;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\MarketerMiddleware;
 use App\Http\Middleware\RoleAdminAccess;
@@ -54,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'set_transaction_pin' => SetTransactionPin::class,
             'set_locale' => SetLocale::class,
             'set_affiliate' => SetAffiliate::class,
+            'parent.affiliate' => EnsureParentOwnsAffiliate::class,
         ]);
 
         $middleware->web(append: [

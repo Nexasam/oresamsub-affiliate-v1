@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
@@ -136,4 +137,34 @@ it('lets only the owning parent edit affiliate details and reseller level', func
             'contact_phone' => '08032223333',
             'parent_reseller_level_id' => $levels[0]->id,
         ])->assertNotFound();
+});
+
+it('exposes safe affiliate operations only to the owning parent', function () {
+    [$parent, $admin, $levels] = managedParent('operations-parent');
+    [$foreign, $foreignAdmin, $foreignLevels] = managedParent('operations-foreign');
+    $affiliate = unattachedAffiliate('operations-affiliate');
+    $affiliate->update(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $levels[0]->id]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->getJson("/parent-admin/affiliates/{$affiliate->id}/wallet-logs")
+        ->assertOk();
+    $this->actingAs($admin, 'parent_admin')
+        ->getJson("/parent-admin/affiliates/{$affiliate->id}/catalog")
+        ->assertOk();
+    $this->actingAs($admin, 'parent_admin')
+        ->getJson("/parent-admin/affiliates/{$affiliate->id}/management-users")
+        ->assertOk();
+    $this->actingAs($admin, 'parent_admin')
+        ->get("/parent-admin/operations?affiliate_id={$affiliate->id}")
+        ->assertOk()
+        ->assertSee('Search affiliates by name or email')
+        ->assertSee('Operations-affiliate');
+
+    $this->actingAs($foreignAdmin, 'parent_admin')
+        ->getJson("/parent-admin/affiliates/{$affiliate->id}/wallet-logs")
+        ->assertNotFound();
+
+    expect(Route::has('parent-admin.affiliates.users.credit'))->toBeFalse()
+        ->and(Route::has('parent-admin.affiliates.users.impersonate'))->toBeFalse()
+        ->and(Route::has('parent-admin.transactions.status.update'))->toBeFalse();
 });

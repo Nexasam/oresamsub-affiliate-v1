@@ -3,12 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
 
 return new class extends Migration
 {
-    private string $ownershipMigration = '2026_08_08_100100_add_parent_ownership_and_plan_routing';
-
     public function up(): void
     {
         if (Schema::hasTable('migrations') && DB::table('migrations')
@@ -36,7 +33,7 @@ return new class extends Migration
         })->exists();
 
         if ($hasValues) {
-            throw new RuntimeException(
+            throw new \RuntimeException(
                 'Partial parent ownership columns contain data; refusing automatic removal. Review the affiliate ownership values manually.'
             );
         }

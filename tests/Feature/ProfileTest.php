@@ -1,85 +1,43 @@
 <?php
 
-use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
-test('profile page is displayed', function () {
-    $user = User::factory()->create();
+test('affiliate user profile page is displayed', function () {
+    $user = affiliateTestContext()['user'];
 
-    $response = $this
-        ->actingAs($user)
-        ->get('/profile');
-
-    $response->assertOk();
+    $this->actingAs($user)->get('/profile')->assertOk();
 });
 
-test('profile information can be updated', function () {
-    $user = User::factory()->create();
+test('affiliate user can update their password from the profile', function () {
+    $user = affiliateTestContext()['user'];
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+    $this->actingAs($user)->from('/profile')->post('/profile/password', [
+        'current_password' => 'password',
+        'new_password' => 'new-password',
+        'new_password_confirmation' => 'new-password',
+    ])->assertSessionHasNoErrors()->assertRedirect('/profile');
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
-
-    $user->refresh();
-
-    $this->assertSame('Test User', $user->name);
-    $this->assertSame('test@example.com', $user->email);
-    $this->assertNull($user->email_verified_at);
+    expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
 });
 
-test('email verification status is unchanged when the email address is unchanged', function () {
-    $user = User::factory()->create();
+test('affiliate profile rejects an incorrect current password', function () {
+    $user = affiliateTestContext()['user'];
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => $user->email,
-        ]);
-
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->refresh()->email_verified_at);
+    $this->actingAs($user)->from('/profile')->post('/profile/password', [
+        'current_password' => 'wrong-password',
+        'new_password' => 'new-password',
+        'new_password_confirmation' => 'new-password',
+    ])->assertSessionHasErrors('current_password')->assertRedirect('/profile');
 });
 
-test('user can delete their account', function () {
-    $user = User::factory()->create();
+test('affiliate user can update their transaction pin', function () {
+    $user = affiliateTestContext()['user'];
 
-    $response = $this
-        ->actingAs($user)
-        ->delete('/profile', [
-            'password' => 'password',
-        ]);
+    $this->actingAs($user)->from('/profile')->post('/profile/pin', [
+        'current_pin' => '4321',
+        'new_pin' => '5678',
+        'new_pin_confirmation' => '5678',
+    ])->assertSessionHasNoErrors()->assertRedirect('/profile');
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/');
-
-    $this->assertGuest();
-    $this->assertNull($user->fresh());
-});
-
-test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
-            'password' => 'wrong-password',
-        ]);
-
-    $response
-        ->assertSessionHasErrorsIn('userDeletion', 'password')
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->fresh());
+    expect($user->refresh()->pin)->toBe('5678');
 });

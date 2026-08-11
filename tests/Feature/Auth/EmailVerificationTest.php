@@ -1,24 +1,23 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 
-test('email verification screen can be rendered', function () {
-    $user = User::factory()->create([
-        'email_verified_at' => null,
-    ]);
+test('an unverified affiliate user can request a verification notification', function () {
+    Notification::fake();
+    $user = affiliateTestContext(['email_verified_at' => null])['user'];
 
-    $response = $this->actingAs($user)->get('/verify-email');
+    $response = $this->actingAs($user)->post('/email/verification-notification');
 
-    $response->assertStatus(200);
+    $response->assertRedirect();
+    Notification::assertSentTo($user, VerifyEmail::class);
 });
 
 test('email can be verified', function () {
-    $user = User::factory()->create([
-        'email_verified_at' => null,
-    ]);
+    $user = affiliateTestContext(['email_verified_at' => null])['user'];
 
     Event::fake();
 
@@ -36,9 +35,7 @@ test('email can be verified', function () {
 });
 
 test('email is not verified with invalid hash', function () {
-    $user = User::factory()->create([
-        'email_verified_at' => null,
-    ]);
+    $user = affiliateTestContext(['email_verified_at' => null])['user'];
 
     $verificationUrl = URL::temporarySignedRoute(
         'verification.verify',

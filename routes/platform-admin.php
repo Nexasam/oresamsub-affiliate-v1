@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PlatformAdmin\AffiliateCatalogController;
 use App\Http\Controllers\PlatformAdmin\AffiliateController;
+use App\Http\Controllers\PlatformAdmin\AffiliateOnboardingController;
 use App\Http\Controllers\PlatformAdmin\AffiliateOperationsController;
 use App\Http\Controllers\PlatformAdmin\AffiliateUsersController;
 use App\Http\Controllers\PlatformAdmin\AuthController;
@@ -58,6 +59,8 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
         Route::post('affiliates/{affiliate}/management-user-plans/generate', [AffiliateUsersController::class, 'generatePlans'])->name('affiliate-users.plans.generate');
 
         Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
+        Route::get('affiliate-onboarding', [AffiliateOnboardingController::class, 'index'])->name('affiliate-onboarding.index');
+        Route::patch('affiliate-onboarding/{onboarding}/review', [AffiliateOnboardingController::class, 'review'])->name('affiliate-onboarding.review');
         Route::get('affiliates/{affiliate}', [AffiliateController::class, 'show'])->name('affiliates.show');
         Route::patch('affiliates/{affiliate}', [AffiliateController::class, 'update'])->name('affiliates.update');
         Route::get('affiliates/{affiliate}/users', [AffiliateController::class, 'users'])->name('affiliates.users');

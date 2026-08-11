@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Admin;
 use App\Models\Affiliate;
+use App\Models\AffiliateOnboardingRequest;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\ParentAdmin;
 use App\Models\ParentBusiness;
@@ -37,6 +39,7 @@ function unattachedAffiliate(string $slug): Affiliate
 it('lets a parent create attach list and relevel only its affiliates', function () {
     [$parent, $admin, $levels] = managedParent('affiliate-owner');
     [$foreign, $foreignAdmin, $foreignLevels] = managedParent('foreign-owner');
+    $platformAdmin = Admin::create(['name' => 'Platform', 'email' => 'affiliate-approver@example.test', 'password' => 'password', 'active' => true]);
     $eligible = unattachedAffiliate('eligible-affiliate');
     $foreignAffiliate = unattachedAffiliate('foreign-affiliate');
     $foreignAffiliate->update(['parent_business_id' => $foreign->id, 'parent_reseller_level_id' => $foreignLevels[0]->id]);
@@ -47,6 +50,12 @@ it('lets a parent create attach list and relevel only its affiliates', function 
         'parent_reseller_level_id' => $levels[0]->id,
     ])->assertRedirect('/parent-admin/affiliates');
 
+    expect(Affiliate::where('slug', 'new-affiliate')->exists())->toBeFalse();
+    $createRequest = AffiliateOnboardingRequest::where('request_type', 'create')->sole();
+    $this->actingAs($platformAdmin, 'platform_admin')
+        ->patchJson("/admin/affiliate-onboarding/{$createRequest->id}/review", ['action' => 'approve'])
+        ->assertOk();
+
     $created = Affiliate::where('slug', 'new-affiliate')->sole();
     expect($created->parent_business_id)->toBe($parent->id)
         ->and($created->parent_reseller_level_id)->toBe($levels[0]->id);
@@ -54,6 +63,12 @@ it('lets a parent create attach list and relevel only its affiliates', function 
     $this->actingAs($admin, 'parent_admin')->post("/parent-admin/affiliates/{$eligible->id}/attach", [
         'parent_reseller_level_id' => $levels[1]->id,
     ])->assertRedirect('/parent-admin/affiliates');
+
+    expect($eligible->fresh()->parent_business_id)->toBeNull();
+    $attachRequest = AffiliateOnboardingRequest::where('request_type', 'attach')->sole();
+    $this->actingAs($platformAdmin, 'platform_admin')
+        ->patchJson("/admin/affiliate-onboarding/{$attachRequest->id}/review", ['action' => 'approve'])
+        ->assertOk();
 
     $this->actingAs($admin, 'parent_admin')->patch("/parent-admin/affiliates/{$eligible->id}/level", [
         'parent_reseller_level_id' => $levels[0]->id,

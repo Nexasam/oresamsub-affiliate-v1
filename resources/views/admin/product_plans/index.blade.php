@@ -165,7 +165,7 @@
             });
     
             const data = await res.json();
-            if (data.status === true) {
+            if (res.ok && data.status === true) {
               this.success = true;
               // close after short delay and show success
               setTimeout(() => {
@@ -174,7 +174,8 @@
               }, 1200);
             } else {
               console.error('Save failed', data);
-              alert(data.message || 'Failed to save profits');
+              const validationMessage = Object.values(data.errors || {}).flat()[0];
+              alert(validationMessage || data.message || 'Failed to save profits');
             }
           } catch (err) {
             console.error(err);

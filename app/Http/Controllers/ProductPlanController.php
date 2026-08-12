@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ParentDefaultProfitRule;
 use App\Services\Pricing\AffiliateAcquisitionPriceResolver;
+use App\Services\Pricing\AffiliatePlanProfitService;
+use App\Models\AffiliateServiceProfitCap;
 
 class ProductPlanController extends Controller
 {
@@ -37,45 +39,19 @@ class ProductPlanController extends Controller
     }
 
     public function updateAffiliatePlanProfits(Request $request){
-     
-          $request->validate([
-              'plan_id' => 'required|exists:affiliate_product_plans,product_plan_id',
-              'profits' => 'required|array',
-          ]);
+        $validated = $request->validate([
+            'plan_id' => ['required', 'integer'],
+            'profits' => ['required', 'array', 'size:6'],
+            'profits.*' => ['required', 'numeric', 'min:0'],
+        ]);
+        $affiliate = Affiliate::findOrFail($this->getId());
+        $plan = app(AffiliatePlanProfitService::class)->update($affiliate, (int) $validated['plan_id'], $validated['profits']);
 
-          $planId = $request->input('product_plan_id');
-          $profits = $request->input('profits');
-      
-
-          $plan = AffiliateProductPlan::with('product_plan')->where('product_plan_id',$request->plan_id)->first();
-      
-          // $level = auth()->user()->user_plan->plan_level;
-          $level = session('affiliate')->parent_plan_level;
-
-          $afflev = "aff_level_{$level}_max_profit";
-
-          $flatval = $plan->product_plan->profit_category == 'flat' ? $plan->product_plan->$afflev : 50;
-          $percval = $plan->product_plan->profit_category == 'percent' ? $plan->product_plan->$afflev : 1;
-
-          $defaultval = $plan->product_plan->profit_category == 'flat' ? $flatval : $percval;          
-          $max_profit = $plan->product_plan->$afflev ?? $defaultval;
-
-         
-
-          // Update each user_level_X_profit dynamically
-          $index = 1;
-          foreach ($request->profits as $label => $value) {
-              $field = 'user_level_' . $index . '_profit';
-              if($value > $max_profit){
-                return response()->json(['status' => false,'message' => 'profit setting cannot be more than the value:'.$max_profit]);
-              }
-              $plan->$field = $value ?? 0;
-              $index++;
-          }
-      
-          $plan->save();
-      
-          return response()->json(['status' => true,'message' => 'successful','profits' => $profits]);
+        return response()->json([
+            'status' => true,
+            'message' => 'Customer profit settings saved.',
+            'profits' => collect(range(1, 6))->mapWithKeys(fn ($level) => [$level => $plan->{"user_level_{$level}_profit"}]),
+        ]);
     
     }
 
@@ -171,6 +147,11 @@ class ProductPlanController extends Controller
             ->get()
             ->keyBy('product_id');
         $acquisitionPrices = app(AffiliateAcquisitionPriceResolver::class);
+        $affiliateCaps = AffiliateServiceProfitCap::query()
+            ->where('parent_business_id', $affiliate->parent_business_id)
+            ->where('affiliate_id', $affiliate->id)
+            ->get()
+            ->groupBy('product_id');
     
         return DataTables::of($data)
             ->addIndexColumn()
@@ -225,22 +206,32 @@ class ProductPlanController extends Controller
 
     
             // Profit Range
-            ->addColumn('max_profit_range', function ($data) {
-              
-                // $level = auth()->user()->user_plan->plan_level;
-                $level = session('affiliate')->parent_plan_level;
+            ->addColumn('max_profit_range', function ($data) use ($affiliate, $legacyOresamsub, $affiliateCaps) {
+                if ($legacyOresamsub) {
+                    $level = session('affiliate')->parent_plan_level;
+                    $field = "aff_level_{$level}_max_profit";
 
-                $afflev = "aff_level_{$level}_max_profit";
-
-                if($data->profit_category == 'percent'){
-                  // product_plan->
-                  $res = $data->$afflev ?? 1;
-                }else{
-                  $res = $data->$afflev ?? 50;
+                    return $data->{$field} ?? ($data->profit_category === 'percent' ? 1 : 50);
                 }
 
+                $productId = $data->product_plan_category?->product_id;
+                $serviceLimits = $affiliateCaps->get($productId, collect())->pluck('max_value', 'customer_level');
+                $planLimit = $data->parentPrices->first()?->max_profit;
+                $limits = collect(range(1, 6))->map(function ($level) use ($serviceLimits, $planLimit) {
+                    $available = collect([$serviceLimits->get($level), $planLimit])->filter(fn ($limit) => $limit !== null);
 
-                return $res;
+                    return $available->isEmpty() ? null : $available->min(fn ($limit) => (float) $limit);
+                });
+
+                if ($limits->contains(null)) {
+                    return 'Not configured';
+                }
+
+                $minimum = $limits->min();
+                $maximum = $limits->max();
+                $suffix = $data->profit_category === 'percent' ? '%' : '';
+
+                return $minimum === $maximum ? $minimum.$suffix : $minimum.'–'.$maximum.$suffix;
             })
 
             ->addColumn('user_plan_profit', function ($data) use ($affiliatePlanIds) {
@@ -264,7 +255,7 @@ class ProductPlanController extends Controller
               $profits = [];
               foreach ($titles as $index => $title) {
                   $value = $data->affiliate_product_plan?->{'user_level_' . ($index + 1) . '_profit'} ?? 1;
-                  $profits[$title] = $isPercent && $value !== '' ? $value : $value;
+                  $profits[(string) ($index + 1)] = $value;
               }
           
               // Encode JSON safely
@@ -316,7 +307,7 @@ class ProductPlanController extends Controller
                       <!-- Editable fields -->
                       <template x-for="(value, level) in profits" :key="level">
                           <div class="flex items-center justify-between space-x-2">
-                              <span class="text-xs font-medium text-gray-700 dark:text-gray-200" x-text="level"></span>
+                              <span class="text-xs font-medium text-gray-700 dark:text-gray-200" x-text="`Customer level \${level}`"></span>
                               <input 
                                   type="text" 
                                   x-model="profits[level]" 

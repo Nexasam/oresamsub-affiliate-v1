@@ -194,8 +194,11 @@ class ProductPlanController extends Controller
             ->addColumn('cost_price', function ($data) use ($affiliate, $legacyOresamsub, $defaultRules, $acquisitionPrices) {
                 if (! $legacyOresamsub) {
                     $productId = $data->product_plan_category?->product_id;
+                    $resolved = $acquisitionPrices->resolve($affiliate, $data, $defaultRules->get($productId));
+                    $source = ucfirst($resolved['source']);
+                    $level = $resolved['level_position'] ? "Level {$resolved['level_position']}" : 'Invalid level';
 
-                    return $acquisitionPrices->display($affiliate, $data, $defaultRules->get($productId));
+                    return '<span class="font-semibold">₦'.e($resolved['price']).'</span><br><span class="text-[10px] text-slate-500">'.e("{$level} · {$source} · ID {$resolved['level_id']}").'</span>';
                 }
 
                 $cost_price_level = 'cost_price_' . session('affiliate')->parent_plan_level; //plan level

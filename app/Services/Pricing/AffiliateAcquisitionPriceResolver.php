@@ -5,6 +5,7 @@ namespace App\Services\Pricing;
 use App\Models\Affiliate;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ProductPlan;
+use App\Models\ProductPlanParentPrice;
 use App\Support\BrickMathRounding;
 use Brick\Math\BigDecimal;
 
@@ -12,9 +13,15 @@ class AffiliateAcquisitionPriceResolver
 {
     public function display(Affiliate $affiliate, ProductPlan $plan, ?ParentDefaultProfitRule $rule = null): string
     {
-        $override = $plan->relationLoaded('parentPrices')
-            ? $plan->parentPrices->first(fn ($price) => (int) $price->parent_reseller_level_id === (int) $affiliate->parent_reseller_level_id || $price->parent_reseller_level_id === null)
-            : $plan->parentPrices()->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id)->first();
+        $override = $plan->exists
+            ? ProductPlanParentPrice::query()
+                ->where('parent_business_id', $affiliate->parent_business_id)
+                ->where('product_plan_id', $plan->id)
+                ->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id)
+                ->first()
+            : ($plan->relationLoaded('parentPrices')
+                ? $plan->parentPrices->first(fn ($price) => (int) $price->parent_reseller_level_id === (int) $affiliate->parent_reseller_level_id)
+                : null);
 
         if ($override) {
             return $this->money((string) $override->selling_price);

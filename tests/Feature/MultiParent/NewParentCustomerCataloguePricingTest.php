@@ -7,6 +7,7 @@ use App\Models\AffiliateUserPlan;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ProductPlanParentPrice;
 use App\Models\User;
+use App\Services\Pricing\AffiliateAcquisitionPriceResolver;
 
 it('returns custom parent acquisition price plus affiliate customer profit', function () {
     $f = affiliateProfitFixture('catalogue1');
@@ -21,4 +22,16 @@ it('returns custom parent acquisition price plus affiliate customer profit', fun
     $price = app(DataPlansService::class)->get_customer_price_per_plan(['plan_details' => $f['affiliatePlan']->fresh(), 'product_id' => $f['product']->id, 'user' => $customer, 'network_id' => '', 'amount' => 0]);
 
     expect($price['message'])->toBe('590.00');
+});
+
+it('reads the exact persisted custom override for the affiliates assigned reseller level', function () {
+    $f = affiliateProfitFixture('catalogue2');
+    $level2 = $f['parent']->resellerLevels()->create(['name' => 'Silver', 'position' => 2, 'status' => 'active']);
+    $level3 = $f['parent']->resellerLevels()->create(['name' => 'Gold', 'position' => 3, 'status' => 'active']);
+    $f['affiliate']->update(['parent_reseller_level_id' => $level3->id]);
+    ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $level3->id, 'product_id' => $f['product']->id, 'calculation_type' => 'flat', 'value' => 50]);
+    ProductPlanParentPrice::create(['parent_business_id' => $f['parent']->id, 'product_plan_id' => $f['plan']->id, 'parent_reseller_level_id' => $level2->id, 'selling_price' => 565]);
+    ProductPlanParentPrice::create(['parent_business_id' => $f['parent']->id, 'product_plan_id' => $f['plan']->id, 'parent_reseller_level_id' => $level3->id, 'selling_price' => 595]);
+
+    expect(app(AffiliateAcquisitionPriceResolver::class)->display($f['affiliate']->fresh(), $f['plan']->fresh()))->toBe('595.00');
 });

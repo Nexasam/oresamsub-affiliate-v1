@@ -12,7 +12,7 @@ uses(TestCase::class);
 it('uses the parent plan override as the affiliate acquisition price', function () {
     $affiliate = new Affiliate(['parent_business_id' => 8, 'parent_reseller_level_id' => 4]);
     $plan = new ProductPlan(['id' => 12, 'parent_business_id' => 8, 'cost_price' => '100.00']);
-    $override = new ProductPlanParentPrice(['selling_price' => '127.50']);
+    $override = new ProductPlanParentPrice(['parent_reseller_level_id' => 4, 'selling_price' => '127.50']);
     $plan->setRelation('parentPrices', collect([$override]));
 
     expect(app(AffiliateAcquisitionPriceResolver::class)->display($affiliate, $plan))->toBe('127.50');

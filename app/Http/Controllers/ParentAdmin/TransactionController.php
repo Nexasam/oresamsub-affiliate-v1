@@ -15,7 +15,7 @@ class TransactionController extends Controller
         $parent = $request->user('parent_admin')->parentBusiness;
         $affiliateIds = Affiliate::query()->where('parent_business_id', $parent->id)->pluck('id');
         $query = Transaction::withoutGlobalScope('affiliate')
-            ->with(['user:id,name,email', 'affiliate:id,name,slug', 'parentProviderConnection:id,name'])
+            ->with(['user:id,first_name,last_name,email', 'affiliate:id,name,slug', 'parentProviderConnection:id,name'])
             ->where(function ($query) use ($parent, $affiliateIds) {
                 $query->where('parent_business_id', $parent->id)
                     ->orWhere(function ($legacy) use ($affiliateIds) {

@@ -30,3 +30,17 @@ it('shows only the current parents transactions including legacy rows without a 
         ->assertOk()->assertSee('OWN-LEGACY')->assertSee('OWN-ROUTED')->assertDontSee('FOREIGN-TXN')
         ->assertSee('Needs reconciliation');
 });
+
+it('loads transaction customers using the actual first and last name columns', function () {
+    [$parent, $admin, $levels] = managedParent('report-customer-name');
+    $affiliate = unattachedAffiliate('report-customer-affiliate');
+    $affiliate->update(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $levels[0]->id]);
+    $role = Role::create(['role_name' => 'User']);
+    $plan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create(['affiliate_id' => $affiliate->id, 'user_plan_name' => 'Basic', 'plan_level' => 1]);
+    $user = User::factory()->create(['affiliate_id' => $affiliate->id, 'role_id' => $role->id, 'user_plan_id' => $plan->id, 'first_name' => 'Ada', 'last_name' => 'Buyer']);
+    Transaction::withoutGlobalScope('affiliate')->create(['parent_business_id' => $parent->id, 'affiliate_id' => $affiliate->id, 'user_id' => $user->id, 'api_id' => 'test-plan', 'affiliate_product_plan_id' => 1, 'wallet_category' => 'main_wallet', 'balance_before' => 1000, 'balance_after' => 500, 'description' => 'Customer report', 'txn_reference' => 'CUSTOMER-NAME', 'transaction_category' => 'data', 'amount' => 500, 'status' => 1]);
+
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions')
+        ->assertOk()
+        ->assertSee('CUSTOMER-NAME');
+});

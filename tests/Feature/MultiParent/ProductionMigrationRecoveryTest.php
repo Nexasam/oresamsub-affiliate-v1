@@ -32,3 +32,13 @@ it('normalizes mysql parent foundation tables to innodb before adding foreign ke
         ->and($source)->toContain("'parent_provider_connections'")
         ->and($source)->toContain('ENGINE=InnoDB');
 });
+
+it('makes the provider approval migration resumable and normalizes its foreign tables', function () {
+    $source = file_get_contents(database_path('migrations/2026_08_10_160000_add_approval_to_parent_provider_connections.php'));
+
+    expect($source)->toContain("ensureColumn('parent_provider_connections', 'approval_status'")
+        ->and($source)->toContain("normalizeTableEngine('admins')")
+        ->and($source)->toContain("normalizeTableEngine('parent_provider_connections')")
+        ->and($source)->toContain('constraintExists')
+        ->and($source)->toContain('ENGINE=InnoDB');
+});

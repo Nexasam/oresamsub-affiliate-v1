@@ -2,6 +2,7 @@
 
 namespace App\Services\Funding;
 
+use App\Support\BrickMathRounding;
 use App\Models\AffiliateFundingProviderConfig;
 use App\Models\FundingWebhookEvent;
 use App\Models\MaxCrystalPaymentsPendingApproval;
@@ -9,7 +10,6 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\WalletLog;
 use Brick\Math\BigDecimal;
-use Brick\Math\RoundingMode;
 use Illuminate\Support\Facades\DB;
 
 class FundingWebhookProcessor
@@ -41,11 +41,11 @@ class FundingWebhookProcessor
 
             $config->loadMissing(['banks.parentBank', 'parentFundingProvider.banks', 'parentFundingProvider.fundingProvider']);
             $bank = $this->effectiveBank($config, (string) $data['bank_name']);
-            $gross = BigDecimal::of((string) $data['gross_amount'])->toScale(2, RoundingMode::HalfUp);
+            $gross = BigDecimal::of((string) $data['gross_amount'])->toScale(2, BrickMathRounding::halfUp());
             $charge = $bank
                 ? BigDecimal::of($this->charges->calculate($bank->rate_type, (string) $bank->rate_value, $bank->percentage_cap !== null ? (string) $bank->percentage_cap : null, (string) $gross))
                 : $gross->minus(BigDecimal::of((string) ($data['settlement_amount'] ?? $data['gross_amount'])));
-            $net = $gross->minus($charge)->toScale(2, RoundingMode::HalfUp);
+            $net = $gross->minus($charge)->toScale(2, BrickMathRounding::halfUp());
             if ($net->isNegative()) {
                 $event->update(['status' => 'unresolved', 'processed_at' => now()]);
 
@@ -70,8 +70,8 @@ class FundingWebhookProcessor
                 return 'pending_review';
             }
 
-            $before = BigDecimal::of((string) ($user->main_wallet ?? 0))->toScale(2, RoundingMode::HalfUp);
-            $after = $before->plus($net)->toScale(2, RoundingMode::HalfUp);
+            $before = BigDecimal::of((string) ($user->main_wallet ?? 0))->toScale(2, BrickMathRounding::halfUp());
+            $after = $before->plus($net)->toScale(2, BrickMathRounding::halfUp());
             $user->update(['main_wallet' => (string) $after]);
             WalletLog::withoutGlobalScope('affiliate')->create([
                 'affiliate_id' => $config->affiliate_id,

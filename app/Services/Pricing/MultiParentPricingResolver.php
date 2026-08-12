@@ -8,8 +8,8 @@ use App\Models\AffiliateServiceProfitCap;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ProductPlanParentPrice;
 use App\Services\ParentAdmin\ParentProfitRuleService;
+use App\Support\BrickMathRounding;
 use Brick\Math\BigDecimal;
-use Brick\Math\RoundingMode;
 use Illuminate\Validation\ValidationException;
 
 class MultiParentPricingResolver
@@ -125,7 +125,7 @@ class MultiParentPricingResolver
 
     private function discounted(BigDecimal $amount, BigDecimal $percent): BigDecimal
     {
-        return $amount->minus($amount->multipliedBy($percent)->dividedBy(100, 8, RoundingMode::HalfUp));
+        return $amount->minus($amount->multipliedBy($percent)->dividedBy(100, 8, BrickMathRounding::halfUp()));
     }
 
     private function requiredFaceAmount(?string $faceAmount): BigDecimal
@@ -144,7 +144,7 @@ class MultiParentPricingResolver
 
     private function money(BigDecimal $value): string
     {
-        return (string) $value->toScale(2, RoundingMode::HalfUp);
+        return (string) $value->toScale(2, BrickMathRounding::halfUp());
     }
 
     private function fail(string $field, string $message): never

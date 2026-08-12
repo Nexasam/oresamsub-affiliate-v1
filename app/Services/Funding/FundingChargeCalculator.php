@@ -2,8 +2,8 @@
 
 namespace App\Services\Funding;
 
+use App\Support\BrickMathRounding;
 use Brick\Math\BigDecimal;
-use Brick\Math\RoundingMode;
 use Illuminate\Validation\ValidationException;
 
 class FundingChargeCalculator
@@ -29,13 +29,13 @@ class FundingChargeCalculator
         $this->validate($type, $value, $cap);
         $charge = $type === 'flat'
             ? BigDecimal::of($value)
-            : BigDecimal::of($amount)->multipliedBy($value)->dividedBy(100, 2, RoundingMode::HalfUp);
+            : BigDecimal::of($amount)->multipliedBy($value)->dividedBy(100, 2, BrickMathRounding::halfUp());
 
         if ($type === 'percentage' && $charge->isGreaterThan(BigDecimal::of($cap))) {
             $charge = BigDecimal::of($cap);
         }
 
-        return (string) $charge->toScale(2, RoundingMode::HalfUp);
+        return (string) $charge->toScale(2, BrickMathRounding::halfUp());
     }
 
     private function fail(string $message): never

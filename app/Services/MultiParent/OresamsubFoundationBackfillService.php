@@ -5,7 +5,7 @@ namespace App\Services\MultiParent;
 use App\Models\MultiParentMigrationAudit;
 use App\Models\ParentBusiness;
 use Brick\Math\BigDecimal;
-use Brick\Math\RoundingMode;
+use App\Support\BrickMathRounding;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -379,7 +379,7 @@ class OresamsubFoundationBackfillService
 
         return (string) BigDecimal::of((string) $higher)
             ->minus(BigDecimal::of((string) $lower))
-            ->toScale(2, RoundingMode::HalfUp);
+            ->toScale(2, BrickMathRounding::halfUp());
     }
 
     private function audit(string $batchUuid, string $action, string $entityType, int $entityId, mixed $from, mixed $to, array &$counts): void

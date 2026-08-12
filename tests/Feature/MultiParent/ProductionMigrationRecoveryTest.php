@@ -22,3 +22,13 @@ it('makes the ownership migration resumable after non-transactional mysql ddl fa
         ->and($source)->toContain('indexExists')
         ->and($source)->toContain('triggerExists');
 });
+
+it('normalizes mysql parent foundation tables to innodb before adding foreign keys', function () {
+    $source = file_get_contents(database_path('migrations/2026_08_08_100100_add_parent_ownership_and_plan_routing.php'));
+
+    expect($source)->toContain('$this->normalizeReferencedTableEngines();')
+        ->and($source)->toContain("'parent_businesses'")
+        ->and($source)->toContain("'parent_reseller_levels'")
+        ->and($source)->toContain("'parent_provider_connections'")
+        ->and($source)->toContain('ENGINE=InnoDB');
+});

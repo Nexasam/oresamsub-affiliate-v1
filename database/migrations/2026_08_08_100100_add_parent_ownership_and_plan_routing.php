@@ -9,6 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $this->normalizeReferencedTableEngines();
+
         $this->ensureColumn('affiliates', 'parent_business_id', fn (Blueprint $table) => $table->foreignId('parent_business_id')->nullable());
         $this->ensureColumn('affiliates', 'parent_reseller_level_id', fn (Blueprint $table) => $table->foreignId('parent_reseller_level_id')->nullable());
         $this->ensureIndex('affiliates', ['parent_business_id'], 'affiliates_parent_business_id_index');
@@ -22,6 +24,7 @@ return new class extends Migration
         $this->ensureUnique('product_plans', ['id', 'parent_business_id'], 'product_plans_id_parent_unique');
 
         if (! Schema::hasTable('product_plan_parent_prices')) Schema::create('product_plan_parent_prices', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('parent_business_id');
             $table->foreignId('product_plan_id');
@@ -46,6 +49,7 @@ return new class extends Migration
         });
 
         if (! Schema::hasTable('product_plan_provider_routes')) Schema::create('product_plan_provider_routes', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('parent_business_id');
             $table->foreignId('product_plan_id');
@@ -68,6 +72,7 @@ return new class extends Migration
         });
 
         if (! Schema::hasTable('multi_parent_migration_audits')) Schema::create('multi_parent_migration_audits', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->uuid('batch_uuid')->index();
             $table->string('action')->index();
@@ -102,6 +107,42 @@ return new class extends Migration
         $this->ensureForeign('transactions', 'transactions_product_plan_provider_route_fk', ['product_plan_provider_route_id'], 'product_plan_provider_routes', ['id']);
 
         $this->addAffiliateOwnershipTriggers();
+    }
+
+    private function normalizeReferencedTableEngines(): void
+    {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        $tables = [
+            'parent_businesses',
+            'parent_admins',
+            'provider_connections',
+            'parent_provider_connections',
+            'parent_reseller_levels',
+            'affiliates',
+            'product_plans',
+            'transactions',
+            'product_plan_parent_prices',
+            'product_plan_provider_routes',
+            'multi_parent_migration_audits',
+        ];
+
+        foreach ($tables as $table) {
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
+
+            $engine = DB::table('information_schema.TABLES')
+                ->whereRaw('TABLE_SCHEMA = DATABASE()')
+                ->where('TABLE_NAME', $table)
+                ->value('ENGINE');
+
+            if (strcasecmp((string) $engine, 'InnoDB') !== 0) {
+                DB::statement("ALTER TABLE `{$table}` ENGINE=InnoDB");
+            }
+        }
     }
 
     private function ensureColumn(string $table, string $column, callable $definition): void

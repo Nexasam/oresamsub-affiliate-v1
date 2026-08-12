@@ -23,4 +23,7 @@ return [
             'password' => env('ORESAMSUB_PARENT_ADMIN_PASSWORD'),
         ],
     ],
+    'reset_test_affiliate' => [
+        'parent_admin_password' => env('TEST_PARENT_ADMIN_PASSWORD'),
+    ],
 ];

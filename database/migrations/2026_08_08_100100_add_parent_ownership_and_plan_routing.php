@@ -9,25 +9,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('affiliates', function (Blueprint $table) {
-            $table->foreignId('parent_business_id')->nullable()->index();
-            $table->foreignId('parent_reseller_level_id')->nullable()->index();
-            $table->foreign('parent_business_id', 'affiliates_parent_business_fk')
-                ->references('id')->on('parent_businesses')->restrictOnDelete();
-            $table->foreign(
-                ['parent_reseller_level_id', 'parent_business_id'],
-                'affiliates_parent_reseller_level_parent_fk'
-            )->references(['id', 'parent_business_id'])->on('parent_reseller_levels')->restrictOnDelete();
-        });
+        $this->ensureColumn('affiliates', 'parent_business_id', fn (Blueprint $table) => $table->foreignId('parent_business_id')->nullable());
+        $this->ensureColumn('affiliates', 'parent_reseller_level_id', fn (Blueprint $table) => $table->foreignId('parent_reseller_level_id')->nullable());
+        $this->ensureIndex('affiliates', ['parent_business_id'], 'affiliates_parent_business_id_index');
+        $this->ensureIndex('affiliates', ['parent_reseller_level_id'], 'affiliates_parent_reseller_level_id_index');
+        $this->ensureForeign('affiliates', 'affiliates_parent_business_fk', ['parent_business_id'], 'parent_businesses', ['id']);
+        $this->ensureForeign('affiliates', 'affiliates_parent_reseller_level_parent_fk', ['parent_reseller_level_id', 'parent_business_id'], 'parent_reseller_levels', ['id', 'parent_business_id']);
 
-        Schema::table('product_plans', function (Blueprint $table) {
-            $table->foreignId('parent_business_id')->nullable()->index();
-            $table->foreign('parent_business_id', 'product_plans_parent_business_fk')
-                ->references('id')->on('parent_businesses')->restrictOnDelete();
-            $table->unique(['id', 'parent_business_id'], 'product_plans_id_parent_unique');
-        });
+        $this->ensureColumn('product_plans', 'parent_business_id', fn (Blueprint $table) => $table->foreignId('parent_business_id')->nullable());
+        $this->ensureIndex('product_plans', ['parent_business_id'], 'product_plans_parent_business_id_index');
+        $this->ensureForeign('product_plans', 'product_plans_parent_business_fk', ['parent_business_id'], 'parent_businesses', ['id']);
+        $this->ensureUnique('product_plans', ['id', 'parent_business_id'], 'product_plans_id_parent_unique');
 
-        Schema::create('product_plan_parent_prices', function (Blueprint $table) {
+        if (! Schema::hasTable('product_plan_parent_prices')) Schema::create('product_plan_parent_prices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('parent_business_id');
             $table->foreignId('product_plan_id');
@@ -51,7 +45,7 @@ return new class extends Migration
             )->references(['id', 'parent_business_id'])->on('parent_reseller_levels')->restrictOnDelete();
         });
 
-        Schema::create('product_plan_provider_routes', function (Blueprint $table) {
+        if (! Schema::hasTable('product_plan_provider_routes')) Schema::create('product_plan_provider_routes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('parent_business_id');
             $table->foreignId('product_plan_id');
@@ -73,7 +67,7 @@ return new class extends Migration
             )->references(['id', 'parent_business_id'])->on('parent_provider_connections')->restrictOnDelete();
         });
 
-        Schema::create('multi_parent_migration_audits', function (Blueprint $table) {
+        if (! Schema::hasTable('multi_parent_migration_audits')) Schema::create('multi_parent_migration_audits', function (Blueprint $table) {
             $table->id();
             $table->uuid('batch_uuid')->index();
             $table->string('action')->index();
@@ -85,28 +79,69 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->foreignId('parent_business_id')->nullable()->index();
-            $table->foreignId('parent_provider_connection_id')->nullable()->index();
-            $table->foreignId('product_plan_provider_route_id')->nullable()->index();
-            $table->string('provider_plan_id_snapshot')->nullable();
-            $table->string('provider_reference')->nullable()->index();
-            $table->string('routing_status')->nullable()->index();
-            $table->decimal('provider_cost_snapshot', 14, 2)->nullable();
-            $table->decimal('parent_cost_snapshot', 14, 2)->nullable();
-            $table->decimal('affiliate_cost_snapshot', 14, 2)->nullable();
-            $table->decimal('customer_price_snapshot', 14, 2)->nullable();
-            $table->decimal('parent_profit_snapshot', 14, 2)->nullable();
-            $table->decimal('affiliate_profit_snapshot', 14, 2)->nullable();
-            $table->foreign('parent_business_id', 'transactions_parent_business_fk')
-                ->references('id')->on('parent_businesses')->restrictOnDelete();
-            $table->foreign('parent_provider_connection_id', 'transactions_parent_provider_connection_fk')
-                ->references('id')->on('parent_provider_connections')->restrictOnDelete();
-            $table->foreign('product_plan_provider_route_id', 'transactions_product_plan_provider_route_fk')
-                ->references('id')->on('product_plan_provider_routes')->restrictOnDelete();
-        });
+        $transactionColumns = [
+            'parent_business_id' => fn (Blueprint $t) => $t->foreignId('parent_business_id')->nullable(),
+            'parent_provider_connection_id' => fn (Blueprint $t) => $t->foreignId('parent_provider_connection_id')->nullable(),
+            'product_plan_provider_route_id' => fn (Blueprint $t) => $t->foreignId('product_plan_provider_route_id')->nullable(),
+            'provider_plan_id_snapshot' => fn (Blueprint $t) => $t->string('provider_plan_id_snapshot')->nullable(),
+            'provider_reference' => fn (Blueprint $t) => $t->string('provider_reference')->nullable(),
+            'routing_status' => fn (Blueprint $t) => $t->string('routing_status')->nullable(),
+            'provider_cost_snapshot' => fn (Blueprint $t) => $t->decimal('provider_cost_snapshot', 14, 2)->nullable(),
+            'parent_cost_snapshot' => fn (Blueprint $t) => $t->decimal('parent_cost_snapshot', 14, 2)->nullable(),
+            'affiliate_cost_snapshot' => fn (Blueprint $t) => $t->decimal('affiliate_cost_snapshot', 14, 2)->nullable(),
+            'customer_price_snapshot' => fn (Blueprint $t) => $t->decimal('customer_price_snapshot', 14, 2)->nullable(),
+            'parent_profit_snapshot' => fn (Blueprint $t) => $t->decimal('parent_profit_snapshot', 14, 2)->nullable(),
+            'affiliate_profit_snapshot' => fn (Blueprint $t) => $t->decimal('affiliate_profit_snapshot', 14, 2)->nullable(),
+        ];
+        foreach ($transactionColumns as $column => $definition) $this->ensureColumn('transactions', $column, $definition);
+        foreach (['parent_business_id', 'parent_provider_connection_id', 'product_plan_provider_route_id', 'provider_reference', 'routing_status'] as $column) {
+            $this->ensureIndex('transactions', [$column], "transactions_{$column}_index");
+        }
+        $this->ensureForeign('transactions', 'transactions_parent_business_fk', ['parent_business_id'], 'parent_businesses', ['id']);
+        $this->ensureForeign('transactions', 'transactions_parent_provider_connection_fk', ['parent_provider_connection_id'], 'parent_provider_connections', ['id']);
+        $this->ensureForeign('transactions', 'transactions_product_plan_provider_route_fk', ['product_plan_provider_route_id'], 'product_plan_provider_routes', ['id']);
 
         $this->addAffiliateOwnershipTriggers();
+    }
+
+    private function ensureColumn(string $table, string $column, callable $definition): void
+    {
+        if (! Schema::hasColumn($table, $column)) Schema::table($table, $definition);
+    }
+
+    private function ensureIndex(string $table, array $columns, string $name): void
+    {
+        if (! $this->indexExists($table, $name)) Schema::table($table, fn (Blueprint $t) => $t->index($columns, $name));
+    }
+
+    private function ensureUnique(string $table, array $columns, string $name): void
+    {
+        if (! $this->indexExists($table, $name)) Schema::table($table, fn (Blueprint $t) => $t->unique($columns, $name));
+    }
+
+    private function ensureForeign(string $table, string $name, array $columns, string $foreignTable, array $foreignColumns): void
+    {
+        if (! $this->constraintExists($table, $name)) Schema::table($table, fn (Blueprint $t) => $t->foreign($columns, $name)->references($foreignColumns)->on($foreignTable)->restrictOnDelete());
+    }
+
+    private function indexExists(string $table, string $name): bool
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return collect(DB::select("PRAGMA index_list(`{$table}`)"))->contains(fn ($row) => $row->name === $name);
+        }
+        return DB::table('information_schema.STATISTICS')->whereRaw('TABLE_SCHEMA = DATABASE()')->where('TABLE_NAME', $table)->where('INDEX_NAME', $name)->exists();
+    }
+
+    private function constraintExists(string $table, string $name): bool
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') return false;
+        return DB::table('information_schema.TABLE_CONSTRAINTS')->whereRaw('CONSTRAINT_SCHEMA = DATABASE()')->where('TABLE_NAME', $table)->where('CONSTRAINT_NAME', $name)->exists();
+    }
+
+    private function triggerExists(string $name): bool
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') return false;
+        return DB::table('information_schema.TRIGGERS')->whereRaw('TRIGGER_SCHEMA = DATABASE()')->where('TRIGGER_NAME', $name)->exists();
     }
 
     public function down(): void
@@ -168,7 +203,7 @@ return new class extends Migration
     private function addAffiliateOwnershipTriggers(): void
     {
         if (DB::connection()->getDriverName() !== 'sqlite') {
-            DB::unprepared(<<<'SQL'
+            if (! $this->triggerExists('affiliates_parent_ownership_insert')) DB::unprepared(<<<'SQL'
                 CREATE TRIGGER affiliates_parent_ownership_insert
                 BEFORE INSERT ON affiliates
                 FOR EACH ROW
@@ -180,7 +215,7 @@ return new class extends Migration
                 END
                 SQL);
 
-            DB::unprepared(<<<'SQL'
+            if (! $this->triggerExists('affiliates_parent_ownership_update')) DB::unprepared(<<<'SQL'
                 CREATE TRIGGER affiliates_parent_ownership_update
                 BEFORE UPDATE ON affiliates
                 FOR EACH ROW
@@ -195,6 +230,8 @@ return new class extends Migration
             return;
         }
 
+        DB::unprepared('DROP TRIGGER IF EXISTS affiliates_parent_ownership_insert');
+        DB::unprepared('DROP TRIGGER IF EXISTS affiliates_parent_ownership_update');
         DB::unprepared(<<<'SQL'
             CREATE TRIGGER affiliates_parent_ownership_insert
             BEFORE INSERT ON affiliates

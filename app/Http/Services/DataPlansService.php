@@ -13,6 +13,8 @@ use App\Models\AffiliateProductPlan;
 use Illuminate\Support\Facades\Hash;
 use App\Models\ProductPlanCustomPricing;
 use App\Models\AffiliateProductPlanCategory;
+use App\Models\Affiliate;
+use App\Services\Pricing\MultiParentPricingResolver;
 use function GuzzleHttp\json_encode;
 
 class DataPlansService{
@@ -152,6 +154,27 @@ class DataPlansService{
         $user_details = $data['user'];
         $amount = $data['amount'] ?? 0;
         $slug = Product::select('slug')->where('id',$product_id)->first()->slug;
+
+        $affiliate = Affiliate::with(['parentBusiness', 'processingProfile'])->find($user_details->affiliate_id);
+        $isMultiParent = $affiliate
+            && $affiliate->parent_business_id
+            && $affiliate->processingProfile?->processing_engine === 'multi_parent';
+
+        if ($isMultiParent) {
+            $customerLevel = (int) (AffiliateUserPlan::whereKey($user_details->user_plan_id)->value('plan_level') ?? 1);
+            $resolved = app(MultiParentPricingResolver::class)->resolve(
+                $affiliate,
+                $product_plan,
+                $customerLevel,
+                in_array($slug, ['airtime', 'utility_bills'], true) ? (string) $amount : null,
+            );
+
+            return [
+                'status' => 1,
+                'plan_level' => $customerLevel,
+                'message' => $resolved['customer_selling_price'],
+            ];
+        }
 
 
         $user_plan_id = $user_details->user_plan_id;

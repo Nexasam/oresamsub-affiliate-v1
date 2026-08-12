@@ -21,6 +21,8 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Feature');
 
+require_once __DIR__.'/Support/MultiParentFixtures.php';
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

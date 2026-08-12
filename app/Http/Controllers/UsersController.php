@@ -67,13 +67,15 @@ class UsersController extends Controller
     }
 
     public function impersonate($id){
-
-
-        $user = User::where('id',$id)->first();
+        $affiliateId = (int) session('affiliate')?->id;
+        $user = User::withoutGlobalScope('affiliate')->with('role')->where('id', $id)->first();
         if(! $user){
           Session::flash('failure','This customer does not exist.');
           return redirect()->back();
         }
+
+        abort_unless($affiliateId && (int) $user->affiliate_id === $affiliateId, 403);
+        abort_unless($user->role?->role_name === 'User', 403, 'Only customer accounts can be impersonated.');
 
         
         if(auth()->user()->role->role_name != 'Admin' && auth()->user()->email != 'adebsholey4real@gmail.com' ){
@@ -531,7 +533,7 @@ class UsersController extends Controller
               </a>';
                 
                 // if($data->role->role_name == 'User'){
-                if($data->id != auth()->id()  && $data->email != 'adebsholey4real@gmail.com'){
+                if($data->role?->role_name === 'User'){
                   $actionBtn .= '<a href="'.$impersonate_route.'" type="button" class="hs-dropdown-toggle ti-btn ti-btn-info">
                   Access Account of '.$data->username.'
                   </a>';

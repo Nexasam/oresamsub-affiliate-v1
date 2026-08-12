@@ -17,6 +17,8 @@ use App\Models\ProductPlanCategory;
 use App\Models\AffiliateProductPlan;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use App\Models\ParentDefaultProfitRule;
+use App\Services\Pricing\AffiliateAcquisitionPriceResolver;
 
 class ProductPlanController extends Controller
 {
@@ -144,15 +146,31 @@ class ProductPlanController extends Controller
 
    
    public function admin_fetch_product_plans(Request $request){
+        $affiliate = Affiliate::with('parentBusiness')->findOrFail($this->getId());
+        $legacyOresamsub = $affiliate->parentBusiness?->slug === 'oresamsub'
+            && $affiliate->processingProfile?->processing_engine === 'legacy_oresamsub';
+
         // Fetch all product plans with related data
-        $data = ProductPlan::with(['product_plan_category.network', 'product_plan_category.product','affiliate_product_plan'])
+        $data = ProductPlan::with([
+                'product_plan_category.network',
+                'product_plan_category.product',
+                'affiliate_product_plan' => fn ($query) => $query->where('affiliate_id', $affiliate->id),
+                'parentPrices' => fn ($query) => $query->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id),
+            ])
+            ->where('parent_business_id', $affiliate->parent_business_id)
             ->orderBy('updated_at', 'desc')
             ->get();
 
         // return $data;
     
         // Get all affiliate-added plan IDs
-        $affiliatePlanIds = AffiliateProductPlan::pluck('product_plan_id')->toArray();
+        $affiliatePlanIds = AffiliateProductPlan::where('affiliate_id', $affiliate->id)->pluck('product_plan_id')->toArray();
+        $defaultRules = ParentDefaultProfitRule::query()
+            ->where('parent_business_id', $affiliate->parent_business_id)
+            ->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id)
+            ->get()
+            ->keyBy('product_id');
+        $acquisitionPrices = app(AffiliateAcquisitionPriceResolver::class);
     
         return DataTables::of($data)
             ->addIndexColumn()
@@ -192,8 +210,13 @@ class ProductPlanController extends Controller
             // ->addColumn('cost_price', fn($data) => '₦' . number_format((float)$data->$cost_price_level, 2))
 
             // Profit Range
-            ->addColumn('cost_price', function ($data) {
-          
+            ->addColumn('cost_price', function ($data) use ($affiliate, $legacyOresamsub, $defaultRules, $acquisitionPrices) {
+                if (! $legacyOresamsub) {
+                    $productId = $data->product_plan_category?->product_id;
+
+                    return $acquisitionPrices->display($affiliate, $data, $defaultRules->get($productId));
+                }
+
                 $cost_price_level = 'cost_price_' . session('affiliate')->parent_plan_level; //plan level
 
 

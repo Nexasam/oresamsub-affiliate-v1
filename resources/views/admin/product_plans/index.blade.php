@@ -85,7 +85,7 @@
                                 <th class="px-3 py-2 text-left font-semibold">Category</th>
                                 <th class="px-3 py-2 text-left font-semibold">Data Size</th>
                                 <th class="px-3 py-2 text-left font-semibold">Validity</th>
-                                <th class="px-3 py-2 text-left font-semibold">Cost Price</th>
+                                <th class="px-3 py-2 text-left font-semibold">Affiliate Acquisition Price</th>
                                 {{-- <th class="px-3 py-2 text-left font-semibold">Admin Cost</th> --}}
                                 <th class="px-3 py-2 text-left font-semibold">Max Profit</th>
                                 <th class="px-3 py-2 text-left font-semibold">User Plan Margin</th>

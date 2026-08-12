@@ -2,13 +2,15 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('funding_providers', function (Blueprint $table) {
+        if (! Schema::hasTable('funding_providers')) Schema::create('funding_providers', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -19,7 +21,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('parent_funding_providers', function (Blueprint $table) {
+        if (! Schema::hasTable('parent_funding_providers')) Schema::create('parent_funding_providers', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('parent_business_id')->constrained()->restrictOnDelete();
             $table->foreignId('funding_provider_id')->constrained()->restrictOnDelete();
@@ -31,7 +34,8 @@ return new class extends Migration
             $table->unique(['parent_business_id', 'funding_provider_id'], 'parent_funding_provider_unique');
         });
 
-        Schema::create('affiliate_funding_provider_configs', function (Blueprint $table) {
+        if (! Schema::hasTable('affiliate_funding_provider_configs')) Schema::create('affiliate_funding_provider_configs', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('affiliate_id')->constrained()->restrictOnDelete();
             $table->foreignId('parent_funding_provider_id')->constrained(indexName: 'affiliate_funding_parent_provider_fk')->restrictOnDelete();
@@ -45,7 +49,8 @@ return new class extends Migration
             $table->unique(['affiliate_id', 'parent_funding_provider_id'], 'affiliate_parent_funding_unique');
         });
 
-        Schema::create('funding_mode_change_requests', function (Blueprint $table) {
+        if (! Schema::hasTable('funding_mode_change_requests')) Schema::create('funding_mode_change_requests', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('affiliate_funding_provider_config_id')->constrained(indexName: 'funding_mode_config_fk')->cascadeOnDelete();
             $table->string('requested_mode');
@@ -56,7 +61,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('funding_webhook_events', function (Blueprint $table) {
+        if (! Schema::hasTable('funding_webhook_events')) Schema::create('funding_webhook_events', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('funding_provider_id')->constrained()->restrictOnDelete();
             $table->foreignId('parent_business_id')->nullable()->constrained()->nullOnDelete();
@@ -70,11 +76,60 @@ return new class extends Migration
             $table->unique(['funding_provider_id', 'external_event_id'], 'funding_webhook_event_unique');
         });
 
-        Schema::table('user_virtual_accounts', function (Blueprint $table) {
-            $table->foreignId('parent_business_id')->nullable()->after('affiliate_id')->constrained()->nullOnDelete();
-            $table->foreignId('parent_funding_provider_id')->nullable()->after('funding_option_id')->constrained()->nullOnDelete();
-            $table->foreignId('affiliate_funding_provider_config_id')->nullable()->after('parent_funding_provider_id')->constrained(indexName: 'user_virtual_account_funding_config_fk')->nullOnDelete();
+        foreach (['funding_providers', 'parent_funding_providers', 'affiliate_funding_provider_configs', 'funding_mode_change_requests', 'funding_webhook_events', 'user_virtual_accounts'] as $table) {
+            $this->normalizeTableEngine($table);
+        }
+
+        $this->ensureForeign('parent_funding_providers', 'parent_funding_providers_parent_business_id_foreign', 'parent_business_id', 'parent_businesses', 'restrict');
+        $this->ensureForeign('parent_funding_providers', 'parent_funding_providers_funding_provider_id_foreign', 'funding_provider_id', 'funding_providers', 'restrict');
+        $this->ensureForeign('affiliate_funding_provider_configs', 'affiliate_funding_provider_configs_affiliate_id_foreign', 'affiliate_id', 'affiliates', 'restrict');
+        $this->ensureForeign('affiliate_funding_provider_configs', 'affiliate_funding_parent_provider_fk', 'parent_funding_provider_id', 'parent_funding_providers', 'restrict');
+        $this->ensureForeign('funding_mode_change_requests', 'funding_mode_config_fk', 'affiliate_funding_provider_config_id', 'affiliate_funding_provider_configs', 'cascade');
+        $this->ensureForeign('funding_mode_change_requests', 'funding_mode_change_requests_reviewed_by_parent_admin_id_foreign', 'reviewed_by_parent_admin_id', 'parent_admins', 'null');
+        $this->ensureForeign('funding_webhook_events', 'funding_webhook_events_funding_provider_id_foreign', 'funding_provider_id', 'funding_providers', 'restrict');
+        $this->ensureForeign('funding_webhook_events', 'funding_webhook_events_parent_business_id_foreign', 'parent_business_id', 'parent_businesses', 'null');
+        $this->ensureForeign('funding_webhook_events', 'funding_webhook_events_affiliate_id_foreign', 'affiliate_id', 'affiliates', 'null');
+        $this->ensureForeign('funding_webhook_events', 'funding_webhook_config_fk', 'affiliate_funding_provider_config_id', 'affiliate_funding_provider_configs', 'null');
+
+        $this->ensureColumn('user_virtual_accounts', 'parent_business_id', fn (Blueprint $table) => $table->foreignId('parent_business_id')->nullable()->after('affiliate_id'));
+        $this->ensureColumn('user_virtual_accounts', 'parent_funding_provider_id', fn (Blueprint $table) => $table->foreignId('parent_funding_provider_id')->nullable()->after('funding_option_id'));
+        $this->ensureColumn('user_virtual_accounts', 'affiliate_funding_provider_config_id', fn (Blueprint $table) => $table->foreignId('affiliate_funding_provider_config_id')->nullable()->after('parent_funding_provider_id'));
+
+        $this->ensureForeign('user_virtual_accounts', 'user_virtual_accounts_parent_business_id_foreign', 'parent_business_id', 'parent_businesses', 'null');
+        $this->ensureForeign('user_virtual_accounts', 'user_virtual_accounts_parent_funding_provider_id_foreign', 'parent_funding_provider_id', 'parent_funding_providers', 'null');
+        $this->ensureForeign('user_virtual_accounts', 'user_virtual_account_funding_config_fk', 'affiliate_funding_provider_config_id', 'affiliate_funding_provider_configs', 'null');
+    }
+
+    private function ensureColumn(string $table, string $column, callable $definition): void
+    {
+        if (! Schema::hasColumn($table, $column)) Schema::table($table, $definition);
+    }
+
+    private function normalizeTableEngine(string $table): void
+    {
+        if (DB::connection()->getDriverName() !== 'mysql' || ! Schema::hasTable($table)) return;
+        $engine = DB::table('information_schema.TABLES')->whereRaw('TABLE_SCHEMA = DATABASE()')->where('TABLE_NAME', $table)->value('ENGINE');
+        if (strcasecmp((string) $engine, 'InnoDB') !== 0) DB::statement("ALTER TABLE `{$table}` ENGINE=InnoDB");
+    }
+
+    private function ensureForeign(string $table, string $name, string $column, string $foreignTable, string $onDelete): void
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') return;
+        if ($this->constraintExists($table, $name)) return;
+        Schema::table($table, function (Blueprint $blueprint) use ($column, $name, $foreignTable, $onDelete) {
+            $foreign = $blueprint->foreign($column, $name)->references('id')->on($foreignTable);
+            match ($onDelete) {
+                'cascade' => $foreign->cascadeOnDelete(),
+                'null' => $foreign->nullOnDelete(),
+                default => $foreign->restrictOnDelete(),
+            };
         });
+    }
+
+    private function constraintExists(string $table, string $name): bool
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') return false;
+        return DB::table('information_schema.TABLE_CONSTRAINTS')->whereRaw('CONSTRAINT_SCHEMA = DATABASE()')->where('TABLE_NAME', $table)->where('CONSTRAINT_NAME', $name)->exists();
     }
 
     public function down(): void

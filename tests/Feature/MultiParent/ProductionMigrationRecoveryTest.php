@@ -42,3 +42,15 @@ it('makes the provider approval migration resumable and normalizes its foreign t
         ->and($source)->toContain('constraintExists')
         ->and($source)->toContain('ENGINE=InnoDB');
 });
+
+it('uses innodb by default and makes the multi parent funding migration resumable', function () {
+    $config = file_get_contents(config_path('database.php'));
+    $source = file_get_contents(database_path('migrations/2026_08_11_100000_create_multi_parent_funding_tables.php'));
+
+    expect($config)->toContain("'engine' => 'InnoDB'")
+        ->and($source)->toContain("Schema::hasTable('funding_providers')")
+        ->and($source)->toContain("'funding_webhook_events', 'user_virtual_accounts'")
+        ->and($source)->toContain("ensureColumn('user_virtual_accounts', 'parent_funding_provider_id'")
+        ->and($source)->toContain('ensureForeign')
+        ->and($source)->toContain("\$table->engine = 'InnoDB'");
+});

@@ -138,6 +138,23 @@ it('uses mappings headers network IDs and response rules from the selected produ
         && $request->header('X-Airtime-Key')[0] === 'provider-secret-token');
 });
 
+it('adds the required separator when a bearer header prefix was saved without a trailing space', function () {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['data' => [
+            'request_parameters' => [['key' => 'request_id', 'type' => 'runtime', 'value' => 'reference']],
+            'request_headers' => [[
+                'key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer',
+            ]],
+            'success_conditions' => [['key' => 'status', 'value' => 'success']],
+        ]]],
+    ]);
+    Http::fake(['provider.example/*' => Http::response(['status' => 'success'])]);
+
+    app(ConfigurableProviderClient::class)->execute($connection, 'data', ['reference' => 'ORDER-BEARER-SPACE']);
+
+    Http::assertSent(fn (Request $request) => $request->header('Authorization')[0] === 'Bearer provider-secret-token');
+});
+
 it('falls back to legacy shared mappings when a product configuration has not been migrated', function () {
     $connection = executableProviderConnection(['settings' => ['product_configs' => []]]);
     Http::fake(['provider.example/*' => Http::response([

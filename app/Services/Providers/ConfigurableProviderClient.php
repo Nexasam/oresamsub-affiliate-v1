@@ -160,7 +160,11 @@ class ConfigurableProviderClient
 
         foreach ($mappings as $mapping) {
             $value = $this->resolveValue($mapping, $runtime, $credentials, $networkMapping);
-            $headers[$mapping['key']] = ($mapping['prefix'] ?? '').$value.($mapping['suffix'] ?? '');
+            $prefix = (string) ($mapping['prefix'] ?? '');
+            if (strcasecmp(trim($prefix), 'Bearer') === 0) {
+                $prefix = 'Bearer ';
+            }
+            $headers[$mapping['key']] = $prefix.$value.($mapping['suffix'] ?? '');
         }
 
         return $headers;

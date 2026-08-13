@@ -143,3 +143,39 @@ it('orchestrates a parent-managed data purchase with pricing snapshots and settl
         ->and($wallet->available_balance)->toBe('380.00')
         ->and($wallet->reserved_balance)->toBe('0.00');
 });
+
+it('refunds a conclusive provider failure and releases settlement exactly once', function () {
+    $f = executableParentPurchase();
+    $f['affiliatePlan']->update(['user_level_1_profit' => '10.00']);
+    ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'flat', 'value' => '20.00']);
+    AffiliateServiceProfitCap::create(['parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'product_id' => $f['product']->id, 'customer_level' => 1, 'calculation_type' => 'flat', 'max_value' => '70.00']);
+    AffiliateProcessingProfile::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'management_mode' => 'parent_managed', 'processing_engine' => 'multi_parent', 'status' => 'active']);
+    AffiliateSettlementWallet::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'available_balance' => '500.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $customer = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'main_wallet' => '1000.00']);
+
+    $failure = [
+        'status' => 2, 'successful' => false, 'ambiguous' => false, 'routing_status' => 'failed',
+        'provider_reference' => 'REJECTED-1', 'parent_provider_connection_id' => $f['connection']->id,
+        'product_plan_provider_route_id' => $f['route']->id, 'provider_plan_id_snapshot' => 'PAUL-1GB',
+        'user_message' => 'Transaction failed.', 'admin_message' => 'Provider rejected the request.',
+        'provider_response' => ['success' => false, 'message' => 'Insufficient provider balance.'],
+    ];
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldReceive('execute')->once()->andReturn($failure));
+
+    $service = app(ParentManagedPurchaseOrchestrator::class);
+    $result = $service->purchase($customer, $f['affiliatePlan']->fresh(), [
+        'reference' => 'ORDER-FAILED-ONCE', 'phone_number' => '08030000000',
+    ], 1);
+    $service->finalize($result['transaction']->fresh(), $f['affiliate'], $customer, $failure);
+
+    $wallet = AffiliateSettlementWallet::where('affiliate_id', $f['affiliate']->id)->first();
+    expect($result['transaction']->routing_status)->toBe('failed')
+        ->and($result['transaction']->status)->toBe('2')
+        ->and($customer->fresh()->main_wallet)->toBe('1000.00')
+        ->and($wallet->available_balance)->toBe('500.00')
+        ->and($wallet->reserved_balance)->toBe('0.00')
+        ->and($wallet->ledgerEntries()->where('entry_type', 'purchase_reservation')->count())->toBe(1)
+        ->and($wallet->ledgerEntries()->where('entry_type', 'reservation_release')->count())->toBe(1)
+        ->and(\App\Models\WalletLog::withoutGlobalScope('affiliate')->where('user_id', $customer->id)->where('transaction_category', 'PARENT_MANAGED_DATA_REFUND')->count())->toBe(1);
+});

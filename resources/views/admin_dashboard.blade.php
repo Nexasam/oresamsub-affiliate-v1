@@ -126,16 +126,6 @@
                                       @endforelse
                                     </div>
                                   </div>
-                                  <div class="mt-4 border-t border-indigo-100 pt-4 dark:border-gray-700">
-                                    <div class="flex items-center justify-between gap-3"><h3 class="text-sm font-semibold text-gray-900 dark:text-white">Recent settlement funding</h3><a href="{{ route('admin.settlement-funding.index') }}" class="text-xs font-semibold text-indigo-600">View all</a></div>
-                                    <div class="mt-2 overflow-x-auto"><table class="w-full min-w-[680px] text-left text-xs"><thead class="text-gray-500"><tr><th class="py-2">Date</th><th>Reference</th><th>Gross</th><th>Charge</th><th>Net credit</th><th>Balance</th><th>Status</th></tr></thead><tbody class="divide-y divide-indigo-50 dark:divide-gray-700">
-                                      @forelse($settlement_funding_entries as $entry)
-                                      <tr><td class="py-2.5 text-gray-500">{{ $entry->created_at?->format('d M Y, H:i') }}</td><td class="font-medium text-gray-800 dark:text-gray-200">{{ data_get($entry->metadata,'external_event_id',str($entry->reference)->after('FUNDING:')) }}</td><td>₦{{ number_format((float)data_get($entry->metadata,'gross_amount',$entry->amount),2) }}</td><td>₦{{ number_format((float)data_get($entry->metadata,'charge',0),2) }}</td><td class="font-semibold text-emerald-700">+₦{{ number_format((float)$entry->amount,2) }}</td><td>₦{{ number_format((float)$entry->balance_after,2) }}</td><td><span class="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">Successful</span></td></tr>
-                                      @empty
-                                      <tr><td colspan="7" class="py-3 text-gray-500">No automated settlement funding yet.</td></tr>
-                                      @endforelse
-                                    </tbody></table></div>
-                                  </div>
                                 </div>
                                 @endif
 
@@ -401,6 +391,27 @@
                   @endforelse
                 </div>
               </div>
+
+              @if(config('parent_businesses.features.multi_parent_funding') && session('affiliate')?->parent_business_id)
+              <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                  <span class="font-semibold text-gray-700 dark:text-gray-200">Recent settlement funding</span>
+                  <a href="{{ route('admin.settlement-funding.index') }}" class="text-xs font-semibold text-indigo-600">View all</a>
+                </div>
+                <div class="overflow-x-auto px-4 pb-3">
+                  <table class="w-full min-w-[680px] text-left text-xs">
+                    <thead class="text-gray-500"><tr><th class="py-3">Date</th><th>Reference</th><th>Gross</th><th>Charge</th><th>Net credit</th><th>Balance</th><th>Status</th></tr></thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                      @forelse($settlement_funding_entries as $entry)
+                      <tr><td class="py-3 text-gray-500">{{ $entry->created_at?->format('d M Y, H:i') }}</td><td class="font-medium text-gray-800 dark:text-gray-200">{{ data_get($entry->metadata,'external_event_id',str($entry->reference)->after('FUNDING:')) }}</td><td>₦{{ number_format((float)data_get($entry->metadata,'gross_amount',$entry->amount),2) }}</td><td>₦{{ number_format((float)data_get($entry->metadata,'charge',0),2) }}</td><td class="font-semibold text-emerald-700">+₦{{ number_format((float)$entry->amount,2) }}</td><td>₦{{ number_format((float)$entry->balance_after,2) }}</td><td><span class="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">Successful</span></td></tr>
+                      @empty
+                      <tr><td colspan="7" class="py-4 text-center text-gray-500">No automated settlement funding yet.</td></tr>
+                      @endforelse
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              @endif
 
 
 

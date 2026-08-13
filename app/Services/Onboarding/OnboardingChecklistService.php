@@ -22,8 +22,12 @@ class OnboardingChecklistService
             $this->step('Reseller pricing', $parent->productPlans()->whereHas('parentPrices')->exists(), 'Set acquisition prices or service defaults for reseller levels.', route('parent-admin.pricing.index')),
             $this->step('Funding provider', $parent->fundingProviders()->where('active', true)->exists(), 'Enable at least one approved funding provider.', route('parent-admin.funding-providers.index')),
             $this->step('Approved affiliate', $parent->affiliates()->exists(), 'Submit an affiliate and wait for platform approval.', route('parent-admin.affiliates.index')),
+            $this->step('Affiliate setup', AffiliateProductPlan::withoutGlobalScope('affiliate')->whereIn('affiliate_id', $affiliateIds)->exists(), 'Generate the affiliate catalogue and confirm its customer-facing plan setup.', route('parent-admin.operations.index')),
             $this->step('Affiliate settlement wallet', $parent->affiliates()->whereHas('settlementWallet')->exists(), 'Prepare a settlement wallet for an affiliate.', route('parent-admin.settlement-wallets.index')),
-            $this->step('Successful test transaction', Transaction::query()->where('parent_business_id', $parent->id)->where('status', 1)->exists(), 'Complete one low-value end-to-end purchase.', route('parent-admin.transactions.index')),
+            $this->step('Successful test transaction', Transaction::withoutGlobalScope('affiliate')->where(function ($query) use ($parent, $affiliateIds) {
+                $query->where('parent_business_id', $parent->id)
+                    ->orWhere(fn ($legacy) => $legacy->whereNull('parent_business_id')->whereIn('affiliate_id', $affiliateIds));
+            })->where('status', 1)->exists(), 'Complete one low-value end-to-end purchase.', route('parent-admin.transactions.index')),
         ];
 
         return $this->summary($steps);

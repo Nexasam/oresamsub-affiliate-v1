@@ -378,7 +378,7 @@
 
         </div>
 
-        <div class="col-span-12 xxl:col-span-12 px-6 rounded-lg">
+        {{-- <div class="col-span-12 xxl:col-span-12 px-6 rounded-lg">
 
             <div class="grid grid-cols-12 gap-1">
 
@@ -500,29 +500,9 @@
 
 
 
-
-                    {{-- <div class="box-body">
-                      <div class="overflow-auto table-bordered p-4">
-                        <table id="basic-table" class="ti-custom-table ti-striped-table ti-custom-table-hover">
-                          <thead>
-                              <tr>
-
-                                  <td>First Name</td>
-                                  <td>Last Name</td>
-                                  <td>Action</td>
-                              </tr>
-                          </thead>
-                          <tbody>
-                          </tbody>
-                        </table>
-                      </div>
-
-                    </div> --}}
-
-
                   </div>
                 </div>
-        </div>
+        </div> --}}
 
     </div>
 

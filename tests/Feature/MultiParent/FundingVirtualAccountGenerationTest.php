@@ -73,3 +73,15 @@ it('uses securewaveng business_id credentials while retaining contract_code comp
     expect(app(MultiParentVirtualAccountService::class)->generateForUser($fixture['user'])['status'])->toBe(1);
     Http::assertSent(fn ($request) => $request['business_id'] === 'securewave-business-9');
 });
+
+it('returns a safe diagnostic when securewaveng rejects affiliate credentials', function () {
+    $fixture = virtualAccountFixture('securewaveng');
+    Http::fake(['securewaveng.com/*' => Http::response('<!DOCTYPE html><title>Unauthorized</title>', 401)]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $result = app(MultiParentVirtualAccountService::class)->generateForUser($fixture['user']);
+
+    expect($result['status'])->toBe(-1)
+        ->and($result['message'])->toContain('SecureWaveNG authentication failed')
+        ->and($result['message'])->not->toContain('<!DOCTYPE html>');
+});

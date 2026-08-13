@@ -30,11 +30,12 @@ class FundingWebhookController extends Controller
         $parentProvider = $affiliateConfig ? null : ParentFundingProvider::query()
             ->where('funding_provider_id', $provider->id)->where('webhook_key', $webhookKey)->where('webhook_active', true)->first();
 
-        $secret = $affiliateConfig?->webhook_secret ?? $parentProvider?->webhook_secret;
-        abort_unless(filled($secret), 404);
-
         $signature = $this->adapter->signature($request, $provider);
-        abort_unless(hash_equals(hash_hmac('sha256', $request->getContent(), $secret), $signature), 401);
+        $secrets = $this->verificationSecrets($provider, $affiliateConfig, $parentProvider);
+        abort_unless($secrets !== [], 404);
+        abort_unless(collect($secrets)->contains(
+            fn (string $secret) => hash_equals(hash_hmac('sha256', $request->getContent(), $secret), $signature)
+        ), 401);
 
         $payload = $request->json()->all();
         $normalized = $this->adapter->normalize($provider, $payload);
@@ -52,5 +53,20 @@ class FundingWebhookController extends Controller
             : 'received';
 
         return response()->json(['accepted' => true, 'duplicate' => false, 'status' => $status], $status === 'processed' ? 200 : 202);
+    }
+
+    private function verificationSecrets(
+        FundingProvider $provider,
+        ?AffiliateFundingProviderConfig $affiliateConfig,
+        ?ParentFundingProvider $parentProvider,
+    ): array {
+        $secrets = [];
+        if ($provider->adapter_key === 'securewaveng') {
+            $credentials = $affiliateConfig?->credentials ?? $parentProvider?->credentials ?? [];
+            $secrets[] = $credentials['api_secret_key'] ?? null;
+        }
+        $secrets[] = $affiliateConfig?->webhook_secret ?? $parentProvider?->webhook_secret;
+
+        return collect($secrets)->filter(fn ($secret) => filled($secret))->map(fn ($secret) => (string) $secret)->unique()->values()->all();
     }
 }

@@ -107,6 +107,9 @@ class MultiParentVirtualAccountService
                 'business_id' => $this->credential($resolved, 'business_id', ['contract_code']), 'account_type' => 'static',
                 'id_type' => 'bvn', 'id_number' => $resolved['credentials']['biz_bvn'] ?? $user->bvn,
             ]);
+        if ($response->status() === 401) {
+            throw new \RuntimeException('SecureWaveNG authentication failed. Confirm the affiliate API public key, API secret key and business ID belong to the same active SecureWaveNG account.');
+        }
         $response->throw();
         if ($response->json('status') !== true) {
             throw new \RuntimeException((string) ($response->json('message') ?: 'SecurewaveNG rejected virtual-account generation.'));

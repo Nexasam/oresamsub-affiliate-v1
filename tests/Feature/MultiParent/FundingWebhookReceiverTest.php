@@ -90,6 +90,30 @@ it('credits an affiliate customer from a signed securewaveng webhook', function 
     expect($user->fresh()->main_wallet)->toBe('1175.00');
 });
 
+it('verifies securewaveng webhooks with the affiliate api secret used by the provider', function () {
+    $fixture = webhookFundingFixture();
+    $fixture['provider']->update(['name' => 'SecurewaveNG', 'slug' => 'securewaveng', 'adapter_key' => 'securewaveng']);
+    $fixture['config']->update([
+        'credentials' => ['api_public_key' => 'secure-public', 'api_secret_key' => 'secure-api-secret', 'business_id' => 'business-1'],
+        'webhook_key' => 'securewave-api-secret-hook',
+        'webhook_secret' => 'different-manual-secret',
+        'webhook_active' => true,
+    ]);
+    $user = User::factory()->create(['affiliate_id' => $fixture['affiliate']->id, 'user_plan_id' => $fixture['userPlanId'], 'email' => 'secure-api-secret@example.test', 'main_wallet' => '0.00']);
+    $payload = json_encode([
+        'transaction_status' => 'success', 'provider_reference' => 'SW-API-SECRET-1', 'amount' => 500,
+        'settlement_amount' => 500, 'customer' => ['email' => $user->email], 'receiver' => ['bank' => 'Wema'],
+    ]);
+
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+    $this->call('POST', '/api/funding/webhooks/securewaveng/securewave-api-secret-hook', [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_SIGNATURE' => hash_hmac('sha256', $payload, 'secure-api-secret'),
+    ], $payload)->assertOk()->assertJson(['accepted' => true, 'status' => 'processed']);
+
+    expect($user->fresh()->main_wallet)->toBe('500.00');
+});
+
 it('holds oversized affiliate funding for approval instead of crediting immediately', function () {
     $fixture = webhookFundingFixture();
     $fixture['config']->update(['webhook_key' => 'limited-hook', 'webhook_secret' => 'limited-secret', 'webhook_active' => true]);

@@ -7,6 +7,7 @@ use App\Support\ProviderProductRegistry;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ConfigurableProviderClient
@@ -53,12 +54,31 @@ class ConfigurableProviderClient
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
             $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
             $method = strtoupper($settings['http_method'] ?? 'POST');
+            $logContext = $this->logContext($connection, $productSlug, $runtime, $method, $endpoint);
+            Log::info('provider.request.prepared', $logContext + [
+                'payload' => $this->redact($payload),
+            ]);
             $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
 
+            Log::info('provider.response.received', $logContext + [
+                'http_status' => $response->status(),
+                'response' => is_array($response->json())
+                    ? $this->redact($response->json())
+                    : ['format' => 'non_json', 'body_length' => strlen($response->body())],
+            ]);
+
             return $this->interpret($response, $productSettings);
-        } catch (ConnectionException) {
+        } catch (ConnectionException $exception) {
+            Log::warning('provider.request.failed', $this->logContext($connection, $productSlug, $runtime, $method ?? null, $endpoint ?? null) + [
+                'stage' => 'transport',
+                'error' => 'Provider connection failed or timed out.',
+            ]);
             return $this->failure('The provider response is uncertain and requires reconciliation.', ambiguous: true);
         } catch (Throwable $exception) {
+            Log::warning('provider.request.failed', $this->logContext($connection, $productSlug, $runtime, $method ?? null, $endpoint ?? null) + [
+                'stage' => isset($request) ? 'transport_or_response' : 'preparation',
+                'error' => $this->safeConfigurationMessage($exception),
+            ]);
             report($exception);
 
             return $this->failure($this->safeConfigurationMessage($exception));
@@ -227,6 +247,55 @@ class ConfigurableProviderClient
             'false' => false,
             default => trim($value),
         };
+    }
+
+    /** @return array<string, mixed> */
+    private function logContext(
+        ParentProviderConnection $connection,
+        string $productSlug,
+        array $runtime,
+        ?string $method,
+        ?string $endpoint,
+    ): array {
+        return [
+            'reference' => $runtime['reference'] ?? null,
+            'connection_id' => $connection->id,
+            'parent_business_id' => $connection->parent_business_id,
+            'product' => $productSlug,
+            'method' => $method,
+            'endpoint' => $this->safeEndpoint($endpoint),
+        ];
+    }
+
+    private function safeEndpoint(?string $endpoint): ?string
+    {
+        if (! $endpoint) {
+            return null;
+        }
+
+        $parts = parse_url($endpoint);
+        if (! is_array($parts) || empty($parts['host'])) {
+            return '[INVALID ENDPOINT]';
+        }
+
+        return ($parts['scheme'] ?? 'https').'://'.$parts['host']
+            .(isset($parts['port']) ? ':'.$parts['port'] : '')
+            .($parts['path'] ?? '');
+    }
+
+    private function redact(mixed $value, ?string $key = null): mixed
+    {
+        if ($key !== null && preg_match('/authorization|credential|password|secret|token|api[_-]?key|phone|mobile|customer[_-]?number|smartcard|meter|metre/i', $key)) {
+            return '[REDACTED]';
+        }
+
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        return collect($value)->mapWithKeys(
+            fn ($item, $itemKey) => [$itemKey => $this->redact($item, (string) $itemKey)]
+        )->all();
     }
 
     private function safeConfigurationMessage(Throwable $exception): string

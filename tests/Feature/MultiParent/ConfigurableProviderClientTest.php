@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -241,6 +242,34 @@ it('returns a conclusive failure for provider business errors', function () {
     expect($failure)->toMatchArray([
         'successful' => false, 'ambiguous' => false, 'message' => 'Insufficient balance', 'http_status' => 200,
     ]);
+});
+
+it('logs the provider request boundary and redacted response for transaction diagnosis', function () {
+    $connection = executableProviderConnection();
+    Log::spy();
+    Http::fake(['provider.example/*' => Http::response([
+        'status' => false,
+        'error' => ['message' => 'Upstream wallet is insufficient'],
+        'api_token' => 'response-secret-token',
+    ], 200)]);
+
+    app(ConfigurableProviderClient::class)->execute($connection, 'data', [
+        'phone_number' => '08030000000', 'plan' => '1GB', 'reference' => 'ORDER-LOG-1',
+    ]);
+
+    Log::shouldHaveReceived('info')->with('provider.request.prepared', \Mockery::on(
+        fn (array $context) => $context['reference'] === 'ORDER-LOG-1'
+            && $context['connection_id'] === $connection->id
+            && $context['endpoint'] === 'https://provider.example/data'
+            && $context['payload']['data_phone'] === '[REDACTED]'
+            && ! array_key_exists('headers', $context)
+    ))->once();
+    Log::shouldHaveReceived('info')->with('provider.response.received', \Mockery::on(
+        fn (array $context) => $context['reference'] === 'ORDER-LOG-1'
+            && $context['http_status'] === 200
+            && $context['response']['error']['message'] === 'Upstream wallet is insufficient'
+            && $context['response']['api_token'] === '[REDACTED]'
+    ))->once();
 });
 
 it('fails safely for invalid json responses', function () {

@@ -51,10 +51,18 @@ class FundingProviderController extends Controller
     private function seedInitialProviders(): void
     {
         foreach ([['Xixapay', 'xixapay'], ['SecurewaveNG', 'securewaveng']] as [$name, $slug]) {
-            FundingProvider::firstOrCreate(['slug' => $slug], [
+            $provider = FundingProvider::firstOrCreate(['slug' => $slug], [
                 'name' => $name, 'adapter_key' => $slug,
                 'credential_fields' => ['api_public_key', 'api_secret_key'], 'active' => true,
             ]);
+            if ($slug === 'securewaveng') {
+                $fields = collect($provider->credential_fields ?? [])
+                    ->map(fn ($field) => $field === 'contract_code' ? 'business_id' : $field)
+                    ->push('business_id')->unique()->values()->all();
+                if ($fields !== ($provider->credential_fields ?? [])) {
+                    $provider->update(['credential_fields' => $fields]);
+                }
+            }
         }
     }
 }

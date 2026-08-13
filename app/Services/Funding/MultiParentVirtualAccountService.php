@@ -104,7 +104,7 @@ class MultiParentVirtualAccountService
             ->post(data_get($resolved, 'provider.settings.virtual_account_url', 'https://securewaveng.com/api/virtual_accounts/generate'), [
                 'email' => $user->email, 'first_name' => $user->first_name, 'last_name' => $user->last_name,
                 'phone_number' => $user->phone_number, 'bank_code' => $bankCodes,
-                'business_id' => $this->credential($resolved, 'contract_code'), 'account_type' => 'static',
+                'business_id' => $this->credential($resolved, 'business_id', ['contract_code']), 'account_type' => 'static',
                 'id_type' => 'bvn', 'id_number' => $resolved['credentials']['biz_bvn'] ?? $user->bvn,
             ]);
         $response->throw();
@@ -146,9 +146,15 @@ class MultiParentVirtualAccountService
         ]));
     }
 
-    private function credential(array $resolved, string $key): string
+    private function credential(array $resolved, string $key, array $aliases = []): string
     {
         $value = (string) ($resolved['credentials'][$key] ?? '');
+        foreach ($aliases as $alias) {
+            if ($value !== '') {
+                break;
+            }
+            $value = (string) ($resolved['credentials'][$alias] ?? '');
+        }
         if ($value === '') {
             throw new \RuntimeException("The {$key} credential is missing.");
         }

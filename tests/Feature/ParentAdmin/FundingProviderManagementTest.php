@@ -35,7 +35,7 @@ it('saves an affiliate configuration from the funding affiliates table', functio
 
     $this->actingAs($admin, 'parent_admin')
         ->put("/parent-admin/funding-providers/{$parentProvider->id}/affiliates/{$affiliate->id}", [
-            'management_mode' => 'parent_managed',
+            'management_mode' => 'affiliate_managed',
             'active' => '1',
             'generation_enabled' => '1',
             'bank_codes' => [''],
@@ -46,7 +46,7 @@ it('saves an affiliate configuration from the funding affiliates table', functio
     $this->assertDatabaseHas('affiliate_funding_provider_configs', [
         'affiliate_id' => $affiliate->id,
         'parent_funding_provider_id' => $parentProvider->id,
-        'management_mode' => 'parent_managed',
+        'management_mode' => 'affiliate_managed',
         'active' => 1,
         'generation_enabled' => 1,
     ]);
@@ -78,7 +78,7 @@ it('lets a parent enable providers configure credentials and approve affiliate m
         ->assertOk()->assertSee('9PSB')->assertSee('Percentage');
 
     $this->actingAs($admin, 'parent_admin')->put("/parent-admin/funding-providers/{$parentProvider->id}/affiliates/{$affiliate->id}", [
-        'management_mode' => 'parent_managed', 'active' => '1', 'generation_enabled' => '1',
+        'management_mode' => 'affiliate_managed', 'active' => '1', 'generation_enabled' => '1',
         'bank_codes' => ['9PSB', 'SAFEHAVEN'],
     ])->assertRedirect("/parent-admin/funding-providers/{$parentProvider->id}/affiliates");
 
@@ -94,4 +94,20 @@ it('lets a parent enable providers configure credentials and approve affiliate m
 
     $this->actingAs($admin, 'parent_admin')->get("/parent-admin/funding-providers/{$parentProvider->id}/affiliates?q=Child")
         ->assertOk()->assertSee('Child')->assertSee('Affiliate managed');
+});
+
+it('hides and rejects parent-managed customer funding for new affiliate configurations', function () {
+    $parent = ParentBusiness::create(['name' => 'Safe Funding Parent', 'slug' => 'safe-funding']);
+    $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'safe-funding@example.test', 'password' => 'password', 'active' => true]);
+    $level = $parent->resellerLevels()->create(['name' => 'Basic', 'position' => 1, 'status' => 'active']);
+    $affiliate = Affiliate::create(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $level->id, 'name' => 'Child', 'slug' => 'safe-funding-child', 'affiliate_plan_id' => 1, 'ip_address' => '127.9.0.9', 'contact_phone' => '08090000009', 'contact_email' => 'safe-child@example.test', 'parent_key' => 'safe-child-key', 'parent_email' => 'parent@example.test']);
+    $provider = FundingProvider::create(['name' => 'Xixapay', 'slug' => 'xixapay-safe', 'adapter_key' => 'xixapay_safe', 'active' => true]);
+    $parentProvider = $parent->fundingProviders()->create(['funding_provider_id' => $provider->id, 'active' => true, 'generation_enabled' => true]);
+
+    $this->actingAs($admin, 'parent_admin')->get("/parent-admin/funding-providers/{$parentProvider->id}/affiliates")
+        ->assertOk()->assertSee('Affiliate managed')->assertDontSee('Parent managed');
+
+    $this->actingAs($admin, 'parent_admin')->put("/parent-admin/funding-providers/{$parentProvider->id}/affiliates/{$affiliate->id}", [
+        'management_mode' => 'parent_managed', 'active' => '1', 'generation_enabled' => '1',
+    ])->assertSessionHasErrors('management_mode');
 });

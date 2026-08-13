@@ -25,7 +25,8 @@ it('lets an affiliate admin save own credentials and request an approved mode sw
     $bank = ParentFundingProviderBank::create(['parent_funding_provider_id' => $parentProvider->id, 'name' => '9PSB', 'bank_code' => '9PSB', 'rate_type' => 'flat', 'rate_value' => 50, 'active' => true, 'generation_enabled' => true]);
 
     $this->withSession(['affiliate' => $affiliate])->actingAs($admin)
-        ->get('/admin/affiliate-funding-providers')->assertOk()->assertSee('Affiliate funding providers')->assertDontSee('parent-secret');
+        ->get('/admin/affiliate-funding-providers')->assertOk()->assertSee('Affiliate funding providers')->assertDontSee('parent-secret')
+        ->assertSee('Switch to affiliate-managed funding')->assertDontSee('Request switch to parent managed');
 
     $this->withSession(['affiliate' => $affiliate])->actingAs($admin)
         ->put("/admin/affiliate-funding-providers/{$config->id}", [

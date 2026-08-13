@@ -73,7 +73,7 @@ class AffiliateFundingProviderController extends Controller
     public function requestMode(Request $request, AffiliateFundingProviderConfig $config): RedirectResponse
     {
         $this->authorizeAffiliate($config);
-        $data = $request->validate(['requested_mode' => ['required', Rule::in(['parent_managed', 'affiliate_managed']), Rule::notIn([$config->management_mode])]]);
+        $data = $request->validate(['requested_mode' => ['required', Rule::in(['affiliate_managed']), Rule::notIn([$config->management_mode])]]);
         FundingModeChangeRequest::updateOrCreate(
             ['affiliate_funding_provider_config_id' => $config->id, 'status' => 'pending'],
             ['requested_mode' => $data['requested_mode']]

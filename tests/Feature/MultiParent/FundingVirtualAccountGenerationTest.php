@@ -57,3 +57,19 @@ it('generates and stores securewaveng virtual accounts once', function () {
     $this->assertDatabaseCount('user_virtual_accounts', 1);
     Http::assertSentCount(1);
 });
+
+it('uses securewaveng business_id credentials while retaining contract_code compatibility', function () {
+    $fixture = virtualAccountFixture('securewaveng');
+    $fixture['config']->update(['credentials' => [
+        'api_public_key' => 'public-key', 'api_secret_key' => 'secret-key',
+        'business_id' => 'securewave-business-9', 'biz_bvn' => '22222222222',
+    ]]);
+    Http::fake(['securewaveng.com/*' => Http::response(['status' => true, 'data' => [[
+        'status' => 1, 'account_reference' => 'SW-VA-BUSINESS', 'account_bank' => 'Wema',
+        'bank_code' => 'WEMA', 'account_name' => 'Test User', 'account_number' => '9876543211',
+    ]]], 200)]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    expect(app(MultiParentVirtualAccountService::class)->generateForUser($fixture['user'])['status'])->toBe(1);
+    Http::assertSent(fn ($request) => $request['business_id'] === 'securewave-business-9');
+});

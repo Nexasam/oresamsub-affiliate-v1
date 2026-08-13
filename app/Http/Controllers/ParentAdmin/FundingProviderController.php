@@ -94,7 +94,7 @@ class FundingProviderController extends Controller
         $parent = $request->user('parent_admin')->parentBusiness;
         abort_unless($parentProvider->parent_business_id === $parent->id && $affiliate->parent_business_id === $parent->id, 404);
         $data = $request->validate([
-            'management_mode' => ['required', Rule::in(['parent_managed', 'affiliate_managed'])],
+            'management_mode' => ['required', Rule::in(['affiliate_managed'])],
             'active' => ['required', 'boolean'], 'generation_enabled' => ['required', 'boolean'],
             'bank_codes' => ['nullable', 'array'], 'bank_codes.*' => ['nullable', 'string', 'max:100', 'distinct'],
         ]);

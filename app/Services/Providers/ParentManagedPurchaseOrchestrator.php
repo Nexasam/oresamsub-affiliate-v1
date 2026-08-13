@@ -130,6 +130,7 @@ class ParentManagedPurchaseOrchestrator
                 'provider_plan_id_snapshot' => $result['provider_plan_id_snapshot'] ?? null,
                 'user_screen_message' => $result['user_message'] ?? null,
                 'admin_screen_message' => $result['admin_message'] ?? null,
+                'provider_response' => $result['provider_response'] ?? null,
             ];
 
             if ($routing === 'successful') {

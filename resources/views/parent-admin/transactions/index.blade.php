@@ -16,7 +16,7 @@
         <button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Filter</button>
     </form>
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="px-4 py-3">Reference</th><th class="px-4 py-3">Affiliate</th><th class="px-4 py-3">Service</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Provider</th><th class="px-4 py-3">Failure details</th><th class="px-4 py-3">Date</th></tr></thead><tbody class="divide-y divide-slate-100">
+        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="px-4 py-3">Reference</th><th class="px-4 py-3">Affiliate</th><th class="px-4 py-3">Service</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Provider</th><th class="px-4 py-3">Provider response</th><th class="px-4 py-3">Date</th></tr></thead><tbody class="divide-y divide-slate-100">
         @forelse($transactions as $transaction)
             @php
                 $needsDiagnostics = (int) $transaction->status === 2
@@ -24,6 +24,7 @@
                 $failureReason = filled($transaction->admin_screen_message)
                     ? $transaction->admin_screen_message
                     : (filled($transaction->user_screen_message) ? $transaction->user_screen_message : 'No failure reason was recorded.');
+                $providerResponse = $transaction->provider_response;
             @endphp
             <tr>
                 <td class="px-4 py-3 font-medium">{{ $transaction->txn_reference }}</td>
@@ -33,11 +34,15 @@
                 <td class="px-4 py-3">@if($transaction->routing_status === 'reconciliation_required')<span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Needs reconciliation</span>@elseif((int) $transaction->status === 1)<span class="text-emerald-700">Successful</span>@elseif((int) $transaction->status === 2)<span class="text-rose-700">Failed / refunded</span>@else<span class="text-slate-600">Pending</span>@endif</td>
                 <td class="px-4 py-3">{{ $transaction->parentProviderConnection?->name ?? 'Legacy' }}</td>
                 <td class="max-w-sm px-4 py-3">
-                    @if($needsDiagnostics)
+                    @if(filled($providerResponse) || $needsDiagnostics)
                         <details class="group">
-                            <summary class="cursor-pointer font-semibold text-rose-700">View reason</summary>
-                            <div class="mt-2 space-y-1 rounded-lg bg-rose-50 p-3 text-xs text-slate-700">
-                                <p class="whitespace-pre-line break-words">{{ $failureReason }}</p>
+                            <summary class="cursor-pointer font-semibold {{ $needsDiagnostics ? 'text-rose-700' : 'text-blue-700' }}">View response</summary>
+                            <div class="mt-2 space-y-2 rounded-lg {{ $needsDiagnostics ? 'bg-rose-50' : 'bg-blue-50' }} p-3 text-xs text-slate-700">
+                                @if(filled($providerResponse))
+                                    <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono">{{ json_encode($providerResponse, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                @else
+                                    <p class="whitespace-pre-line break-words">{{ $failureReason }}</p>
+                                @endif
                                 <p><span class="font-semibold">Route status:</span> {{ str($transaction->routing_status ?: 'legacy')->replace('_', ' ')->title() }}</p>
                                 @if(filled($transaction->provider_reference))
                                     <p><span class="font-semibold">Provider reference:</span> {{ $transaction->provider_reference }}</p>

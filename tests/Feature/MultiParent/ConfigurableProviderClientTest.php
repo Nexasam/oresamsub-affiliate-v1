@@ -270,8 +270,14 @@ it('logs the provider request boundary and redacted response for transaction dia
         'api_token' => 'response-secret-token',
     ], 200)]);
 
-    app(ConfigurableProviderClient::class)->execute($connection, 'data', [
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'data', [
         'phone_number' => '08030000000', 'plan' => '1GB', 'reference' => 'ORDER-LOG-1',
+    ]);
+
+    expect($result['provider_response'])->toBe([
+        'status' => false,
+        'error' => ['message' => 'Upstream wallet is insufficient'],
+        'api_token' => '[REDACTED]',
     ]);
 
     Log::shouldHaveReceived('info')->with('provider.request.prepared', \Mockery::on(

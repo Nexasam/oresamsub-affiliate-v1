@@ -236,7 +236,7 @@ class ConfigurableProviderClient
                 ?? data_get($decoded, 'reference')
                 ?? data_get($decoded, 'data.reference'),
             'http_status' => $response->status(),
-            'provider_response' => $decoded,
+            'provider_response' => $this->redact($decoded),
         ];
     }
 

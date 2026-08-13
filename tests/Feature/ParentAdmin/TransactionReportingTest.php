@@ -78,3 +78,26 @@ it('shows the recorded failure reason and provider reference to the owning paren
         ->assertSee('Provider rejected the request because its wallet balance is insufficient.')
         ->assertSee('PROVIDER-7788');
 });
+
+it('shows a stored redacted provider response for successful transactions', function () {
+    [$parent, $admin, $levels] = managedParent('report-provider-response');
+    $affiliate = unattachedAffiliate('report-response-affiliate');
+    $affiliate->update(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $levels[0]->id]);
+    $role = Role::create(['role_name' => 'User']);
+    $plan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create(['affiliate_id' => $affiliate->id, 'user_plan_name' => 'Basic', 'plan_level' => 1]);
+    $user = User::factory()->create(['affiliate_id' => $affiliate->id, 'role_id' => $role->id, 'user_plan_id' => $plan->id]);
+
+    Transaction::withoutGlobalScope('affiliate')->create([
+        'parent_business_id' => $parent->id, 'affiliate_id' => $affiliate->id, 'user_id' => $user->id,
+        'api_id' => 'test-plan', 'affiliate_product_plan_id' => 1, 'wallet_category' => 'main_wallet',
+        'balance_before' => 1000, 'balance_after' => 500, 'description' => 'Successful purchase',
+        'txn_reference' => 'SUCCESS-WITH-RESPONSE', 'transaction_category' => 'data', 'amount' => 500,
+        'status' => 1, 'routing_status' => 'successful',
+        'provider_response' => ['success' => true, 'message' => 'Transaction processed successfully.'],
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions')
+        ->assertOk()
+        ->assertSee('Provider response')
+        ->assertSee('Transaction processed successfully.');
+});

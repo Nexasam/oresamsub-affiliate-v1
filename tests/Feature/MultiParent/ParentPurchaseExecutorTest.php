@@ -124,6 +124,7 @@ it('orchestrates a parent-managed data purchase with pricing snapshots and settl
         'provider_reference' => 'UPSTREAM-1', 'parent_provider_connection_id' => $f['connection']->id,
         'product_plan_provider_route_id' => $f['route']->id, 'provider_plan_id_snapshot' => 'PAUL-1GB',
         'user_message' => 'Delivered', 'admin_message' => 'Delivered',
+        'provider_response' => ['success' => true, 'message' => 'Transaction processed successfully.', 'api_token' => '[REDACTED]'],
     ]));
 
     $result = app(ParentManagedPurchaseOrchestrator::class)->purchase($customer, $f['affiliatePlan']->fresh(), [
@@ -135,6 +136,9 @@ it('orchestrates a parent-managed data purchase with pricing snapshots and settl
         ->and($result['transaction']->provider_cost_snapshot)->toBe('100.00')
         ->and($result['transaction']->affiliate_cost_snapshot)->toBe('120.00')
         ->and($result['transaction']->customer_price_snapshot)->toBe('130.00')
+        ->and($result['transaction']->provider_response)->toBe([
+            'success' => true, 'message' => 'Transaction processed successfully.', 'api_token' => '[REDACTED]',
+        ])
         ->and($customer->fresh()->main_wallet)->toBe('870.00')
         ->and($wallet->available_balance)->toBe('380.00')
         ->and($wallet->reserved_balance)->toBe('0.00');

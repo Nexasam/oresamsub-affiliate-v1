@@ -21,6 +21,7 @@ class Transaction extends AffiliateScopedModel
         'customer_price_snapshot' => 'decimal:2',
         'parent_profit_snapshot' => 'decimal:2',
         'affiliate_profit_snapshot' => 'decimal:2',
+        'provider_response' => 'array',
     ];
 
     public function user()

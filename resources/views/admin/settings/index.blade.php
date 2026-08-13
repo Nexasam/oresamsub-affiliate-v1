@@ -73,9 +73,11 @@
                     <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500" id="pills-with-brand-color-item-4" data-hs-tab="#pills-with-brand-color-4" aria-controls="pills-with-brand-color-4">
                       Settings
                     </button>
+                    @if($show_legacy_settings)
                     <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500" id="pills-with-brand-color-item-6" data-hs-tab="#pills-with-brand-color-6" aria-controls="pills-with-brand-color-6">
                       Funding settings
                     </button>
+                    @endif
                     <button type="button" class="hs-tab-active:bg-primary hs-tab-active:text-white py-3 px-4 inline-flex items-center gap-2 bg-transparent text-sm font-medium text-center text-gray-500 rounded-sm hover:text-primary  dark:text-gray-500 dark:hover:text-gray-500" id="pills-with-brand-color-item-5" data-hs-tab="#pills-with-brand-color-5" aria-controls="pills-with-brand-color-5">
                       Security
                     </button>
@@ -943,6 +945,7 @@
                       </div>
                   </div>
 
+                  @if($show_legacy_settings)
                   <div id="pills-with-brand-color-6" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-6">
                       <div class="overflow-auto">
                           @csrf
@@ -1299,6 +1302,7 @@
 
                       </div>
                     </div>
+                  @endif
                     <div id="pills-with-brand-color-5" class="hidden" role="tabpanel" aria-labelledby="pills-with-brand-color-item-5">
                       <div class="overflow-auto">
 
@@ -1560,5 +1564,4 @@
     });
   });
 </script>
-
 

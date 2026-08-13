@@ -64,4 +64,9 @@ class Affiliate extends Model
     {
         return $this->processingProfile?->management_mode !== 'parent_managed';
     }
+
+    public function usesLegacyAdminSettings(): bool
+    {
+        return $this->processingProfile?->management_mode !== 'parent_managed';
+    }
 }

@@ -14,6 +14,7 @@ it('hides purchase credentials for explicitly parent managed affiliates', functi
     ]));
 
     expect($affiliate->managesOwnPurchaseCredentials())->toBeFalse();
+    expect($affiliate->usesLegacyAdminSettings())->toBeFalse();
 });
 
 it('keeps purchase credentials for legacy and affiliate managed affiliates', function (?AffiliateProcessingProfile $profile) {
@@ -21,6 +22,7 @@ it('keeps purchase credentials for legacy and affiliate managed affiliates', fun
     $affiliate->setRelation('processingProfile', $profile);
 
     expect($affiliate->managesOwnPurchaseCredentials())->toBeTrue();
+    expect($affiliate->usesLegacyAdminSettings())->toBeTrue();
 })->with([
     'missing legacy profile' => null,
     'legacy OresamSub' => fn () => new AffiliateProcessingProfile(['management_mode' => 'affiliate_managed', 'processing_engine' => 'legacy_oresamsub']),

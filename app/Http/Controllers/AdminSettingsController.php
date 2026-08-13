@@ -26,8 +26,8 @@ use App\Models\AffiliateFundingOptionBankCodes;
 class AdminSettingsController extends Controller
 {
     public function index(){
-
-   
+        $affiliate = $this->currentAffiliate();
+        $data['show_legacy_settings'] = $affiliate->usesLegacyAdminSettings();
 
       //landing page template2       
       $site_images_data = SiteImage::get();
@@ -279,6 +279,7 @@ class AdminSettingsController extends Controller
     }
 
     public function update_api_key(Request $request){
+      $this->authorizeLegacySettings();
       $validator = Validator::make($request->all(), [
         'api_key' => 'required|string',
       ]);
@@ -388,6 +389,7 @@ class AdminSettingsController extends Controller
     }
 
     public function update_webhook_suffix_string(Request $request){
+      $this->authorizeLegacySettings();
       $validator = Validator::make($request->all(), [
         'funding_option_id' => 'required',
         'webhook_suffix_string' => 'required',
@@ -756,6 +758,7 @@ class AdminSettingsController extends Controller
     //async
     public function add_funding_option_bank_code(Request $request)
 {
+    $this->authorizeLegacySettings();
     $validator = Validator::make($request->all(), [
         'funding_option_id' => 'required|integer',
         'bank_code'        => 'required|string',
@@ -849,6 +852,7 @@ class AdminSettingsController extends Controller
 
 
     public function update_funding_options(Request $request){
+      $this->authorizeLegacySettings();
       $validator = Validator::make($request->all(), [
         'id' => 'required',
         'api_public_key' => 'required',
@@ -910,5 +914,17 @@ class AdminSettingsController extends Controller
         );
         Session::flash('success','Landing page settings successfully updated');
         return redirect()->back();
+    }
+
+    private function currentAffiliate(): \App\Models\Affiliate
+    {
+        $affiliateId = session('affiliate')?->id ?? auth()->user()?->affiliate_id;
+
+        return \App\Models\Affiliate::with('processingProfile')->findOrFail($affiliateId);
+    }
+
+    private function authorizeLegacySettings(): void
+    {
+        abort_unless($this->currentAffiliate()->usesLegacyAdminSettings(), 403, 'This setting is managed through the new affiliate funding flow.');
     }
 }

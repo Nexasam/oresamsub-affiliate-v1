@@ -33,4 +33,14 @@ class AffiliateSettlementLedgerEntry extends Model
     {
         return $this->belongsTo(ParentBusiness::class);
     }
+
+    public function displaySign(): string
+    {
+        return in_array($this->entry_type, ['purchase_reservation', 'purchase_capture'], true) ? '-' : '+';
+    }
+
+    public function displayColor(): string
+    {
+        return $this->displaySign() === '-' ? 'text-rose-700' : 'text-emerald-700';
+    }
 }

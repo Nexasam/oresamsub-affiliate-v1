@@ -44,3 +44,37 @@ it('loads transaction customers using the actual first and last name columns', f
         ->assertOk()
         ->assertSee('CUSTOMER-NAME');
 });
+
+it('shows the recorded failure reason and provider reference to the owning parent', function () {
+    [$parent, $admin, $levels] = managedParent('report-failure-details');
+    $affiliate = unattachedAffiliate('report-failure-affiliate');
+    $affiliate->update(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $levels[0]->id]);
+    $role = Role::create(['role_name' => 'User']);
+    $plan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create(['affiliate_id' => $affiliate->id, 'user_plan_name' => 'Basic', 'plan_level' => 1]);
+    $user = User::factory()->create(['affiliate_id' => $affiliate->id, 'role_id' => $role->id, 'user_plan_id' => $plan->id]);
+
+    Transaction::withoutGlobalScope('affiliate')->create([
+        'parent_business_id' => $parent->id,
+        'affiliate_id' => $affiliate->id,
+        'user_id' => $user->id,
+        'api_id' => 'test-plan',
+        'affiliate_product_plan_id' => 1,
+        'wallet_category' => 'main_wallet',
+        'balance_before' => 1000,
+        'balance_after' => 1000,
+        'description' => 'Failed customer purchase',
+        'txn_reference' => 'FAILED-WITH-CAUSE',
+        'provider_reference' => 'PROVIDER-7788',
+        'transaction_category' => 'data',
+        'amount' => 500,
+        'status' => 2,
+        'routing_status' => 'failed',
+        'user_screen_message' => 'Your purchase could not be completed.',
+        'admin_screen_message' => 'Provider rejected the request because its wallet balance is insufficient.',
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions')
+        ->assertOk()
+        ->assertSee('Provider rejected the request because its wallet balance is insufficient.')
+        ->assertSee('PROVIDER-7788');
+});

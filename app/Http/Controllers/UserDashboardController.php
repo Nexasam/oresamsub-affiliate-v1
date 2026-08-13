@@ -45,7 +45,10 @@ class UserDashboardController extends Controller
 
   
     $hot_sales = AffiliateProductPlanCategory::with('product')->where('is_hot_sales',1)->get();
-    $user_virtual_accounts = UserVirtualAccount::with('funding_option.bank_codes')->where('user_id',auth()->id())->latest()->get();
+    $user_virtual_accounts = UserVirtualAccount::with([
+      'funding_option.bank_codes',
+      'affiliateFundingProviderConfig.banks.parentBank',
+    ])->where('user_id',auth()->id())->latest()->get();
 
     // return $user_virtual_accounts;
 
@@ -56,6 +59,7 @@ class UserDashboardController extends Controller
     $new_hot_sales_array = [];
 
     $data['user_virtual_accounts'] = $user_virtual_accounts;
+    $data['funding_accounts'] = $user_virtual_accounts->map->dashboardPayload()->values();
     $data['active_bankcodes'] = $active_bankcodes;
     $data['total_expected_bankcodes'] = $total_expected_bankcodes;
 

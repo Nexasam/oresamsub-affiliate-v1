@@ -85,3 +85,39 @@ it('returns a safe diagnostic when securewaveng rejects affiliate credentials', 
         ->and($result['message'])->toContain('SecureWaveNG authentication failed')
         ->and($result['message'])->not->toContain('<!DOCTYPE html>');
 });
+
+it('presents normalized virtual account charges without requiring a legacy funding option', function () {
+    $fixture = virtualAccountFixture('dashboard-charge');
+    $account = $fixture['user']->virtual_accounts()->create([
+        'affiliate_id' => $fixture['affiliate']->id,
+        'parent_business_id' => $fixture['parent']->id,
+        'parent_funding_provider_id' => $fixture['parentProvider']->id,
+        'affiliate_funding_provider_config_id' => $fixture['config']->id,
+        'funding_option_id' => null,
+        'bank_name' => 'Wema',
+        'bank_code' => 'WEMA',
+        'account_name' => 'Test User',
+        'account_number' => '0123456789',
+    ]);
+
+    expect($account->fundingChargeDetails())
+        ->toMatchArray([
+            'type' => 'flat',
+            'value' => '25.00',
+            'display' => '₦25.00',
+        ]);
+});
+
+it('safely presents an account when neither normalized nor legacy charge configuration exists', function () {
+    $fixture = virtualAccountFixture('dashboard-no-charge');
+    $account = $fixture['user']->virtual_accounts()->create([
+        'affiliate_id' => $fixture['affiliate']->id,
+        'funding_option_id' => null,
+        'bank_name' => 'Wema',
+        'bank_code' => 'UNKNOWN',
+        'account_name' => 'Test User',
+        'account_number' => '0123456790',
+    ]);
+
+    expect($account->fundingChargeDetails())->toBeNull();
+});

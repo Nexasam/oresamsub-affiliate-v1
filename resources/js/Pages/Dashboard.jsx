@@ -9,7 +9,7 @@ import Announcements from "@/Components/Announcements";
 
 export default function Dashboard({ transactions: initialTransactions }) {
   const { props } = usePage();
-  const { affiliate, auth, announcements, impersonator, userDashboardPrimaryColor, userDashboardAnnouncementColor, userDashboardSecondaryColor} = props;
+  const { affiliate, auth, announcements, impersonator, funding_accounts = [], userDashboardPrimaryColor, userDashboardAnnouncementColor, userDashboardSecondaryColor} = props;
   const user = auth.user;
 
   // 🎨 Helper to get colors dynamically
@@ -62,6 +62,29 @@ export default function Dashboard({ transactions: initialTransactions }) {
         user={user}
         balanceColor={ userDashboardPrimaryColor }
       />
+
+      {funding_accounts.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 mt-4 rounded-xl shadow p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-700 dark:text-gray-200">My funding accounts</h2>
+            <Link href={route("inertia.virtual_accounts.index")} className="text-sm font-medium" style={{ color: userDashboardPrimaryColor }}>
+              View all
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {funding_accounts.map((account) => (
+              <div key={account.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-200">{account.bank_name}</div>
+                <div className="text-lg font-mono font-bold text-gray-900 dark:text-white">{account.account_number}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{account.account_name}</div>
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Charge: {account.charge?.display ?? "Configured by provider"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 📢 Announcements Section */}
       <div style={{ borderLeft: `4px solid ${userDashboardAnnouncementColor}` }}>

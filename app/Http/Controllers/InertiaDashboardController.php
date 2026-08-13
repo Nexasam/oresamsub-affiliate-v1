@@ -74,7 +74,10 @@ class InertiaDashboardController extends Controller
     }
 
     public function virtual_accounts(){
-        $virtualccts = UserVirtualAccount::select('id','bank_name','account_name','account_number')->where('user_id',auth()->id())->get();
+        $virtualccts = UserVirtualAccount::with([
+            'funding_option.bank_codes',
+            'affiliateFundingProviderConfig.banks.parentBank',
+        ])->where('user_id',auth()->id())->latest()->get()->map->dashboardPayload()->values();
         $data['virtualccts'] = $virtualccts;
         return Inertia::render('VirtualAccounts')->with($data);
     }

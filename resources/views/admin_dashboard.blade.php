@@ -118,6 +118,7 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
 
                                       @foreach ($user_virtual_accounts as $user_virtual_account)
+                                      @php($fundingCharge = $user_virtual_account->fundingChargeDetails())
                                       <div
                                         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all transform hover:-translate-y-0.5 p-3 flex flex-col justify-between text-[13px]">
                                         <div class="flex items-start gap-2">
@@ -141,10 +142,10 @@
                                               </p>
                                               <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
                                                 Charges:
-                                                {{ $user_virtual_account->funding_option->bank_codes->first()->bank_charges }}
-                                                {{ $user_virtual_account->funding_option->bank_codes->first()->rate_category == 'percent' ? '%' : 'Naira' }}
-                                                |
-                                                {{ $user_virtual_account->funding_option->bank_codes->first()->short_description }}
+                                                {{ $fundingCharge['display'] ?? 'Configured by provider' }}
+                                                @if (! empty($fundingCharge['description']))
+                                                  | {{ $fundingCharge['description'] }}
+                                                @endif
                                               </p>
                                             </div>
                                           </div>

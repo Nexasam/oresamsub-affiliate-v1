@@ -302,6 +302,31 @@ it('stores independent mapping and response configuration for every product', fu
         ->and($configs['airtime']['success_conditions'][0]['key'])->toBe('airtime.status');
 });
 
+it('keeps shared response defaults synchronized with the data product configuration', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('shared-response-sync');
+    $payload = providerPayload($adapter->id, [
+        'settings' => [
+            'success_conditions' => [['key' => 'status', 'value' => 'success']],
+            'success_message_path' => 'data.message',
+            'failure_message_path' => 'error.message',
+            'product_configs' => ['data' => [
+                'success_conditions' => [['key' => 'success', 'value' => 'true']],
+                'success_message_path' => 'message',
+                'failure_message_path' => 'message',
+            ]],
+        ],
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertCreated();
+
+    $settings = $parent->providerConnections()->sole()->settings;
+    expect($settings['success_conditions'])->toBe([['key' => 'success', 'value' => 'true']])
+        ->and($settings['success_message_path'])->toBe('message')
+        ->and($settings['failure_message_path'])->toBe('message');
+});
+
 it('allows the same mapping and header keys across products but not within one product', function () {
     [, $admin, $adapter] = providerWorkspace('per-product-distinct-keys');
     $payload = providerPayload($adapter->id);

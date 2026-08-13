@@ -48,8 +48,8 @@
         @if($editingConnection) @method('PUT') @endif
         <input type="hidden" name="is_primary" :value="form.is_primary ? 1 : 0">
         <input type="hidden" name="settings[request_parameters][0][key]" value="phone_number"><input type="hidden" name="settings[request_parameters][0][type]" value="runtime"><input type="hidden" name="settings[request_parameters][0][value]" value="phone_number">
-        <input type="hidden" name="settings[success_conditions][0][key]" value="status"><input type="hidden" name="settings[success_conditions][0][value]" value="success">
-        <input type="hidden" name="settings[success_message_path]" value="data.message"><input type="hidden" name="settings[failure_message_path]" value="error.message"><input type="hidden" name="settings[expected_success_code]" value="200">
+        <input type="hidden" name="settings[success_conditions][0][key]" :value="config('data')?.success_conditions?.[0]?.key || 'status'"><input type="hidden" name="settings[success_conditions][0][value]" :value="config('data')?.success_conditions?.[0]?.value || 'success'">
+        <input type="hidden" name="settings[success_message_path]" :value="config('data')?.success_message_path || 'data.message'"><input type="hidden" name="settings[failure_message_path]" :value="config('data')?.failure_message_path || 'error.message'"><input type="hidden" name="settings[expected_success_code]" :value="config('data')?.expected_success_code || 200">
 
         @if($editingConnection)<div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Changing endpoints, credentials, mappings, headers, or response rules returns this connection to pending platform approval.</div>@endif
 

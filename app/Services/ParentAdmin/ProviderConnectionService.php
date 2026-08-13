@@ -29,6 +29,7 @@ class ProviderConnectionService
         return DB::transaction(function () use ($parent, $data, $connection) {
             $existingConnection = $connection;
             $settings = $data['settings'];
+            $settings = $this->synchronizeSharedResponseDefaults($settings);
             $settings['is_primary'] = (bool) $data['is_primary'];
 
             $credentials = $connection?->credentials ?? [];
@@ -143,5 +144,21 @@ class ProviderConnectionService
         }
 
         return $value;
+    }
+
+    private function synchronizeSharedResponseDefaults(array $settings): array
+    {
+        $dataConfig = $settings['product_configs']['data'] ?? null;
+        if (! is_array($dataConfig)) {
+            return $settings;
+        }
+
+        foreach (['success_conditions', 'success_message_path', 'failure_message_path', 'expected_success_code', 'expected_failure_code'] as $field) {
+            if (array_key_exists($field, $dataConfig)) {
+                $settings[$field] = $dataConfig[$field];
+            }
+        }
+
+        return $settings;
     }
 }

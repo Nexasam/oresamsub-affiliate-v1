@@ -6,7 +6,8 @@
 
     <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
 
-        <h2 class="text-lg font-semibold mb-4">Edit Affiliate</h2>
+        <h2 class="text-lg font-semibold mb-1">Business Profile</h2>
+        <p class="mb-4 text-sm text-gray-500">Manage the branding displayed to your customers.</p>
 
         <form action="{{ route('affiliate.update') }}" enctype="multipart/form-data" method="POST">
             @csrf
@@ -103,6 +104,7 @@
                        >
             </div> --}}
 
+            @if($affiliate->managesOwnPurchaseCredentials())
             <div class="mb-3">
                 <label>Parent Email</label>
                 <input type="email"
@@ -156,9 +158,14 @@
                 </button>
             
             </div>
+            @else
+            <div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                Purchase processing and provider credentials are securely managed by {{ $affiliate->parentBusiness?->name ?? 'your parent business' }}.
+            </div>
+            @endif
 
             <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-                Update
+                Save business profile
             </button>
 
         </form>

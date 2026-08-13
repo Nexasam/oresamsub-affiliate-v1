@@ -80,7 +80,8 @@ class InertiaDashboardController extends Controller
             'affiliateFundingProviderConfig.banks.parentBank',
         ])->where('user_id',auth()->id())->latest()->get()->map->dashboardPayload()->values();
         $data['virtualccts'] = $virtualccts;
-        $data['fundingHistory'] = WalletLog::where('user_id', auth()->id())
+        $data['fundingHistory'] = WalletLog::with('user:id,first_name,last_name,email')
+            ->where('user_id', auth()->id())
             ->where('transaction_category', 'like', '%\_WALLET\_FUNDING')
             ->latest()->limit(50)->get()->map->fundingHistoryPayload()->values();
         return Inertia::render('VirtualAccounts')->with($data);

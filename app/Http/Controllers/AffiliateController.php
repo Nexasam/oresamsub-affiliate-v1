@@ -19,7 +19,7 @@ class AffiliateController extends Controller
     // EDIT PAGE
     public function edit()
     {
-        $affiliate = session('affiliate');
+        $affiliate = Affiliate::with('processingProfile')->find(session('affiliate')?->id);
 
         if (!$affiliate) {
             abort(403, 'Unauthorized');
@@ -124,15 +124,20 @@ class AffiliateController extends Controller
   
           $affiliate = Affiliate::findOrFail($affiliate->id);
   
-          $request->validate([
-              'parent_key' => 'required|string|max:255',
-              'parent_email' => 'required|email|max:255',
+          $rules = [
               'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-          ]);
+          ];
+          if ($affiliate->managesOwnPurchaseCredentials()) {
+              $rules['parent_key'] = 'required|string|max:255';
+              $rules['parent_email'] = 'required|email|max:255';
+          }
+          $request->validate($rules);
   
           // Update fields
-          $affiliate->parent_key = $request->parent_key;
-          $affiliate->parent_email = $request->parent_email;
+          if ($affiliate->managesOwnPurchaseCredentials()) {
+              $affiliate->parent_key = $request->parent_key;
+              $affiliate->parent_email = $request->parent_email;
+          }
   
           // HANDLE LOGO UPLOAD
           if ($request->hasFile('logo')) {

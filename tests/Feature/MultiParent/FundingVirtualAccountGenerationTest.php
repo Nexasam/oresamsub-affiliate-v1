@@ -104,8 +104,30 @@ it('presents normalized virtual account charges without requiring a legacy fundi
         ->toMatchArray([
             'type' => 'flat',
             'value' => '25.00',
-            'display' => '₦25.00',
+            'display' => '25.00 Naira flat',
         ]);
+});
+
+it('presents percentage virtual account charges with their naira cap', function () {
+    $fixture = virtualAccountFixture('dashboard-percentage-charge');
+    $fixture['config']->banks()->first()->update([
+        'rate_type' => 'percentage',
+        'rate_value' => 2,
+        'percentage_cap' => 100,
+    ]);
+    $account = $fixture['user']->virtual_accounts()->create([
+        'affiliate_id' => $fixture['affiliate']->id,
+        'parent_business_id' => $fixture['parent']->id,
+        'parent_funding_provider_id' => $fixture['parentProvider']->id,
+        'affiliate_funding_provider_config_id' => $fixture['config']->id,
+        'funding_option_id' => null,
+        'bank_name' => 'Wema',
+        'bank_code' => 'WEMA',
+        'account_name' => 'Test User',
+        'account_number' => '0123456791',
+    ]);
+
+    expect($account->fundingChargeDetails()['display'])->toBe('2.00% · capped at ₦100.00');
 });
 
 it('safely presents an account when neither normalized nor legacy charge configuration exists', function () {

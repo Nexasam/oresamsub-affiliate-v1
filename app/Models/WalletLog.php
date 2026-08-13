@@ -32,6 +32,11 @@ class WalletLog extends AffiliateScopedModel
             ->headline()
             ->toString();
 
+        $customerName = trim(implode(' ', array_filter([
+            $this->user?->first_name,
+            $this->user?->last_name,
+        ])));
+
         return [
             'id' => $this->id,
             'reference' => $this->transaction_id,
@@ -39,6 +44,8 @@ class WalletLog extends AffiliateScopedModel
             'amount' => number_format(max(0, (float) $this->balance_after - (float) $this->balance_before), 2, '.', ''),
             'balance_after' => number_format((float) $this->balance_after, 2, '.', ''),
             'status' => 'Successful',
+            'customer' => $customerName ?: ($this->user?->email ?? 'Unknown customer'),
+            'customer_email' => $this->user?->email,
             'description' => $this->description,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

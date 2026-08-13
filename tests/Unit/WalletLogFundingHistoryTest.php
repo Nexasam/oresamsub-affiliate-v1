@@ -15,6 +15,11 @@ it('converts a wallet funding log into a safe dashboard payload', function () {
     ]);
     $log->id = 9;
     $log->created_at = now();
+    $log->setRelation('user', new \App\Models\User([
+        'first_name' => 'Emeka',
+        'last_name' => 'Buyer',
+        'email' => 'emeka@example.test',
+    ]));
 
     expect($log->fundingHistoryPayload())->toMatchArray([
         'id' => 9,
@@ -22,5 +27,7 @@ it('converts a wallet funding log into a safe dashboard payload', function () {
         'provider' => 'Securewaveng',
         'amount' => '2450.00',
         'status' => 'Successful',
+        'customer' => 'Emeka Buyer',
+        'customer_email' => 'emeka@example.test',
     ]);
 });

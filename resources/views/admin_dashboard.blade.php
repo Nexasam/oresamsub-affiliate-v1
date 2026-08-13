@@ -113,12 +113,13 @@
 
                                 <div class="col-span-12 p-2">
                                   <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
-                                    <div class="border-b border-gray-200 px-4 py-3 font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-200">My funding history</div>
-                                    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                                    <div class="border-b border-gray-200 px-4 py-3 font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-200">Affiliate funding history</div>
+                                    <div class="max-h-[32rem] divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
                                       @forelse($funding_history as $funding)
                                         <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                                           <div class="min-w-0">
                                             <p class="font-semibold text-gray-800 dark:text-gray-100">{{ $funding['provider'] }}</p>
+                                            <p class="text-xs font-medium text-gray-600 dark:text-gray-300">{{ $funding['customer'] }} @if($funding['customer_email']) · {{ $funding['customer_email'] }} @endif</p>
                                             <p class="truncate text-xs text-gray-500">{{ $funding['reference'] ?: $funding['description'] }}</p>
                                             <p class="text-xs text-gray-400">{{ $funding['created_at'] }}</p>
                                           </div>

@@ -388,7 +388,7 @@
                 <li class="slide">
                     <a href="{{ route('affiliate.edit') }}" class="side-menu__item">
                         <i class="ti ti-user-edit side-menu__icon"></i>
-                        <span class="side-menu__label">Update Affiliate</span>
+                        <span class="side-menu__label">Business Profile</span>
                     </a>
                 </li>
 

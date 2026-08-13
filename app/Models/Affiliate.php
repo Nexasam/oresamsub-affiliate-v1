@@ -59,4 +59,9 @@ class Affiliate extends Model
     {
         return $this->hasOne(AffiliateProcessingProfile::class);
     }
+
+    public function managesOwnPurchaseCredentials(): bool
+    {
+        return $this->processingProfile?->management_mode !== 'parent_managed';
+    }
 }

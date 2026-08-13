@@ -250,7 +250,7 @@
 
                       <a href="{{ route('affiliate.edit') }}" class="ti-dropdown-item">
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
-                        {{__('Update Affilaite')}}
+                        {{__('Business Profile')}}
 
                       </a>
                     @endif

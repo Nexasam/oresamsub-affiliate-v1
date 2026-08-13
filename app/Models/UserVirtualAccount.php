@@ -42,7 +42,7 @@ class UserVirtualAccount extends AffiliateScopedModel
                 'type' => $type,
                 'value' => $value,
                 'cap' => null,
-                'display' => $type === 'percentage' ? "{$value}%" : "₦{$value}",
+                'display' => $type === 'percentage' ? "{$value}%" : "{$value} Naira flat",
                 'description' => $legacyBank->short_description,
             ];
         }
@@ -59,9 +59,9 @@ class UserVirtualAccount extends AffiliateScopedModel
         $cap = $normalizedBank->percentage_cap !== null
             ? number_format((float) $normalizedBank->percentage_cap, 2, '.', '')
             : null;
-        $display = $type === 'percentage' ? "{$value}%" : "₦{$value}";
+        $display = $type === 'percentage' ? "{$value}%" : "{$value} Naira flat";
         if ($type === 'percentage' && $cap !== null) {
-            $display .= " (capped at ₦{$cap})";
+            $display .= " · capped at ₦{$cap}";
         }
 
         return [

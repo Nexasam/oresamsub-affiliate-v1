@@ -384,6 +384,15 @@
                 </li>
                 @endif
 
+                @if(Route::has('admin.settlement-funding.index') && config('parent_businesses.features.multi_parent_funding'))
+                <li class="slide">
+                    <a href="{{ route('admin.settlement-funding.index') }}" class="side-menu__item">
+                        <i class="ti ti-wallet side-menu__icon"></i>
+                        <span class="side-menu__label">Settlement Funding</span>
+                    </a>
+                </li>
+                @endif
+
                 <!-- Update Affiliate -->
                 <li class="slide">
                     <a href="{{ route('affiliate.edit') }}" class="side-menu__item">

@@ -17,6 +17,7 @@ class FundingWebhookController extends Controller
         private readonly FundingWebhookRecorder $recorder,
         private readonly FundingWebhookAdapter $adapter,
         private readonly FundingWebhookProcessor $processor,
+        private readonly \App\Services\Funding\SettlementFundingWebhookProcessor $settlementProcessor,
     ) {}
 
     public function __invoke(Request $request, FundingProvider $provider, string $webhookKey): JsonResponse
@@ -41,7 +42,7 @@ class FundingWebhookController extends Controller
         $normalized = $this->adapter->normalize($provider, $payload);
         $externalId = (string) ($request->header('X-Webhook-Id') ?: $normalized['external_id']);
         abort_if($externalId === '', 422, 'A provider event ID is required.');
-        $recorded = $this->recorder->record($provider, $externalId, $payload, $affiliateConfig);
+        $recorded = $this->recorder->record($provider, $externalId, $payload, $affiliateConfig, $parentProvider);
         if ($recorded['duplicate']) {
             $status = $recorded['event']->status;
 
@@ -50,7 +51,7 @@ class FundingWebhookController extends Controller
 
         $status = $affiliateConfig
             ? $this->processor->process($recorded['event'], $affiliateConfig, $normalized)
-            : 'received';
+            : $this->settlementProcessor->process($recorded['event'], $parentProvider, $normalized);
 
         return response()->json(['accepted' => true, 'duplicate' => false, 'status' => $status], $status === 'processed' ? 200 : 202);
     }

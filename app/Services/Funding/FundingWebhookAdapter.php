@@ -27,6 +27,8 @@ class FundingWebhookAdapter
                 'gross_amount' => data_get($payload, 'amount_paid'),
                 'settlement_amount' => data_get($payload, 'settlement_amount'),
                 'bank_name' => data_get($payload, 'receiver.bank'),
+                'account_number' => data_get($payload, 'receiver.account_number'),
+                'account_reference' => data_get($payload, 'receiver.account_reference'),
             ],
             'securewaveng' => [
                 'external_id' => data_get($payload, 'provider_reference'),
@@ -35,6 +37,8 @@ class FundingWebhookAdapter
                 'gross_amount' => data_get($payload, 'amount'),
                 'settlement_amount' => data_get($payload, 'settlement_amount'),
                 'bank_name' => data_get($payload, 'receiver.bank'),
+                'account_number' => data_get($payload, 'receiver.account_number'),
+                'account_reference' => data_get($payload, 'receiver.account_reference'),
             ],
             default => [
                 'external_id' => data_get($payload, 'reference'),
@@ -43,6 +47,8 @@ class FundingWebhookAdapter
                 'gross_amount' => null,
                 'settlement_amount' => null,
                 'bank_name' => null,
+                'account_number' => null,
+                'account_reference' => null,
             ],
         };
 

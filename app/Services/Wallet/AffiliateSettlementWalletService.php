@@ -107,6 +107,35 @@ class AffiliateSettlementWalletService
         });
     }
 
+    public function creditFromWebhook(Affiliate $affiliate, string $amount, string $reference, array $metadata = []): AffiliateSettlementWallet
+    {
+        $amount = $this->normalizePositiveMoney($amount);
+
+        return DB::transaction(function () use ($affiliate, $amount, $reference, $metadata) {
+            AffiliateSettlementWallet::query()->firstOrCreate(
+                ['affiliate_id' => $affiliate->id],
+                ['parent_business_id' => $affiliate->parent_business_id, 'currency' => 'NGN', 'available_balance' => '0.00', 'reserved_balance' => '0.00', 'status' => 'active'],
+            );
+            $wallet = AffiliateSettlementWallet::query()->where('affiliate_id', $affiliate->id)->lockForUpdate()->firstOrFail();
+            $existing = AffiliateSettlementLedgerEntry::query()
+                ->where('parent_business_id', $affiliate->parent_business_id)->where('reference', $reference)->first();
+            if ($existing) return $wallet;
+            if ($wallet->status !== 'active') $this->fail('wallet', 'The affiliate settlement wallet is not active.');
+
+            $before = $wallet->available_balance;
+            $after = $this->addMoney($before, $amount);
+            $wallet->forceFill(['available_balance' => $after])->save();
+            $wallet->ledgerEntries()->create([
+                'parent_business_id' => $affiliate->parent_business_id, 'affiliate_id' => $affiliate->id,
+                'entry_type' => 'settlement_funding', 'amount' => $amount,
+                'balance_before' => $before, 'balance_after' => $after, 'reference' => $reference,
+                'actor_type' => 'funding_webhook', 'actor_id' => 0,
+                'reason' => "Automated settlement funding {$reference}", 'metadata' => $metadata,
+            ]);
+            return $wallet->fresh();
+        });
+    }
+
     private function transition(
         Affiliate $affiliate,
         string $amount,

@@ -55,6 +55,11 @@ class Affiliate extends Model
         return $this->hasOne(AffiliateSettlementWallet::class);
     }
 
+    public function settlementVirtualAccounts(): HasMany
+    {
+        return $this->hasMany(AffiliateSettlementVirtualAccount::class);
+    }
+
     public function processingProfile(): HasOne
     {
         return $this->hasOne(AffiliateProcessingProfile::class);

@@ -76,6 +76,59 @@ it('allows only the affiliate admin to view and generate its settlement accounts
     $this->assertDatabaseHas('affiliate_settlement_virtual_accounts', ['affiliate_id' => $f['affiliate']->id, 'account_number' => '0888888888']);
 });
 
+it('shows the affiliate settlement balance and business account on the admin dashboard', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id]);
+    $f['affiliate']->settlementWallet()->create(['parent_business_id' => $f['parent']->id, 'available_balance' => '975.00', 'reserved_balance' => '25.00', 'currency' => 'NGN', 'status' => 'active']);
+    AffiliateSettlementVirtualAccount::create([
+        'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+        'parent_funding_provider_id' => $f['parentProvider']->id, 'wallet_purpose' => 'settlement',
+        'bank_name' => 'Wema', 'bank_code' => 'WEMA', 'account_name' => 'Settlement Child',
+        'account_number' => '0666666666', 'account_reference' => 'SETTLEMENT-DASHBOARD', 'status' => 'active',
+    ]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->get('/dashboard')->assertOk()
+        ->assertSee('Settlement wallet')->assertSee('₦975.00')->assertSee('0666666666');
+});
+
+it('shows recent settlement funding transactions on the affiliate admin dashboard', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id]);
+    $wallet = $f['affiliate']->settlementWallet()->create(['parent_business_id' => $f['parent']->id, 'available_balance' => '975.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $wallet->ledgerEntries()->create([
+        'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+        'entry_type' => 'settlement_funding', 'amount' => '975.00', 'balance_before' => '0.00',
+        'balance_after' => '975.00', 'reference' => 'FUNDING:SETTLEMENT-PAY-DASHBOARD',
+        'actor_type' => 'funding_webhook', 'actor_id' => 0, 'reason' => 'Automated settlement funding',
+        'metadata' => ['gross_amount' => '1000.00', 'charge' => '25.00', 'external_event_id' => 'SETTLEMENT-PAY-DASHBOARD'],
+    ]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->get('/dashboard')->assertOk()->assertSee('Recent settlement funding')
+        ->assertSee('SETTLEMENT-PAY-DASHBOARD')->assertSee('₦1,000.00')->assertSee('₦25.00')->assertSee('₦975.00');
+});
+
+it('returns the affiliate to settlement funding with a safe provider error', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id]);
+    Http::fake(['securewaveng.com/*' => Http::response(['status' => false, 'message' => 'Invalid API Credentials', 'data' => []], 404)]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->post("/admin/settlement-funding/providers/{$f['parentProvider']->id}/generate")
+        ->assertRedirect('/admin/settlement-funding')
+        ->assertSessionHas('error', 'SecurewaveNG rejected the parent funding credentials. Ask your parent administrator to verify the API public key, API secret key and business ID.');
+});
+
 it('credits the matching affiliate settlement wallet once from a signed parent webhook', function () {
     $f = settlementFundingFixture();
     AffiliateSettlementVirtualAccount::create([

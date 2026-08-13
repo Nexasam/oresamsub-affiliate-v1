@@ -6,6 +6,8 @@ use App\Models\ParentFundingProvider;
 use App\Services\Funding\SettlementVirtualAccountService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class AffiliateSettlementFundingController extends Controller
 {
@@ -32,7 +34,15 @@ class AffiliateSettlementFundingController extends Controller
     {
         $affiliate = session('affiliate');
         abort_unless($affiliate && (int) $affiliate->parent_business_id === (int) $parentFundingProvider->parent_business_id, 404);
-        $result = $service->generate($affiliate, $parentFundingProvider);
+        try {
+            $result = $service->generate($affiliate, $parentFundingProvider);
+        } catch (ValidationException $exception) {
+            return redirect('/admin/settlement-funding')->with('error', collect($exception->errors())->flatten()->first());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect('/admin/settlement-funding')->with('error', 'The funding provider could not generate the settlement account. Please try again later or contact your parent administrator.');
+        }
 
         return redirect('/admin/settlement-funding')->with($result['status'] === 1 ? 'success' : 'error', $result['message']);
     }

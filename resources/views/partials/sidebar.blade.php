@@ -393,6 +393,10 @@
                 </li>
                 @endif
 
+                @if(Route::has('admin.profits.index'))
+                <li class="slide"><a href="{{ route('admin.profits.index') }}" class="side-menu__item"><i class="ti ti-chart-line side-menu__icon"></i><span class="side-menu__label">Profit Management</span></a></li>
+                @endif
+
                 <!-- Update Affiliate -->
                 <li class="slide">
                     <a href="{{ route('affiliate.edit') }}" class="side-menu__item">

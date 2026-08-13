@@ -111,6 +111,34 @@
 
                                 </div>
 
+                                @if(config('parent_businesses.features.multi_parent_funding') && session('affiliate')?->parent_business_id)
+                                <div class="col-span-12 p-2">
+                                  <div class="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-white p-4 shadow-sm dark:border-gray-700 dark:from-gray-900 dark:to-gray-800">
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                      <div><p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Settlement wallet</p><p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">₦{{ number_format((float)($settlement_wallet?->available_balance ?? 0), 2) }}</p><p class="text-xs text-gray-500">Reserved: ₦{{ number_format((float)($settlement_wallet?->reserved_balance ?? 0), 2) }}</p></div>
+                                      <a href="{{ route('admin.settlement-funding.index') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Manage settlement funding</a>
+                                    </div>
+                                    <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                      @forelse($settlement_accounts as $account)
+                                      <div class="rounded-xl border border-indigo-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"><p class="text-xs font-semibold uppercase text-gray-500">{{ $account->bank_name }}</p><p class="mt-1 text-lg font-bold tracking-wide text-gray-900 dark:text-white">{{ $account->account_number }}</p><p class="text-xs text-gray-500">{{ $account->account_name }}</p></div>
+                                      @empty
+                                      <p class="text-sm text-gray-500">No business settlement account yet. Use Manage settlement funding to generate one.</p>
+                                      @endforelse
+                                    </div>
+                                  </div>
+                                  <div class="mt-4 border-t border-indigo-100 pt-4 dark:border-gray-700">
+                                    <div class="flex items-center justify-between gap-3"><h3 class="text-sm font-semibold text-gray-900 dark:text-white">Recent settlement funding</h3><a href="{{ route('admin.settlement-funding.index') }}" class="text-xs font-semibold text-indigo-600">View all</a></div>
+                                    <div class="mt-2 overflow-x-auto"><table class="w-full min-w-[680px] text-left text-xs"><thead class="text-gray-500"><tr><th class="py-2">Date</th><th>Reference</th><th>Gross</th><th>Charge</th><th>Net credit</th><th>Balance</th><th>Status</th></tr></thead><tbody class="divide-y divide-indigo-50 dark:divide-gray-700">
+                                      @forelse($settlement_funding_entries as $entry)
+                                      <tr><td class="py-2.5 text-gray-500">{{ $entry->created_at?->format('d M Y, H:i') }}</td><td class="font-medium text-gray-800 dark:text-gray-200">{{ data_get($entry->metadata,'external_event_id',str($entry->reference)->after('FUNDING:')) }}</td><td>₦{{ number_format((float)data_get($entry->metadata,'gross_amount',$entry->amount),2) }}</td><td>₦{{ number_format((float)data_get($entry->metadata,'charge',0),2) }}</td><td class="font-semibold text-emerald-700">+₦{{ number_format((float)$entry->amount,2) }}</td><td>₦{{ number_format((float)$entry->balance_after,2) }}</td><td><span class="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">Successful</span></td></tr>
+                                      @empty
+                                      <tr><td colspan="7" class="py-3 text-gray-500">No automated settlement funding yet.</td></tr>
+                                      @endforelse
+                                    </tbody></table></div>
+                                  </div>
+                                </div>
+                                @endif
+
                                 {{-- FUND WALLET / VIRTUAL ACCOUNTS - FULL ROW --}}
                                 {{-- FUND WALLET / VIRTUAL ACCOUNTS - FULL ROW (DUMMY VALUES) --}}
                                 <div class="col-span-12 sm:col-span-2 md:col-span-3 lg:col-span-12 p-2">

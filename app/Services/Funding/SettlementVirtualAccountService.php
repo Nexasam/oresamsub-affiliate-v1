@@ -48,7 +48,15 @@ class SettlementVirtualAccountService
                 'account_type' => 'static', 'id_type' => 'bvn', 'id_number' => $credentials['biz_bvn'] ?? null,
                 'metadata' => ['wallet_purpose' => 'settlement', 'affiliate_id' => $affiliate->id],
             ]);
-        $response->throw();
+        if (! $response->successful()) {
+            $providerMessage = trim((string) $response->json('message'));
+            if (in_array($response->status(), [401, 403, 404], true) && str_contains(strtolower($providerMessage), 'credential')) {
+                throw ValidationException::withMessages([
+                    'provider' => 'SecurewaveNG rejected the parent funding credentials. Ask your parent administrator to verify the API public key, API secret key and business ID.',
+                ]);
+            }
+            $response->throw();
+        }
         if ($response->json('status') !== true) throw new \RuntimeException((string) ($response->json('message') ?: 'SecurewaveNG rejected settlement-account generation.'));
 
         return $this->storeAccounts($affiliate, $provider, collect($response->json('data', []))->map(fn ($account) => [

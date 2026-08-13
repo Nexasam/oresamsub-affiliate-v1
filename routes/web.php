@@ -738,6 +738,8 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
             Route::middleware(['auth','verified','admin'])->put('admin/affiliate-funding-providers/{config}', [AffiliateFundingProviderController::class, 'update'])->name('admin.affiliate-funding-providers.update');
             Route::middleware(['auth','verified','admin'])->post('admin/affiliate-funding-providers/{config}/mode-request', [AffiliateFundingProviderController::class, 'requestMode'])->name('admin.affiliate-funding-providers.mode-request');
             Route::middleware(['auth','verified','admin'])->get('admin/settlement-funding', [\App\Http\Controllers\AffiliateSettlementFundingController::class, 'index'])->name('admin.settlement-funding.index');
+            Route::middleware(['auth','verified','admin'])->get('admin/profits', [\App\Http\Controllers\AffiliateProfitReportController::class, 'index'])->name('admin.profits.index');
+            Route::middleware(['auth','verified','admin'])->get('admin/profits/export', [\App\Http\Controllers\AffiliateProfitReportController::class, 'export'])->name('admin.profits.export');
             Route::middleware(['auth','verified','admin'])->post('admin/settlement-funding/providers/{parentFundingProvider}/generate', [\App\Http\Controllers\AffiliateSettlementFundingController::class, 'generate'])->name('admin.settlement-funding.generate');
 
 

@@ -20,6 +20,7 @@
             ['label' => 'Dashboard', 'route' => 'parent-admin.dashboard', 'match' => 'parent-admin.dashboard', 'icon' => 'dashboard'],
             ['label' => 'Operations', 'route' => 'parent-admin.operations.index', 'match' => 'parent-admin.operations.*', 'icon' => 'activity'],
             ['label' => 'Transactions', 'route' => 'parent-admin.transactions.index', 'match' => 'parent-admin.transactions.*', 'icon' => 'activity'],
+            ['label' => 'Profit management', 'route' => 'parent-admin.profits.index', 'match' => 'parent-admin.profits.*', 'icon' => 'pricing'],
             ['label' => 'Affiliates', 'route' => 'parent-admin.affiliates.index', 'match' => 'parent-admin.affiliates.*', 'icon' => 'users'],
             ['label' => 'Settlement wallets', 'route' => 'parent-admin.settlement-wallets.index', 'match' => 'parent-admin.settlement-wallets.*', 'icon' => 'wallet'],
             ['label' => 'Product plans', 'route' => 'parent-admin.product-plans.index', 'match' => 'parent-admin.product-plans.*', 'icon' => 'catalog'],

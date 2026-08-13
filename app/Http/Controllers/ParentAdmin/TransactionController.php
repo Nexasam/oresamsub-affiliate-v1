@@ -33,6 +33,7 @@ class TransactionController extends Controller
             'volume' => (clone $summaryQuery)->sum('amount'),
             'successful' => (clone $summaryQuery)->where('status', 1)->count(),
             'reconciliation' => (clone $summaryQuery)->where('routing_status', 'reconciliation_required')->count(),
+            'manual_review' => (clone $summaryQuery)->where('routing_status', 'reconciliation_exhausted')->count(),
         ];
 
         return view('parent-admin.transactions.index', [

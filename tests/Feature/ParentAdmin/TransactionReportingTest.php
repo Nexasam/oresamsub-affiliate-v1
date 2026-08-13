@@ -24,11 +24,14 @@ it('shows only the current parents transactions including legacy rows without a 
     $required = ['api_id' => 'test-plan', 'affiliate_product_plan_id' => 1, 'wallet_category' => 'main_wallet', 'balance_before' => 1000, 'balance_after' => 500, 'description' => 'Test purchase'];
     Transaction::withoutGlobalScope('affiliate')->create($required + ['affiliate_id' => $affiliate->id, 'user_id' => $user->id, 'txn_reference' => 'OWN-LEGACY', 'transaction_category' => 'data', 'amount' => 500, 'status' => 1]);
     Transaction::withoutGlobalScope('affiliate')->create($required + ['parent_business_id' => $parent->id, 'affiliate_id' => $affiliate->id, 'user_id' => $user->id, 'txn_reference' => 'OWN-ROUTED', 'transaction_category' => 'airtime', 'amount' => 200, 'status' => 0, 'routing_status' => 'reconciliation_required']);
+    Transaction::withoutGlobalScope('affiliate')->create($required + ['parent_business_id' => $parent->id, 'affiliate_id' => $affiliate->id, 'user_id' => $user->id, 'txn_reference' => 'OWN-MANUAL-REVIEW', 'transaction_category' => 'data', 'amount' => 300, 'status' => 0, 'routing_status' => 'reconciliation_exhausted']);
     Transaction::withoutGlobalScope('affiliate')->create($required + ['parent_business_id' => $foreign->id, 'affiliate_id' => $foreignAffiliate->id, 'user_id' => $foreignUser->id, 'txn_reference' => 'FOREIGN-TXN', 'transaction_category' => 'data', 'amount' => 900, 'status' => 1]);
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions')
         ->assertOk()->assertSee('OWN-LEGACY')->assertSee('OWN-ROUTED')->assertDontSee('FOREIGN-TXN')
         ->assertSee('Needs reconciliation');
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions?routing_status=reconciliation_exhausted')
+        ->assertOk()->assertSee('OWN-MANUAL-REVIEW')->assertSee('Manual review');
 });
 
 it('loads transaction customers using the actual first and last name columns', function () {

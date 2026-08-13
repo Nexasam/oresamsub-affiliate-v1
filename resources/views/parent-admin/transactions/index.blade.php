@@ -16,7 +16,7 @@
         <button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Filter</button>
     </form>
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="px-4 py-3">Reference</th><th class="px-4 py-3">Affiliate</th><th class="px-4 py-3">Service</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Provider</th><th class="px-4 py-3">Provider response</th><th class="px-4 py-3">Date</th></tr></thead><tbody class="divide-y divide-slate-100">
+        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="w-28 px-2 py-3">Ref</th><th class="px-3 py-3">Affiliate</th><th class="px-3 py-3">Service</th><th class="px-3 py-3">Amount</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Provider</th><th class="px-3 py-3">Provider response</th><th class="px-3 py-3">Date</th></tr></thead><tbody class="divide-y divide-slate-100">
         @forelse($transactions as $transaction)
             @php
                 $needsDiagnostics = (int) $transaction->status === 2
@@ -27,13 +27,13 @@
                 $providerResponse = $transaction->provider_response;
             @endphp
             <tr>
-                <td class="px-4 py-3 font-medium">{{ $transaction->txn_reference }}</td>
-                <td class="px-4 py-3">{{ $transaction->affiliate?->name ?? '—' }}</td>
-                <td class="px-4 py-3">{{ str($transaction->transaction_category)->replace('_', ' ')->title() }}</td>
-                <td class="px-4 py-3">₦{{ number_format($transaction->amount, 2) }}</td>
-                <td class="px-4 py-3">@if($transaction->routing_status === 'reconciliation_required')<span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Needs reconciliation</span>@elseif((int) $transaction->status === 1)<span class="text-emerald-700">Successful</span>@elseif((int) $transaction->status === 2)<span class="text-rose-700">Failed / refunded</span>@else<span class="text-slate-600">Pending</span>@endif</td>
-                <td class="px-4 py-3">{{ $transaction->parentProviderConnection?->name ?? 'Legacy' }}</td>
-                <td class="max-w-sm px-4 py-3">
+                <td class="w-28 px-2 py-3"><span class="block max-w-28 truncate font-mono text-[10px] font-medium text-slate-500" title="{{ $transaction->txn_reference }}">{{ str($transaction->txn_reference)->limit(18) }}</span></td>
+                <td class="px-3 py-3">{{ $transaction->affiliate?->name ?? '—' }}</td>
+                <td class="px-3 py-3">{{ str($transaction->transaction_category)->replace('_', ' ')->title() }}</td>
+                <td class="px-3 py-3">₦{{ number_format($transaction->amount, 2) }}</td>
+                <td class="px-3 py-3">@if($transaction->routing_status === 'reconciliation_required')<span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Needs reconciliation</span>@elseif((int) $transaction->status === 1)<span class="text-emerald-700">Successful</span>@elseif((int) $transaction->status === 2)<span class="text-rose-700">Failed / refunded</span>@else<span class="text-slate-600">Pending</span>@endif</td>
+                <td class="px-3 py-3">{{ $transaction->parentProviderConnection?->name ?? 'Legacy' }}</td>
+                <td class="max-w-sm px-3 py-3">
                     @if(filled($providerResponse) || $needsDiagnostics)
                         <details class="group">
                             <summary class="cursor-pointer font-semibold {{ $needsDiagnostics ? 'text-rose-700' : 'text-blue-700' }}">View response</summary>
@@ -53,7 +53,7 @@
                         <span class="text-slate-400">—</span>
                     @endif
                 </td>
-                <td class="px-4 py-3 text-slate-500">{{ $transaction->created_at }}</td>
+                <td class="px-3 py-3 text-slate-500">{{ $transaction->created_at }}</td>
             </tr>
         @empty<tr><td colspan="8" class="px-4 py-12 text-center text-slate-500">No transactions match these filters.</td></tr>@endforelse
         </tbody></table></div><div class="border-t border-slate-200 p-4">{{ $transactions->links() }}</div>

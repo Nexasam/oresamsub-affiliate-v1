@@ -13,6 +13,7 @@ use App\Models\ProductPlanCategory;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserVirtualAccount;
+use App\Models\WalletLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -79,6 +80,9 @@ class InertiaDashboardController extends Controller
             'affiliateFundingProviderConfig.banks.parentBank',
         ])->where('user_id',auth()->id())->latest()->get()->map->dashboardPayload()->values();
         $data['virtualccts'] = $virtualccts;
+        $data['fundingHistory'] = WalletLog::where('user_id', auth()->id())
+            ->where('transaction_category', 'like', '%\_WALLET\_FUNDING')
+            ->latest()->limit(50)->get()->map->fundingHistoryPayload()->values();
         return Inertia::render('VirtualAccounts')->with($data);
     }
 

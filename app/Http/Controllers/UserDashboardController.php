@@ -60,6 +60,9 @@ class UserDashboardController extends Controller
 
     $data['user_virtual_accounts'] = $user_virtual_accounts;
     $data['funding_accounts'] = $user_virtual_accounts->map->dashboardPayload()->values();
+    $data['funding_history'] = WalletLog::where('user_id', auth()->id())
+      ->where('transaction_category', 'like', '%\_WALLET\_FUNDING')
+      ->latest()->limit(20)->get()->map->fundingHistoryPayload()->values();
     $data['active_bankcodes'] = $active_bankcodes;
     $data['total_expected_bankcodes'] = $total_expected_bankcodes;
 

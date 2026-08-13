@@ -7,7 +7,7 @@ import PrimaryLink from "@/Components/PrimaryLink";
 
 export default function VirtualAccounts() {
   const { props } = usePage();
-  const { auth, virtualccts } = props;
+  const { auth, virtualccts, fundingHistory = [] } = props;
   const user = auth.user;
 
   const [copiedAcct, setCopiedAcct] = useState(null);
@@ -77,6 +77,31 @@ export default function VirtualAccounts() {
             </p>
           )}
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 mb-16 rounded-xl shadow overflow-hidden font-inter">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold">
+          Funding History
+        </div>
+        {fundingHistory.length > 0 ? (
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            {fundingHistory.map((funding) => (
+              <div key={funding.id} className="flex items-center justify-between gap-3 p-4 text-sm">
+                <div className="min-w-0">
+                  <div className="font-semibold text-gray-800 dark:text-gray-100">{funding.provider}</div>
+                  <div className="truncate text-xs text-gray-500 dark:text-gray-400">{funding.reference ?? funding.description}</div>
+                  <div className="text-xs text-gray-400">{funding.created_at ? new Date(funding.created_at).toLocaleString() : ""}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-emerald-600">+₦{Number(funding.amount).toFixed(2)}</div>
+                  <div className="text-xs text-emerald-600">{funding.status}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="p-4 text-center text-sm text-gray-500">No funding history yet.</p>
+        )}
       </div>
     </DashboardLayout>
   );

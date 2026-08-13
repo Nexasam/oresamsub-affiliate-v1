@@ -96,6 +96,29 @@ it('lets a parent enable providers configure credentials and approve affiliate m
         ->assertOk()->assertSee('Child')->assertSee('Affiliate managed');
 });
 
+it('preserves existing parent funding credentials when blank fields are submitted', function () {
+    $parent = ParentBusiness::create(['name' => 'Credential Parent', 'slug' => 'credential-parent']);
+    $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'credential-parent@example.test', 'password' => 'password', 'active' => true]);
+    $provider = FundingProvider::create([
+        'name' => 'SecurewaveNG', 'slug' => 'securewaveng', 'adapter_key' => 'securewaveng',
+        'credential_fields' => ['api_public_key', 'api_secret_key', 'business_id'], 'active' => true,
+    ]);
+    $saved = $parent->fundingProviders()->create([
+        'funding_provider_id' => $provider->id,
+        'credentials' => ['api_public_key' => 'public-old', 'api_secret_key' => 'secret-old', 'business_id' => 'business-old'],
+        'active' => true, 'generation_enabled' => true,
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->post("/parent-admin/funding-providers/{$provider->id}/enable", [
+        'credentials' => ['api_public_key' => '', 'api_secret_key' => '', 'business_id' => 'business-new'],
+        'webhook_secret' => '', 'webhook_active' => '1', 'active' => '1', 'generation_enabled' => '1',
+    ])->assertSessionHasNoErrors();
+
+    expect($saved->fresh()->credentials)->toBe([
+        'api_public_key' => 'public-old', 'api_secret_key' => 'secret-old', 'business_id' => 'business-new',
+    ]);
+});
+
 it('hides and rejects parent-managed customer funding for new affiliate configurations', function () {
     $parent = ParentBusiness::create(['name' => 'Safe Funding Parent', 'slug' => 'safe-funding']);
     $admin = ParentAdmin::create(['parent_business_id' => $parent->id, 'name' => 'Owner', 'email' => 'safe-funding@example.test', 'password' => 'password', 'active' => true]);

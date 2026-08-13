@@ -38,8 +38,10 @@ class FundingProviderController extends Controller
         $parent = $request->user('parent_admin')->parentBusiness;
         $data = $request->validate(['credentials' => ['nullable', 'array'], 'webhook_secret' => ['nullable', 'string', 'max:2000'], 'webhook_active' => ['required', 'boolean'], 'active' => ['required', 'boolean'], 'generation_enabled' => ['required', 'boolean']]);
         $provider = $parent->fundingProviders()->firstOrNew(['funding_provider_id' => $fundingProvider->id]);
-        if (filled(array_filter($data['credentials'] ?? []))) {
-            $provider->credentials = $data['credentials'];
+        $submittedCredentials = collect($data['credentials'] ?? [])
+            ->filter(fn ($value) => filled($value))->map(fn ($value) => trim((string) $value))->all();
+        if ($submittedCredentials !== []) {
+            $provider->credentials = array_merge($provider->credentials ?? [], $submittedCredentials);
         }
         $provider->active = $data['active'];
         $provider->generation_enabled = $data['generation_enabled'];

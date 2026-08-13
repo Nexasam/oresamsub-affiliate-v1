@@ -77,12 +77,13 @@ class ImpersonationController extends Controller
         $request->session()->regenerate();
         $request->session()->put('platform_impersonation', [
             'admin_id' => $record->admin_id,
+            'parent_admin_id' => $record->parent_admin_id,
             'affiliate_id' => $record->affiliate_id,
             'user_id' => $record->user_id,
             'return_url' => $record->return_url,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Platform administrator impersonation session started.');
+        return redirect()->route('dashboard')->with('success', ($record->parent_admin_id ? 'Parent' : 'Platform').' administrator impersonation session started.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -91,8 +92,12 @@ class ImpersonationController extends Controller
         abort_unless($impersonation, 404);
 
         Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($impersonation['parent_admin_id'] ?? null) {
+            $request->session()->regenerateToken();
+        } else {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return redirect()->away($impersonation['return_url']);
     }

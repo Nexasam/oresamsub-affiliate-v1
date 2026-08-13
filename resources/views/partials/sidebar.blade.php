@@ -46,6 +46,7 @@
                     <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
                 </svg></div>
             <ul class="main-menu text-md ">
+                <li class="slide"><a href="{{ route('admin.onboarding.index') }}" class="side-menu__item"><i class="ri-list-check-3 side-menu__icon"></i><span class="side-menu__label">Onboarding checklist</span></a></li>
                 <!-- Start::slide__category -->
                 <li class="slide__category"><span class="category-name">Main</span></li>
                 <!-- End::slide__category -->
@@ -53,7 +54,7 @@
                 @if (session()->has('impersonator') || session()->has('platform_impersonation'))
                 <li class="slide  has-sub bg-green-800 p-2 rounded-2xl">
                     @if(session()->has('platform_impersonation'))
-                    <form method="POST" action="{{ route('platform-impersonation.exit') }}">@csrf<button class="side-menu__item w-full">Exit platform impersonation</button></form>
+                    <form method="POST" action="{{ route('platform-impersonation.exit') }}">@csrf<button class="side-menu__item w-full">Exit {{ data_get(session('platform_impersonation'), 'parent_admin_id') ? 'parent' : 'platform' }} impersonation</button></form>
                     @else
                     <a href="{{route('admin.exit_impersonate')}}" class="side-menu__item">
                         <i class="ti ti-user-secret side-menu__icon"></i>

@@ -10,9 +10,13 @@ use App\Http\Controllers\ParentAdmin\DashboardController;
 use App\Http\Controllers\ParentAdmin\FundingProviderController;
 use App\Http\Controllers\ParentAdmin\PricingController;
 use App\Http\Controllers\ParentAdmin\ProductPlanController;
+use App\Http\Controllers\ParentAdmin\ProductPlanImportController;
 use App\Http\Controllers\ParentAdmin\ProviderConnectionController;
 use App\Http\Controllers\ParentAdmin\TransactionController;
 use App\Http\Controllers\ParentAdmin\ProfitController;
+use App\Http\Controllers\ParentAdmin\OnboardingController;
+use App\Http\Controllers\ParentAdmin\UserController;
+use App\Http\Controllers\ParentAdmin\AffiliateImpersonationController;
 use App\Http\Controllers\PlatformAdmin\AffiliateController as PlatformAffiliateController;
 use App\Http\Controllers\PlatformAdmin\AffiliateOperationsController as PlatformAffiliateOperationsController;
 use App\Http\Controllers\PlatformAdmin\AffiliateUsersController as PlatformAffiliateUsersController;
@@ -26,9 +30,15 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
 
     Route::middleware('auth:parent_admin')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+        Route::get('onboarding', OnboardingController::class)->name('onboarding.index');
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
+        Route::post('impersonation/exit', [\App\Http\Controllers\PlatformAdmin\ParentImpersonationController::class, 'destroy'])->name('impersonation.exit');
         Route::get('product-plans', [ProductPlanController::class, 'index'])->name('product-plans.index');
         Route::get('product-plans/data', [ProductPlanController::class, 'data'])->name('product-plans.data');
+        Route::get('product-plans/import/template', [ProductPlanImportController::class, 'template'])->name('product-plans.import.template');
+        Route::post('product-plans/import/preview', [ProductPlanImportController::class, 'preview'])->name('product-plans.import.preview');
+        Route::post('product-plans/import/confirm', [ProductPlanImportController::class, 'confirm'])->name('product-plans.import.confirm');
         Route::post('product-plans', [ProductPlanController::class, 'store'])->name('product-plans.store');
         Route::post('product-plans/bulk', [ProductPlanController::class, 'bulkStore'])->name('product-plans.bulk-store');
         Route::get('product-plans/{plan}/edit', [ProductPlanController::class, 'edit'])->name('product-plans.edit');
@@ -39,6 +49,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('operations', [AffiliateOperationsController::class, 'index'])->name('operations.index');
         Route::post('affiliates', [AffiliateController::class, 'store'])->name('affiliates.store');
         Route::get('affiliates/{affiliate}/edit', [AffiliateController::class, 'edit'])->name('affiliates.edit');
+        Route::post('affiliates/{affiliate}/impersonate', [AffiliateImpersonationController::class, 'store'])->name('affiliates.impersonate');
         Route::put('affiliates/{affiliate}', [AffiliateController::class, 'update'])->name('affiliates.update');
         Route::post('affiliates/{affiliate}/attach', [AffiliateController::class, 'attach'])->name('affiliates.attach');
         Route::patch('affiliates/{affiliate}/level', [AffiliateController::class, 'updateLevel'])->name('affiliates.level.update');

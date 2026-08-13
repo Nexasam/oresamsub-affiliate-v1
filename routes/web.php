@@ -3,6 +3,7 @@
 use App\Http\Controllers\AddonController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AffiliateController;
+use App\Http\Controllers\AffiliateOnboardingChecklistController;
 use App\Http\Controllers\AffiliateFundingProviderController;
 use App\Http\Controllers\AffiliateUserPlanController;
 use App\Http\Controllers\AirtimeController;
@@ -81,8 +82,10 @@ Route::get('query_airtime_transaction', [ParentSyncController::class, 'queryAirt
 
 
 Route::middleware(['set_locale','set_affiliate'])->group(function () {
+            Route::get('admin/onboarding', AffiliateOnboardingChecklistController::class)->middleware(['auth','verified','admin'])->name('admin.onboarding.index');
             Route::get('/platform-impersonation/{token}', [\App\Http\Controllers\PlatformAdmin\ImpersonationController::class, 'consume'])
                 ->name('platform-impersonation.consume');
+            Route::get('/parent-impersonation/{token}', [\App\Http\Controllers\PlatformAdmin\ImpersonationController::class, 'consume'])->name('parent-impersonation.consume');
             Route::post('/platform-impersonation/exit', [\App\Http\Controllers\PlatformAdmin\ImpersonationController::class, 'destroy'])
                 ->middleware('auth')
                 ->name('platform-impersonation.exit');

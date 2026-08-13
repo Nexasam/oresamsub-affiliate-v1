@@ -9,6 +9,7 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
 @php($parentAdmin = auth('parent_admin')->user()->loadMissing('parentBusiness'))
+@if(session('parent_impersonation'))<div class="sticky top-0 z-[60] flex items-center justify-between bg-amber-400 px-5 py-2 text-sm font-bold text-slate-950"><span>Platform admin impersonation · {{ $parentAdmin->parentBusiness->name }}</span><form method="POST" action="{{ route('parent-admin.impersonation.exit') }}">@csrf<button class="rounded-lg bg-slate-950 px-3 py-1.5 text-white">Exit</button></form></div>@endif
 <div x-data="{ sidebar: false }" class="min-h-screen">
     <div x-cloak x-show="sidebar" x-transition.opacity @click="sidebar = false" class="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"></div>
     <aside :class="sidebar ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-slate-950 text-white transition-transform duration-200 lg:translate-x-0">
@@ -18,10 +19,12 @@
         </div>
         @php($navigation = [
             ['label' => 'Dashboard', 'route' => 'parent-admin.dashboard', 'match' => 'parent-admin.dashboard', 'icon' => 'dashboard'],
+            ['label' => 'Onboarding checklist', 'route' => 'parent-admin.onboarding.index', 'match' => 'parent-admin.onboarding.*', 'icon' => 'activity'],
             ['label' => 'Operations', 'route' => 'parent-admin.operations.index', 'match' => 'parent-admin.operations.*', 'icon' => 'activity'],
             ['label' => 'Transactions', 'route' => 'parent-admin.transactions.index', 'match' => 'parent-admin.transactions.*', 'icon' => 'activity'],
             ['label' => 'Profit management', 'route' => 'parent-admin.profits.index', 'match' => 'parent-admin.profits.*', 'icon' => 'pricing'],
             ['label' => 'Affiliates', 'route' => 'parent-admin.affiliates.index', 'match' => 'parent-admin.affiliates.*', 'icon' => 'users'],
+            ['label' => 'Users', 'route' => 'parent-admin.users.index', 'match' => 'parent-admin.users.*', 'icon' => 'users'],
             ['label' => 'Settlement wallets', 'route' => 'parent-admin.settlement-wallets.index', 'match' => 'parent-admin.settlement-wallets.*', 'icon' => 'wallet'],
             ['label' => 'Product plans', 'route' => 'parent-admin.product-plans.index', 'match' => 'parent-admin.product-plans.*', 'icon' => 'catalog'],
             ['label' => 'Pricing levels', 'route' => 'parent-admin.pricing.index', 'match' => ['parent-admin.pricing.index', 'parent-admin.pricing.data', 'parent-admin.pricing.defaults.*', 'parent-admin.pricing.levels.*', 'parent-admin.pricing.plans.*', 'parent-admin.pricing.affiliates.*'], 'icon' => 'pricing'],

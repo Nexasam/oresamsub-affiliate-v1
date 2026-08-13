@@ -17,6 +17,7 @@ use App\Services\Providers\ConfigurableProviderClient;
 use App\Services\Providers\ParentManagedPurchaseOrchestrator;
 use App\Services\Providers\ParentPurchaseExecutor;
 use App\Services\Providers\PurchaseRouteResolver;
+use App\Services\Reconciliation\TransactionFinancialReconciliationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Mockery\MockInterface;
@@ -141,7 +142,12 @@ it('orchestrates a parent-managed data purchase with pricing snapshots and settl
         ])
         ->and($customer->fresh()->main_wallet)->toBe('870.00')
         ->and($wallet->available_balance)->toBe('380.00')
-        ->and($wallet->reserved_balance)->toBe('0.00');
+        ->and($wallet->reserved_balance)->toBe('0.00')
+        ->and(app(TransactionFinancialReconciliationService::class)->audit($result['transaction'])['balanced'])->toBeTrue();
+
+    $this->artisan('parent-purchases:audit-financials', ['--reference' => 'ORDER-PARENT-1'])
+        ->expectsOutputToContain('1 balanced, 0 mismatch')
+        ->assertSuccessful();
 });
 
 it('refunds a conclusive provider failure and releases settlement exactly once', function () {
@@ -178,4 +184,38 @@ it('refunds a conclusive provider failure and releases settlement exactly once',
         ->and($wallet->ledgerEntries()->where('entry_type', 'purchase_reservation')->count())->toBe(1)
         ->and($wallet->ledgerEntries()->where('entry_type', 'reservation_release')->count())->toBe(1)
         ->and(\App\Models\WalletLog::withoutGlobalScope('affiliate')->where('user_id', $customer->id)->where('transaction_category', 'PARENT_MANAGED_DATA_REFUND')->count())->toBe(1);
+
+    expect(app(TransactionFinancialReconciliationService::class)->audit($result['transaction'])['balanced'])->toBeTrue();
+});
+
+it('flags a parent-managed purchase whose financial snapshots no longer reconcile', function () {
+    $f = executableParentPurchase();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $customer = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId]);
+    $transaction = \App\Models\Transaction::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'parent_business_id' => $f['parent']->id,
+        'api_id' => 'TAMPERED-PLAN',
+        'affiliate_product_plan_id' => $f['affiliatePlan']->id,
+        'user_id' => $customer->id,
+        'txn_reference' => 'ORDER-TAMPERED',
+        'wallet_category' => 'main_wallet',
+        'amount' => '130.00',
+        'balance_before' => '1000.00',
+        'balance_after' => '870.00',
+        'description' => 'Parent-managed data purchase',
+        'status' => 1,
+        'routing_status' => 'successful',
+        'provider_cost_snapshot' => '100.00',
+        'parent_cost_snapshot' => '100.00',
+        'affiliate_cost_snapshot' => '120.00',
+        'customer_price_snapshot' => '130.00',
+        'parent_profit_snapshot' => '20.00',
+        'affiliate_profit_snapshot' => '11.00',
+    ]);
+
+    $audit = app(TransactionFinancialReconciliationService::class)->audit($transaction);
+
+    expect($audit['balanced'])->toBeFalse()
+        ->and($audit['issues'])->toContain('Affiliate profit snapshot does not bridge affiliate cost to customer price.');
 });

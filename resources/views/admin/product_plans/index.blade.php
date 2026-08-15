@@ -31,7 +31,10 @@
                             <td><p x-text="row.category"></p><p class="mt-1 text-xs text-slate-500" x-text="row.data_size_in_mb + ' · ' + row.validity_in_days"></p></td>
                             <td><div x-html="row.cost_price"></div></td>
                             <td><div x-html="row.max_profit_range"></div></td>
-                            <td><div x-html="row.user_plan_profit"></div></td>
+                            <td>
+                                <button type="button" class="workspace-btn-secondary whitespace-nowrap" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
+                                <p class="mt-1 text-[11px] text-slate-500" x-text="row.profit_editable ? profitSummary(row) : 'Add this plan first'"></p>
+                            </td>
                             <td><div class="space-y-2"><div x-html="row.admin_visibility"></div><div x-html="row.affiliate_visibility"></div><div x-html="row.public_visibility"></div></div></td>
                             <td><div x-html="row.action"></div></td>
                         </tr></template>
@@ -42,6 +45,27 @@
             </div>
             <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs text-slate-500" x-text="pageSummary"></p><div class="flex gap-2"><button class="workspace-btn-secondary" @click="page--" :disabled="page<=1">Previous</button><button class="workspace-btn-secondary" @click="page++" :disabled="page>=pages">Next</button></div></div>
         </section>
+
+        <div x-cloak x-show="profitModal" x-transition.opacity class="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4" @keydown.escape.window="closeProfits()">
+            <div x-show="profitModal" x-transition @click.outside="closeProfits()" class="w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-slate-900">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5 dark:border-slate-700">
+                    <div><h3 class="text-lg font-bold">Customer profit levels</h3><p class="mt-1 text-sm text-slate-500" x-text="selectedPlan?.product_plan_name"></p></div>
+                    <button type="button" class="workspace-btn-secondary px-2.5" aria-label="Close profit editor" @click="closeProfits()">✕</button>
+                </div>
+                <form class="p-5" @submit.prevent="saveProfits()">
+                    <div class="mb-4 rounded-xl bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
+                        <span x-text="selectedPlan?.profit_type === 'percent' ? 'Enter a percentage margin for each customer level.' : 'Enter a flat naira margin for each customer level.'"></span>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <template x-for="level in [1,2,3,4,5,6]" :key="level">
+                            <label class="block"><span class="text-xs font-semibold text-slate-600 dark:text-slate-300" x-text="`Customer level ${level}`"></span><div class="relative mt-1"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400" x-text="selectedPlan?.profit_type === 'percent' ? '%' : '₦'"></span><input required min="0" step="0.01" type="number" x-model="profitValues[level]" class="workspace-input w-full pl-8"></div></label>
+                        </template>
+                    </div>
+                    <p x-show="profitError" class="mt-4 text-sm text-rose-600" x-text="profitError"></p>
+                    <div class="mt-5 flex justify-end gap-2"><button type="button" class="workspace-btn-secondary" @click="closeProfits()">Cancel</button><button type="submit" class="workspace-btn-primary" :disabled="profitSaving"><span x-text="profitSaving ? 'Saving…' : 'Save profit levels'"></span></button></div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @else
@@ -160,12 +184,29 @@
     function affiliatePlansTable() {
       return {
         rows: [], loading: false, syncing: false, error: '', notice: '', search: '', availability: '', page: 1, perPage: 25,
+        profitModal: false, profitSaving: false, profitError: '', selectedPlan: null, profitValues: {},
         async load() { this.loading = true; this.error = ''; try { const response = await fetch(@js(route('admin.product_plans.admin_fetch_product_plans')), {headers:{'Accept':'application/json'}}); if (!response.ok) throw new Error('Product plans could not be loaded.'); const payload = await response.json(); this.rows = payload.data || []; } catch (error) { this.error = error.message; } finally { this.loading = false; } },
         plain(value) { const el = document.createElement('div'); el.innerHTML = value || ''; return (el.textContent || '').toLowerCase(); },
         get filtered() { const term = this.search.toLowerCase().trim(); return this.rows.filter(row => (!term || `${row.product_plan_name} ${row.network_name} ${row.category}`.toLowerCase().includes(term)) && (!this.availability || this.plain(row.affiliate_visibility).includes(this.availability))); },
         get pages() { return Math.max(1, Math.ceil(this.filtered.length / this.perPage)); },
         get visible() { if (this.page > this.pages) this.page = this.pages; const start=(this.page-1)*this.perPage; return this.filtered.slice(start,start+this.perPage); },
         get pageSummary() { if (!this.filtered.length) return 'No plans'; const start=(this.page-1)*this.perPage+1; return `Showing ${start}–${Math.min(start+this.perPage-1,this.filtered.length)} of ${this.filtered.length}`; },
+        profitSummary(row) { const values = Object.values(row.profit_values || {}); const suffix = row.profit_type === 'percent' ? '%' : ''; return values.length ? `${Math.min(...values)}–${Math.max(...values)}${suffix}` : 'Not configured'; },
+        editProfits(row) { if (!row.profit_editable) return; this.selectedPlan = row; this.profitValues = JSON.parse(JSON.stringify(row.profit_values || {})); this.profitError = ''; this.profitModal = true; },
+        closeProfits() { if (this.profitSaving) return; this.profitModal = false; this.selectedPlan = null; this.profitError = ''; },
+        async saveProfits() {
+          if (!this.selectedPlan) return;
+          this.profitSaving = true; this.profitError = '';
+          try {
+            const response = await fetch(@js(route('admin.affiliate.updatePlanProfits')), {method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@js(csrf_token())}, body:JSON.stringify({plan_id:this.selectedPlan.DT_RowIndex, profits:this.profitValues})});
+            const payload = await response.json();
+            if (!response.ok || payload.status !== true) throw new Error(Object.values(payload.errors || {}).flat()[0] || payload.message || 'Profit levels could not be saved.');
+            this.selectedPlan.profit_values = payload.profits;
+            this.notice = payload.message || 'Customer profit settings saved.';
+            this.profitSaving = false;
+            this.closeProfits();
+          } catch(error) { this.profitError = error.message; } finally { this.profitSaving = false; }
+        },
         async sync() { if (!confirm('Sync product plans from your parent catalogue?')) return; this.syncing=true; this.error=''; try { const response=await fetch(@js(route('admin.sync_affiliate_product_plans')),{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@js(csrf_token())}}); const payload=await response.json(); if (!response.ok || !(payload.status === 1 || payload.status === true)) throw new Error(payload.message || 'Plan sync failed.'); this.notice=payload.message || 'Plans synchronized successfully.'; await this.load(); } catch(error) { this.error=error.message; } finally { this.syncing=false; } }
       }
     }

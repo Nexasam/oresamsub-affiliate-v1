@@ -343,6 +343,13 @@ class ProductPlanController extends Controller
               </div>
               HTML;
              })
+            ->addColumn('profit_values', function ($data) {
+                return collect(range(1, 6))->mapWithKeys(fn ($level) => [
+                    (string) $level => (float) ($data->affiliate_product_plan?->{"user_level_{$level}_profit"} ?? 1),
+                ])->all();
+            })
+            ->addColumn('profit_type', fn ($data) => $data->profit_category === 'percent' ? 'percent' : 'flat')
+            ->addColumn('profit_editable', fn ($data) => in_array($data->id, $affiliatePlanIds, true))
           
           
 

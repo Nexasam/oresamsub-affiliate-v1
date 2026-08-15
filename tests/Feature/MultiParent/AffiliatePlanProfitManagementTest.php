@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\AffiliateServiceProfitCap;
+use App\Models\AffiliateUserPlan;
 use App\Models\ProductPlanParentPrice;
+use App\Models\Role;
+use App\Models\User;
 use App\Services\Pricing\AffiliatePlanProfitService;
 use Illuminate\Validation\ValidationException;
 
@@ -34,4 +37,29 @@ it('rejects a plan owned by another affiliate or parent', function () {
 
     expect(fn () => app(AffiliatePlanProfitService::class)->update($first['affiliate'], $other['plan']->id, array_fill_keys(range(1, 6), 1)))
         ->toThrow(ValidationException::class);
+});
+
+it('returns structured profit values for the alpine affiliate plan editor', function () {
+    $f = affiliateProfitFixture('editor-payload');
+    $role = Role::create(['role_name' => 'Admin']);
+    $userPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $admin = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'role_id' => $role->id,
+        'user_plan_id' => $userPlan->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->withSession(['affiliate' => $f['affiliate']])
+        ->getJson(route('admin.product_plans.admin_fetch_product_plans'))
+        ->assertOk()
+        ->assertJsonPath('data.0.profit_editable', true)
+        ->assertJsonPath('data.0.profit_type', 'flat')
+        ->assertJsonPath('data.0.profit_values.1', 10)
+        ->assertJsonPath('data.0.profit_values.6', 1);
 });

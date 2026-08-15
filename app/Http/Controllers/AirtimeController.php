@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Mail\WalletFundingNotification;
 use App\Models\AffiliateProductPlan;
+use App\Models\Affiliate;
 use App\Models\AffiliateUserPlan;
 use App\Models\Automation;
 use App\Models\BulkDataProductPlans;
@@ -23,6 +24,7 @@ use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendAirtime;
 use App\Services\Automation\MegaSubPlugAutomation\MegaSubVendData;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
 use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ParentManagedPurchaseOrchestrator;
 use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Services\Utils\UtilService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
@@ -477,6 +479,39 @@ class AirtimeController extends Controller
             }
         }
 
+        $profile = Affiliate::query()->find($plan_details->affiliate_id)?->processingProfile;
+        if (config('parent_businesses.features.parent_managed_purchases')
+            && app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)
+            && $profile?->status === 'active'
+            && $profile->processing_engine === 'multi_parent'
+            && $profile->management_mode === 'parent_managed') {
+            if ($request->wallet_category !== 'main_wallet' || $phone_numbers_count !== 1) {
+                return response()->json(['status' => -1, 'message' => 'The controlled parent-managed rollout currently supports one Airtime number from the main wallet per request.']);
+            }
+
+            try {
+                $reference = $this->generateTxnReference('AIRTIME', $user_details->id);
+                $faceAmount = (string) $actual_amount;
+                $purchase = app(ParentManagedPurchaseOrchestrator::class)->purchase($user_details, $plan_details, [
+                    'service' => 'airtime',
+                    'amount' => $faceAmount,
+                    'mobile_number' => $phone_numbers_array[0],
+                    'phone_number' => $phone_numbers_array[0],
+                    'network' => $plan_details->product_plan->product_plan_category->network?->network_name ?? (string) $request->network_id,
+                    'reference' => $reference,
+                ], (int) $plan_level, $faceAmount);
+                $transaction = $purchase['transaction'];
+
+                return response()->json([
+                    'status' => (int) $transaction->status,
+                    'message' => $transaction->user_screen_message ?: 'Transaction submitted.',
+                    'data' => [['reference' => $transaction->txn_reference, 'status' => (int) $transaction->status]],
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                return response()->json(['status' => -1, 'message' => collect($exception->errors())->flatten()->first()]);
+            }
+        }
+
         DB::beginTransaction();
         try{
 
@@ -485,6 +520,7 @@ class AirtimeController extends Controller
                             $wallet_before = $user_details->main_wallet;
                             $total_amount = $phone_numbers_count * $amount;
                             if($total_amount > $wallet_before || $wallet_before < 0){
+                                DB::rollBack();
                                 return response()->json(['status'=> -1, 'message'=>'Insufficient wallet balance' ]);
                             }
                                

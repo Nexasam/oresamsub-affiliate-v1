@@ -7,7 +7,7 @@
     <title>@yield('title', 'Parent Admin') · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/platform-admin.js'])
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
 @php($parentAdmin = auth('parent_admin')->user()->loadMissing('parentBusiness'))
 @if(session('parent_impersonation'))<div class="sticky top-0 z-[60] flex items-center justify-between bg-amber-400 px-5 py-2 text-sm font-bold text-slate-950"><span>Platform admin impersonation · {{ $parentAdmin->parentBusiness->name }}</span><form method="POST" action="{{ route('parent-admin.impersonation.exit') }}">@csrf<button class="rounded-lg bg-slate-950 px-3 py-1.5 text-white">Exit</button></form></div>@endif
 <div x-data="{ sidebar: false }" class="min-h-screen">
@@ -56,12 +56,12 @@
         </div>
     </aside>
     <main class="lg:pl-72">
-        <header class="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200/80 bg-white/90 px-5 backdrop-blur lg:px-10">
-            <button @click="sidebar = true" class="rounded-xl border border-slate-200 p-2 lg:hidden">☰</button>
+        <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:px-6 lg:px-8">
+            <button @click="sidebar = true" aria-label="Open navigation" class="workspace-btn-secondary px-2.5 lg:hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
             <div><p class="text-xs font-semibold uppercase tracking-[.2em] text-blue-600">{{ $parentAdmin->parentBusiness->name }}</p><h1 class="text-lg font-semibold">@yield('heading', 'Product plans')</h1></div>
             <div class="hidden items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 sm:flex"><span class="h-2 w-2 rounded-full bg-blue-500"></span> Parent access</div>
         </header>
-        <div class="p-5 lg:p-10">@yield('content')</div>
+        <div class="p-4 sm:p-6 lg:p-8">@yield('content')</div>
     </main>
 </div>
 @stack('scripts')

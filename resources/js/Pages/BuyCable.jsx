@@ -162,6 +162,9 @@ export default function BuyCable() {
       if (response.data.status === 1) {
         await Swal.fire("✅ Success", response.data.message, "success");
         window.location.reload();
+      } else if (response.data.status === 0) {
+        await Swal.fire("⏳ Pending", response.data.message, "info");
+        window.location.reload();
       } else {
         Swal.fire("⚠️ Failed", response.data.message, "error");
       }

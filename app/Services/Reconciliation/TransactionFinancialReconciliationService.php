@@ -36,7 +36,8 @@ class TransactionFinancialReconciliationService
             }
         }
 
-        $debits = $this->walletLogs($transaction, 'PARENT_MANAGED_DATA_DEBIT');
+        $service = strtoupper((string) ($transaction->transaction_category ?: 'data'));
+        $debits = $this->walletLogs($transaction, "PARENT_MANAGED_{$service}_DEBIT");
         if ($debits->count() !== 1 || $debits->contains(fn (WalletLog $log) => $this->delta($log) !== -$customerPrice)) {
             $issues[] = 'Customer wallet debit is missing, duplicated or has the wrong amount.';
         }
@@ -49,15 +50,15 @@ class TransactionFinancialReconciliationService
         }
 
         $routingStatus = (string) $transaction->routing_status;
-        $refunds = $this->walletLogs($transaction, 'PARENT_MANAGED_DATA_REFUND');
-        if ($routingStatus === 'successful') {
+        $refunds = $this->walletLogs($transaction, "PARENT_MANAGED_{$service}_REFUND");
+        if (in_array($routingStatus, ['successful', 'manual_successful'], true)) {
             if ($capture->count() !== 1 || $capture->contains(fn (AffiliateSettlementLedgerEntry $entry) => $this->cents($entry->amount) !== $affiliateCost) || $release->isNotEmpty()) {
                 $issues[] = 'Successful purchase must have one matching capture and no release.';
             }
             if ($refunds->isNotEmpty()) {
                 $issues[] = 'Successful purchase must not have a customer refund.';
             }
-        } elseif ($routingStatus === 'failed') {
+        } elseif (in_array($routingStatus, ['failed', 'manual_failed'], true)) {
             if ($release->count() !== 1 || $release->contains(fn (AffiliateSettlementLedgerEntry $entry) => $this->cents($entry->amount) !== $affiliateCost) || $capture->isNotEmpty()) {
                 $issues[] = 'Failed purchase must have one matching release and no capture.';
             }

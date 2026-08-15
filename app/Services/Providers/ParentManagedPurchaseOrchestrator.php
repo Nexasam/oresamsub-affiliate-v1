@@ -75,7 +75,10 @@ class ParentManagedPurchaseOrchestrator
             $after = $before - $charge;
             $lockedCustomer->forceFill(['main_wallet' => $this->money($after)])->save();
 
+            $affiliatePlan->loadMissing('product_plan.product_plan_category.product');
             $plan = $affiliatePlan->product_plan;
+            $service = (string) ($plan?->product_plan_category?->product?->slug ?: 'data');
+            $serviceLabel = str_replace('_', ' ', $service);
             $transaction = Transaction::withoutGlobalScope('affiliate')->create([
                 'affiliate_id' => $affiliate->id,
                 'parent_business_id' => $affiliate->parent_business_id,
@@ -83,13 +86,14 @@ class ParentManagedPurchaseOrchestrator
                 'txn_reference' => $reference,
                 'affiliate_product_plan_id' => $affiliatePlan->id,
                 'user_id' => $lockedCustomer->id,
-                'transaction_category' => 'data',
+                'transaction_category' => $service,
                 'wallet_category' => 'main_wallet',
                 'phone_number' => $runtime['phone_number'] ?? $runtime['mobile_number'] ?? null,
                 'amount' => $price['customer_selling_price'],
+                'discounted_amount' => $price['customer_selling_price'],
                 'balance_before' => $this->money($before),
                 'balance_after' => $this->money($after),
-                'description' => 'Parent-managed data purchase',
+                'description' => "Parent-managed {$serviceLabel} purchase",
                 'status' => 0,
                 'routing_status' => 'processing',
                 'provider_cost_snapshot' => $price['provider_cost'],
@@ -103,9 +107,9 @@ class ParentManagedPurchaseOrchestrator
             WalletLog::withoutGlobalScope('affiliate')->create([
                 'affiliate_id' => $affiliate->id, 'user_id' => $lockedCustomer->id,
                 'transaction_id' => $transaction->id, 'action_by' => $lockedCustomer->id,
-                'transaction_category' => 'PARENT_MANAGED_DATA_DEBIT',
+                'transaction_category' => 'PARENT_MANAGED_'.strtoupper($service).'_DEBIT',
                 'balance_before' => $this->money($before), 'balance_after' => $this->money($after),
-                'description' => "Data purchase {$reference}",
+                'description' => ucfirst($serviceLabel)." purchase {$reference}",
             ]);
 
             return $transaction;
@@ -156,7 +160,7 @@ class ParentManagedPurchaseOrchestrator
         WalletLog::withoutGlobalScope('affiliate')->create([
             'affiliate_id' => $transaction->affiliate_id, 'user_id' => $locked->id,
             'transaction_id' => $transaction->id, 'action_by' => $locked->id,
-            'transaction_category' => 'PARENT_MANAGED_DATA_REFUND',
+            'transaction_category' => 'PARENT_MANAGED_'.strtoupper((string) ($transaction->transaction_category ?: 'data')).'_REFUND',
             'balance_before' => $this->money($before), 'balance_after' => $this->money($after),
             'description' => "Refund for {$transaction->txn_reference}",
         ]);

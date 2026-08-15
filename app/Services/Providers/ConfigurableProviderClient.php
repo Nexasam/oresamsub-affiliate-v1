@@ -85,6 +85,55 @@ class ConfigurableProviderClient
         }
     }
 
+    /** Confirm a cable or electricity customer without sending a vending request. */
+    public function validateCustomer(ParentProviderConnection $connection, string $productSlug, array $runtime): array
+    {
+        $connection->loadMissing('providerConnection');
+        if ($connection->approval_status !== 'approved') {
+            return $this->failure('This provider connection has not been approved.');
+        }
+        if ($connection->status !== 'active' || $connection->providerConnection?->status !== 'active') {
+            return $this->failure('This provider connection is inactive.');
+        }
+
+        $settings = $connection->settings ?? [];
+        $productSlug = $this->products->normalize($productSlug);
+        $capabilities = $this->products->normalizeCapabilities($connection->providerConnection?->capabilities);
+        if (! in_array($productSlug, $capabilities['services'] ?? [], true)) {
+            return $this->failure("This adapter does not support {$productSlug}.");
+        }
+
+        $productSettings = $this->productSettings($settings, $productSlug);
+        $validation = $productSettings['validation'] ?? null;
+        $endpoint = is_array($validation) ? ($validation['endpoint'] ?? null) : null;
+        if (! $endpoint) {
+            return $this->failure("No customer validation endpoint is configured for {$productSlug}.");
+        }
+
+        try {
+            $payload = $this->mapValues($validation['request_parameters'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
+            $headers = $this->mapHeaders($validation['request_headers'] ?? $productSettings['request_headers'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
+            $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
+            $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
+            $method = strtoupper($validation['http_method'] ?? $settings['http_method'] ?? 'POST');
+            $logContext = $this->logContext($connection, $productSlug.'.validation', $runtime, $method, $endpoint);
+            Log::info('provider.validation.request.prepared', $logContext + ['payload' => $this->redact($payload)]);
+            $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
+            $result = $this->interpret($response, $validation);
+            $decoded = $response->json();
+            $result['customer_name'] = is_array($decoded) ? data_get($decoded, $validation['customer_name_path'] ?? 'data.customer_name') : null;
+            $result['customer_address'] = is_array($decoded) ? data_get($decoded, $validation['customer_address_path'] ?? 'data.address') : null;
+
+            return $result;
+        } catch (ConnectionException) {
+            return $this->failure('Customer validation could not be confirmed because the provider did not respond.', ambiguous: true);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->failure($this->safeConfigurationMessage($exception));
+        }
+    }
+
     /** Requery an uncertain purchase without repeating the vending request. */
     public function requery(ParentProviderConnection $connection, string $productSlug, array $runtime): array
     {

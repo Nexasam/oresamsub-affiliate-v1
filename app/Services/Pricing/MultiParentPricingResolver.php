@@ -40,7 +40,13 @@ class MultiParentPricingResolver
             $this->fail('provider_cost', 'The product plan has no valid provider cost.');
         }
 
+        $service = $this->profitRules->serviceKey($product);
+        $percentageService = in_array($service, ['airtime', 'electricity'], true);
+        $face = $percentageService ? $this->requiredFaceAmount($faceAmount) : null;
         $providerCost = $this->decimal((string) $plan->cost_price);
+        if ($percentageService) {
+            $providerCost = $this->scaleReferencePrice($providerCost, $face);
+        }
         $custom = ProductPlanParentPrice::query()
             ->where('parent_business_id', $affiliate->parent_business_id)
             ->where('product_plan_id', $plan->id)
@@ -49,6 +55,9 @@ class MultiParentPricingResolver
 
         if ($custom) {
             $acquisitionPrice = $this->decimal($custom->selling_price);
+            if ($percentageService) {
+                $acquisitionPrice = $this->scaleReferencePrice($acquisitionPrice, $face);
+            }
             $parentSource = 'custom';
             $parentRuleType = 'custom_price';
             $parentRuleValue = $this->money($acquisitionPrice->minus($providerCost));
@@ -67,7 +76,7 @@ class MultiParentPricingResolver
             $parentRuleValue = $this->money($this->decimal($rule->value));
             $acquisitionPrice = $rule->calculation_type === 'flat'
                 ? $providerCost->plus($this->decimal($rule->value))
-                : $this->discounted($this->requiredFaceAmount($faceAmount), $this->decimal($rule->value));
+                : $this->discounted($face, $this->decimal($rule->value));
         }
 
         if ($acquisitionPrice->isLessThan($providerCost)) {
@@ -76,7 +85,6 @@ class MultiParentPricingResolver
 
         $marginField = "user_level_{$customerLevel}_profit";
         $margin = $this->decimal((string) ($affiliatePlan->{$marginField} ?? 0));
-        $service = $this->profitRules->serviceKey($product);
         $affiliateType = in_array($service, ['airtime', 'electricity'], true) ? 'percent_discount' : 'flat';
 
         $cap = AffiliateServiceProfitCap::query()
@@ -94,7 +102,7 @@ class MultiParentPricingResolver
 
         $customerPrice = $affiliateType === 'flat'
             ? $acquisitionPrice->plus($margin)
-            : $this->discounted($this->requiredFaceAmount($faceAmount), $margin);
+            : $this->discounted($face, $margin);
         $affiliateProfit = $customerPrice->minus($acquisitionPrice);
         if ($affiliateProfit->isNegative()) {
             $this->fail('affiliate_profit', 'The configured customer price would sell below the affiliate acquisition price.');
@@ -135,6 +143,11 @@ class MultiParentPricingResolver
         }
 
         return $this->decimal($faceAmount);
+    }
+
+    private function scaleReferencePrice(BigDecimal $referencePrice, BigDecimal $faceAmount): BigDecimal
+    {
+        return $referencePrice->multipliedBy($faceAmount)->dividedBy(1000, 8, BrickMathRounding::halfUp());
     }
 
     private function decimal(string $value): BigDecimal

@@ -6,3 +6,25 @@
 body {
   font-family: 'Inter', sans-serif; 
 }
+
+@layer components {
+  .workspace-page { @apply min-h-screen bg-slate-50 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:px-6; }
+  .workspace-stack { @apply mx-auto max-w-screen-2xl space-y-5; }
+  .workspace-panel { @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900; }
+  .workspace-panel-header { @apply flex flex-col gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-5; }
+  .workspace-panel-body { @apply p-4 sm:p-5; }
+  .workspace-table-wrap { @apply w-full overflow-x-auto; }
+  .workspace-table { @apply min-w-full divide-y divide-slate-200 text-left text-sm dark:divide-slate-700; }
+  .workspace-table thead { @apply bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/70 dark:text-slate-400; }
+  .workspace-table th { @apply whitespace-nowrap px-4 py-3; }
+  .workspace-table tbody { @apply divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900; }
+  .workspace-table td { @apply px-4 py-3 align-top text-slate-700 dark:text-slate-200; }
+  .workspace-table tbody tr { @apply transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40; }
+  .workspace-input { @apply rounded-lg border-slate-300 bg-white text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white; }
+  .workspace-btn { @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50; }
+  .workspace-btn-primary { @apply workspace-btn bg-slate-950 text-white hover:bg-slate-800 focus:ring-slate-700 dark:bg-blue-500 dark:hover:bg-blue-400; }
+  .workspace-btn-secondary { @apply workspace-btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700; }
+  .workspace-btn-success { @apply workspace-btn bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500; }
+  .workspace-btn-danger { @apply workspace-btn bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500; }
+  .workspace-empty { @apply px-5 py-12 text-center text-sm text-slate-500 dark:text-slate-400; }
+}

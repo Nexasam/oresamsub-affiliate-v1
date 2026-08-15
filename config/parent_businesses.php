@@ -7,6 +7,7 @@ return [
         'provider_routing' => env('PARENT_PROVIDER_ROUTING', false),
         'parent_managed_purchases' => env('PARENT_MANAGED_PURCHASES_ENABLED', false),
         'multi_parent_funding' => env('MULTI_PARENT_FUNDING_ENABLED', false),
+        'affiliate_blade_ui' => env('AFFILIATE_BLADE_UI_ENABLED', true),
     ],
     'oresamsub' => [
         'name' => 'OresamSub',

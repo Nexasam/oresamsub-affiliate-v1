@@ -327,3 +327,47 @@ it('requeries an uncertain purchase through the separately configured status end
     Http::assertSent(fn (Request $request) => $request->url() === 'https://provider.example/data/status'
         && $request['request_id'] === 'ORDER-REQUERY-1');
 });
+
+it('validates a cable customer through its separate configured operation without vending', function () {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['cable_subscription' => [
+            'validation' => [
+                'endpoint' => 'https://provider.example/cable/validate',
+                'http_method' => 'POST',
+                'request_parameters' => [
+                    ['key' => 'smartcard', 'type' => 'runtime', 'value' => 'smartcard_number'],
+                    ['key' => 'service', 'type' => 'runtime', 'value' => 'service_provider'],
+                ],
+                'request_headers' => [[
+                    'key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer',
+                ]],
+                'success_conditions' => [['key' => 'success', 'value' => 'true']],
+                'success_message_path' => 'message',
+                'failure_message_path' => 'message',
+                'customer_name_path' => 'data.customer_name',
+                'customer_address_path' => 'data.address',
+                'expected_success_code' => 200,
+            ],
+        ]]],
+    ]);
+    Http::fake([
+        'provider.example/cable/validate' => Http::response([
+            'success' => true, 'message' => 'Customer verified',
+            'data' => ['customer_name' => 'Ada Customer', 'address' => 'Lagos'],
+        ]),
+    ]);
+
+    $result = app(ConfigurableProviderClient::class)->validateCustomer($connection, 'cable_subscription', [
+        'smartcard_number' => '1234567890', 'service_provider' => 'DSTV', 'reference' => 'VALIDATE-CABLE-1',
+    ]);
+
+    expect($result)->toMatchArray([
+        'successful' => true, 'message' => 'Customer verified',
+        'customer_name' => 'Ada Customer', 'customer_address' => 'Lagos',
+    ]);
+    Http::assertSentCount(1);
+    Http::assertSent(fn (Request $request) => $request->url() === 'https://provider.example/cable/validate'
+        && $request['smartcard'] === '1234567890'
+        && $request['service'] === 'DSTV'
+        && $request->header('Authorization')[0] === 'Bearer provider-secret-token');
+});

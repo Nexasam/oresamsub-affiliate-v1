@@ -5,7 +5,10 @@ namespace App\Http\Controllers\ParentAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\Transaction;
+use App\Services\Providers\ParentManagedManualPurchaseService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class TransactionController extends Controller
@@ -33,7 +36,7 @@ class TransactionController extends Controller
             'volume' => (clone $summaryQuery)->sum('amount'),
             'successful' => (clone $summaryQuery)->where('status', 1)->count(),
             'reconciliation' => (clone $summaryQuery)->where('routing_status', 'reconciliation_required')->count(),
-            'manual_review' => (clone $summaryQuery)->where('routing_status', 'reconciliation_exhausted')->count(),
+            'manual_review' => (clone $summaryQuery)->whereIn('routing_status', ['manual_pending', 'reconciliation_exhausted'])->count(),
         ];
 
         return view('parent-admin.transactions.index', [
@@ -41,5 +44,25 @@ class TransactionController extends Controller
             'affiliates' => Affiliate::query()->where('parent_business_id', $parent->id)->orderBy('name')->get(['id', 'name']),
             'summary' => $summary,
         ]);
+    }
+
+    public function completeManual(Request $request, int $transaction, ParentManagedManualPurchaseService $manualPurchases): RedirectResponse
+    {
+        $validated = $request->validate([
+            'outcome' => ['required', Rule::in(['successful', 'failed'])],
+            'message' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $record = Transaction::withoutGlobalScope('affiliate')->findOrFail($transaction);
+        $manualPurchases->complete(
+            $record,
+            $request->user('parent_admin'),
+            $validated['outcome'],
+            $validated['message'] ?? null,
+        );
+
+        return redirect()->route('parent-admin.transactions.index')
+            ->with('success', $validated['outcome'] === 'successful'
+                ? 'Transaction marked successful and settlement captured.'
+                : 'Transaction marked failed; settlement released and customer refunded.');
     }
 }

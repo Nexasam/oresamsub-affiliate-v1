@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Http\Services\DataPlansService;
 use App\Models\AffiliateProductPlan;
+use App\Models\Affiliate;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\AffiliateUserPlan;
 use App\Models\Automation;
@@ -28,6 +29,7 @@ use App\Services\Automation\PayscribeAutomation;
 use App\Services\Automation\SafehavenAutomation;
 use App\Services\Automation\VtpassAutomation;
 use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ParentManagedManualPurchaseService;
 use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use Exception;
@@ -225,7 +227,37 @@ class ElectricitySubscriptionController extends Controller
 
     public function validate_metre_number(Request $request){
         //call the automation involved
-        logger('yes oh, na here oh for elec');
+        $affiliatePlan = AffiliateProductPlan::with('product_plan.product_plan_category.product')
+            ->where('visibility', 1)->find($request->plan_id);
+        $profile = $affiliatePlan ? Affiliate::query()->find($affiliatePlan->affiliate_id)?->processingProfile : null;
+        if ($affiliatePlan
+            && config('parent_businesses.features.parent_managed_purchases')
+            && app(ProviderRoutingRolloutService::class)->enabledFor($affiliatePlan)
+            && $profile?->status === 'active'
+            && $profile->processing_engine === 'multi_parent'
+            && $profile->management_mode === 'parent_managed') {
+            try {
+                $result = app(ParentManagedManualPurchaseService::class)->validateCustomer(auth()->user(), $affiliatePlan, [
+                    'reference' => $this->generateTxnReference('ELECTRICITY-VALIDATE', auth()->id()),
+                    'meter_number' => (string) $request->smart_card_number,
+                    'metre_number' => (string) $request->smart_card_number,
+                    'meter_type' => (string) ($request->meter_type ?? ''),
+                    'service_provider' => $affiliatePlan->product_plan->product_plan_category->product_plan_category_name,
+                ]);
+
+                return response()->json([
+                    'status' => ($result['successful'] ?? false) ? 1 : -1,
+                    'name' => $result['customer_name'] ?? null,
+                    'address' => $result['customer_address'] ?? null,
+                    'user_message' => $result['message'] ?? null,
+                    'admin_message' => $result['message'] ?? null,
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                $message = collect($exception->errors())->flatten()->first();
+                return response()->json(['status' => -1, 'name' => null, 'address' => null, 'user_message' => $message, 'admin_message' => $message]);
+            }
+        }
+
         $plan_details = AffiliateProductPlan::with('product_plan','product_plan_category','automation')
         ->where('visibility',1)
         ->where('id',$request->plan_id)->first();
@@ -471,6 +503,39 @@ class ElectricitySubscriptionController extends Controller
         $amount = $fetch_data_plan['message'];
         /////////getting amount end
 
+        $profile = Affiliate::query()->find($plan_details->affiliate_id)?->processingProfile;
+        if (config('parent_businesses.features.parent_managed_purchases')
+            && app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)
+            && $profile?->status === 'active'
+            && $profile->processing_engine === 'multi_parent'
+            && $profile->management_mode === 'parent_managed') {
+            if ($request->wallet_category !== 'main_wallet' || (int) $no_of_slots !== 1) {
+                return response()->json(['status' => -1, 'message' => 'The controlled parent-managed electricity flow supports one meter from the main wallet per request.']);
+            }
+
+            try {
+                $transaction = app(ParentManagedManualPurchaseService::class)->submit($user_details, $plan_details, [
+                    'reference' => $txn_reference,
+                    'service' => 'utility_bills',
+                    'meter_number' => $metre_number,
+                    'metre_number' => $metre_number,
+                    'meter_type' => $request->meter_type ?? $request->validation_extra_info,
+                    'customer_name' => $request->validation_extra_info,
+                    'service_provider' => $plan_category_details->product_plan_category_name,
+                    'plan' => $plan_id,
+                    'amount' => (string) $actual_amount,
+                ], (int) $plan_level, (string) $actual_amount);
+
+                return response()->json([
+                    'status' => 0,
+                    'message' => $transaction->user_screen_message,
+                    'data' => [['reference' => $transaction->txn_reference, 'status' => 0]],
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                return response()->json(['status' => -1, 'message' => collect($exception->errors())->flatten()->first()]);
+            }
+        }
+
         DB::beginTransaction();
         try{
 
@@ -481,6 +546,7 @@ class ElectricitySubscriptionController extends Controller
                             $total_amount =  $no_of_slots * $amount;
                            
                             if($total_amount > $wallet_before || $wallet_before < 0){
+                                DB::rollBack();
                                 return response()->json(['status'=>'-1', 'message'=>'Insufficient wallet balance' ]);
                             }
              
@@ -636,6 +702,7 @@ class ElectricitySubscriptionController extends Controller
                               
                     
                         } else{
+                            DB::rollBack();
                             return response()->json(['status'=>'-1', 'message'=>'Wrong wallet selection', 'data'=>[]]);
                         }
 

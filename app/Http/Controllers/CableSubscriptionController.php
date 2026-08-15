@@ -19,6 +19,8 @@ use App\Models\UserBulkDataWallet;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProductPlanCategory;
 use App\Models\AffiliateProductPlan;
+use App\Models\Affiliate;
+use App\Models\AffiliateUserPlan;
 use App\Models\BulkDataProductPlans;
 use App\Models\UserBulkDataPurchase;
 use App\Http\Services\DataPlansService;
@@ -28,6 +30,7 @@ use App\Services\Automation\AutomationLogic;
 use App\Services\Automation\VtpassAutomation;
 use App\Services\Automation\PaultechsAutomation;
 use App\Services\Providers\ParentPurchaseExecutor;
+use App\Services\Providers\ParentManagedManualPurchaseService;
 use App\Services\Providers\ProviderRoutingRolloutService;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 use App\Services\Automation\MegaSubPlugAutomation\VendData;
@@ -220,6 +223,36 @@ class CableSubscriptionController extends Controller
 
     public function validate_smart_card_number(Request $request){
          //call the automation involved
+         $affiliatePlan = AffiliateProductPlan::with('product_plan.product_plan_category.product')
+             ->where('visibility', 1)->find($request->plan_id);
+         $profile = $affiliatePlan ? Affiliate::query()->find($affiliatePlan->affiliate_id)?->processingProfile : null;
+         if ($affiliatePlan
+             && config('parent_businesses.features.parent_managed_purchases')
+             && app(ProviderRoutingRolloutService::class)->enabledFor($affiliatePlan)
+             && $profile?->status === 'active'
+             && $profile->processing_engine === 'multi_parent'
+             && $profile->management_mode === 'parent_managed') {
+             try {
+                 $result = app(ParentManagedManualPurchaseService::class)->validateCustomer(auth()->user(), $affiliatePlan, [
+                     'reference' => $this->generateTxnReference('CABLE-VALIDATE', auth()->id()),
+                     'smartcard_number' => (string) $request->smart_card_number,
+                     'smart_card_number' => (string) $request->smart_card_number,
+                     'service_provider' => $affiliatePlan->product_plan->product_plan_category->product_plan_category_name,
+                 ]);
+
+                 return response()->json([
+                     'status' => ($result['successful'] ?? false) ? 1 : -1,
+                     'name' => $result['customer_name'] ?? null,
+                     'address' => $result['customer_address'] ?? null,
+                     'user_message' => $result['message'] ?? null,
+                     'admin_message' => $result['message'] ?? null,
+                 ]);
+             } catch (\Illuminate\Validation\ValidationException $exception) {
+                 $message = collect($exception->errors())->flatten()->first();
+                 return response()->json(['status' => -1, 'name' => null, 'address' => null, 'user_message' => $message, 'admin_message' => $message]);
+             }
+         }
+
          $plan_details = ProductPlan::with('product_plan_category','automation')
          ->where('visibility',1)
          ->where('id',$request->plan_id)
@@ -429,6 +462,38 @@ class CableSubscriptionController extends Controller
          $amount = $fetch_data_plan['message'];
          /////////getting amount end
 
+        $profile = Affiliate::query()->find($plan_details->affiliate_id)?->processingProfile;
+        if (config('parent_businesses.features.parent_managed_purchases')
+            && app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)
+            && $profile?->status === 'active'
+            && $profile->processing_engine === 'multi_parent'
+            && $profile->management_mode === 'parent_managed') {
+            if ($request->wallet_category !== 'main_wallet' || (int) $no_of_slots !== 1) {
+                return response()->json(['status' => -1, 'message' => 'The controlled parent-managed cable flow supports one smartcard slot from the main wallet per request.']);
+            }
+
+            try {
+                $level = AffiliateUserPlan::query()->where('id', $user_details->user_plan_id)->value('plan_level');
+                $transaction = app(ParentManagedManualPurchaseService::class)->submit($user_details, $plan_details, [
+                    'reference' => $txn_reference,
+                    'service' => 'cable_subscription',
+                    'smartcard_number' => (string) $request->smart_card_number,
+                    'smart_card_number' => (string) $request->smart_card_number,
+                    'customer_name' => $request->validation_customer_name,
+                    'service_provider' => $plan_category_details->product_plan_category_name,
+                    'plan' => $plan_id,
+                ], (int) $level);
+
+                return response()->json([
+                    'status' => 0,
+                    'message' => $transaction->user_screen_message,
+                    'data' => [['reference' => $transaction->txn_reference, 'status' => 0]],
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                return response()->json(['status' => -1, 'message' => collect($exception->errors())->flatten()->first()]);
+            }
+        }
+
         $user_id = $user_details->id;
         $smart_card_number = $request->smart_card_number;
      
@@ -441,6 +506,7 @@ class CableSubscriptionController extends Controller
                             $wallet_before = $user_details->main_wallet;
                             $total_amount =  $no_of_slots * $amount;
                             if($total_amount > $wallet_before || $wallet_before < 0){
+                                DB::rollBack();
                                 return response()->json(['status'=>'-1', 'message'=>'Insufficient wallet balance' ]);
                             }
                     
@@ -596,6 +662,7 @@ class CableSubscriptionController extends Controller
                              return response()->json(['status'=> -1, 'message'=>$user_message, 'data' => $display_results  ]);   
                     
                         } else{
+                            DB::rollBack();
                             return response()->json(['status'=>'-1', 'message'=>'Wrong wallet selection', 'data'=>[]]);
                         }
 

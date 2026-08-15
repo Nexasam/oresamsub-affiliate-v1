@@ -58,6 +58,19 @@ it('calculates percentage services from face amount and returns realized profits
     expect($price)->toMatchArray(['provider_cost' => '950.00', 'affiliate_acquisition_price' => '970.00', 'parent_profit' => '20.00', 'affiliate_profit' => '20.00', 'customer_selling_price' => '990.00', 'affiliate_pricing_type' => 'percent_discount']);
 });
 
+it('scales a percentage service reference cost proportionally for variable face amounts', function () {
+    $f = resolverFixture('4006', 'Airtime', '950.00');
+    ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'percent_discount', 'value' => 3]);
+    AffiliateServiceProfitCap::create(['parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'product_id' => $f['product']->id, 'customer_level' => 1, 'calculation_type' => 'percent', 'max_value' => 1]);
+
+    $price = app(MultiParentPricingResolver::class)->resolve($f['affiliate'], $f['affiliatePlan'], 1, '500.00');
+
+    expect($price)->toMatchArray([
+        'provider_cost' => '475.00', 'affiliate_acquisition_price' => '485.00',
+        'parent_profit' => '10.00', 'affiliate_profit' => '10.00', 'customer_selling_price' => '495.00',
+    ]);
+});
+
 it('rejects margins above the parent cap and cross parent plans', function () {
     $f = resolverFixture('4004');
     ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'flat', 'value' => 20]);

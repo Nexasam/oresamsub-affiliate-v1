@@ -12,7 +12,9 @@ use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
 use App\Models\ProviderConnection;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WalletLog;
 use App\Services\Providers\ConfigurableProviderClient;
 use App\Services\Providers\ParentManagedPurchaseOrchestrator;
 use App\Services\Providers\ParentPurchaseExecutor;
@@ -44,6 +46,22 @@ function executableParentPurchase(): array
     $affiliatePlan = AffiliateProductPlan::withoutGlobalScope('affiliate')->create(['affiliate_id' => $affiliate->id, 'product_plan_id' => $plan->id, 'product_plan_name' => '1GB', 'visibility' => 1, 'visibility_from_admin' => 1]);
 
     return compact('parent', 'level', 'affiliate', 'adapter', 'connection', 'product', 'plan', 'route', 'affiliatePlan');
+}
+
+function executableAirtimePurchase(string $suffix): array
+{
+    $f = executableParentPurchase();
+    $f['product']->update(['product_name' => 'Airtime', 'slug' => 'airtime']);
+    $f['plan']->update(['cost_price' => '950.00', 'profit_category' => 'percent']);
+    $f['affiliatePlan']->update(['user_level_1_profit' => '1.00']);
+    ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'percent_discount', 'value' => '3.00']);
+    AffiliateServiceProfitCap::create(['parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'product_id' => $f['product']->id, 'customer_level' => 1, 'calculation_type' => 'percent', 'max_value' => '1.00']);
+    AffiliateProcessingProfile::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'management_mode' => 'parent_managed', 'processing_engine' => 'multi_parent', 'status' => 'active']);
+    AffiliateSettlementWallet::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'available_balance' => '1500.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic '.$suffix, 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $f['customer'] = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'main_wallet' => '1500.00']);
+
+    return $f;
 }
 
 it('executes a resolved parent route with its provider plan reference and returns a transaction snapshot', function () {
@@ -149,6 +167,88 @@ it('orchestrates a parent-managed data purchase with pricing snapshots and settl
         ->expectsOutputToContain('1 balanced, 0 mismatch')
         ->assertSuccessful();
 });
+
+it('orchestrates parent-managed airtime with percentage pricing and service-aware financial records', function () {
+    $f = executableParentPurchase();
+    $f['product']->update(['product_name' => 'Airtime', 'slug' => 'airtime']);
+    $f['plan']->update(['cost_price' => '950.00', 'profit_category' => 'percent']);
+    $f['affiliatePlan']->update(['user_level_1_profit' => '1.00']);
+    ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'percent_discount', 'value' => '3.00']);
+    AffiliateServiceProfitCap::create(['parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'product_id' => $f['product']->id, 'customer_level' => 1, 'calculation_type' => 'percent', 'max_value' => '1.00']);
+    AffiliateProcessingProfile::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'management_mode' => 'parent_managed', 'processing_engine' => 'multi_parent', 'status' => 'active']);
+    AffiliateSettlementWallet::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'available_balance' => '1500.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $customer = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'main_wallet' => '1500.00']);
+
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldReceive('execute')->once()->withArgs(fn ($plan, $runtime) => $runtime['amount'] === '1000.00' && $runtime['service'] === 'airtime')->andReturn([
+        'status' => 1, 'successful' => true, 'ambiguous' => false, 'routing_status' => 'successful',
+        'provider_reference' => 'AIRTIME-UPSTREAM-1', 'parent_provider_connection_id' => $f['connection']->id,
+        'product_plan_provider_route_id' => $f['route']->id, 'provider_plan_id_snapshot' => 'PAUL-1GB',
+        'user_message' => 'Airtime delivered', 'admin_message' => 'Airtime delivered',
+        'provider_response' => ['success' => true, 'message' => 'Airtime delivered'],
+    ]));
+
+    $result = app(ParentManagedPurchaseOrchestrator::class)->purchase($customer, $f['affiliatePlan']->fresh(), [
+        'reference' => 'AIRTIME-PARENT-1', 'service' => 'airtime', 'amount' => '1000.00',
+        'phone_number' => '08030000000', 'network' => 'MTN',
+    ], 1, '1000.00');
+    $transaction = $result['transaction'];
+
+    expect($transaction->transaction_category)->toBe('airtime')
+        ->and($transaction->description)->toBe('Parent-managed airtime purchase')
+        ->and($transaction->amount)->toBe('990.00')
+        ->and($transaction->discounted_amount)->toBe('990.00')
+        ->and($customer->fresh()->main_wallet)->toBe('510.00')
+        ->and(WalletLog::withoutGlobalScope('affiliate')->where('transaction_id', $transaction->id)->value('transaction_category'))->toBe('PARENT_MANAGED_AIRTIME_DEBIT')
+        ->and(app(TransactionFinancialReconciliationService::class)->audit($transaction)['balanced'])->toBeTrue();
+});
+
+it('applies the correct airtime financial outcome for provider failures and ambiguous responses', function (bool $ambiguous, string $routingStatus, string $expectedCustomerBalance, string $expectedAvailable, string $expectedReserved, int $refunds) {
+    $f = executableAirtimePurchase($routingStatus);
+    $providerResult = [
+        'status' => $ambiguous ? 0 : 2, 'successful' => false, 'ambiguous' => $ambiguous,
+        'routing_status' => $routingStatus, 'provider_reference' => null,
+        'parent_provider_connection_id' => $f['connection']->id, 'product_plan_provider_route_id' => $f['route']->id,
+        'provider_plan_id_snapshot' => 'PAUL-AIRTIME', 'user_message' => 'Provider issue',
+        'admin_message' => 'Provider issue', 'provider_response' => ['success' => false],
+    ];
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldReceive('execute')->once()->andReturn($providerResult));
+
+    $result = app(ParentManagedPurchaseOrchestrator::class)->purchase($f['customer'], $f['affiliatePlan']->fresh(), [
+        'reference' => 'AIRTIME-'.strtoupper($routingStatus), 'service' => 'airtime', 'amount' => '1000.00',
+        'phone_number' => '08030000000', 'network' => 'MTN',
+    ], 1, '1000.00');
+    $wallet = AffiliateSettlementWallet::where('affiliate_id', $f['affiliate']->id)->first();
+
+    expect($result['transaction']->routing_status)->toBe($routingStatus)
+        ->and($f['customer']->fresh()->main_wallet)->toBe($expectedCustomerBalance)
+        ->and($wallet->available_balance)->toBe($expectedAvailable)
+        ->and($wallet->reserved_balance)->toBe($expectedReserved)
+        ->and(WalletLog::withoutGlobalScope('affiliate')->where('transaction_id', $result['transaction']->id)->where('transaction_category', 'PARENT_MANAGED_AIRTIME_REFUND')->count())->toBe($refunds)
+        ->and(app(TransactionFinancialReconciliationService::class)->audit($result['transaction'])['balanced'])->toBeTrue();
+})->with([
+    'conclusive failure refunds and releases' => [false, 'failed', '1500.00', '1500.00', '0.00', 1],
+    'ambiguous response stays reserved without refund' => [true, 'reconciliation_required', '510.00', '530.00', '970.00', 0],
+]);
+
+it('does not call the airtime provider when customer or settlement funds are insufficient', function (string $shortfall) {
+    $f = executableAirtimePurchase('insufficient-'.$shortfall);
+    if ($shortfall === 'customer') {
+        $f['customer']->update(['main_wallet' => '500.00']);
+    } else {
+        AffiliateSettlementWallet::where('affiliate_id', $f['affiliate']->id)->update(['available_balance' => '500.00']);
+    }
+
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldNotReceive('execute'));
+
+    expect(fn () => app(ParentManagedPurchaseOrchestrator::class)->purchase($f['customer']->fresh(), $f['affiliatePlan']->fresh(), [
+        'reference' => 'AIRTIME-INSUFFICIENT-'.strtoupper($shortfall), 'service' => 'airtime', 'amount' => '1000.00',
+        'phone_number' => '08030000000', 'network' => 'MTN',
+    ], 1, '1000.00'))->toThrow(\Illuminate\Validation\ValidationException::class);
+
+    expect(Transaction::withoutGlobalScope('affiliate')->where('txn_reference', 'AIRTIME-INSUFFICIENT-'.strtoupper($shortfall))->doesntExist())->toBeTrue()
+        ->and(WalletLog::withoutGlobalScope('affiliate')->where('transaction_category', 'PARENT_MANAGED_AIRTIME_DEBIT')->doesntExist())->toBeTrue();
+})->with(['customer', 'settlement']);
 
 it('refunds a conclusive provider failure and releases settlement exactly once', function () {
     $f = executableParentPurchase();

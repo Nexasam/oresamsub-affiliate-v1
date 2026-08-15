@@ -302,6 +302,33 @@ it('stores independent mapping and response configuration for every product', fu
         ->and($configs['airtime']['success_conditions'][0]['key'])->toBe('airtime.status');
 });
 
+it('stores and validates separate cable customer confirmation settings', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('cable-validation-operation');
+    $payload = providerPayload($adapter->id);
+    $payload['settings']['product_configs']['cable'] = [
+        'request_parameters' => [['key' => 'smartcard', 'type' => 'runtime', 'value' => 'smartcard_number']],
+        'request_headers' => [], 'network_mapping' => [],
+        'success_conditions' => [['key' => 'success', 'value' => 'true']],
+        'success_message_path' => 'message', 'failure_message_path' => 'message',
+        'validation' => [
+            'endpoint' => 'https://provider.example/cable/validate', 'http_method' => 'POST',
+            'request_parameters' => [['key' => 'smartcard', 'type' => 'runtime', 'value' => 'smartcard_number']],
+            'request_headers' => [['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer']],
+            'success_conditions' => [['key' => 'success', 'value' => 'true']],
+            'success_message_path' => 'message', 'failure_message_path' => 'message',
+            'customer_name_path' => 'data.name', 'customer_address_path' => 'data.address',
+        ],
+    ];
+
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', $payload)->assertCreated();
+    expect(data_get($parent->providerConnections()->sole()->settings, 'product_configs.cable.validation.endpoint'))
+        ->toBe('https://provider.example/cable/validate');
+
+    $payload['settings']['product_configs']['cable']['validation']['endpoint'] = 'not-a-url';
+    $this->actingAs($admin, 'parent_admin')->postJson('/parent-admin/provider-connections', $payload)
+        ->assertUnprocessable()->assertJsonValidationErrors('settings.product_configs.cable.validation.endpoint');
+});
+
 it('keeps shared response defaults synchronized with the data product configuration', function () {
     [$parent, $admin, $adapter] = providerWorkspace('shared-response-sync');
     $payload = providerPayload($adapter->id, [

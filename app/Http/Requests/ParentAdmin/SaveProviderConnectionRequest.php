@@ -89,6 +89,27 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.product_configs.*.failure_message_path' => ['required', 'string', 'max:255'],
             'settings.product_configs.*.expected_success_code' => ['nullable', 'integer', 'between:100,599'],
             'settings.product_configs.*.expected_failure_code' => ['nullable', 'integer', 'between:100,599'],
+            'settings.product_configs.*.validation' => ['nullable', 'array'],
+            'settings.product_configs.*.validation.endpoint' => ['required_with:settings.product_configs.*.validation', 'url:http,https', 'max:2048'],
+            'settings.product_configs.*.validation.http_method' => ['required_with:settings.product_configs.*.validation', Rule::in(['GET', 'POST'])],
+            'settings.product_configs.*.validation.request_parameters' => ['required_with:settings.product_configs.*.validation', 'array', 'min:1'],
+            'settings.product_configs.*.validation.request_parameters.*.key' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.validation.request_parameters.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
+            'settings.product_configs.*.validation.request_parameters.*.value' => ['present', 'nullable', 'string', 'max:4096'],
+            'settings.product_configs.*.validation.request_headers' => ['nullable', 'array'],
+            'settings.product_configs.*.validation.request_headers.*.key' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.validation.request_headers.*.type' => ['required', Rule::in(['runtime', 'credential', 'literal'])],
+            'settings.product_configs.*.validation.request_headers.*.value' => ['present', 'nullable', 'string', 'max:4096'],
+            'settings.product_configs.*.validation.request_headers.*.prefix' => ['nullable', 'string', 'max:255'],
+            'settings.product_configs.*.validation.request_headers.*.suffix' => ['nullable', 'string', 'max:255'],
+            'settings.product_configs.*.validation.success_conditions' => ['required_with:settings.product_configs.*.validation', 'array', 'min:1'],
+            'settings.product_configs.*.validation.success_conditions.*.key' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.validation.success_conditions.*.value' => ['present'],
+            'settings.product_configs.*.validation.success_message_path' => ['required_with:settings.product_configs.*.validation', 'string', 'max:255'],
+            'settings.product_configs.*.validation.failure_message_path' => ['required_with:settings.product_configs.*.validation', 'string', 'max:255'],
+            'settings.product_configs.*.validation.customer_name_path' => ['required_with:settings.product_configs.*.validation', 'string', 'max:255'],
+            'settings.product_configs.*.validation.customer_address_path' => ['nullable', 'string', 'max:255'],
+            'settings.product_configs.*.validation.expected_success_code' => ['nullable', 'integer', 'between:100,599'],
         ];
     }
 
@@ -137,6 +158,23 @@ class SaveProviderConnectionRequest extends FormRequest
                 foreach ($productConfig['request_headers'] ?? [] as $header) {
                     if (strtolower($header['key'] ?? '') === 'authorization' && ($header['type'] ?? null) === 'literal') {
                         $validator->errors()->add("{$path}.request_headers", 'Authorization headers must use a credential placeholder.');
+                    }
+                }
+                if (is_array($productConfig['validation'] ?? null)) {
+                    $validation = $productConfig['validation'];
+                    $validationPath = "{$path}.validation";
+                    $this->validateUniqueKeys($validator, $validation['request_parameters'] ?? [], "{$validationPath}.request_parameters", false);
+                    $this->validateUniqueKeys($validator, $validation['request_headers'] ?? [], "{$validationPath}.request_headers", true);
+                    $this->validateMappings(
+                        $validator,
+                        array_merge($validation['request_parameters'] ?? [], $validation['request_headers'] ?? []),
+                        $credentialFields,
+                        $validationPath,
+                    );
+                    foreach ($validation['request_headers'] ?? [] as $header) {
+                        if (strtolower($header['key'] ?? '') === 'authorization' && ($header['type'] ?? null) === 'literal') {
+                            $validator->errors()->add("{$validationPath}.request_headers", 'Authorization headers must use a credential placeholder.');
+                        }
                     }
                 }
             }

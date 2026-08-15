@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class WorkspaceUiComponentsTest extends TestCase
@@ -19,5 +20,14 @@ class WorkspaceUiComponentsTest extends TestCase
         $this->assertStringContainsString('role="status"', $alert);
         $this->assertStringContainsString('Saved', $alert);
         $this->assertStringContainsString('Pending', $status);
+    }
+
+    public function test_workspace_date_accepts_database_strings_and_date_objects(): void
+    {
+        $stringDate = Blade::render('<x-workspace.date :value="$value" />', ['value' => '2026-08-15 02:59:31']);
+        $objectDate = Blade::render('<x-workspace.date :value="$value" />', ['value' => Carbon::parse('2026-08-15 02:59:31')]);
+
+        $this->assertSame('15 Aug 2026, 02:59', trim($stringDate));
+        $this->assertSame('15 Aug 2026, 02:59', trim($objectDate));
     }
 }

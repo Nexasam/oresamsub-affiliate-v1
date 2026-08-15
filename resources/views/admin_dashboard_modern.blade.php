@@ -54,7 +54,7 @@
                         <tbody>
                         @forelse($settlement_funding_entries as $entry)
                             <tr>
-                                <td class="whitespace-nowrap text-xs text-slate-500">{{ $entry->created_at?->format('d M Y, H:i') }}</td>
+                                <td class="whitespace-nowrap text-xs text-slate-500"><x-workspace.date :value="$entry->created_at" /></td>
                                 <td class="font-medium">{{ data_get($entry->metadata, 'external_event_id', str($entry->reference)->after('FUNDING:')) }}</td>
                                 <td>₦{{ number_format((float) data_get($entry->metadata, 'gross_amount', $entry->amount), 2) }}</td>
                                 <td>₦{{ number_format((float) data_get($entry->metadata, 'charge', 0), 2) }}</td>
@@ -101,7 +101,7 @@
                                 @elseif((int)$transaction->status === 0)<x-workspace.status type="pending">Pending</x-workspace.status>
                                 @else<x-workspace.status>{{ str($transaction->routing_status ?: 'processing')->headline() }}</x-workspace.status>@endif
                             </td>
-                            <td class="whitespace-nowrap text-xs text-slate-500">{{ $transaction->created_at?->format('d M Y, H:i') }}</td>
+                            <td class="whitespace-nowrap text-xs text-slate-500"><x-workspace.date :value="$transaction->created_at" /></td>
                             <td><a href="{{ route('transactions.transaction_details', $transaction->id) }}" class="workspace-btn-secondary">Details</a></td>
                         </tr>
                     @empty

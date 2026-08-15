@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="main-content workspace-page">
+<div class="main-content ">
 
     @php
         $sidebar_color =  App\Models\AdminColorSetting::where('color_name','site_admin_sidebar_color')->first();
@@ -10,12 +10,7 @@
     @endphp
 
     <!-- Page Header -->
-    <div class="workspace-stack">
-    <x-workspace.page-header title="Welcome, {{ $user->first_name }}" description="Monitor customers, transactions, product plans and business funding from one place.">
-        <a href="{{ route('admin.transactions.index') }}" class="workspace-btn-secondary">View transactions</a>
-        <a href="{{ route('admin.product_plans.index') }}" class="workspace-btn-primary">Manage plans</a>
-    </x-workspace.page-header>
-    <div class="hidden block justify-between page-header md:flex">
+    <div class="block justify-between page-header md:flex ">
         <div>
             {{-- <p>Current locale: {{ app()->getLocale() }}</p> --}}
             <h3 class="text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white text-2xl font-medium"> <small style=" font-size: 14px;">{{ __('messages.Welcome') }} <strong>{{ $user->first_name. ' '. $user->last_name }}</strong></small> </h3>
@@ -39,7 +34,7 @@
 
 
 
-                    <div class="mt-5 grid grid-cols-12">
+                    <div class="grid grid-cols-12">
 
 
                             {{-- MODERN DASHBOARD CARDS --}}

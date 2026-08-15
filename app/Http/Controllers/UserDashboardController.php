@@ -242,7 +242,11 @@ class UserDashboardController extends Controller
       $data['alltime_bulk_wallet_balance_mb'] = UserBulkDataWallet::select('alltime_bulk_wallet_balance_mb')->sum('alltime_bulk_wallet_balance_mb');
       $data['transactions'] = Transaction::with(['user','product_plan'])->latest()->get();
       //no need here
-      return view('admin_dashboard')->with($data);
+      $dashboardView = config('parent_businesses.features.affiliate_blade_ui')
+        ? 'admin_dashboard_modern'
+        : 'admin_dashboard';
+
+      return view($dashboardView)->with($data);
     }
   }
 }

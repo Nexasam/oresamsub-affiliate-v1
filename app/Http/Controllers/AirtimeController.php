@@ -483,11 +483,19 @@ class AirtimeController extends Controller
         }
 
         $profile = Affiliate::query()->find($plan_details->affiliate_id)?->processingProfile;
-        if (config('parent_businesses.features.parent_managed_purchases')
-            && app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)
-            && $profile?->status === 'active'
-            && $profile->processing_engine === 'multi_parent'
-            && $profile->management_mode === 'parent_managed') {
+        if ($profile?->processing_engine === 'multi_parent') {
+            if ($profile->status !== 'active' || $profile->management_mode !== 'parent_managed') {
+                return response()->json(['status' => -1, 'message' => 'This affiliate is not configured for parent-managed Airtime purchasing.']);
+            }
+
+            if (! config('parent_businesses.features.parent_managed_purchases')) {
+                return response()->json(['status' => -1, 'message' => 'Parent-managed Airtime purchasing is not enabled.']);
+            }
+
+            if (! app(ProviderRoutingRolloutService::class)->enabledFor($plan_details)) {
+                return response()->json(['status' => -1, 'message' => 'Airtime purchasing is not enabled for this affiliate.']);
+            }
+
             if ($request->wallet_category !== 'main_wallet' || $phone_numbers_count !== 1) {
                 return response()->json(['status' => -1, 'message' => 'The controlled parent-managed rollout currently supports one Airtime number from the main wallet per request.']);
             }
@@ -513,6 +521,10 @@ class AirtimeController extends Controller
             } catch (\Illuminate\Validation\ValidationException $exception) {
                 return response()->json(['status' => -1, 'message' => collect($exception->errors())->flatten()->first()]);
             }
+        }
+
+        if ($profile?->processing_engine !== 'legacy_oresamsub') {
+            return response()->json(['status' => -1, 'message' => 'Airtime processing is not configured for this affiliate.']);
         }
 
         DB::beginTransaction();

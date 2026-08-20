@@ -255,10 +255,54 @@ it('rejects a stale or inaccessible affiliate airtime plan without touching eith
         ->and(Transaction::withoutGlobalScope('affiliate')->doesntExist())->toBeTrue();
 });
 
-it('falls back to the legacy airtime flow when parent-managed purchases are disabled', function () {
+it('does not fall back to legacy airtime when a multi-parent feature flag is disabled', function () {
     $f = airtimeControllerFixture();
     config()->set('parent_businesses.features.parent_managed_purchases', false);
     config()->set('parent_businesses.features.provider_routing', true);
+
+    $this->mock(ParentManagedPurchaseOrchestrator::class, fn (MockInterface $mock) => $mock->shouldNotReceive('purchase'));
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldNotReceive('execute'));
+
+    $response = $this->withoutMiddleware()->actingAs($f['customer'])->withSession(['affiliate' => $f['affiliate']])->postJson('/user/airtime/store2', [
+        'network_id' => $f['network']->id, 'phone_number' => '08030000000', 'product_plan_id' => $f['affiliatePlan']->id,
+        'pin' => '1234', 'amount' => 1000, 'validatephonenetwork' => 0, 'wallet_category' => 'main_wallet',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('status', -1)
+        ->assertJsonPath('message', 'Parent-managed Airtime purchasing is not enabled.');
+    expect($f['customer']->fresh()->main_wallet)->toBe('1500.00')
+        ->and(Transaction::withoutGlobalScope('affiliate')->doesntExist())->toBeTrue();
+});
+
+it('does not fall back to legacy airtime when rollout is disabled for a multi-parent affiliate', function () {
+    $f = airtimeControllerFixture();
+    config()->set('parent_businesses.features.parent_managed_purchases', true);
+    config()->set('parent_businesses.features.provider_routing', true);
+    ProviderRoutingRollout::query()->delete();
+
+    $this->mock(ParentManagedPurchaseOrchestrator::class, fn (MockInterface $mock) => $mock->shouldNotReceive('purchase'));
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldNotReceive('execute'));
+
+    $this->withoutMiddleware()->actingAs($f['customer'])->withSession(['affiliate' => $f['affiliate']])->postJson('/user/airtime/store2', [
+        'network_id' => $f['network']->id, 'phone_number' => '08030000000', 'product_plan_id' => $f['affiliatePlan']->id,
+        'pin' => '1234', 'amount' => 1000, 'validatephonenetwork' => 0, 'wallet_category' => 'main_wallet',
+    ])->assertOk()
+        ->assertJsonPath('status', -1)
+        ->assertJsonPath('message', 'Airtime purchasing is not enabled for this affiliate.');
+
+    expect($f['customer']->fresh()->main_wallet)->toBe('1500.00')
+        ->and(Transaction::withoutGlobalScope('affiliate')->doesntExist())->toBeTrue();
+});
+
+it('retains the legacy airtime path for an explicit legacy oresamsub profile', function () {
+    $f = airtimeControllerFixture();
+    config()->set('parent_businesses.features.parent_managed_purchases', false);
+    config()->set('parent_businesses.features.provider_routing', false);
+    $f['affiliate']->processingProfile()->update([
+        'management_mode' => 'affiliate_managed',
+        'processing_engine' => 'legacy_oresamsub',
+    ]);
     $f['customer']->update(['main_wallet' => '0.00']);
 
     $this->mock(ParentManagedPurchaseOrchestrator::class, fn (MockInterface $mock) => $mock->shouldNotReceive('purchase'));

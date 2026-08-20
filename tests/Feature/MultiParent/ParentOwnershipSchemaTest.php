@@ -59,7 +59,7 @@ it('creates parent ownership routing and snapshot schema', function () {
             'parent_business_id', 'parent_provider_connection_id', 'product_plan_provider_route_id',
             'provider_plan_id_snapshot', 'provider_reference', 'routing_status',
             'provider_cost_snapshot', 'parent_cost_snapshot', 'affiliate_cost_snapshot',
-            'customer_price_snapshot', 'parent_profit_snapshot', 'affiliate_profit_snapshot',
+            'customer_price_snapshot', 'face_value_snapshot', 'parent_profit_snapshot', 'affiliate_profit_snapshot',
         ]))->toBeTrue()
         ->and(Schema::hasColumns('product_plan_parent_prices', [
             'parent_business_id', 'product_plan_id', 'parent_reseller_level_id', 'selling_price', 'max_profit',

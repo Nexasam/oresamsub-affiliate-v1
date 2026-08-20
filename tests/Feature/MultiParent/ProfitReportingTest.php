@@ -31,7 +31,7 @@ function createProfitTransaction(array $f, string $reference, string $routing = 
         'balance_before' => '1000.00', 'balance_after' => '870.00', 'description' => 'Profit test',
         'status' => $routing === 'successful' ? 1 : 0, 'routing_status' => $routing,
         'provider_cost_snapshot' => '100.00', 'parent_cost_snapshot' => '100.00',
-        'affiliate_cost_snapshot' => '120.00', 'customer_price_snapshot' => '130.00',
+        'affiliate_cost_snapshot' => '120.00', 'customer_price_snapshot' => '130.00', 'face_value_snapshot' => '150.00',
         'parent_profit_snapshot' => '20.00', 'affiliate_profit_snapshot' => '10.00',
     ]);
 }
@@ -46,7 +46,9 @@ it('shows only realised tenant profit to the parent admin and exports it', funct
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/profits')->assertOk()
         ->assertSee('Affiliate charges')->assertSee('Affiliate charge')->assertSee('Provider cost')
-        ->assertSee('₦120.00')->assertSee('₦100.00')->assertSee('₦20.00')->assertDontSee('₦130.00')
+        ->assertSee('₦120.00')->assertSee('₦100.00')->assertSee('₦20.00')->assertSee('₦150.00')
+        ->assertSee('View details')->assertSee('Financial breakdown')->assertSee('Customer paid')
+        ->assertSee('Affiliate acquisition charge')->assertSee('Actual provider charge')->assertSee('Discount')
         ->assertSee('PROFIT-OWN-SUCCESS')->assertDontSee('PROFIT-OWN-PENDING')->assertDontSee('PROFIT-FOREIGN');
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/profits/export')
         ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
@@ -63,6 +65,8 @@ it('shows only realised profit belonging to the affiliate admin', function () {
 
     $this->actingAs($admin)->withSession(['affiliate' => $own['affiliate']])->get('/admin/profits')->assertOk()
         ->assertSee('Customer sales')->assertSee('Customer sale')->assertSee('Acquisition cost')
-        ->assertSee('₦130.00')->assertSee('₦120.00')->assertSee('₦10.00')
+        ->assertSee('₦130.00')->assertSee('₦120.00')->assertSee('₦10.00')->assertSee('₦150.00')
+        ->assertSee('View details')->assertSee('Financial breakdown')->assertSee('Face value purchased')
+        ->assertSee('Affiliate acquisition charge')->assertDontSee('Actual provider charge')
         ->assertSee('AFFILIATE-PROFIT-SUCCESS')->assertDontSee('AFFILIATE-PROFIT-FAILED')->assertDontSee('AFFILIATE-PROFIT-FOREIGN');
 });

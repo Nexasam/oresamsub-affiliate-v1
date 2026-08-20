@@ -44,7 +44,7 @@ class ParentManagedPurchaseOrchestrator
         }
 
         $price = $this->pricing->resolve($affiliate, $affiliatePlan, $customerLevel, $faceAmount);
-        $transaction = $this->prepare($customer, $affiliate, $affiliatePlan, $runtime, $reference, $price);
+        $transaction = $this->prepare($customer, $affiliate, $affiliatePlan, $runtime, $reference, $price, $faceAmount);
 
         try {
             $result = $this->executor->execute($affiliatePlan, $runtime);
@@ -61,9 +61,9 @@ class ParentManagedPurchaseOrchestrator
         return ['transaction' => $this->finalize($transaction, $affiliate, $customer, $result), 'provider_result' => $result];
     }
 
-    private function prepare(User $customer, Affiliate $affiliate, AffiliateProductPlan $affiliatePlan, array $runtime, string $reference, array $price): Transaction
+    private function prepare(User $customer, Affiliate $affiliate, AffiliateProductPlan $affiliatePlan, array $runtime, string $reference, array $price, ?string $faceAmount): Transaction
     {
-        return DB::transaction(function () use ($customer, $affiliate, $affiliatePlan, $runtime, $reference, $price) {
+        return DB::transaction(function () use ($customer, $affiliate, $affiliatePlan, $runtime, $reference, $price, $faceAmount) {
             $lockedCustomer = User::withoutGlobalScope('affiliate')->lockForUpdate()->findOrFail($customer->id);
             $before = $this->cents((string) $lockedCustomer->main_wallet);
             $charge = $this->cents($price['customer_selling_price']);
@@ -100,6 +100,7 @@ class ParentManagedPurchaseOrchestrator
                 'parent_cost_snapshot' => $price['provider_cost'],
                 'affiliate_cost_snapshot' => $price['affiliate_acquisition_price'],
                 'customer_price_snapshot' => $price['customer_selling_price'],
+                'face_value_snapshot' => $this->snapshotFaceValue($faceAmount),
                 'parent_profit_snapshot' => $price['parent_profit'],
                 'affiliate_profit_snapshot' => $price['affiliate_profit'],
             ]);
@@ -199,5 +200,12 @@ class ParentManagedPurchaseOrchestrator
         $amount = trim((string) $amount);
 
         return $amount !== '' && is_numeric($amount) && (float) $amount > 0 ? $amount : null;
+    }
+
+    private function snapshotFaceValue(?string $amount): ?string
+    {
+        return $amount !== null && is_numeric($amount) && (float) $amount > 0
+            ? $this->money($this->cents($amount))
+            : null;
     }
 }

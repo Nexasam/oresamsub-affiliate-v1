@@ -122,6 +122,7 @@ it('validates and records cable and electricity as manual pending without vendin
         ->and((int) $transaction->status)->toBe(0)
         ->and($transaction->customer_price_snapshot)->toBe($customerPrice)
         ->and($transaction->affiliate_cost_snapshot)->toBe($affiliateCost)
+        ->and($transaction->face_value_snapshot)->toBe($faceAmount === null ? null : number_format((float) $faceAmount, 2, '.', ''))
         ->and($transaction->{$service === 'utility_bills' ? 'metre_number' : 'smart_card_number'})->toBe($identifierValue)
         ->and(data_get($transaction->provider_response, 'validation.customer_name'))->toBe('Verified Customer')
         ->and($f['customer']->fresh()->main_wallet)->toBe(number_format(5000 - (float) $customerPrice, 2, '.', ''))

@@ -19,6 +19,7 @@ class Transaction extends AffiliateScopedModel
         'parent_cost_snapshot' => 'decimal:2',
         'affiliate_cost_snapshot' => 'decimal:2',
         'customer_price_snapshot' => 'decimal:2',
+        'face_value_snapshot' => 'decimal:2',
         'parent_profit_snapshot' => 'decimal:2',
         'affiliate_profit_snapshot' => 'decimal:2',
         'provider_response' => 'array',

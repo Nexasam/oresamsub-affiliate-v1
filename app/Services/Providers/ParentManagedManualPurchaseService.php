@@ -74,7 +74,7 @@ class ParentManagedManualPurchaseService
 
         $price = $this->pricing->resolve($affiliate, $affiliatePlan, $customerLevel, $faceAmount);
 
-        return DB::transaction(function () use ($customer, $affiliate, $affiliatePlan, $runtime, $reference, $resolved, $service, $validation, $price) {
+        return DB::transaction(function () use ($customer, $affiliate, $affiliatePlan, $runtime, $reference, $resolved, $service, $validation, $price, $faceAmount) {
             $lockedCustomer = User::withoutGlobalScope('affiliate')->lockForUpdate()->findOrFail($customer->id);
             $before = $this->cents((string) $lockedCustomer->main_wallet);
             $charge = $this->cents($price['customer_selling_price']);
@@ -123,6 +123,9 @@ class ParentManagedManualPurchaseService
                 'parent_cost_snapshot' => $price['provider_cost'],
                 'affiliate_cost_snapshot' => $price['affiliate_acquisition_price'],
                 'customer_price_snapshot' => $price['customer_selling_price'],
+                'face_value_snapshot' => $faceAmount !== null && is_numeric($faceAmount) && (float) $faceAmount > 0
+                    ? $this->money($this->cents($faceAmount))
+                    : null,
                 'parent_profit_snapshot' => $price['parent_profit'],
                 'affiliate_profit_snapshot' => $price['affiliate_profit'],
             ]);

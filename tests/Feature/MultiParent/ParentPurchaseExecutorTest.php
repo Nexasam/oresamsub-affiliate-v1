@@ -226,6 +226,7 @@ it('orchestrates parent-managed airtime with percentage pricing and service-awar
 
     expect($transaction->transaction_category)->toBe('airtime')
         ->and($transaction->description)->toBe('Parent-managed airtime purchase')
+        ->and($transaction->face_value_snapshot)->toBe('1000.00')
         ->and($transaction->amount)->toBe('990.00')
         ->and($transaction->discounted_amount)->toBe('990.00')
         ->and($customer->fresh()->main_wallet)->toBe('510.00')

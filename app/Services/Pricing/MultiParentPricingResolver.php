@@ -79,8 +79,8 @@ class MultiParentPricingResolver
                 : $this->discounted($face, $this->decimal($rule->value));
         }
 
-        if ($acquisitionPrice->isLessThan($providerCost)) {
-            $this->fail('parent_pricing', 'The affiliate acquisition price cannot be below the provider cost.');
+        if ($acquisitionPrice->isLessThanOrEqualTo($providerCost)) {
+            $this->fail('parent_pricing', 'The affiliate acquisition price must include a positive parent margin.');
         }
 
         $marginField = "user_level_{$customerLevel}_profit";

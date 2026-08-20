@@ -22,7 +22,13 @@ class ProfitReportService
 
     public function report(Builder $query, string $profitColumn): array
     {
-        $summary = ['transactions' => (clone $query)->count(), 'sales' => (clone $query)->sum('customer_price_snapshot'), 'cost' => (clone $query)->sum($profitColumn === 'parent_profit_snapshot' ? 'provider_cost_snapshot' : 'affiliate_cost_snapshot'), 'profit' => (clone $query)->sum($profitColumn)];
+        $parentScope = $profitColumn === 'parent_profit_snapshot';
+        $summary = [
+            'transactions' => (clone $query)->count(),
+            'sales' => (clone $query)->sum($parentScope ? 'affiliate_cost_snapshot' : 'customer_price_snapshot'),
+            'cost' => (clone $query)->sum($parentScope ? 'provider_cost_snapshot' : 'affiliate_cost_snapshot'),
+            'profit' => (clone $query)->sum($profitColumn),
+        ];
         $services = (clone $query)->selectRaw("transaction_category, COUNT(*) transactions, SUM({$profitColumn}) profit")->groupBy('transaction_category')->orderByDesc('profit')->get();
         return compact('summary', 'services');
     }

@@ -71,6 +71,28 @@ it('scales a percentage service reference cost proportionally for variable face 
     ]);
 });
 
+it('rejects a parent acquisition price that contains no positive parent margin', function () {
+    $f = resolverFixture('4007', 'Airtime', '980.00');
+    ParentDefaultProfitRule::create([
+        'parent_business_id' => $f['parent']->id,
+        'parent_reseller_level_id' => $f['level']->id,
+        'product_id' => $f['product']->id,
+        'calculation_type' => 'percent_discount',
+        'value' => 2,
+    ]);
+    AffiliateServiceProfitCap::create([
+        'parent_business_id' => $f['parent']->id,
+        'affiliate_id' => $f['affiliate']->id,
+        'product_id' => $f['product']->id,
+        'customer_level' => 1,
+        'calculation_type' => 'percent',
+        'max_value' => 1,
+    ]);
+
+    expect(fn () => app(MultiParentPricingResolver::class)->resolve($f['affiliate'], $f['affiliatePlan'], 1, '102.00'))
+        ->toThrow(ValidationException::class, 'The affiliate acquisition price must include a positive parent margin.');
+});
+
 it('rejects margins above the parent cap and cross parent plans', function () {
     $f = resolverFixture('4004');
     ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'flat', 'value' => 20]);

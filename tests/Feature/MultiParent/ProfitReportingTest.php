@@ -45,7 +45,9 @@ it('shows only realised tenant profit to the parent admin and exports it', funct
     $admin = ParentAdmin::create(['parent_business_id' => $own['parent']->id, 'name' => 'Owner', 'email' => 'profit-owner@example.test', 'password' => 'password', 'active' => true]);
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/profits')->assertOk()
-        ->assertSee('₦20.00')->assertSee('PROFIT-OWN-SUCCESS')->assertDontSee('PROFIT-OWN-PENDING')->assertDontSee('PROFIT-FOREIGN');
+        ->assertSee('Affiliate charges')->assertSee('Affiliate charge')->assertSee('Provider cost')
+        ->assertSee('₦120.00')->assertSee('₦100.00')->assertSee('₦20.00')->assertDontSee('₦130.00')
+        ->assertSee('PROFIT-OWN-SUCCESS')->assertDontSee('PROFIT-OWN-PENDING')->assertDontSee('PROFIT-FOREIGN');
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/profits/export')
         ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
 });
@@ -60,5 +62,7 @@ it('shows only realised profit belonging to the affiliate admin', function () {
     $admin = User::factory()->create(['affiliate_id' => $own['affiliate']->id, 'user_plan_id' => $own['customer']->user_plan_id, 'role_id' => $adminRole->id]);
 
     $this->actingAs($admin)->withSession(['affiliate' => $own['affiliate']])->get('/admin/profits')->assertOk()
-        ->assertSee('₦10.00')->assertSee('AFFILIATE-PROFIT-SUCCESS')->assertDontSee('AFFILIATE-PROFIT-FAILED')->assertDontSee('AFFILIATE-PROFIT-FOREIGN');
+        ->assertSee('Customer sales')->assertSee('Customer sale')->assertSee('Acquisition cost')
+        ->assertSee('₦130.00')->assertSee('₦120.00')->assertSee('₦10.00')
+        ->assertSee('AFFILIATE-PROFIT-SUCCESS')->assertDontSee('AFFILIATE-PROFIT-FAILED')->assertDontSee('AFFILIATE-PROFIT-FOREIGN');
 });

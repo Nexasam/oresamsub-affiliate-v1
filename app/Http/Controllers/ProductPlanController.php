@@ -147,6 +147,7 @@ class ProductPlanController extends Controller
             ->get()
             ->keyBy('product_id');
         $acquisitionPrices = app(AffiliateAcquisitionPriceResolver::class);
+        $profitLimits = app(AffiliatePlanProfitService::class);
         $affiliateCaps = AffiliateServiceProfitCap::query()
             ->where('parent_business_id', $affiliate->parent_business_id)
             ->where('affiliate_id', $affiliate->id)
@@ -209,7 +210,7 @@ class ProductPlanController extends Controller
 
     
             // Profit Range
-            ->addColumn('max_profit_range', function ($data) use ($affiliate, $legacyOresamsub, $affiliateCaps) {
+            ->addColumn('max_profit_range', function ($data) use ($affiliate, $legacyOresamsub, $profitLimits) {
                 if ($legacyOresamsub) {
                     $level = session('affiliate')->parent_plan_level;
                     $field = "aff_level_{$level}_max_profit";
@@ -217,14 +218,8 @@ class ProductPlanController extends Controller
                     return $data->{$field} ?? ($data->profit_category === 'percent' ? 1 : 50);
                 }
 
-                $productId = $data->product_plan_category?->product_id;
-                $serviceLimits = $affiliateCaps->get($productId, collect())->pluck('max_value', 'customer_level');
-                $planLimit = $data->parentPrices->first()?->max_profit;
-                $limits = collect(range(1, 6))->map(function ($level) use ($serviceLimits, $planLimit) {
-                    $available = collect([$serviceLimits->get($level), $planLimit])->filter(fn ($limit) => $limit !== null);
-
-                    return $available->isEmpty() ? null : $available->min(fn ($limit) => (float) $limit);
-                });
+                $resolved = $profitLimits->limits($affiliate, $data);
+                $limits = collect($resolved['effective']);
 
                 if ($limits->contains(null)) {
                     return 'Not configured';
@@ -232,9 +227,16 @@ class ProductPlanController extends Controller
 
                 $minimum = $limits->min();
                 $maximum = $limits->max();
-                $suffix = $data->profit_category === 'percent' ? '%' : '';
+                $suffix = $resolved['type'] === 'percent' ? '%' : '';
+                $range = $minimum === $maximum ? $minimum.$suffix : $minimum.'–'.$maximum.$suffix;
+                if ($resolved['type'] === 'percent' && $resolved['acquisition_discount'] !== null) {
+                    $parentCap = collect($resolved['parent_caps'])->filter(fn ($limit) => $limit !== null)->min();
+                    $parentCapLabel = $parentCap === null ? 'not configured' : number_format($parentCap, 2).'%';
 
-                return $minimum === $maximum ? $minimum.$suffix : $minimum.'–'.$maximum.$suffix;
+                    return '<strong>'.e($range).'</strong><br><span class="text-[10px] text-slate-500">Acquisition discount '.e(number_format($resolved['acquisition_discount'], 2)).'% · Parent cap '.e($parentCapLabel).'</span>';
+                }
+
+                return $range;
             })
 
             ->addColumn('user_plan_profit', function ($data) use ($affiliatePlanIds) {
@@ -349,6 +351,12 @@ class ProductPlanController extends Controller
                 ])->all();
             })
             ->addColumn('profit_type', fn ($data) => $data->profit_category === 'percent' ? 'percent' : 'flat')
+            ->addColumn('profit_limits', fn ($data) => $legacyOresamsub
+                ? collect(range(1, 6))->mapWithKeys(fn ($level) => [(string) $level => null])->all()
+                : $profitLimits->limits($affiliate, $data)['effective'])
+            ->addColumn('acquisition_discount', fn ($data) => $legacyOresamsub
+                ? null
+                : $profitLimits->limits($affiliate, $data)['acquisition_discount'])
             ->addColumn('profit_editable', fn ($data) => in_array($data->id, $affiliatePlanIds, true))
           
           

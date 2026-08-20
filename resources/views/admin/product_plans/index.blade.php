@@ -24,7 +24,7 @@
             <div x-show="error" class="p-4"><x-workspace.alert type="error"><span x-text="error"></span></x-workspace.alert></div>
             <div class="workspace-table-wrap">
                 <table class="workspace-table min-w-[1050px]">
-                    <thead><tr><th>Plan</th><th>Category</th><th>Acquisition</th><th>Maximum profit</th><th>Customer margins</th><th>Availability</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Plan</th><th>Category</th><th>Acquisition</th><th>Maximum customer setting</th><th>Customer pricing</th><th>Availability</th><th>Actions</th></tr></thead>
                     <tbody>
                         <template x-for="row in visible" :key="row.DT_RowIndex"><tr :class="row.DT_RowClass || ''">
                             <td><p class="font-semibold" x-text="row.product_plan_name"></p><p class="mt-1 text-xs text-slate-500" x-text="row.network_name"></p></td>
@@ -35,8 +35,8 @@
                                 <button type="button" class="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-blue-700 bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
                                 <p class="mt-1 text-[11px] text-slate-500" x-text="row.profit_editable ? profitSummary(row) : 'Add this plan first'"></p>
                             </td>
-                            <td><div class="space-y-2"><div x-html="row.admin_visibility"></div><div x-html="row.affiliate_visibility"></div><div x-html="row.public_visibility"></div></div></td>
-                            <td><div x-html="row.action"></div></td>
+                            <td><div class="space-y-2"><div x-html="row.admin_visibility || ''"></div><div x-html="row.affiliate_visibility || ''"></div></div></td>
+                            <td><div x-html="row.affiliate_status || ''"></div></td>
                         </tr></template>
                         <tr x-show="!loading && visible.length === 0"><td colspan="7" class="workspace-empty">No plans match your filters.</td></tr>
                         <tr x-show="loading"><td colspan="7" class="workspace-empty">Loading product plans…</td></tr>
@@ -54,11 +54,11 @@
                 </div>
                 <form class="p-5" @submit.prevent="saveProfits()">
                     <div class="mb-4 rounded-xl bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
-                        <span x-text="selectedPlan?.profit_type === 'percent' ? 'Enter a percentage margin for each customer level.' : 'Enter a flat naira margin for each customer level.'"></span>
+                        <span x-text="selectedPlan?.profit_type === 'percent' ? `Enter a customer discount for each level. Acquisition discount: ${Number(selectedPlan?.acquisition_discount || 0).toFixed(2)}%.` : 'Enter a flat naira margin for each customer level.'"></span>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-2">
                         <template x-for="level in [1,2,3,4,5,6]" :key="level">
-                            <label class="block"><span class="text-xs font-semibold text-slate-600 dark:text-slate-300" x-text="`Customer level ${level}`"></span><div class="relative mt-1"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400" x-text="selectedPlan?.profit_type === 'percent' ? '%' : '₦'"></span><input required min="0" step="0.01" type="number" x-model="profitValues[level]" class="workspace-input w-full pl-8"></div></label>
+                            <label class="block"><span class="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300"><span x-text="`Customer level ${level}`"></span><small class="font-normal text-slate-400" x-text="limitLabel(level)"></small></span><div class="relative mt-1"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400" x-text="selectedPlan?.profit_type === 'percent' ? '%' : '₦'"></span><input required min="0" :max="limitFor(level)" step="0.01" type="number" x-model="profitValues[level]" class="workspace-input w-full pl-8"></div></label>
                         </template>
                     </div>
                     <p x-show="profitError" class="mt-4 text-sm text-rose-600" x-text="profitError"></p>
@@ -192,6 +192,8 @@
         get visible() { if (this.page > this.pages) this.page = this.pages; const start=(this.page-1)*this.perPage; return this.filtered.slice(start,start+this.perPage); },
         get pageSummary() { if (!this.filtered.length) return 'No plans'; const start=(this.page-1)*this.perPage+1; return `Showing ${start}–${Math.min(start+this.perPage-1,this.filtered.length)} of ${this.filtered.length}`; },
         profitSummary(row) { const values = Object.values(row.profit_values || {}); const suffix = row.profit_type === 'percent' ? '%' : ''; return values.length ? `${Math.min(...values)}–${Math.max(...values)}${suffix}` : 'Not configured'; },
+        limitFor(level) { const limit=this.selectedPlan?.profit_limits?.[level]; return limit === null || limit === undefined ? null : Number(limit); },
+        limitLabel(level) { const limit=this.limitFor(level); if (limit === null) return 'No maximum configured'; return `Maximum ${limit.toFixed(2)}${this.selectedPlan?.profit_type === 'percent' ? '%' : ''}`; },
         editProfits(row) { if (!row.profit_editable) return; this.selectedPlan = row; this.profitValues = JSON.parse(JSON.stringify(row.profit_values || {})); this.profitError = ''; this.profitModal = true; },
         closeProfits() { if (this.profitSaving) return; this.profitModal = false; this.selectedPlan = null; this.profitError = ''; },
         async saveProfits() {

@@ -302,9 +302,92 @@ it('stores independent mapping and response configuration for every product', fu
         ->and($configs['airtime']['success_conditions'][0]['key'])->toBe('airtime.status');
 });
 
+it('ignores empty customer validation controls submitted for data and airtime', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('non-validatable-products');
+    $payload = providerPayload($adapter->id);
+    $emptyValidation = [
+        'endpoint' => '',
+        'http_method' => 'POST',
+        'request_parameters' => [['key' => '', 'type' => 'runtime', 'value' => 'smartcard_number']],
+        'request_headers' => [],
+        'success_conditions' => [['key' => 'status', 'value' => 'success']],
+        'success_message_path' => 'message',
+        'failure_message_path' => 'message',
+        'customer_name_path' => 'data.customer_name',
+        'customer_address_path' => 'data.address',
+        'expected_success_code' => 200,
+    ];
+    $payload['settings']['product_configs']['data']['validation'] = $emptyValidation;
+    $payload['settings']['product_configs']['airtime']['validation'] = $emptyValidation;
+
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertCreated();
+
+    $configs = $parent->providerConnections()->sole()->settings['product_configs'];
+    expect($configs['data'])->not->toHaveKey('validation')
+        ->and($configs['airtime'])->not->toHaveKey('validation');
+});
+
+it('allows one service to be configured now and additional services to be completed later', function () {
+    [$parent, $admin, $adapter] = providerWorkspace('partial-service-setup');
+    $payload = providerPayload($adapter->id);
+    $payload['settings']['endpoints'] = [
+        'data' => 'https://affatech.example/api/data',
+        'airtime' => '',
+        'cable_subscription' => '',
+        'utility_bills' => '',
+    ];
+    $payload['settings']['product_configs']['airtime'] = [
+        'request_parameters' => [['key' => '', 'type' => 'runtime', 'value' => 'phone_number']],
+        'request_headers' => [],
+        'network_mapping' => [],
+        'success_conditions' => [['key' => '', 'value' => '']],
+        'success_message_path' => '',
+        'failure_message_path' => '',
+    ];
+
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertCreated();
+
+    $connection = $parent->providerConnections()->sole();
+    expect($connection->settings['product_configs'])->toHaveKey('data')
+        ->and($connection->settings['product_configs'])->not->toHaveKey('airtime');
+
+    $update = providerPayload($adapter->id, [
+        'credentials' => ['api_public_key' => null, 'api_secret_key' => null, 'api_password' => null],
+    ]);
+    $update['settings']['endpoints']['airtime'] = 'https://affatech.example/api/airtime';
+
+    $this->actingAs($admin, 'parent_admin')
+        ->putJson("/parent-admin/provider-connections/{$connection->id}", $update)
+        ->assertOk();
+
+    $configs = $connection->fresh()->settings['product_configs'];
+    expect($configs)->toHaveKeys(['data', 'airtime']);
+});
+
+it('requires at least one configured service even when a base URL is supplied', function () {
+    [, $admin, $adapter] = providerWorkspace('service-endpoint-required');
+    $payload = providerPayload($adapter->id);
+    $payload['settings']['endpoints'] = [
+        'data' => '',
+        'airtime' => '',
+        'cable_subscription' => '',
+        'utility_bills' => '',
+    ];
+
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('settings.endpoints');
+});
+
 it('stores and validates separate cable customer confirmation settings', function () {
     [$parent, $admin, $adapter] = providerWorkspace('cable-validation-operation');
     $payload = providerPayload($adapter->id);
+    $payload['settings']['endpoints']['cable'] = 'https://provider.example/cable/purchase';
     $payload['settings']['product_configs']['cable'] = [
         'request_parameters' => [['key' => 'smartcard', 'type' => 'runtime', 'value' => 'smartcard_number']],
         'request_headers' => [], 'network_mapping' => [],

@@ -22,6 +22,34 @@ class SaveProviderConnectionRequest extends FormRequest
         return $this->user('parent_admin') !== null;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $settings = $this->input('settings', []);
+        $productConfigs = $settings['product_configs'] ?? [];
+        $products = app(ProviderProductRegistry::class);
+
+        foreach ($productConfigs as $service => &$productConfig) {
+            $normalizedService = $products->normalize((string) $service);
+            $endpoint = $settings['endpoints'][$service]
+                ?? $settings['endpoints'][$normalizedService]
+                ?? null;
+
+            if (blank($endpoint)) {
+                unset($productConfigs[$service]);
+
+                continue;
+            }
+
+            if (! in_array($normalizedService, ['cable_subscription', 'utility_bills'], true)) {
+                unset($productConfig['validation']);
+            }
+        }
+        unset($productConfig);
+
+        $settings['product_configs'] = $productConfigs;
+        $this->merge(['settings' => $settings]);
+    }
+
     public function rules(): array
     {
         $existingProviderId = $this->route('connection')?->provider_connection_id;
@@ -128,8 +156,8 @@ class SaveProviderConnectionRequest extends FormRequest
             $this->validateUniqueKeys($validator, $settings['request_parameters'] ?? [], 'settings.request_parameters', false);
             $this->validateUniqueKeys($validator, $settings['request_headers'] ?? [], 'settings.request_headers', true);
 
-            if (collect($settings['endpoints'] ?? [])->filter()->isEmpty() && blank($this->input('base_url'))) {
-                $validator->errors()->add('settings.endpoints', 'Provide a base URL or at least one service endpoint.');
+            if (collect($settings['endpoints'] ?? [])->filter(fn ($endpoint) => filled($endpoint))->isEmpty()) {
+                $validator->errors()->add('settings.endpoints', 'Configure at least one service endpoint.');
             }
             if (! in_array($settings['http_method'] ?? null, $methods, true)) {
                 $validator->errors()->add('settings.http_method', 'The selected adapter does not support this HTTP method.');

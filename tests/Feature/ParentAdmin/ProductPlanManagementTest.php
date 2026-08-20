@@ -104,8 +104,8 @@ it('renders a functional parent product plan workspace', function () {
     $this->actingAs($admin, 'parent_admin')
         ->get('/parent-admin')
         ->assertOk()
-        ->assertSee('Open product plans')
-        ->assertSee('Open pricing');
+        ->assertSee('Product plans')
+        ->assertSee('Pricing levels');
 
     $this->actingAs($admin, 'parent_admin')
         ->get('/parent-admin/product-plans')
@@ -335,7 +335,9 @@ it('fully edits an owned plan route settings and reseller prices', function () {
 
     $this->actingAs($admin, 'parent_admin')
         ->get("/parent-admin/product-plans/{$plan->id}/edit")
-        ->assertOk()->assertSee('Edit product plan')->assertSee('Provider external plan ID');
+        ->assertOk()->assertSee('Edit product plan')->assertSee('Provider external plan ID')
+        ->assertSee('Airtime setup guide')
+        ->assertSee('per ₦1,000 face value');
 
     $this->actingAs($admin, 'parent_admin')
         ->get('/parent-admin/product-plans')

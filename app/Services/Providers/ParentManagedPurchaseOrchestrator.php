@@ -138,6 +138,14 @@ class ParentManagedPurchaseOrchestrator
             ];
 
             if ($routing === 'successful') {
+                $actualProviderCharge = $this->validActualProviderCharge($result['actual_provider_charge'] ?? null);
+                if ($actualProviderCharge !== null) {
+                    $providerCost = $this->cents($actualProviderCharge);
+                    $affiliateCost = $this->cents((string) $locked->affiliate_cost_snapshot);
+                    $updates['provider_cost_snapshot'] = $this->money($providerCost);
+                    $updates['parent_cost_snapshot'] = $this->money($providerCost);
+                    $updates['parent_profit_snapshot'] = $this->signedMoney($affiliateCost - $providerCost);
+                }
                 $this->settlements->capture($affiliate, $locked->affiliate_cost_snapshot, $locked->txn_reference, 'system', $customer->id);
             } elseif ($routing === 'failed') {
                 $this->settlements->release($affiliate, $locked->affiliate_cost_snapshot, $locked->txn_reference, 'system', $customer->id);
@@ -175,5 +183,21 @@ class ParentManagedPurchaseOrchestrator
     private function money(int $cents): string
     {
         return intdiv($cents, 100).'.'.str_pad((string) ($cents % 100), 2, '0', STR_PAD_LEFT);
+    }
+
+    private function signedMoney(int $cents): string
+    {
+        return ($cents < 0 ? '-' : '').$this->money(abs($cents));
+    }
+
+    private function validActualProviderCharge(mixed $amount): ?string
+    {
+        if (! is_int($amount) && ! is_float($amount) && ! is_string($amount)) {
+            return null;
+        }
+
+        $amount = trim((string) $amount);
+
+        return $amount !== '' && is_numeric($amount) && (float) $amount > 0 ? $amount : null;
     }
 }

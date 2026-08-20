@@ -6,6 +6,12 @@
 <div class="space-y-5">
     <a href="{{ route('parent-admin.product-plans.index') }}" class="text-sm font-semibold text-blue-600">← Product plans</a>
     @if($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><ul class="list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+        <h2 class="font-semibold">Airtime setup guide</h2>
+        <p class="mt-2">For airtime, enter costs and reseller prices per ₦1,000 face value. Example: a 1.96% upstream discount means a provider cost of ₦980.40; an affiliate acquisition discount of 0.80% means a reseller price of ₦992.00.</p>
+        <p class="mt-2">Use <strong>Percentage</strong> profit mode. Leave maximum profit blank unless you intentionally want a stricter customer-discount ceiling. The same percentages then scale safely to any airtime amount entered by a customer.</p>
+        <p class="mt-2 text-xs text-amber-800">For fixed-value services such as data and cable plans, enter their actual per-plan naira costs and use Flat mode where appropriate.</p>
+    </section>
     <form method="POST" action="{{ route('parent-admin.product-plans.configuration.update', $plan) }}" class="space-y-5">@csrf @method('PUT')
         <section class="rounded-2xl border bg-white p-5 shadow-sm"><h2 class="font-semibold">Plan details</h2><div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label class="text-sm">Name<input name="product_plan_name" value="{{ old('product_plan_name', $plan->product_plan_name) }}" required class="mt-1 w-full rounded-xl border-slate-200"></label>

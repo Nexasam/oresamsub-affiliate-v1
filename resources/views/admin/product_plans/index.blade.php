@@ -5,7 +5,7 @@
 <div class="workspace-page" x-data="affiliatePlansTable()" x-init="load()">
     <div class="workspace-stack">
         <x-workspace.page-header title="Product plans" description="Review acquisition prices, customer margins and plan availability.">
-            <button type="button" class="workspace-btn-success" @click="sync()" :disabled="syncing"><span x-text="syncing ? 'Syncing…' : 'Sync plans'"></span></button>
+            <button type="button" data-testid="sync-plans-button" class="inline-flex min-h-9 items-center justify-center rounded-lg border border-emerald-700 bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="sync()" :disabled="syncing"><span x-text="syncing ? 'Syncing…' : 'Sync plans'"></span></button>
         </x-workspace.page-header>
         @if(Session::has('success'))<x-workspace.alert type="success">{{ Session::get('success') }}</x-workspace.alert>@endif
         @if(Session::has('failure'))<x-workspace.alert type="error">{{ Session::get('failure') }}</x-workspace.alert>@endif
@@ -62,7 +62,7 @@
                         @endforeach
                     </div>
                     <p x-show="profitError" class="mt-4 text-sm text-rose-600" x-text="profitError"></p>
-                    <div class="mt-5 flex justify-end gap-2"><button type="button" class="workspace-btn-secondary" @click="closeProfits()">Cancel</button><button type="submit" class="workspace-btn-primary" :disabled="profitSaving"><span x-text="profitSaving ? 'Saving…' : 'Save profit levels'"></span></button></div>
+                    <div class="mt-5 flex justify-end gap-2"><button type="button" class="workspace-btn-secondary" @click="closeProfits()">Cancel</button><button type="submit" data-testid="save-profit-levels-button" class="inline-flex min-h-9 items-center justify-center rounded-lg border border-blue-700 bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" :disabled="profitSaving"><span x-text="profitSaving ? 'Saving…' : 'Save profit levels'"></span></button></div>
                 </form>
             </div>
         </div>

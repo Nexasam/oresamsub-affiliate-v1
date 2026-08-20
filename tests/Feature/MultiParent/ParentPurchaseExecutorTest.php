@@ -168,6 +168,36 @@ it('orchestrates a parent-managed data purchase with pricing snapshots and settl
         ->assertSuccessful();
 });
 
+it('replaces estimated provider cost with the confirmed provider charge on success', function () {
+    $f = executableParentPurchase();
+    $f['affiliatePlan']->update(['user_level_1_profit' => '10.00']);
+    ParentDefaultProfitRule::create(['parent_business_id' => $f['parent']->id, 'parent_reseller_level_id' => $f['level']->id, 'product_id' => $f['product']->id, 'calculation_type' => 'flat', 'value' => '20.00']);
+    AffiliateServiceProfitCap::create(['parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'product_id' => $f['product']->id, 'customer_level' => 1, 'calculation_type' => 'flat', 'max_value' => '70.00']);
+    AffiliateProcessingProfile::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'management_mode' => 'parent_managed', 'processing_engine' => 'multi_parent', 'status' => 'active']);
+    AffiliateSettlementWallet::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'available_balance' => '500.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $customer = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'main_wallet' => '1000.00']);
+
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldReceive('execute')->once()->andReturn([
+        'status' => 1, 'successful' => true, 'ambiguous' => false, 'routing_status' => 'successful',
+        'actual_provider_charge' => '99.00', 'provider_reference' => 'UPSTREAM-ACTUAL-COST',
+        'parent_provider_connection_id' => $f['connection']->id, 'product_plan_provider_route_id' => $f['route']->id,
+        'provider_plan_id_snapshot' => 'PAUL-1GB', 'user_message' => 'Delivered', 'admin_message' => 'Delivered',
+        'provider_response' => ['success' => true, 'data' => ['discounted_amount' => '99.00']],
+    ]));
+
+    $transaction = app(ParentManagedPurchaseOrchestrator::class)->purchase($customer, $f['affiliatePlan']->fresh(), [
+        'reference' => 'ORDER-ACTUAL-PROVIDER-COST', 'phone_number' => '08030000000',
+    ], 1)['transaction'];
+
+    expect($transaction->provider_cost_snapshot)->toBe('99.00')
+        ->and($transaction->parent_cost_snapshot)->toBe('99.00')
+        ->and($transaction->affiliate_cost_snapshot)->toBe('120.00')
+        ->and($transaction->parent_profit_snapshot)->toBe('21.00')
+        ->and($transaction->affiliate_profit_snapshot)->toBe('10.00')
+        ->and(app(TransactionFinancialReconciliationService::class)->audit($transaction)['balanced'])->toBeTrue();
+});
+
 it('orchestrates parent-managed airtime with percentage pricing and service-aware financial records', function () {
     $f = executableParentPurchase();
     $f['product']->update(['product_name' => 'Airtime', 'slug' => 'airtime']);

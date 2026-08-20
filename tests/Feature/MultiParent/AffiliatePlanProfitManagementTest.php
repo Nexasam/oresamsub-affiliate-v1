@@ -173,3 +173,30 @@ it('renders exactly six modern customer pricing controls', function () {
     $response->assertOk();
     expect(substr_count($response->getContent(), 'data-profit-level='))->toBe(6);
 });
+
+it('renders the sync and save controls with visible resting colours', function () {
+    $f = affiliateProfitFixture('editor-visible-actions');
+    $role = Role::create(['role_name' => 'Admin']);
+    $userPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $admin = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'role_id' => $role->id,
+        'user_plan_id' => $userPlan->id,
+    ]);
+    config()->set('parent_businesses.features.affiliate_blade_ui', true);
+
+    $response = $this->actingAs($admin)
+        ->withSession(['affiliate' => $f['affiliate']])
+        ->get(route('admin.product_plans.index'));
+
+    $response->assertOk()
+        ->assertSee('data-testid="sync-plans-button"', false)
+        ->assertSee('data-testid="save-profit-levels-button"', false)
+        ->assertSee('bg-emerald-600', false)
+        ->assertSee('bg-blue-600', false);
+});

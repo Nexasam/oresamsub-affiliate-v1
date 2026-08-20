@@ -69,8 +69,25 @@ it('renders the parent provider connection workspace', function () {
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections?create=1')
         ->assertOk()->assertSee('Provider connections')->assertSee('Product request configuration')
         ->assertSee('Each product has its own payload, headers, network IDs and response rules.')
+        ->assertSee('Actual provider charge path')
         ->assertDontSee('structuredClone(this.form)', false)
         ->assertDontSee('axios({method,url,data:this.payload()})', false);
+});
+
+it('stores a product specific actual provider charge path', function () {
+    [, $admin, $adapter] = providerWorkspace('actual-charge-path');
+    $payload = providerPayload($adapter->id, [
+        'settings' => ['product_configs' => ['airtime' => [
+            'actual_charge_path' => 'data.transaction.discounted_amount',
+        ]]],
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->postJson('/parent-admin/provider-connections', $payload)
+        ->assertCreated();
+
+    expect(ParentProviderConnection::sole()->settings['product_configs']['airtime']['actual_charge_path'])
+        ->toBe('data.transaction.discounted_amount');
 });
 
 it('uses a blade form for parent connection submission and redirects with feedback', function () {

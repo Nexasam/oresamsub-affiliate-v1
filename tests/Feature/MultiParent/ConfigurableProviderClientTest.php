@@ -138,6 +138,44 @@ it('uses mappings headers network IDs and response rules from the selected produ
         && $request->header('X-Airtime-Key')[0] === 'provider-secret-token');
 });
 
+it('extracts the actual provider charge from the configured response path', function () {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['airtime' => [
+            'actual_charge_path' => 'data.transaction.discounted_amount',
+        ]]],
+    ]);
+    Http::fake(['provider.example/*' => Http::response([
+        'airtime' => ['ok' => true, 'message' => 'Airtime delivered'],
+        'data' => ['transaction' => ['discounted_amount' => '99.00']],
+    ], 201)]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'airtime', [
+        'phone_number' => '08030000000', 'network' => 'MTN', 'reference' => 'ORDER-AIRTIME-COST',
+    ]);
+
+    expect($result['successful'])->toBeTrue()
+        ->and($result['actual_provider_charge'])->toBe('99.00');
+});
+
+it('ignores a missing or invalid configured actual provider charge', function (mixed $charge) {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['airtime' => [
+            'actual_charge_path' => 'data.charged',
+        ]]],
+    ]);
+    Http::fake(['provider.example/*' => Http::response([
+        'airtime' => ['ok' => true, 'message' => 'Airtime delivered'],
+        'data' => ['charged' => $charge],
+    ], 201)]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'airtime', [
+        'phone_number' => '08030000000', 'network' => 'MTN', 'reference' => 'ORDER-AIRTIME-FALLBACK',
+    ]);
+
+    expect($result['successful'])->toBeTrue()
+        ->and($result['actual_provider_charge'])->toBeNull();
+})->with(['missing' => null, 'non numeric' => 'unknown', 'negative' => '-1.00', 'zero' => '0']);
+
 it('adds the required separator when a bearer header prefix was saved without a trailing space', function () {
     $connection = executableProviderConnection([
         'settings' => ['product_configs' => ['data' => [

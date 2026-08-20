@@ -285,8 +285,30 @@ class ConfigurableProviderClient
                 ?? data_get($decoded, 'reference')
                 ?? data_get($decoded, 'data.reference'),
             'http_status' => $response->status(),
+            'actual_provider_charge' => $successful
+                ? $this->actualProviderCharge($decoded, $settings['actual_charge_path'] ?? null)
+                : null,
             'provider_response' => $this->redact($decoded),
         ];
+    }
+
+    private function actualProviderCharge(array $response, mixed $path): ?string
+    {
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $value = data_get($response, trim($path));
+        if (! is_int($value) && ! is_float($value) && ! is_string($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '' || ! is_numeric($value) || (float) $value <= 0) {
+            return null;
+        }
+
+        return number_format((float) $value, 2, '.', '');
     }
 
     private function normalize(mixed $value): mixed
@@ -366,6 +388,7 @@ class ConfigurableProviderClient
             'message' => $message,
             'provider_reference' => null,
             'http_status' => $httpStatus,
+            'actual_provider_charge' => null,
             'provider_response' => null,
         ];
     }

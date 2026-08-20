@@ -115,6 +115,7 @@ class SaveProviderConnectionRequest extends FormRequest
             'settings.product_configs.*.success_conditions.*.value' => ['present'],
             'settings.product_configs.*.success_message_path' => ['required', 'string', 'max:255'],
             'settings.product_configs.*.failure_message_path' => ['required', 'string', 'max:255'],
+            'settings.product_configs.*.actual_charge_path' => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9_.-]+$/'],
             'settings.product_configs.*.expected_success_code' => ['nullable', 'integer', 'between:100,599'],
             'settings.product_configs.*.expected_failure_code' => ['nullable', 'integer', 'between:100,599'],
             'settings.product_configs.*.validation' => ['nullable', 'array'],

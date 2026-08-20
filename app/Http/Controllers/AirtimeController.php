@@ -435,6 +435,9 @@ class AirtimeController extends Controller
         $plan_details = AffiliateProductPlan::with('product_plan.product_plan_category')
         ->where('visibility',1)
         ->where('id',$request->product_plan_id)->first();
+        if (! $plan_details || ! $plan_details->product_plan || ! $plan_details->product_plan->product_plan_category) {
+            return response()->json(['status' => -1, 'message' => 'The selected airtime plan is unavailable.']);
+        }
         $automation_id = $plan_details->automation_id;
         $api_id = $plan_details->product_plan->api_id;
         $product_plan_category = $plan_details->product_plan_category;

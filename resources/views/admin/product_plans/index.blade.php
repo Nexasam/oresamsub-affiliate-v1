@@ -32,7 +32,7 @@
                             <td><div x-html="row.cost_price"></div></td>
                             <td><div x-html="row.max_profit_range"></div></td>
                             <td>
-                                <button type="button" class="workspace-btn-secondary whitespace-nowrap" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
+                                <button type="button" class="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-blue-700 bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
                                 <p class="mt-1 text-[11px] text-slate-500" x-text="row.profit_editable ? profitSummary(row) : 'Add this plan first'"></p>
                             </td>
                             <td><div class="space-y-2"><div x-html="row.admin_visibility"></div><div x-html="row.affiliate_visibility"></div><div x-html="row.public_visibility"></div></div></td>

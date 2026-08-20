@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, usePage, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import axios from "axios";
@@ -16,7 +16,9 @@ export default function BuyAirtime() {
   const [showBalance, setShowBalance] = useState(true);
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  const [planError, setPlanError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const planRequest = useRef({ sequence: 0, controller: null });
 
   const { data, setData, post, errors } = useForm({
     phone_number: "",
@@ -39,6 +41,7 @@ export default function BuyAirtime() {
   // When amount changess
   const handleAmountChange = (amount) => {
     setData("amount", amount);
+    setData("product_plan_id", "");
     fetchPlans(data.network_id, amount);
   };
 
@@ -46,11 +49,26 @@ export default function BuyAirtime() {
 
 
   const fetchPlans = async (networkId, amount = "") => {
-    if (!networkId) return;
-  
+    const numericAmount = Number(amount);
+    const sequence = planRequest.current.sequence + 1;
+    planRequest.current.sequence = sequence;
+    planRequest.current.controller?.abort();
+
+    if (!networkId || !Number.isFinite(numericAmount) || numericAmount < 50) {
+      planRequest.current.controller = null;
+      setLoadingPlans(false);
+      setPlanError("");
+      setPlans([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    planRequest.current.controller = controller;
     setLoadingPlans(true);
+    setPlanError("");
     try {
       const response = await axios.get(route("user.fetch_product_plans"), {
+        signal: controller.signal,
         params: {
           network_id: networkId,
           product_slug: "airtime",
@@ -58,38 +76,36 @@ export default function BuyAirtime() {
         },
       });
   
-      // Ensure it's an array
-      const dataList = Array.isArray(response.data.data)
-        ? response.data.data
-        : Object.values(response.data.data || {});
+      if (sequence !== planRequest.current.sequence) return;
+
+      const responsePlans = response.data.data ?? response.data.plans ?? response.data.message ?? [];
+      const dataList = Array.isArray(responsePlans)
+        ? responsePlans
+        : Object.values(responsePlans || {});
   
       const mappedPlans = dataList.map((plan) => {
-        if (amount) {
-          return {
-            ...plan,
-            label: `${plan.product_plan_name} - You are buying for: ₦${plan.selling_price}`,
-            selected: true,
-          };
-        } else {
-          return {
-            ...plan,
-            label: plan.product_plan_name,
-            selected: false,
-          };
-        }
+        return {
+          ...plan,
+          product_plan_id: String(plan.product_plan_id),
+          label: `${plan.product_plan_name} - You are buying for: ₦${plan.selling_price}`,
+          selected: true,
+        };
       });
   
       setPlans(mappedPlans);
   
-      // Auto-select first plan if amount provided
-      if (amount && mappedPlans.length > 0) {
+      if (mappedPlans.length > 0) {
         setData("product_plan_id", mappedPlans[0].product_plan_id);
       }
     } catch (err) {
+      if (controller.signal.aborted || axios.isCancel(err) || sequence !== planRequest.current.sequence) return;
       console.error("Error fetching airtime plans:", err);
       setPlans([]);
+      setPlanError(err.response?.data?.message || "Airtime plans could not be loaded. Please try again.");
     } finally {
-      setLoadingPlans(false);
+      if (sequence === planRequest.current.sequence) {
+        setLoadingPlans(false);
+      }
     }
   };
   
@@ -242,6 +258,9 @@ export default function BuyAirtime() {
           {/* Product Plan */}
           <div>
             <label className="block text-sm mb-1">Product Plan</label>
+            {planError ? (
+              <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-300">{planError}</p>
+            ) : null}
             {loadingPlans ? (
               <p className="text-gray-500 text-sm">Loading plans...</p>
             ) : plans.length === 0 ? (

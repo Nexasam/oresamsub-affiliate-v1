@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AirtimeController;
 use App\Models\Affiliate;
 use App\Models\AffiliateProcessingProfile;
 use App\Models\AffiliateProductPlan;
@@ -26,6 +27,19 @@ use Illuminate\Support\Facades\Http;
 use Mockery\MockInterface;
 
 uses(RefreshDatabase::class);
+
+it('normalizes airtime provider messages when the upstream response omits message', function () {
+    $controller = app(AirtimeController::class);
+    $method = new ReflectionMethod($controller, 'providerResponseMessage');
+    $method->setAccessible(true);
+
+    expect($method->invoke($controller, ['status' => 1], 'user_message', 'Airtime transaction was successful.'))
+        ->toBe('Airtime transaction was successful.')
+        ->and($method->invoke($controller, ['data' => ['user_message' => 'Delivered']], 'user_message', 'Fallback'))
+        ->toBe('Delivered')
+        ->and($method->invoke($controller, ['message' => 'Provider accepted request'], 'user_message', 'Fallback'))
+        ->toBe('Provider accepted request');
+});
 
 function airtimeControllerFixture(): array
 {

@@ -612,17 +612,17 @@ class AirtimeController extends Controller
                                     //no issues
                                     //for now just leave it as success and sort out the pending issue at the parent level. only for airtime
                                     $status = 1; //on the affiliate side: db then query script gets the actual update
-                                    $user_message = $decores['data']['user_message'] ?? $decores['message'];
-                                    $admin_message = $decores['data']['admin_message'] ?? $decores['message'];
+                                    $user_message = $this->providerResponseMessage($decores, 'user_message', 'Airtime transaction was successful.');
+                                    $admin_message = $this->providerResponseMessage($decores, 'admin_message', $user_message);
                                 }else if($decores['status'] == 0 || $decores['status'] == '0'){
                                     $status = 0;
-                                    $user_message = $decores['data']['user_message'] ?? $decores['message'];
-                                    $admin_message = $decores['data']['admin_message'] ?? $decores['message'];
+                                    $user_message = $this->providerResponseMessage($decores, 'user_message', 'Airtime transaction is pending.');
+                                    $admin_message = $this->providerResponseMessage($decores, 'admin_message', $user_message);
                                 }else{
                                     $status = -1;
                                     $wallet_after = $wallet_before;
-                                    $user_message = $decores['data']['user_message'] ?? $decores['message'];
-                                    $admin_message = $decores['data']['admin_message'] ?? $decores['message'];
+                                    $user_message = $this->providerResponseMessage($decores, 'user_message', 'Airtime transaction failed.');
+                                    $admin_message = $this->providerResponseMessage($decores, 'admin_message', $user_message);
                                 }
 
                                 $display_results[$i] = array(
@@ -904,5 +904,14 @@ class AirtimeController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    private function providerResponseMessage(array $response, string $dataKey, string $fallback): string
+    {
+        $message = data_get($response, 'data.'.$dataKey) ?? data_get($response, 'message');
+
+        return is_scalar($message) && trim((string) $message) !== ''
+            ? (string) $message
+            : $fallback;
     }
 }

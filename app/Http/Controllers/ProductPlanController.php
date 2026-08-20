@@ -168,6 +168,7 @@ class ProductPlanController extends Controller
     
             // SN Column
             ->addColumn('DT_RowIndex', fn($data) => $data->id)
+            ->addColumn('product_plan_id', fn ($data) => (int) $data->id)
     
             // Product Name
             ->addColumn('product_name', fn($data) => $data->product_plan_category->product->product_name ?? '—')

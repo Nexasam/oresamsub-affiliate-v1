@@ -100,6 +100,7 @@ it('returns structured profit values for the alpine affiliate plan editor', func
         ->withSession(['affiliate' => $f['affiliate']])
         ->getJson(route('admin.product_plans.admin_fetch_product_plans'))
         ->assertOk()
+        ->assertJsonPath('data.0.product_plan_id', $f['plan']->id)
         ->assertJsonPath('data.0.profit_editable', true)
         ->assertJsonPath('data.0.profit_type', 'flat')
         ->assertJsonPath('data.0.profit_values.1', 10)
@@ -147,4 +148,28 @@ it('returns the effective airtime discount limit to the alpine plan editor', fun
         ->assertJsonPath('data.0.acquisition_discount', 0.8)
         ->assertJsonPath('data.0.profit_limits.1', 0.79)
         ->assertJsonPath('data.0.profit_limits.6', 0.79);
+});
+
+it('renders exactly six modern customer pricing controls', function () {
+    $f = affiliateProfitFixture('editor-six-controls');
+    $role = Role::create(['role_name' => 'Admin']);
+    $userPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $admin = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'role_id' => $role->id,
+        'user_plan_id' => $userPlan->id,
+    ]);
+    config()->set('parent_businesses.features.affiliate_blade_ui', true);
+
+    $response = $this->actingAs($admin)
+        ->withSession(['affiliate' => $f['affiliate']])
+        ->get(route('admin.product_plans.index'));
+
+    $response->assertOk();
+    expect(substr_count($response->getContent(), 'data-profit-level='))->toBe(6);
 });

@@ -57,9 +57,9 @@
                         <span x-text="selectedPlan?.profit_type === 'percent' ? `Enter a customer discount for each level. Acquisition discount: ${Number(selectedPlan?.acquisition_discount || 0).toFixed(2)}%.` : 'Enter a flat naira margin for each customer level.'"></span>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-2">
-                        <template x-for="level in [1,2,3,4,5,6]" :key="level">
-                            <label class="block"><span class="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300"><span x-text="`Customer level ${level}`"></span><small class="font-normal text-slate-400" x-text="limitLabel(level)"></small></span><div class="relative mt-1"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400" x-text="selectedPlan?.profit_type === 'percent' ? '%' : '₦'"></span><input required min="0" :max="limitFor(level)" step="0.01" type="number" x-model="profitValues[level]" class="workspace-input w-full pl-8"></div></label>
-                        </template>
+                        @foreach(range(1, 6) as $level)
+                            <label class="block" data-profit-level="{{ $level }}"><span class="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300"><span>Customer level {{ $level }}</span><small class="font-normal text-slate-400" x-text="limitLabel({{ $level }})"></small></span><div class="relative mt-1"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400" x-text="selectedPlan?.profit_type === 'percent' ? '%' : '₦'"></span><input required min="0" :max="limitFor({{ $level }})" step="0.01" type="number" x-model="profitValues[{{ $level }}]" class="workspace-input w-full pl-8"></div></label>
+                        @endforeach
                     </div>
                     <p x-show="profitError" class="mt-4 text-sm text-rose-600" x-text="profitError"></p>
                     <div class="mt-5 flex justify-end gap-2"><button type="button" class="workspace-btn-secondary" @click="closeProfits()">Cancel</button><button type="submit" class="workspace-btn-primary" :disabled="profitSaving"><span x-text="profitSaving ? 'Saving…' : 'Save profit levels'"></span></button></div>
@@ -200,7 +200,7 @@
           if (!this.selectedPlan) return;
           this.profitSaving = true; this.profitError = '';
           try {
-            const response = await fetch(@js(route('admin.affiliate.updatePlanProfits')), {method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@js(csrf_token())}, body:JSON.stringify({plan_id:this.selectedPlan.DT_RowIndex, profits:this.profitValues})});
+            const response = await fetch(@js(route('admin.affiliate.updatePlanProfits')), {method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@js(csrf_token())}, body:JSON.stringify({plan_id:this.selectedPlan.product_plan_id, profits:this.profitValues})});
             const payload = await response.json();
             if (!response.ok || payload.status !== true) throw new Error(Object.values(payload.errors || {}).flat()[0] || payload.message || 'Profit levels could not be saved.');
             this.selectedPlan.profit_values = payload.profits;

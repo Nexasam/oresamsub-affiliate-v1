@@ -54,6 +54,34 @@ it('renders the parent pricing workspace and parent scoped data', function () {
         ->and($response->json('plans.data.0.id'))->toBe($plan->id);
 });
 
+it('recognises utility bills as electricity in parent defaults and affiliate caps', function () {
+    [$parent, $admin] = pricingContext('electricity-pricing');
+    $level = ParentResellerLevel::create([
+        'parent_business_id' => $parent->id,
+        'name' => 'Basic',
+        'position' => 1,
+    ]);
+    $electricity = Product::create([
+        'api_id' => 'utility-bills',
+        'product_name' => 'UTILITY BILLS',
+        'slug' => 'utility_bills',
+    ]);
+
+    $response = $this->actingAs($admin, 'parent_admin')
+        ->getJson('/parent-admin/pricing/data')
+        ->assertOk();
+
+    $product = collect($response->json('products'))->firstWhere('id', $electricity->id);
+    $rule = collect($response->json('defaults'))->first(
+        fn (array $rule) => $rule['product_id'] === $electricity->id
+            && $rule['parent_reseller_level_id'] === $level->id
+    );
+
+    expect($product)->not->toBeNull()
+        ->and($rule)->not->toBeNull()
+        ->and($rule['calculation_type'])->toBe('percent_discount');
+});
+
 it('filters the complete parent pricing catalogue before pagination', function () {
     [$parent, $admin] = pricingContext('filter-parent');
     $category = $parent->productPlans()->first()->product_plan_category_id;
@@ -201,7 +229,7 @@ it('atomically upserts one normalized price for every active parent level', func
         ->and(ProductPlanParentPrice::where('product_plan_id', $plan->id)->where('parent_reseller_level_id', $basic->id)->value('selling_price'))->toBe('120.25');
 });
 
-it('rejects incomplete below-cost and cross-parent prices without changing existing prices', function () {
+it('rejects incomplete non-profitable and cross-parent prices without changing existing prices', function () {
     [$parent, $admin, $plan] = pricingContext();
     $basic = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Basic', 'position' => 1]);
     $gold = ParentResellerLevel::create(['parent_business_id' => $parent->id, 'name' => 'Gold', 'position' => 2]);
@@ -216,6 +244,10 @@ it('rejects incomplete below-cost and cross-parent prices without changing exist
         [['parent_reseller_level_id' => $basic->id, 'selling_price' => 120]],
         [
             ['parent_reseller_level_id' => $basic->id, 'selling_price' => 99],
+            ['parent_reseller_level_id' => $gold->id, 'selling_price' => 115],
+        ],
+        [
+            ['parent_reseller_level_id' => $basic->id, 'selling_price' => 100],
             ['parent_reseller_level_id' => $gold->id, 'selling_price' => 115],
         ],
         [

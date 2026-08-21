@@ -73,8 +73,14 @@ class ParentProfitRuleService
 
     public function serviceKey(Product $product): ?string
     {
-        $name = strtolower($product->product_name.' '.$product->slug);
-        foreach (['electricity', 'airtime', 'cable', 'data'] as $service) {
+        $name = strtolower(trim($product->product_name.' '.$product->slug));
+        $normalized = str_replace(['-', ' '], '_', $name);
+
+        if (str_contains($normalized, 'utility_bill') || str_contains($normalized, 'electricity')) {
+            return 'electricity';
+        }
+
+        foreach (['airtime', 'cable', 'data'] as $service) {
             if (str_contains($name, $service)) {
                 return $service;
             }

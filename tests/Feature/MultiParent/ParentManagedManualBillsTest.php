@@ -188,6 +188,24 @@ it('prevents a parent admin from completing another parents manual transaction',
     expect($transaction->fresh()->routing_status)->toBe('manual_pending');
 });
 
+it('returns the configured multi-parent electricity plan for a selected provider and amount', function () {
+    $f = manualBillFixture('utility_bills');
+
+    $this->withoutMiddleware()->actingAs($f['customer'])
+        ->withSession(['affiliate' => $f['affiliate']])
+        ->getJson(route('user.fetch_product_plans', [
+            'plan_category_id' => $f['affiliateCategory']->id,
+            'product_slug' => 'utility_bills',
+            'amount' => 1000,
+        ]))
+        ->assertOk()
+        ->assertJsonPath('status', '1')
+        ->assertJsonPath('counter', 1)
+        ->assertJsonPath('data.0.product_plan_id', $f['affiliatePlan']->id)
+        ->assertJsonPath('data.0.product_plan_name', $f['plan']->product_plan_name)
+        ->assertJsonPath('data.0.selling_price', '990.00');
+});
+
 it('routes controlled cable and electricity requests into manual pending processing', function (string $service, string $uri, array $payload) {
     $f = manualBillFixture($service);
     config()->set('parent_businesses.features.parent_managed_purchases', true);

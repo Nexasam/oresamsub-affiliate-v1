@@ -229,8 +229,8 @@ class ParentCatalogService
                     if ($price['inherit'] ?? false) {
                         continue;
                     }
-                    if (BigDecimal::of((string) $price['selling_price'])->isLessThan($providerCost)) {
-                        throw ValidationException::withMessages(['prices' => 'A reseller price cannot be below the provider cost.']);
+                    if (BigDecimal::of((string) $price['selling_price'])->isLessThanOrEqualTo($providerCost)) {
+                        throw ValidationException::withMessages(['prices' => 'A reseller price must be greater than the provider cost so the parent retains a positive margin.']);
                     }
                 }
             }

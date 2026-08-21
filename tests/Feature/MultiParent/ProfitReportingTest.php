@@ -24,12 +24,14 @@ function profitReportFixture(string $slug): array
 
 function createProfitTransaction(array $f, string $reference, string $routing = 'successful'): Transaction
 {
+    $realised = in_array($routing, ['successful', 'manual_successful'], true);
+
     return Transaction::withoutGlobalScope('affiliate')->create([
         'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'user_id' => $f['customer']->id,
         'api_id' => 'PLAN-1', 'affiliate_product_plan_id' => 1, 'txn_reference' => $reference,
         'transaction_category' => 'data', 'wallet_category' => 'main_wallet', 'amount' => '130.00',
         'balance_before' => '1000.00', 'balance_after' => '870.00', 'description' => 'Profit test',
-        'status' => $routing === 'successful' ? 1 : 0, 'routing_status' => $routing,
+        'status' => $realised ? 1 : 0, 'routing_status' => $routing,
         'provider_cost_snapshot' => '100.00', 'parent_cost_snapshot' => '100.00',
         'affiliate_cost_snapshot' => '120.00', 'customer_price_snapshot' => '130.00', 'face_value_snapshot' => '150.00',
         'parent_profit_snapshot' => '20.00', 'affiliate_profit_snapshot' => '10.00',
@@ -40,16 +42,19 @@ it('shows only realised tenant profit to the parent admin and exports it', funct
     $own = profitReportFixture('profit-own');
     $foreign = profitReportFixture('profit-foreign');
     createProfitTransaction($own, 'PROFIT-OWN-SUCCESS');
+    $manualCable = createProfitTransaction($own, 'PROFIT-CABLE-MANUAL-SUCCESS', 'manual_successful');
+    $manualCable->update(['transaction_category' => 'cable_subscription']);
     createProfitTransaction($own, 'PROFIT-OWN-PENDING', 'reconciliation_required');
     createProfitTransaction($foreign, 'PROFIT-FOREIGN');
     $admin = ParentAdmin::create(['parent_business_id' => $own['parent']->id, 'name' => 'Owner', 'email' => 'profit-owner@example.test', 'password' => 'password', 'active' => true]);
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/profits')->assertOk()
         ->assertSee('Affiliate charges')->assertSee('Affiliate charge')->assertSee('Provider cost')
-        ->assertSee('₦120.00')->assertSee('₦100.00')->assertSee('₦20.00')->assertSee('₦150.00')
+        ->assertSee('₦240.00')->assertSee('₦200.00')->assertSee('₦40.00')->assertSee('₦150.00')
         ->assertSee('View details')->assertSee('Financial breakdown')->assertSee('Customer paid')
         ->assertSee('Affiliate acquisition charge')->assertSee('Actual provider charge')->assertSee('Discount')
-        ->assertSee('PROFIT-OWN-SUCCESS')->assertDontSee('PROFIT-OWN-PENDING')->assertDontSee('PROFIT-FOREIGN');
+        ->assertSee('PROFIT-OWN-SUCCESS')->assertSee('PROFIT-CABLE-MANUAL-SUCCESS')
+        ->assertSee('Cable Subscription')->assertDontSee('PROFIT-OWN-PENDING')->assertDontSee('PROFIT-FOREIGN');
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/profits/export')
         ->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
 });

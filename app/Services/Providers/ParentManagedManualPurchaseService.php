@@ -111,7 +111,7 @@ class ParentManagedManualPurchaseService
                 'description' => 'Parent-managed manual '.str_replace('_', ' ', $service).' purchase',
                 'status' => 0,
                 'routing_status' => 'manual_pending',
-                'user_screen_message' => 'Customer confirmed. Transaction is pending manual processing.',
+                'user_screen_message' => 'Your transaction is being processed.',
                 'admin_screen_message' => 'Validated and awaiting parent manual processing.',
                 'provider_response' => ['validation' => [
                     'message' => $validation['message'] ?? null,

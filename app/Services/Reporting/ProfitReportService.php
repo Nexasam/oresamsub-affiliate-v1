@@ -11,7 +11,7 @@ class ProfitReportService
     public function query(Request $request, ?int $parentId = null, ?int $affiliateId = null): Builder
     {
         return Transaction::withoutGlobalScope('affiliate')->with(['affiliate:id,name', 'user:id,first_name,last_name,email'])
-            ->where('routing_status', 'successful')->where('status', 1)
+            ->whereIn('routing_status', ['successful', 'manual_successful'])->where('status', 1)
             ->whereNotNull('provider_cost_snapshot')->whereNotNull('affiliate_cost_snapshot')->whereNotNull('customer_price_snapshot')
             ->when($parentId, fn ($q) => $q->where('parent_business_id', $parentId))
             ->when($affiliateId, fn ($q) => $q->where('affiliate_id', $affiliateId))

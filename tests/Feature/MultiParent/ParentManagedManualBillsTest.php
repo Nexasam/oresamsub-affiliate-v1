@@ -120,6 +120,8 @@ it('validates and records cable and electricity as manual pending without vendin
     $wallet = AffiliateSettlementWallet::where('affiliate_id', $f['affiliate']->id)->first();
     expect($transaction->routing_status)->toBe('manual_pending')
         ->and((int) $transaction->status)->toBe(0)
+        ->and($transaction->user_screen_message)->toBe('Your transaction is being processed.')
+        ->and($transaction->admin_screen_message)->toBe('Validated and awaiting parent manual processing.')
         ->and($transaction->customer_price_snapshot)->toBe($customerPrice)
         ->and($transaction->affiliate_cost_snapshot)->toBe($affiliateCost)
         ->and($transaction->face_value_snapshot)->toBe($faceAmount === null ? null : number_format((float) $faceAmount, 2, '.', ''))
@@ -198,7 +200,7 @@ it('routes controlled cable and electricity requests into manual pending process
     $transaction = new Transaction([
         'status' => 0, 'routing_status' => 'manual_pending',
         'txn_reference' => strtoupper($service).'-HTTP-1',
-        'user_screen_message' => 'Customer confirmed. Transaction is pending manual processing.',
+        'user_screen_message' => 'Your transaction is being processed.',
     ]);
     $this->mock(ParentManagedManualPurchaseService::class, fn (MockInterface $mock) => $mock->shouldReceive('submit')->once()->andReturn($transaction));
     $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldNotReceive('execute'));
@@ -206,7 +208,7 @@ it('routes controlled cable and electricity requests into manual pending process
     $this->withoutMiddleware()->actingAs($f['customer'])->withSession(['affiliate' => $f['affiliate']])
         ->postJson($uri, $payload)
         ->assertOk()->assertJsonPath('status', 0)
-        ->assertJsonPath('message', 'Customer confirmed. Transaction is pending manual processing.');
+        ->assertJsonPath('message', 'Your transaction is being processed.');
 })->with([
     'cable' => ['cable_subscription', '/user/cable_subscription/store', [
         'smart_card_number' => '1234567890', 'validation_customer_name' => 'Verified Customer',

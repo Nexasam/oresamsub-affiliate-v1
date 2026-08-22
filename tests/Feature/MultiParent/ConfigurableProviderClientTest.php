@@ -409,3 +409,51 @@ it('validates a cable customer through its separate configured operation without
         && $request['service'] === 'DSTV'
         && $request->header('Authorization')[0] === 'Bearer provider-secret-token');
 });
+
+it('logs a redacted provider response when customer validation fails', function () {
+    $connection = executableProviderConnection([
+        'settings' => ['product_configs' => ['utility_bills' => [
+            'validation' => [
+                'endpoint' => 'https://provider.example/electricity/validate',
+                'http_method' => 'POST',
+                'request_parameters' => [
+                    ['key' => 'customer_number', 'type' => 'runtime', 'value' => 'meter_number'],
+                ],
+                'request_headers' => [[
+                    'key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer',
+                ]],
+                'success_conditions' => [['key' => 'success', 'value' => 'true']],
+                'success_message_path' => 'message',
+                'failure_message_path' => 'message',
+                'customer_name_path' => 'data.customer_name',
+                'customer_address_path' => 'data.address',
+                'expected_success_code' => 200,
+            ],
+        ]]],
+    ]);
+    Http::fake(['provider.example/electricity/validate' => Http::response([
+        'success' => false,
+        'message' => 'Meter does not belong to IBEDC PREPAID',
+        'data' => ['meter_number' => '45082894648'],
+    ], 422)]);
+    Log::spy();
+
+    $result = app(ConfigurableProviderClient::class)->validateCustomer($connection, 'utility_bills', [
+        'meter_number' => '45082894648',
+        'reference' => 'VALIDATE-METER-1',
+    ]);
+
+    expect($result)->toMatchArray([
+        'successful' => false,
+        'message' => 'Meter does not belong to IBEDC PREPAID',
+        'http_status' => 422,
+    ]);
+    Log::shouldHaveReceived('info')->withArgs(function (string $event, array $context): bool {
+        return $event === 'provider.validation.response.received'
+            && $context['reference'] === 'VALIDATE-METER-1'
+            && $context['http_status'] === 422
+            && $context['successful'] === false
+            && $context['message'] === 'Meter does not belong to IBEDC PREPAID'
+            && data_get($context, 'response.data.meter_number') === '[REDACTED]';
+    })->once();
+});

@@ -121,13 +121,29 @@ class ConfigurableProviderClient
             $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
             $result = $this->interpret($response, $validation);
             $decoded = $response->json();
+            Log::info('provider.validation.response.received', $logContext + [
+                'http_status' => $response->status(),
+                'successful' => (bool) ($result['successful'] ?? false),
+                'message' => $result['message'] ?? null,
+                'response' => is_array($decoded)
+                    ? $this->redact($decoded)
+                    : ['format' => 'non_json', 'body_length' => strlen($response->body())],
+            ]);
             $result['customer_name'] = is_array($decoded) ? data_get($decoded, $validation['customer_name_path'] ?? 'data.customer_name') : null;
             $result['customer_address'] = is_array($decoded) ? data_get($decoded, $validation['customer_address_path'] ?? 'data.address') : null;
 
             return $result;
         } catch (ConnectionException) {
+            Log::warning('provider.validation.request.failed', $this->logContext($connection, $productSlug.'.validation', $runtime, $method ?? null, $endpoint ?? null) + [
+                'stage' => 'transport',
+                'error' => 'Provider connection failed or timed out.',
+            ]);
             return $this->failure('Customer validation could not be confirmed because the provider did not respond.', ambiguous: true);
         } catch (Throwable $exception) {
+            Log::warning('provider.validation.request.failed', $this->logContext($connection, $productSlug.'.validation', $runtime, $method ?? null, $endpoint ?? null) + [
+                'stage' => isset($request) ? 'transport_or_response' : 'preparation',
+                'error' => $this->safeConfigurationMessage($exception),
+            ]);
             report($exception);
 
             return $this->failure($this->safeConfigurationMessage($exception));

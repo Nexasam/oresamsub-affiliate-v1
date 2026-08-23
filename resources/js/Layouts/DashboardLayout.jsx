@@ -5,6 +5,7 @@ import { Head } from "@inertiajs/react";
 import PwaInstallPopup from "@/Components/PwaInstallPopup";
 import MoreMenu from "@/Components/MoreMenu";
 import { useRef } from "react";
+import UiVersionSwitch from "@/Components/V2/UiVersionSwitch";
 
 
 const getInitialTheme = () => {
@@ -131,14 +132,18 @@ export default function DashboardLayout({ children , title}) {
               </a>
         </div>
         
-        <button
-          onClick={() => setDarkMode((prev) => !prev)}
-          className="flex items-center justify-center w-9 h-9 rounded-xl bg-white dark:bg-gray-800 
-                     ring-1 ring-green-200 dark:ring-green-700 shadow-md hover:shadow-xl hover:scale-[1.05] 
-                     transition transform text-gray-700 dark:text-gray-200"
-        >
-          {darkMode ? "🌞" : "🌙"}
-        </button>
+        <div className="flex items-center gap-2">
+          <UiVersionSwitch />
+          <button
+            onClick={() => setDarkMode((prev) => !prev)}
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-white dark:bg-gray-800 
+                       ring-1 ring-green-200 dark:ring-green-700 shadow-md hover:shadow-xl hover:scale-[1.05] 
+                       transition transform text-gray-700 dark:text-gray-200"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? "🌞" : "🌙"}
+          </button>
+        </div>
       </div>
 
      

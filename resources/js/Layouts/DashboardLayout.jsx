@@ -54,7 +54,7 @@ export default function DashboardLayout({ children , title}) {
     
           {/* PWA Install Popup */}
           {/* <PwaInstallPopup visible={showInstall} setVisible={setShowInstall} /> */}
-          <PwaInstallPopup ref={installRef} />
+          <PwaInstallPopup ref={installRef} appName={sitename || "this app"} />
 
     
         {/* Impersonation Banner */}

@@ -6,6 +6,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
+import V2PurchaseIntro from "@/Components/V2/PurchaseIntro";
 
 
 // inside your map(tx)
@@ -14,8 +15,9 @@ import PrimaryLink from "@/Components/PrimaryLink";
 
 export default function BuyData() {
   const { props } = usePage();
-  const { auth, networks } = props;
+  const { auth, networks, customerUi } = props;
   const user = auth.user;
+  const isV2 = customerUi?.version === "v2";
 
   const [showBalance, setShowBalance] = useState(true);
 
@@ -131,27 +133,30 @@ export default function BuyData() {
 
   return (
     <DashboardLayout  title="Buy Data">
-      <WalletBalance
+      {isV2 ? <V2PurchaseIntro service="data" title="Buy mobile data" description="Choose a network and plan, then send data instantly." user={user} /> : <><WalletBalance
              user={user}
              balanceColor={ props.userDashboardPrimaryColor }
         />
 
        <PrimaryLink href={route("dashboard")} primaryColor={props.userDashboardPrimaryColor}>
              Back to Dashboard
-       </PrimaryLink>
+       </PrimaryLink></>}
 
       {/* Buy Data Card */}
-      <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 pb-16  rounded-xl shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-700 dark:text-white">
+      <div className={isV2 ? "rg-v2-panel overflow-hidden text-slate-700 dark:text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 pb-16 rounded-xl shadow overflow-hidden"}>
+        <div className={isV2 ? "border-b border-slate-100 px-5 py-4 text-sm font-black text-slate-950 dark:border-slate-800 dark:text-white" : "p-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-700 dark:text-white"}>
           Buy Data
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form autoComplete="off" data-lpignore="true" data-1p-ignore="true" onSubmit={handleSubmit} className={isV2 ? "rg-v2-purchase-form" : "p-4 space-y-4"}>
           {/* Phone Number */}
           <div>
             <label className="block text-sm mb-1">Phone Number</label>
             <input
               type="tel"
+              inputMode="numeric"
+              autoComplete="off"
+              name="data_recipient_phone"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               placeholder="e.g. 08012345678"
               value={data.phone_number}
@@ -319,6 +324,11 @@ export default function BuyData() {
             <label className="block text-sm mb-1">Transaction PIN</label>
             <input
               type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              name="data_transaction_pin"
+              data-lpignore="true"
+              data-1p-ignore="true"
               maxLength={4}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               placeholder="****"

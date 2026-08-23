@@ -6,11 +6,13 @@ import debounce from "lodash.debounce";
 import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
+import V2PurchaseIntro from "@/Components/V2/PurchaseIntro";
 
 export default function BuyCable() {
   const { props } = usePage();
-  const { auth, cableProviders = [] } = props;
+  const { auth, cableProviders = [], customerUi } = props;
   const user = auth.user;
+  const isV2 = customerUi?.version === "v2";
 
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
@@ -183,18 +185,18 @@ export default function BuyCable() {
 
   return (
     <DashboardLayout title="Buy Cable Subscription">
-      <WalletBalance user={user} balanceColor={props.userDashboardPrimaryColor} />
+      {isV2 ? <V2PurchaseIntro service="cable" title="Pay cable TV" description="Select your provider, verify the smartcard and renew securely." user={user} /> : <><WalletBalance user={user} balanceColor={props.userDashboardPrimaryColor} />
 
       <PrimaryLink href={route("dashboard")} primaryColor={props.userDashboardPrimaryColor}>
         Back to Dashboard
-      </PrimaryLink>
+      </PrimaryLink></>}
 
-      <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 pb-16 rounded-xl shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold">
+      <div className={isV2 ? "rg-v2-panel overflow-hidden text-slate-700 dark:text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 pb-16 rounded-xl shadow overflow-hidden"}>
+        <div className={isV2 ? "border-b border-slate-100 px-5 py-4 text-sm font-black text-slate-950 dark:border-slate-800 dark:text-white" : "p-4 border-b border-gray-200 dark:border-gray-700 font-semibold"}>
           Buy Cable Subscription
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form autoComplete="off" data-lpignore="true" data-1p-ignore="true" onSubmit={handleSubmit} className={isV2 ? "rg-v2-purchase-form" : "p-4 space-y-4"}>
           {/* Provider */}
           <div>
             <label className="block text-sm mb-1">Cable Provider</label>
@@ -248,6 +250,9 @@ export default function BuyCable() {
             <label className="block text-sm mb-1">Smartcard Number</label>
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              name="cable_smartcard_number"
               placeholder="Enter smartcard number"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               value={data.smart_card_number}
@@ -268,6 +273,8 @@ export default function BuyCable() {
             <label className="block text-sm mb-1">Number of Slots</label>
             <input
               type="number"
+              autoComplete="off"
+              name="cable_slot_count"
               min="1"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               value={data.no_of_slots}
@@ -280,6 +287,11 @@ export default function BuyCable() {
             <label className="block text-sm mb-1">Transaction PIN</label>
             <input
               type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              name="cable_transaction_pin"
+              data-lpignore="true"
+              data-1p-ignore="true"
               maxLength={5}
               placeholder="****"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"

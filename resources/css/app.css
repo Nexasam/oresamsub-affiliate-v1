@@ -22,12 +22,21 @@ body {
   .rg-v2-icon-button { @apply inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:text-slate-950 hover:shadow dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white; }
   .rg-v2-avatar { @apply flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black text-white shadow-sm; background: var(--rg-brand); }
   .rg-v2-backdrop { @apply fixed inset-0 z-[60] bg-slate-950/50 backdrop-blur-sm lg:hidden; }
-  .rg-v2-impersonation { @apply fixed inset-x-0 top-0 z-[100] bg-amber-400 px-4 py-2 text-center text-xs font-bold text-slate-950; }
+  .rg-v2-impersonation { @apply fixed inset-x-0 top-0 z-[100] flex h-9 items-center justify-center bg-amber-400 px-4 text-center text-xs font-bold text-slate-950; }
+  .rg-v2-app.has-impersonation .rg-v2-main { padding-top: 36px; }
+  .rg-v2-app.has-impersonation .rg-v2-header { top: 36px; }
+  .rg-v2-app.has-impersonation .rg-v2-sidebar { top: 36px; }
   .rg-v2-bottom-nav { @apply fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_35px_rgba(15,23,42,.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-[#0b111c]/95 lg:hidden; }
   .rg-v2-bottom-link { @apply flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold text-slate-400 transition; }
   .rg-v2-bottom-link.is-active { color: var(--rg-brand); background: color-mix(in srgb, var(--rg-brand) 9%, transparent); }
   .rg-v2-panel { @apply rounded-[22px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,.05)] dark:border-slate-800 dark:bg-[#0d1522]; }
   .rg-v2-kicker { @apply text-[11px] font-bold uppercase tracking-[.16em] text-slate-400 dark:text-slate-500; }
+  .rg-v2-purchase-form { @apply space-y-5 p-5 sm:p-6; }
+  .rg-v2-purchase-form label { @apply mb-2 block text-xs font-bold text-slate-600 dark:text-slate-300; }
+  .rg-v2-purchase-form input, .rg-v2-purchase-form select { min-height: 48px !important; border-radius: 14px !important; border-color: rgb(203 213 225) !important; box-shadow: none !important; }
+  .dark .rg-v2-purchase-form input, .dark .rg-v2-purchase-form select { border-color: rgb(51 65 85) !important; background-color: rgb(15 23 42) !important; }
+  .rg-v2-purchase-form input:focus, .rg-v2-purchase-form select:focus { border-color: var(--rg-brand) !important; --tw-ring-color: color-mix(in srgb, var(--rg-brand) 24%, transparent) !important; }
+  .rg-v2-purchase-form button[type="submit"] { min-height: 50px; border: 0 !important; border-radius: 14px !important; font-weight: 800; }
 }
 
 @layer components {

@@ -1,11 +1,18 @@
 import React from "react";
 import DashboardLayout from "@/Layouts/CustomerLayout";
 import { router, usePage } from "@inertiajs/react";
+import InstallAppButton from "@/Components/V2/InstallAppButton";
+import MorePageV2 from "@/Components/V2/MorePage";
 
 export default function MorePage() {
   const { props } = usePage();
   const primaryColor = props.userDashboardPrimaryColor || "#0C9246";
   const secondaryColor = props.userDashboardSecondaryColor || "#0A7036";
+
+  if (props.customerUi?.version === "v2") {
+    const supportNumber = props.affiliate?.support_whatsapp_number || "2349163128718";
+    return <DashboardLayout title="More"><MorePageV2 supportNumber={supportNumber} /></DashboardLayout>;
+  }
 
   // helper function to darken or lighten a color
   const adjustColor = (color, amount = -20) => {
@@ -68,6 +75,8 @@ export default function MorePage() {
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           More Options
         </h2>
+
+        <InstallAppButton className="mx-auto mb-5 flex min-h-12 max-w-sm items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 dark:bg-blue-500" label="Install this app" />
 
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 text-center text-sm md:text-base">
 

@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import PwaInstallPopup from "@/Components/PwaInstallPopup";
 import UiVersionSwitch from "@/Components/V2/UiVersionSwitch";
+import InstallAppButton from "@/Components/V2/InstallAppButton";
 
 const normalizeColor = (color, fallback) => {
   if (!color) return fallback;
@@ -56,11 +57,11 @@ export default function DashboardLayoutV2({ children, title }) {
 
   return (
     <div
-      className="rg-v2-app"
+      className={`rg-v2-app ${impersonator ? "has-impersonation" : ""}`}
       style={{ "--rg-brand": primary, "--rg-accent": accent }}
     >
       <Head title={`${sitename || "ResellGrid"} | ${title}`} />
-      <PwaInstallPopup />
+      <PwaInstallPopup appName={sitename || "this app"} />
 
       {impersonator ? (
         <button
@@ -94,6 +95,7 @@ export default function DashboardLayoutV2({ children, title }) {
         </nav>
 
         <div className="mt-auto space-y-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <InstallAppButton />
           <a href={`https://wa.me/${supportNumber}`} target="_blank" rel="noreferrer" className="rg-v2-side-link">
             <Headphones size={19} strokeWidth={1.9} />
             <span>Get support</span>

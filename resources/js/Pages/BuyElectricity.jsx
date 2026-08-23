@@ -6,11 +6,13 @@ import debounce from "lodash.debounce";
 import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
+import V2PurchaseIntro from "@/Components/V2/PurchaseIntro";
 
 export default function BuyElectricity() {
   const { props } = usePage();
-  const { auth, electricityProviders = [] } = props;
+  const { auth, electricityProviders = [], customerUi } = props;
   const user = auth.user;
+  const isV2 = customerUi?.version === "v2";
 
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
@@ -212,18 +214,18 @@ export default function BuyElectricity() {
 
   return (
     <DashboardLayout title="Buy Electricity Token">
-      <WalletBalance user={user} balanceColor={props.userDashboardPrimaryColor} />
+      {isV2 ? <V2PurchaseIntro service="electricity" title="Buy electricity" description="Verify your meter and complete your electricity payment securely." user={user} /> : <><WalletBalance user={user} balanceColor={props.userDashboardPrimaryColor} />
 
       <PrimaryLink href={route("dashboard")} primaryColor={props.userDashboardPrimaryColor}>
         Back to Dashboard
-      </PrimaryLink>
+      </PrimaryLink></>}
 
-      <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 pb-16 rounded-xl shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold">
+      <div className={isV2 ? "rg-v2-panel overflow-hidden text-slate-700 dark:text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white mt-6 pb-16 rounded-xl shadow overflow-hidden"}>
+        <div className={isV2 ? "border-b border-slate-100 px-5 py-4 text-sm font-black text-slate-950 dark:border-slate-800 dark:text-white" : "p-4 border-b border-gray-200 dark:border-gray-700 font-semibold"}>
           Buy Electricity Token ⚡
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form autoComplete="off" data-lpignore="true" data-1p-ignore="true" onSubmit={handleSubmit} className={isV2 ? "rg-v2-purchase-form" : "p-4 space-y-4"}>
           {/* Electricity Provider */}
           <div>
             <label className="block text-sm mb-1">Electricity Provider</label>
@@ -251,6 +253,8 @@ export default function BuyElectricity() {
             <label className="block text-sm mb-1">Amount (₦)</label>
             <input
               type="number"
+              autoComplete="off"
+              name="electricity_purchase_amount"
               min={50}
               placeholder="Enter amount e.g. 1000"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
@@ -298,6 +302,9 @@ export default function BuyElectricity() {
             <label className="block text-sm mb-1">Meter Number</label>
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              name="electricity_meter_number"
               placeholder="Enter meter number"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               value={data.metre_number}
@@ -324,6 +331,11 @@ export default function BuyElectricity() {
             <label className="block text-sm mb-1">Transaction PIN</label>
             <input
               type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              name="electricity_transaction_pin"
+              data-lpignore="true"
+              data-1p-ignore="true"
               maxLength={4}
               placeholder="****"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"

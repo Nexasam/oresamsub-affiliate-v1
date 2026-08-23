@@ -1,81 +1,118 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { CheckCircle2, Download, Share, X } from "lucide-react";
 
-const PwaInstallPopup = forwardRef((props, ref) => {
+const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+const PwaInstallPopup = forwardRef(({ appName = "this app" }, ref) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
+  const [mode, setMode] = useState("install");
+  const cooldownMs = 2 * 24 * 60 * 60 * 1000;
 
-  const cooldownDays = 2;
-  const cooldownMs = cooldownDays * 24 * 60 * 60 * 1000;
-
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/service-worker.js")
-          .then((reg) => console.log("SW registered:", reg))
-          .catch((err) => console.log("SW failed:", err));
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      const dismissedAt = localStorage.getItem("installDismissedAt");
-      if (dismissedAt && Date.now() - dismissedAt < cooldownMs) return;
-
-      e.preventDefault();
-      setDeferredPrompt(e);
+  const requestInstall = useCallback(async () => {
+    if (isStandalone()) {
+      setMode("installed");
       setVisible(true);
-    };
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      return;
+    }
+
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setVisible(false);
+      return;
+    }
+
+    setMode(isIos() ? "ios" : "unavailable");
+    setVisible(true);
+  }, [deferredPrompt]);
+
+  useImperativeHandle(ref, () => ({ promptInstall: requestInstall }), [requestInstall]);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return undefined;
+
+    const register = () => navigator.serviceWorker.register("/service-worker.js").catch(() => null);
+    if (document.readyState === "complete") register();
+    else window.addEventListener("load", register, { once: true });
+
+    return () => window.removeEventListener("load", register);
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    promptInstall: async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log("User choice:", outcome);
-        setDeferredPrompt(null);
-        setVisible(false);
-      }
-    },
-  }));
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+      setMode("install");
 
-  const handleDismiss = () => {
-    localStorage.setItem("installDismissedAt", Date.now());
+      const dismissedAt = Number(localStorage.getItem("installDismissedAt") || 0);
+      if (!dismissedAt || Date.now() - dismissedAt >= cooldownMs) setVisible(true);
+    };
+    const handleManualRequest = () => requestInstall();
+    const handleInstalled = () => {
+      setDeferredPrompt(null);
+      setVisible(false);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("pwa:request-install", handleManualRequest);
+    window.addEventListener("appinstalled", handleInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("pwa:request-install", handleManualRequest);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
+  }, [requestInstall]);
+
+  const dismiss = () => {
+    localStorage.setItem("installDismissedAt", String(Date.now()));
     setVisible(false);
   };
 
   if (!visible) return null;
 
+  const content = {
+    install: {
+      icon: <Download size={24} />,
+      title: `Install ${appName}`,
+      description: "Add the app to your home screen for faster access and a full-screen experience.",
+    },
+    ios: {
+      icon: <Share size={24} />,
+      title: `Add ${appName} to your iPhone`,
+      description: "In Safari, tap the Share button, scroll down, then choose Add to Home Screen.",
+    },
+    installed: {
+      icon: <CheckCircle2 size={24} />,
+      title: `${appName} is already installed`,
+      description: "Open it from your home screen or app launcher.",
+    },
+    unavailable: {
+      icon: <Download size={24} />,
+      title: "Installation is not available yet",
+      description: "Open this website in Chrome or Edge and use the browser menu to choose Install app.",
+    },
+  }[mode];
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-          Install OresamSub
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Add this app to your home screen for a faster, app-like experience.
-        </p>
-        <div className="flex gap-3 justify-center">
-          <button
-            onClick={handleDismiss}
-            className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
-          >
-            Not now
-          </button>
-          <button
-            onClick={() => ref.current.promptInstall()}
-            className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium shadow hover:bg-emerald-700"
-          >
-            Install
-          </button>
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-slate-950/65 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="pwa-install-title" onMouseDown={(event) => event.target === event.currentTarget && dismiss()}>
+      <div className="relative w-full rounded-t-[28px] bg-white p-6 shadow-2xl dark:bg-[#0d1522] sm:max-w-sm sm:rounded-[28px]">
+        <button type="button" onClick={dismiss} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300" aria-label="Close install prompt"><X size={18} /></button>
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-white" style={{ background: "linear-gradient(135deg, var(--rg-brand, #2563eb), var(--rg-accent, #14b8a6))" }}>{content.icon}</div>
+        <h2 id="pwa-install-title" className="mt-5 pr-8 text-xl font-black tracking-tight text-slate-950 dark:text-white">{content.title}</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{content.description}</p>
+        <div className="mt-6 flex gap-3">
+          <button type="button" onClick={dismiss} className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">{mode === "install" ? "Not now" : "Close"}</button>
+          {mode === "install" ? <button type="button" onClick={requestInstall} className="min-h-11 flex-1 rounded-xl px-4 text-sm font-black text-white" style={{ background: "linear-gradient(135deg, var(--rg-brand, #2563eb), var(--rg-accent, #14b8a6))" }}>Install app</button> : null}
         </div>
       </div>
     </div>
   );
 });
+
+PwaInstallPopup.displayName = "PwaInstallPopup";
 
 export default PwaInstallPopup;

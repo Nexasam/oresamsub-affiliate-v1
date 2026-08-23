@@ -11,13 +11,13 @@
 
     <section class="rounded-2xl border-2 border-blue-200 bg-white p-5 shadow-sm">
         <div class="flex flex-wrap items-start justify-between gap-4">
-            <div><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bulk migration</p><h2 class="mt-1 text-lg font-semibold">Import product plans from CSV</h2><p class="mt-1 max-w-2xl text-sm text-slate-500">Download the template first. It contains readable category and provider-connection names beside the IDs validated during import.</p></div>
-            <a href="{{ route('parent-admin.product-plans.import.template') }}" class="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-800">1. Download CSV template</a>
+            <div><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bulk migration</p><h2 class="mt-1 text-lg font-semibold">Import product plans from Excel</h2><p class="mt-1 max-w-2xl text-sm text-slate-500">Download your parent-specific workbook. It contains dropdowns for your approved connections, global categories and visibility settings. Existing provider-plan matches are safely shown as updates.</p></div>
+            <a href="{{ route('parent-admin.product-plans.import.template') }}" class="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-800">1. Download Excel template</a>
         </div>
         <form method="POST" enctype="multipart/form-data" action="{{ route('parent-admin.product-plans.import.preview') }}" class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">@csrf
-            <label for="plans_csv" class="block text-sm font-bold text-slate-800">2. Upload completed CSV file</label>
-            <p class="mt-1 text-xs text-slate-500">Accepted format: .csv · Maximum size: 4 MB · The upload is previewed before anything is saved.</p>
-            <div class="mt-4 flex flex-wrap items-center gap-3"><input id="plans_csv" type="file" name="plans_csv" accept=".csv,text/csv" required class="block min-w-0 flex-1 rounded-xl border border-slate-300 bg-white p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:font-semibold file:text-white"><button class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">3. Upload and preview</button></div>
+            <label for="plans_file" class="block text-sm font-bold text-slate-800">2. Upload completed workbook</label>
+            <p class="mt-1 text-xs text-slate-500">Accepted: .xlsx (recommended) or compatible .csv · Maximum size: 10 MB · Nothing is saved until you confirm the preview.</p>
+            <div class="mt-4 flex flex-wrap items-center gap-3"><input id="plans_file" type="file" name="plans_file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" required class="block min-w-0 flex-1 rounded-xl border border-slate-300 bg-white p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:font-semibold file:text-white"><button class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">3. Upload and preview</button></div>
         </form>
         @if(session('import_errors'))<div class="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">@foreach(session('import_errors') as $line=>$error)<p>Row {{ $line }}: {{ $error }}</p>@endforeach</div>@endif
     </section>

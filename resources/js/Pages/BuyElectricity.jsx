@@ -139,6 +139,7 @@ export default function BuyElectricity() {
   // 🔹 Handle purchase submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
 
     const selectedPlan = plans.find(
       (p) => p.product_plan_id === data.electricity_product_plan_id
@@ -191,7 +192,11 @@ export default function BuyElectricity() {
         await Swal.fire("✅ Success", response.data.message, "success");
         window.location.reload();
       } else if (response.data.status === 0) {
-        await Swal.fire("⏳ Pending", response.data.message, "info");
+        await Swal.fire(
+          "⚙️ Processing",
+          "Your request has been received and is being processed. You can track its status in your transactions.",
+          "info"
+        );
         window.location.reload();
       } else {
         Swal.fire("⚠️ Failed", response.data.message, "error");

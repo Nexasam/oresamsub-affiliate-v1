@@ -98,6 +98,7 @@ export default function BuyCable() {
   // 🔹 Submit subscription
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
 
     // Frontend validation to match backend rules
     if (!data.smart_card_number) {
@@ -163,7 +164,11 @@ export default function BuyCable() {
         await Swal.fire("✅ Success", response.data.message, "success");
         window.location.reload();
       } else if (response.data.status === 0) {
-        await Swal.fire("⏳ Pending", response.data.message, "info");
+        await Swal.fire(
+          "⚙️ Processing",
+          "Your request has been received and is being processed. You can track its status in your transactions.",
+          "info"
+        );
         window.location.reload();
       } else {
         Swal.fire("⚠️ Failed", response.data.message, "error");

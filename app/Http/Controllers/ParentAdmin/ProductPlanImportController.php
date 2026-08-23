@@ -1,10 +1,196 @@
 <?php
+
 namespace App\Http\Controllers\ParentAdmin;
-use App\Http\Controllers\Controller;use App\Models\ParentProviderConnection;use App\Models\ProductPlanCategory;use App\Services\ParentAdmin\ParentCatalogService;use Illuminate\Http\Request;use Illuminate\Support\Str;use Illuminate\Validation\ValidationException;
-class ProductPlanImportController extends Controller{
- const HEADERS=['product_plan_name','category_name_reference','product_plan_category_id','connection_name_reference','parent_provider_connection_id','provider_plan_id','internal_reference','provider_cost','active','affiliate_visible','public_visible','level_1_price','level_2_price','level_3_price','level_4_price','level_5_price','level_6_price'];
- function template(Request $r){$p=$r->user('parent_admin')->parentBusiness;$connections=$p->providerConnections()->where('status','active')->where('approval_status','approved')->with('providerConnection:id,name')->orderBy('name')->get();$cats=ProductPlanCategory::with(['product:id,product_name','network:id,network_name'])->orderBy('id')->get();return response()->streamDownload(function()use($connections,$cats){$f=fopen('php://output','w');fputcsv($f,self::HEADERS);foreach($connections as $connection){foreach($cats as $cat){$categoryName=collect([$cat->product?->product_name,$cat->network?->network_name,$cat->product_plan_category_name])->filter()->unique()->implode(' · ');$connectionName=collect([$connection->name,$connection->providerConnection?->name])->filter()->unique()->implode(' · ');fputcsv($f,['',$categoryName,$cat->id,$connectionName,$connection->id,'','','',0,0,0,'','','','','','']);}}fclose($f);},'product-plans-template.csv');}
- function preview(Request $r){$r->validate(['plans_csv'=>['required','file','mimes:csv,txt','max:4096']]);$p=$r->user('parent_admin')->parentBusiness;$f=fopen($r->file('plans_csv')->getRealPath(),'r');$h=array_map('trim',fgetcsv($f)?:[]);if($h!==self::HEADERS)throw ValidationException::withMessages(['plans_csv'=>'Download and use the current CSV template.']);$rows=[];$errors=[];$line=1;while(($v=fgetcsv($f))!==false){$line++;$row=array_combine($h,array_slice(array_pad($v,count($h),null),0,count($h)));if(blank($row['product_plan_name']))continue;try{$rows[]=$this->row($p,$row,$line);}catch(ValidationException $e){$errors[$line]=collect($e->errors())->flatten()->implode(' ');}}fclose($f);if($errors||!$rows)return back()->withErrors(['plans_csv'=>$errors?'Correct the listed CSV rows.':'No completed rows found.'])->with('import_errors',$errors);$token=(string)Str::uuid();$r->session()->put("plan_import.$token",['parent'=>$p->id,'rows'=>$rows,'expires'=>now()->addMinutes(30)->timestamp]);return view('parent-admin.product-plans.import-preview',compact('rows','token'));}
- function confirm(Request $r,ParentCatalogService $catalog){$r->validate(['token'=>['required','uuid']]);$payload=$r->session()->pull('plan_import.'.$r->token);$p=$r->user('parent_admin')->parentBusiness;abort_unless($payload&&$payload['parent']===$p->id&&$payload['expires']>=time(),410,'Import preview expired.');$plans=$catalog->createPlans($p,$payload['rows']);return redirect()->route('parent-admin.product-plans.index')->with('success',$plans->count().' plans imported.');}
- private function row($p,$r,$line){$cat=ProductPlanCategory::find($r['product_plan_category_id']);$connection=ParentProviderConnection::whereKey($r['parent_provider_connection_id'])->where('parent_business_id',$p->id)->where('status','active')->where('approval_status','approved')->first();$levels=$p->resellerLevels()->where('status','active')->orderBy('position')->get();$bad=[];if(!$cat)$bad[]="Row $line has an invalid category.";if(!$connection)$bad[]="Row $line has an invalid or cross-parent connection.";if(blank($r['provider_plan_id'])||!is_numeric($r['provider_cost']))$bad[]="Row $line requires provider plan ID and numeric cost.";if($levels->count()!==6)$bad[]='Exactly six active reseller levels are required.';foreach(range(1,6)as$i)if(!is_numeric($r["level_{$i}_price"]))$bad[]="Row $line requires level $i price.";if($bad)throw ValidationException::withMessages(['row'=>$bad]);return['product_plan_name'=>trim($r['product_plan_name']),'product_plan_category_id'=>$cat->id,'api_id'=>blank($r['internal_reference'])?null:trim($r['internal_reference']),'admin_cost_price'=>$r['provider_cost'],'cost_price'=>$r['provider_cost'],'profit_category'=>'flat','commission_feature'=>false,'upline_commission_option'=>'flat','upline_percentage_commission'=>0,'upline_flat_commission'=>0,'upline_commission_cap'=>0,'visibility'=>filter_var($r['active'],FILTER_VALIDATE_BOOL),'affiliate_visibility'=>filter_var($r['affiliate_visible'],FILTER_VALIDATE_BOOL),'public_visibility'=>filter_var($r['public_visible'],FILTER_VALIDATE_BOOL),'route'=>['parent_provider_connection_id'=>$connection->id,'provider_plan_id'=>trim($r['provider_plan_id'])],'prices'=>$levels->values()->map(fn($l,$i)=>['parent_reseller_level_id'=>$l->id,'selling_price'=>$r['level_'.($i+1).'_price'],'max_profit'=>null])->all()];}
+
+use App\Http\Controllers\Controller;
+use App\Models\ParentBusiness;
+use App\Models\ProductPlan;
+use App\Services\ParentAdmin\ParentCatalogService;
+use App\Services\ParentAdmin\ProductPlanWorkbookService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+
+class ProductPlanImportController extends Controller
+{
+    public function __construct(private readonly ProductPlanWorkbookService $workbooks) {}
+
+    public function template(Request $request)
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+
+        return response()->streamDownload(
+            fn () => $this->workbooks->write($this->workbooks->workbook($parent), 'php://output'),
+            $parent->slug.'-product-plans.xlsx',
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        );
+    }
+
+    public function preview(Request $request)
+    {
+        $request->validate([
+            'plans_file' => ['required_without:plans_csv', 'file', 'mimes:xlsx,csv,txt', 'max:10240'],
+            'plans_csv' => ['required_without:plans_file', 'file', 'mimes:csv,txt', 'max:4096'],
+        ]);
+        $parent = $request->user('parent_admin')->parentBusiness;
+        $file = $request->file('plans_file') ?? $request->file('plans_csv');
+        $parsed = $this->workbooks->rows($file, $parent);
+        [$categories, $connections] = $this->workbooks->lookupMaps($parent);
+        $levels = $parent->resellerLevels()->where('status', 'active')->orderBy('position')->get();
+        if ($levels->count() !== 6) {
+            throw ValidationException::withMessages(['plans_file' => 'Create exactly six active reseller levels before importing plans.']);
+        }
+
+        $rows = [];
+        $errors = [];
+        $seenProviderPlans = [];
+        foreach ($parsed as $parsedRow) {
+            try {
+                $normalized = $this->normalizeRow($parent, $parsedRow['values'], $parsedRow['line'], $categories, $connections, $levels);
+                $route = $normalized['attributes']['route'];
+                $uniqueKey = $route['parent_provider_connection_id'].'|'.strtolower($route['provider_plan_id']);
+                if (isset($seenProviderPlans[$uniqueKey])) {
+                    throw ValidationException::withMessages([
+                        'row' => "Row {$parsedRow['line']}: this connection and Provider Plan ID already appear on row {$seenProviderPlans[$uniqueKey]}.",
+                    ]);
+                }
+                $seenProviderPlans[$uniqueKey] = $parsedRow['line'];
+                $rows[] = $normalized;
+            } catch (ValidationException $exception) {
+                $errors[$parsedRow['line']] = collect($exception->errors())->flatten()->implode(' ');
+            }
+        }
+        if ($rows === [] && $errors === []) {
+            throw ValidationException::withMessages(['plans_file' => 'No completed product-plan rows were found.']);
+        }
+
+        $token = null;
+        if ($errors === []) {
+            $token = (string) Str::uuid();
+            $request->session()->put("plan_import.{$token}", [
+                'parent' => $parent->id,
+                'rows' => $rows,
+                'expires' => now()->addMinutes(30)->timestamp,
+            ]);
+        }
+
+        return view('parent-admin.product-plans.import-preview', compact('rows', 'errors', 'token'));
+    }
+
+    public function confirm(Request $request, ParentCatalogService $catalog)
+    {
+        $request->validate(['token' => ['required', 'uuid']]);
+        $payload = $request->session()->pull('plan_import.'.$request->token);
+        $parent = $request->user('parent_admin')->parentBusiness;
+        abort_unless($payload && (int) $payload['parent'] === (int) $parent->id && $payload['expires'] >= time(), 410, 'Import preview expired.');
+
+        $counts = DB::transaction(function () use ($payload, $parent, $catalog) {
+            $counts = ['new' => 0, 'update' => 0];
+            foreach ($payload['rows'] as $row) {
+                $attributes = $row['attributes'];
+                if ($row['classification'] === 'update') {
+                    $plan = ProductPlan::query()->where('parent_business_id', $parent->id)->findOrFail($row['existing_plan_id']);
+                    $catalog->updateConfiguration($parent, $plan, $attributes);
+                    $counts['update']++;
+                } else {
+                    $catalog->createPlan($parent, $attributes);
+                    $counts['new']++;
+                }
+            }
+
+            return $counts;
+        });
+
+        return redirect()->route('parent-admin.product-plans.index')
+            ->with('success', "Import complete: {$counts['new']} created, {$counts['update']} updated.");
+    }
+
+    private function normalizeRow(ParentBusiness $parent, array $row, int $line, $categories, $connections, $levels): array
+    {
+        $category = $categories->get(trim((string) ($row['Category'] ?? '')));
+        $connection = $connections->get(trim((string) ($row['Provider Connection'] ?? '')));
+        $providerPlanId = trim((string) ($row['Provider Plan ID'] ?? ''));
+        $providerCost = $row['Provider Cost'] ?? null;
+        $errors = [];
+        if (! $category) {
+            $errors[] = "Row {$line}: choose a valid category from the template dropdown.";
+        }
+        if (! $connection) {
+            $errors[] = "Row {$line}: choose an approved connection owned by this parent.";
+        }
+        if ($providerPlanId === '') {
+            $errors[] = "Row {$line}: Provider Plan ID is required.";
+        }
+        if (! is_numeric($providerCost) || (float) $providerCost < 0) {
+            $errors[] = "Row {$line}: Provider Cost must be a valid non-negative amount.";
+        }
+
+        $prices = [];
+        foreach ($levels->values() as $index => $level) {
+            $price = $row["{$level->name} Price"] ?? null;
+            $max = $row["{$level->name} Max Profit"] ?? null;
+            if (! is_numeric($price)) {
+                $errors[] = "Row {$line}: {$level->name} price is required.";
+            } elseif (is_numeric($providerCost) && (float) $price <= (float) $providerCost) {
+                $errors[] = "Row {$line}: {$level->name} price must be greater than provider cost.";
+            }
+            if (filled($max) && (! is_numeric($max) || (float) $max < 0)) {
+                $errors[] = "Row {$line}: {$level->name} maximum profit must be a non-negative amount.";
+            }
+            $prices[] = [
+                'parent_reseller_level_id' => $level->id,
+                'selling_price' => $price,
+                'max_profit' => filled($max) ? $max : null,
+            ];
+        }
+        if ($errors) {
+            throw ValidationException::withMessages(['row' => $errors]);
+        }
+
+        $existing = ProductPlan::query()
+            ->where('parent_business_id', $parent->id)
+            ->whereHas('providerRoutes', fn ($query) => $query
+                ->where('parent_provider_connection_id', $connection->id)
+                ->where('provider_plan_id', $providerPlanId))
+            ->first();
+        $pricing = strtolower(trim((string) ($row['Pricing Mode'] ?? 'flat')));
+        $attributes = [
+            'product_plan_name' => trim((string) $row['Plan Name']),
+            'product_plan_category_id' => $category->id,
+            'api_id' => filled($row['Internal Reference'] ?? null) ? trim((string) $row['Internal Reference']) : null,
+            'admin_cost_price' => $providerCost,
+            'cost_price' => $providerCost,
+            'data_size_in_mb' => is_numeric($row['Data Size MB'] ?? null) ? $row['Data Size MB'] : null,
+            'validity_in_days' => is_numeric($row['Validity Days'] ?? null) ? $row['Validity Days'] : null,
+            'profit_category' => str_starts_with($pricing, 'percent') ? 'percent' : 'flat',
+            'commission_feature' => false,
+            'upline_commission_option' => 'flat',
+            'upline_percentage_commission' => 0,
+            'upline_flat_commission' => 0,
+            'upline_commission_cap' => 0,
+            'visibility' => $this->boolean($row['Active'] ?? false),
+            'affiliate_visibility' => $this->boolean($row['Affiliate Visible'] ?? false),
+            'public_visibility' => $this->boolean($row['Public Visible'] ?? false),
+            'route' => [
+                'parent_provider_connection_id' => $connection->id,
+                'provider_plan_id' => $providerPlanId,
+            ],
+            'prices' => $prices,
+        ];
+
+        return [
+            'line' => $line,
+            'classification' => $existing ? 'update' : 'new',
+            'existing_plan_id' => $existing?->id,
+            'category_label' => $this->workbooks->categoryLabel($category),
+            'connection_label' => $this->workbooks->connectionLabel($connection),
+            'attributes' => $attributes,
+        ];
+    }
+
+    private function boolean(mixed $value): bool
+    {
+        return in_array(strtolower(trim((string) $value)), ['1', 'yes', 'true', 'active'], true);
+    }
 }

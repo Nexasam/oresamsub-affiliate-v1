@@ -28,6 +28,7 @@ class AdminSettingsController extends Controller
     public function index(){
         $affiliate = $this->currentAffiliate();
         $data['show_legacy_settings'] = $affiliate->usesLegacyAdminSettings();
+        $data['customer_ui_default'] = $affiliate->customer_ui_default ?? 'v1';
 
       //landing page template2       
       $site_images_data = SiteImage::get();
@@ -685,6 +686,7 @@ class AdminSettingsController extends Controller
         'user_dashboard_primary_color'      => 'required|max:255',
         'user_dashboard_secondary_color'    => 'required|max:255',
         'user_dashboard_announcement_color' => 'required|max:255',
+        'customer_ui_default'                => 'nullable|in:v1,v2',
     ]);
 
     if ($validator->stopOnFirstFailure()->fails()) {
@@ -728,6 +730,10 @@ class AdminSettingsController extends Controller
         }
     }
 
+    if ($request->filled('customer_ui_default')) {
+        $affiliate->update(['customer_ui_default' => $request->string('customer_ui_default')->toString()]);
+    }
+
     /**
      * ✅ Recreate session data after update
      */
@@ -742,7 +748,7 @@ class AdminSettingsController extends Controller
         ->first();
 
     // Refresh session values
-    Session::put('affiliate', $affiliate);
+    Session::put('affiliate', $affiliate->fresh());
     Session::put('user_dashboard_primary_color', $user_dashboard_primary_color->color_value);
     Session::put('user_dashboard_secondary_color', $user_dashboard_secondary_color->color_value);
     Session::put('user_dashboard_announcement_color', $user_dashboard_announcement_color->color_value);

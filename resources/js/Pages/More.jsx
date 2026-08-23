@@ -1,5 +1,5 @@
 import React from "react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import { router, usePage } from "@inertiajs/react";
 
 export default function MorePage() {

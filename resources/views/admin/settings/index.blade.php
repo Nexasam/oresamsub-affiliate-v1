@@ -782,6 +782,17 @@
                               >
                             </div>
 
+                            @if(config('customer-ui.v2_enabled'))
+                              <div class="box-body space-y-2 mt-1">
+                                <label class="ti-form-label mb-0" for="customer_ui_default">Default customer interface</label>
+                                <select id="customer_ui_default" name="customer_ui_default" class="ti-form-select">
+                                  <option value="v1" @selected(($customer_ui_default ?? 'v1') === 'v1')>Classic UI (V1)</option>
+                                  <option value="v2" @selected(($customer_ui_default ?? 'v1') === 'v2')>Modern app UI (V2)</option>
+                                </select>
+                                <p class="text-xs text-gray-500">Customers may still switch their own interface. The platform can force V1 during an emergency rollback.</p>
+                              </div>
+                            @endif
+
                             <div class="box-body space-y-2 mt-1">
                               <label class="ti-form-label mb-0">User Dashboard Announcement Color</label>
                               <input
@@ -1564,4 +1575,3 @@
     });
   });
 </script>
-

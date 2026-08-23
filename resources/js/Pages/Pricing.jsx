@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { usePage } from "@inertiajs/react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import PrimaryLink from "@/Components/PrimaryLink";
 
 export default function Pricing({ productPlans = [] }) {

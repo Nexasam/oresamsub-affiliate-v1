@@ -1,7 +1,7 @@
 // resources/js/Pages/SetPin.jsx
 import { useState } from "react";
 import { useForm, usePage, Link } from "@inertiajs/react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import Swal from "sweetalert2";
 import axios from "axios";

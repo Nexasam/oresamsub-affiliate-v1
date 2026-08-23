@@ -1,15 +1,16 @@
 import { useState } from "react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import { Link, usePage } from "@inertiajs/react";
 import ProductButtons from "@/Components/ProductButtons";
 import InviteEarn from "@/Components/InviteEarn";
 import CommunityCard from "@/Components/CommunityCard";
 import WalletBalance from "@/Components/WalletBalance";
 import Announcements from "@/Components/Announcements";
+import CustomerDashboardV2 from "@/Components/V2/CustomerDashboard";
 
 export default function Dashboard({ transactions: initialTransactions }) {
   const { props } = usePage();
-  const { affiliate, auth, announcements, impersonator, funding_accounts = [], userDashboardPrimaryColor, userDashboardAnnouncementColor, userDashboardSecondaryColor} = props;
+  const { affiliate, auth, announcements, impersonator, funding_accounts = [], customerUi, userDashboardPrimaryColor, userDashboardAnnouncementColor, userDashboardSecondaryColor} = props;
   const user = auth.user;
 
   // 🎨 Helper to get colors dynamically
@@ -53,6 +54,14 @@ export default function Dashboard({ transactions: initialTransactions }) {
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
+  if (customerUi?.version === "v2") {
+    return (
+      <DashboardLayout title="Home">
+        <CustomerDashboardV2 user={user} transactions={transactions} fundingAccounts={funding_accounts} />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Dashboard">

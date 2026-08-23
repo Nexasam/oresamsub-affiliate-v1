@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\SiteImage;
+use App\Models\Affiliate;
+use App\Services\CustomerUiResolver;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,13 +45,24 @@ class HandleInertiaRequests extends Middleware
         $siteLogo = SiteImage::where('image_category', 'site_logo')->first();
 
 
+        $affiliate = session('affiliate');
+        if (! $affiliate instanceof Affiliate && $request->user()?->affiliate_id) {
+            $affiliate = Affiliate::find($request->user()->affiliate_id);
+        }
+        $customerUiVersion = app(CustomerUiResolver::class)->resolve($request->user(), $affiliate);
+
         return array_merge(parent::share($request), [
             'userDashboardPrimaryColor' => session('user_dashboard_primary_color'),
             'userDashboardSecondaryColor' => session('user_dashboard_secondary_color'),
             'userDashboardAnnouncementColor' => session('user_dashboard_announcement_color'),
             'affiliate' => session('affiliate'),
             'siteLogo' => $siteLogo?->image_name,
-            'sitename' => session('affiliate')->name ?? 'Oresamsub'
+            'sitename' => $affiliate?->name ?? 'Oresamsub',
+            'customerUi' => [
+                'version' => $customerUiVersion,
+                'canSwitch' => (bool) config('customer-ui.v2_enabled') && ! config('customer-ui.force_v1'),
+                'updateUrl' => route('customer-ui.update'),
+            ],
         ]);
     }
 }

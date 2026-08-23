@@ -13,6 +13,7 @@ use App\Http\Controllers\BulkDataPlanController;
 use App\Http\Controllers\CableSubscriptionController;
 use App\Http\Controllers\CommissionsController;
 use App\Http\Controllers\CouponCodesController;
+use App\Http\Controllers\CustomerUiPreferenceController;
 use App\Http\Controllers\CrystalPayController;
 use App\Http\Controllers\DailyCustomerFollowupController;
 use App\Http\Controllers\DataController;
@@ -115,6 +116,9 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
 
             Route::middleware(['auth','set_transaction_pin'])->group(function () {
+
+                Route::patch('/interface-preference', [CustomerUiPreferenceController::class, 'update'])
+                    ->name('customer-ui.update');
 
                 //   INERTIAJS
                 Route::middleware('verified')->get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');   

@@ -1,7 +1,7 @@
 // resources/js/Pages/BuyData.jsx
 import { useState } from "react";
 import { useForm, usePage, Link } from "@inertiajs/react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import axios from "axios";
 import Swal from "sweetalert2";
 import WalletBalance from "@/Components/WalletBalance";

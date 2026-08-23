@@ -3,7 +3,7 @@ import { useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import debounce from "lodash.debounce";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
 

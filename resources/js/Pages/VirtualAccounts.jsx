@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { usePage, Link } from "@inertiajs/react";
-import DashboardLayout from "@/Layouts/DashboardLayout";
+import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
 

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "@inertiajs/react";
 import {
   ArrowDownToLine, ArrowUpRight, ChevronRight, CreditCard, Eye, EyeOff,
-  CheckCircle2, Clock3, PackageOpen, ReceiptText, RotateCcw, Smartphone,
-  Wifi, X, XCircle, Zap,
+  PackageOpen, ReceiptText, Smartphone, Wifi, Zap,
 } from "lucide-react";
+import TransactionDetailModal from "@/Components/V2/TransactionDetailModal";
 
 const money = (value) => Number(value || 0).toLocaleString("en-NG", {
   minimumFractionDigits: 2,
@@ -25,40 +25,9 @@ const services = [
   { label: "Electricity", note: "Pay meter bills", routeName: "inertia.electricity.index", icon: Zap },
 ];
 
-const DetailRow = ({ label, children, mono = false }) => (
-  <div className="flex items-start justify-between gap-5 py-3">
-    <dt className="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{label}</dt>
-    <dd className={`min-w-0 break-words text-right text-xs font-bold text-slate-900 dark:text-white ${mono ? "font-mono" : ""}`}>{children || "—"}</dd>
-  </div>
-);
-
-const StatusIcon = ({ status }) => {
-  const normalized = String(status);
-  if (normalized === "1") return <CheckCircle2 size={28} />;
-  if (normalized === "0") return <Clock3 size={28} />;
-  if (normalized === "2") return <RotateCcw size={28} />;
-  return <XCircle size={28} />;
-};
-
 export default function CustomerDashboardV2({ user, transactions, fundingAccounts }) {
   const [showBalance, setShowBalance] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
-
-  useEffect(() => {
-    if (!selectedTransaction) return undefined;
-
-    const closeOnEscape = (event) => {
-      if (event.key === "Escape") setSelectedTransaction(null);
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [selectedTransaction]);
 
   return (
     <div className="space-y-6">
@@ -150,57 +119,7 @@ export default function CustomerDashboardV2({ user, transactions, fundingAccount
         </div>
       </section>
 
-      {selectedTransaction ? (() => {
-        const [status, statusColor] = statusLabel(selectedTransaction.status);
-        const service = String(selectedTransaction.transaction_category || "Transaction").replaceAll("_", " ");
-        const reference = selectedTransaction.api_id
-          ?? selectedTransaction.transaction_reference
-          ?? selectedTransaction.reference
-          ?? selectedTransaction.id;
-
-        return (
-          <div
-            className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-950/65 p-0 backdrop-blur-sm sm:items-center sm:p-5"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setSelectedTransaction(null);
-            }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="transaction-detail-title"
-          >
-            <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[30px] bg-white shadow-2xl dark:bg-[#0d1522] sm:max-w-md sm:rounded-[28px]">
-              <div className="relative overflow-hidden border-b border-slate-100 px-6 pb-6 pt-7 text-center dark:border-slate-800">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-10" style={{ background: "linear-gradient(135deg, var(--rg-brand), var(--rg-accent))" }} />
-                <button type="button" onClick={() => setSelectedTransaction(null)} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" aria-label="Close transaction details">
-                  <X size={18} />
-                </button>
-                <div className={`relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 ${statusColor} dark:bg-slate-800`}>
-                  <StatusIcon status={selectedTransaction.status} />
-                </div>
-                <p className={`relative mt-4 text-xs font-black uppercase tracking-[.14em] ${statusColor}`}>{status}</p>
-                <h2 id="transaction-detail-title" className="relative mt-2 text-3xl font-black tracking-[-.04em] text-slate-950 dark:text-white">₦{money(selectedTransaction.discounted_amount ?? selectedTransaction.amount)}</h2>
-                <p className="relative mt-1 text-sm capitalize text-slate-500 dark:text-slate-400">{service}</p>
-              </div>
-
-              <dl className="divide-y divide-slate-100 px-6 dark:divide-slate-800">
-                <DetailRow label="Plan">{selectedTransaction.product_plan?.product_plan_name}</DetailRow>
-                <DetailRow label="Recipient" mono>{selectedTransaction.phone_number}</DetailRow>
-                <DetailRow label="Original amount">₦{money(selectedTransaction.amount)}</DetailRow>
-                <DetailRow label="Amount charged">₦{money(selectedTransaction.discounted_amount ?? selectedTransaction.amount)}</DetailRow>
-                <DetailRow label="Reference" mono>{reference}</DetailRow>
-                <DetailRow label="Date">{new Date(selectedTransaction.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}</DetailRow>
-                {selectedTransaction.refund_reason ? <DetailRow label="Refund reason">{selectedTransaction.refund_reason}</DetailRow> : null}
-              </dl>
-
-              <div className="p-6 pt-5">
-                <button type="button" onClick={() => setSelectedTransaction(null)} className="min-h-12 w-full rounded-xl text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, var(--rg-brand), var(--rg-accent))" }}>
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })() : null}
+      {selectedTransaction ? <TransactionDetailModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} /> : null}
     </div>
   );
 }

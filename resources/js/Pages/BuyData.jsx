@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
 import V2PurchaseIntro from "@/Components/V2/PurchaseIntro";
+import NetworkLogo from "@/Components/V2/NetworkLogo";
 
 
 // inside your map(tx)
@@ -221,17 +222,19 @@ export default function BuyData() {
                   "bg-gray-200 text-gray-700 border-gray-300";
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={n.id}
                     onClick={() => handleNetworkChange(n.id)}
-                    className={`cursor-pointer rounded-lg border p-1 text-center font-semibold transition
+                    aria-pressed={data.network_id === n.id}
+                    className={`cursor-pointer rounded-lg border p-2 text-center font-semibold transition
                       ${data.network_id === n.id
-                        ? `${colorClass} ring-2 ring-emerald-500 scale-105`
-                        : `${colorClass} hover:shadow-md`}
+                        ? isV2 ? "border-transparent bg-white ring-2 ring-[var(--rg-brand)] shadow-md dark:bg-slate-900" : `${colorClass} ring-2 ring-emerald-500 scale-105`
+                        : isV2 ? "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900" : `${colorClass} hover:shadow-md`}
                     `}
                   >
-                    {n.network_name}
-                  </div>
+                    {isV2 ? <NetworkLogo name={n.network_name} /> : n.network_name}
+                  </button>
                 );
               })}
             </div>

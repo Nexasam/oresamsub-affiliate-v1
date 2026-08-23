@@ -3,13 +3,15 @@ import { usePage, Link } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
+import TransactionDetailModal from "@/Components/V2/TransactionDetailModal";
 
 
 
 export default function Transactions() {
   const { props } = usePage();
-  const { auth, transactions } = props;
+  const { auth, transactions, customerUi } = props;
   const user = auth.user;
+  const isV2 = customerUi?.version === "v2";
 
   const [selectedTx, setSelectedTx] = useState(null);
   const [showBalance, setShowBalance] = useState(true);
@@ -91,7 +93,8 @@ export default function Transactions() {
       </div>
 
       {/* Transaction Modal */}
-      {selectedTx && (
+      {selectedTx && isV2 ? <TransactionDetailModal transaction={selectedTx} onClose={() => setSelectedTx(null)} /> : null}
+      {selectedTx && !isV2 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-sm w-full p-6 font-inter">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">

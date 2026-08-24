@@ -206,8 +206,6 @@
 
     </div>
     <div class="hidden"  id="styled-dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-       <livewire:user-wallet-transactions />
-
     </div>
 
 </div>

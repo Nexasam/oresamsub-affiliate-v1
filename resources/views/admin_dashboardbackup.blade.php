@@ -498,8 +498,6 @@
                         <h5 class="box-title my-auto">Recent Transactions</h5>
                     </div>
                 </div>
-                <livewire:transactions-table />
-
             </div> --}}
 
 

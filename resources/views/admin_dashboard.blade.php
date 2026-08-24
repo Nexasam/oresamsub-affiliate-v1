@@ -183,17 +183,7 @@
 
         <div class="col-span-12 xxl:col-span-12 px-6 rounded-lg">
 
-            {{-- <div class="box w-full mb-4">
-                <div class="box-header">
-                    <div class="sm:flex">
-                        <h5 class="box-title my-auto">Recent Transactions</h5>
-                    </div>
-                </div>
-                <livewire:transactions-table />
-
-            </div> --}}
-
-
+          
 
             <div class="box dark:bg-gray-900 dark:text-gray-100">
                 <div class="box-header dark:bg-gray-800">

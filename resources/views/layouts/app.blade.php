@@ -250,7 +250,6 @@
 
 
 
-@livewireStyles
 </head>
 
 <body class="montserrat2">
@@ -2393,25 +2392,6 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     {{-- <script src="https://cdn.jsdelivr.net/npm/flowbite@2.4.1/dist/flowbite.min.js"></script> --}}
 
-
-
-    <script>
-      document.addEventListener("livewire:navigated", function () {
-          let scrollPosition = 0;
-
-          // Store scroll position before Livewire updates the page
-          Livewire.hook('message.sent', () => {
-              scrollPosition = window.scrollY;
-          });
-
-          // Restore scroll position after Livewire updates
-          Livewire.hook('message.processed', () => {
-              window.scrollTo(0, scrollPosition);
-          });
-      });
-     </script>
-
-    @livewireScripts
 
 
     <script>

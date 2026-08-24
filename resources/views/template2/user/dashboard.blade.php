@@ -14,11 +14,6 @@
                     <h5 class="box-title my-auto">Recent Transactions</h5>
                 </div> --}}
             {{-- </div> --}}
-            <livewire:transactions-table />
-
-            {{-- @livewire('transactions-table', ['site_primary_color' => $site_primary_color,'site_secondary_color'=>$site_secondary_color]) --}}
-
-
         {{-- </div> --}}
     {{-- </div> --}}
    

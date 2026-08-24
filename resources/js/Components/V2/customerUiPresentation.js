@@ -46,3 +46,24 @@ export function resolveNetworkBrand(networkName = "") {
   };
 }
 
+const normalizeAssetUrl = (path) => {
+  if (!path) return null;
+  const value = String(path).trim();
+  if (/^https?:\/\//i.test(value)) return value;
+  return value.startsWith("/") ? value : `/${value}`;
+};
+
+export function resolveAffiliateBranding({ affiliate = null, siteLogo = null } = {}) {
+  const name = affiliate?.name || "ResellGrid";
+  const siteLogoUrl = siteLogo
+    ? normalizeAssetUrl(`assets/landing_page_assets/img/site_logo/${siteLogo}`)
+    : null;
+  const affiliateIconUrl = normalizeAssetUrl(affiliate?.logo);
+
+  return {
+    name,
+    initial: String(name).slice(0, 1).toUpperCase() || "R",
+    logoUrl: siteLogoUrl || affiliateIconUrl,
+    faviconUrl: affiliateIconUrl || siteLogoUrl || "/assets/logo_imgs/favicon/android-chrome-192x192.png",
+  };
+}

@@ -7,6 +7,7 @@ import {
 import PwaInstallPopup from "@/Components/PwaInstallPopup";
 import UiVersionSwitch from "@/Components/V2/UiVersionSwitch";
 import InstallAppButton from "@/Components/V2/InstallAppButton";
+import { resolveAffiliateBranding } from "@/Components/V2/customerUiPresentation";
 
 const normalizeColor = (color, fallback) => {
   if (!color) return fallback;
@@ -33,12 +34,14 @@ const initialDarkMode = () => {
 
 export default function DashboardLayoutV2({ children, title }) {
   const { props, url } = usePage();
-  const { auth, affiliate, impersonator, sitename, userDashboardPrimaryColor, userDashboardSecondaryColor } = props;
+  const { auth, affiliate, impersonator, siteLogo, sitename, userDashboardPrimaryColor, userDashboardSecondaryColor } = props;
   const [darkMode, setDarkMode] = useState(initialDarkMode);
   const [menuOpen, setMenuOpen] = useState(false);
   const primary = normalizeColor(userDashboardPrimaryColor, "#2563eb");
   const accent = normalizeColor(userDashboardSecondaryColor, "#14b8a6");
   const supportNumber = affiliate?.support_whatsapp_number || "2349163128718";
+  const branding = resolveAffiliateBranding({ affiliate, siteLogo });
+  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
@@ -60,7 +63,11 @@ export default function DashboardLayoutV2({ children, title }) {
       className={`rg-v2-app ${impersonator ? "has-impersonation" : ""}`}
       style={{ "--rg-brand": primary, "--rg-accent": accent }}
     >
-      <Head title={`${sitename || "ResellGrid"} | ${title}`} />
+      <Head>
+        <title>{`${sitename || "ResellGrid"} | ${title}`}</title>
+        <link rel="icon" href={branding.faviconUrl} />
+        <link rel="apple-touch-icon" href={branding.faviconUrl} />
+      </Head>
       <PwaInstallPopup appName={sitename || "this app"} />
 
       {impersonator ? (
@@ -75,7 +82,11 @@ export default function DashboardLayoutV2({ children, title }) {
 
       <aside className={`rg-v2-sidebar ${menuOpen ? "is-open" : ""}`}>
         <div className="rg-v2-brand">
-          <div className="rg-v2-brand-mark">{String(sitename || "R").slice(0, 1).toUpperCase()}</div>
+          <div className="rg-v2-brand-mark">
+            {branding.logoUrl && !logoFailed ? (
+              <img src={branding.logoUrl} alt={`${branding.name} logo`} className="h-full w-full rounded-[14px] object-cover" onError={() => setLogoFailed(true)} />
+            ) : branding.initial}
+          </div>
           <div className="min-w-0">
             <div className="truncate text-[15px] font-bold text-slate-950 dark:text-white">{sitename || "ResellGrid"}</div>
             <div className="text-xs text-slate-500 dark:text-slate-400">Customer app</div>

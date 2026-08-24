@@ -1,145 +1,74 @@
+@php
+    $affiliate = session('affiliate');
+    $authSiteLogo = $site_logo ?? null;
+    $favicon = $affiliate?->logo
+        ? asset($affiliate->logo)
+        : ($authSiteLogo
+            ? asset('assets/landing_page_assets/img/site_logo/'.$authSiteLogo)
+            : asset('assets/logo_imgs/favicon/android-chrome-192x192.png'));
+    $primary = session('user_dashboard_primary_color', '#2563eb');
+    $secondary = session('user_dashboard_secondary_color', '#14b8a6');
+@endphp
 <!DOCTYPE html>
-<html lang="en" class="font-sans bg-gray-100 text-gray-800">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-  <meta charset="UTF-8">
-  <title>{{ session('affiliate')->name ?? 'Affiliate Data Site' }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  {{-- <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}"> --}}
-
-  {{-- new content --}}
-      <!-- Favicon -->
-      {{-- <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}"> --}}
-      <link rel="icon"
-      type="image/png"
-      href="{{ session('affiliate') && session('affiliate')->logo
-                ? asset(session('affiliate')->logo)
-                : asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
-   
-       <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
-
-
-      <!-- Manifest -->
-      <link rel="manifest" href="{{ asset('manifest.json') }}">
-      <meta name="theme-color" content="#047857">
-
-      <!-- iOS support -->
-      {{-- <link rel="apple-touch-icon"
-      href="{{ session('affiliate')?->logo
-          ? asset('assets/landing_page_assets/img/site_logo/' . session('affiliate')->logo)
-          : asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
-
-    <link rel="apple-touch-icon"
-          sizes="512x512"
-          href="{{ session('affiliate')?->logo
-              ? asset('assets/landing_page_assets/img/site_logo/' . session('affiliate')->logo)
-              : asset('assets/logo_imgs/favicon/android-chrome-512x512.png') }}">
-
-
-      <meta name="apple-mobile-web-app-capable" content="yes">
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <meta name="apple-mobile-web-app-title" content="{{session('affiliate')->name ?? 'Affiliate Data Site'}}"> --}}
-      {{-- new content ends --}}
-
-
-  <!-- DARK MODE PREVENT FLASH -->
-  <script>
-    if (localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.add('bg-gray-900');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('bg-gray-100');
-    }
-  </script>
-
-  <!-- Tailwind CSS + Alpine.js -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' };
-  </script>
- 
-  <style>
-    [x-cloak] { display: none !important; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="{{ $primary }}">
+    <title>@yield('title', $affiliate?->name ?? 'Customer account')</title>
+    <link rel="icon" href="{{ $favicon }}">
+    <link rel="apple-touch-icon" href="{{ $favicon }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' };</script>
+    <style>
+        :root { --auth-primary: {{ $primary }}; --auth-secondary: {{ $secondary }}; }
+        * { box-sizing: border-box; }
+        [x-cloak] { display: none !important; }
+        body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+        .auth-page { min-height: 100dvh; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); color: #0f172a; background: #f8fafc; position: relative; overflow: hidden; }
+        .auth-page::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--auth-primary) 13%, transparent), transparent 32%), radial-gradient(circle at 92% 90%, color-mix(in srgb, var(--auth-secondary) 12%, transparent), transparent 30%); }
+        .auth-wrap { position: relative; width: 100%; max-width: 460px; }
+        .auth-card { width: 100%; border: 1px solid #e2e8f0; border-radius: 24px; padding: 24px 20px; background: rgba(255,255,255,.96); box-shadow: 0 24px 70px rgba(15,23,42,.10); }
+        .auth-card--wide { max-width: 680px; }
+        .auth-wrap:has(.auth-card--wide) { max-width: 680px; }
+        .auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+        .auth-logo { width: 48px; height: 48px; flex: none; border-radius: 15px; object-fit: cover; box-shadow: 0 8px 22px rgba(15,23,42,.13); }
+        .auth-logo--fallback { display: grid; place-items: center; color: white; font-weight: 800; font-size: 19px; background: linear-gradient(135deg,var(--auth-primary),var(--auth-secondary)); }
+        .auth-business-name { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 750; color: #0f172a; }
+        .auth-business-label { margin: 3px 0 0; font-size: 12px; color: #64748b; }
+        .auth-heading { margin-bottom: 24px; }
+        .auth-heading h1 { margin: 0; font-size: clamp(25px, 7vw, 32px); line-height: 1.15; letter-spacing: -.035em; font-weight: 800; color: #0f172a; }
+        .auth-heading p { margin: 9px 0 0; color: #64748b; font-size: 14px; line-height: 1.6; }
+        .auth-grid { display: grid; gap: 16px; }
+        .auth-grid--two { grid-template-columns: 1fr; }
+        .auth-field label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 650; color: #334155; }
+        .auth-input { width: 100%; min-height: 49px; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 13px; background: #fff; color: #0f172a; font: inherit; font-size: 15px; outline: none; transition: border-color .18s, box-shadow .18s; }
+        .auth-input:focus { border-color: var(--auth-primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--auth-primary) 14%, transparent); }
+        .auth-input-wrap { position: relative; }
+        .auth-input-wrap .auth-input { padding-right: 72px; }
+        .auth-reveal { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); border: 0; border-radius: 9px; padding: 7px 8px; background: #f1f5f9; color: #475569; font-size: 12px; font-weight: 650; cursor: pointer; }
+        .auth-error { margin: 6px 0 0; color: #dc2626; font-size: 12px; }
+        .auth-alert { margin-bottom: 18px; padding: 12px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+        .auth-alert--success { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .auth-alert--error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .auth-button { display: inline-flex; width: 100%; min-height: 50px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 13px; padding: 12px 18px; color: white; background: var(--auth-primary); font: inherit; font-size: 14px; font-weight: 750; cursor: pointer; box-shadow: 0 10px 24px color-mix(in srgb, var(--auth-primary) 24%, transparent); transition: transform .18s, opacity .18s; }
+        .auth-button:hover { transform: translateY(-1px); }
+        .auth-button:disabled { cursor: wait; opacity: .65; transform: none; }
+        .auth-link { color: var(--auth-primary); font-weight: 650; text-decoration: none; }
+        .auth-link:hover { text-decoration: underline; }
+        .auth-footer { margin: 22px 0 0; text-align: center; color: #64748b; font-size: 13px; }
+        @media (min-width: 640px) { .auth-page { padding: 36px 24px; } .auth-card { padding: 32px; border-radius: 28px; } .auth-grid--two { grid-template-columns: repeat(2,minmax(0,1fr)); } .auth-span-two { grid-column: span 2; } }
+        @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+    </style>
 </head>
-
-<body
-  x-data="themeToggle()"
-  x-init="init(); $watch('showLoader', val => document.body.classList.toggle('overflow-hidden', val))"
-  class="min-h-screen text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-900"
->
-
-  <!-- App Container -->
-  <div class="max-w-full mx-auto border border-gray-300 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden bg-white dark:bg-gray-900">
-
-     
-
-
-    <!-- Header -->
-    <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      {{-- <h1 class="text-xl font-bold">OresamSub</h1> --}}
-      <button @click="toggle()" class="text-xl">
-        <span x-text="darkMode ? '☀️' : '🌙'"></span>
-      </button>
-    </div>
-
-    <!-- Main Content -->
-    {{-- px-4 pt-4 pb-28 --}}
-    <main class="px-4 min-h-[calc(100vh-96px)]">
-      <!-- Logo -->
-      @yield('content')
+<body>
+    <main class="auth-page">
+        <div class="auth-wrap">@yield('content')</div>
     </main>
-
-    <!-- Bottom Navigation -->
-    {{-- <nav class="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
-      <div class="max-w-md mx-auto flex justify-around py-2 text-xs font-medium text-gray-700 dark:text-gray-200">
-        @foreach ([
-          ['icon' => '🏠', 'label' => 'Dashboard'],
-          ['icon' => '📞', 'label' => 'Airtime'],
-          ['icon' => '📶', 'label' => 'Data'],
-          ['icon' => '⚡', 'label' => 'Electricity']
-        ] as $item)
-          <a 
-            href="{{ route('ore.dashboard') }}"
-            @click.prevent="showLoader = true; setTimeout(() => window.location.href = '{{ route('ore.dashboard') }}', 10000)"
-            class="flex flex-col items-center hover:text-blue-600 dark:hover:text-blue-400"
-          >
-            <div class="text-xl">{{ $item['icon'] }}</div>
-            <span>{{ $item['label'] }}</span>
-          </a>
-        @endforeach
-      </div>
-    </nav> --}}
-
-  </div>
-
-  <!-- Global Loader -->
-  <div x-show="showLoader" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-900 bg-opacity-80">
-    <div class="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-  </div>
-
-
-  <script src="https://unpkg.com/alpinejs@3.x.x" defer></script>
-  <!-- Alpine Logic -->
-  <script>
-    function themeToggle() {
-      return {
-        darkMode: false,
-        showLoader: false,
-
-        init() {
-          this.darkMode = document.documentElement.classList.contains('dark');
-        },
-
-        toggle() {
-          this.darkMode = !this.darkMode;
-          localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
-          document.documentElement.classList.toggle('dark', this.darkMode);
-        }
-      }
-    }
-  </script>
+    <script src="https://unpkg.com/alpinejs@3.x.x" defer></script>
 </body>
 </html>

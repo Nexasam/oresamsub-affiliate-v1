@@ -1,8 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { CheckCircle2, Download, Share, X } from "lucide-react";
-
-const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+import { currentInstallEnvironment, resolveInstallMode } from "@/Components/V2/pwaInstallState";
 
 const PwaInstallPopup = forwardRef(({ appName = "this app" }, ref) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -11,12 +9,6 @@ const PwaInstallPopup = forwardRef(({ appName = "this app" }, ref) => {
   const cooldownMs = 2 * 24 * 60 * 60 * 1000;
 
   const requestInstall = useCallback(async () => {
-    if (isStandalone()) {
-      setMode("installed");
-      setVisible(true);
-      return;
-    }
-
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       await deferredPrompt.userChoice;
@@ -25,7 +17,7 @@ const PwaInstallPopup = forwardRef(({ appName = "this app" }, ref) => {
       return;
     }
 
-    setMode(isIos() ? "ios" : "unavailable");
+    setMode(resolveInstallMode(currentInstallEnvironment(false)));
     setVisible(true);
   }, [deferredPrompt]);
 
@@ -34,7 +26,10 @@ const PwaInstallPopup = forwardRef(({ appName = "this app" }, ref) => {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return undefined;
 
-    const register = () => navigator.serviceWorker.register("/service-worker.js").catch(() => null);
+    const register = () => navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+      console.warn("PWA service worker registration failed.", error);
+      return null;
+    });
     if (document.readyState === "complete") register();
     else window.addEventListener("load", register, { once: true });
 
@@ -90,10 +85,20 @@ const PwaInstallPopup = forwardRef(({ appName = "this app" }, ref) => {
       title: `${appName} is already installed`,
       description: "Open it from your home screen or app launcher.",
     },
-    unavailable: {
+    manual: {
       icon: <Download size={24} />,
-      title: "Installation is not available yet",
-      description: "Open this website in Chrome or Edge and use the browser menu to choose Install app.",
+      title: "Install from your browser menu",
+      description: "Chrome or Edge has not offered the automatic prompt yet. Open the browser menu and choose Install app or Add to Home screen.",
+    },
+    insecure: {
+      icon: <Download size={24} />,
+      title: "A secure connection is required",
+      description: "Open this website using HTTPS before installing it as an app.",
+    },
+    unsupported: {
+      icon: <Download size={24} />,
+      title: "This browser cannot install the app",
+      description: "Open the website in Chrome, Edge or Safari and add it from the browser menu.",
     },
   }[mode];
 

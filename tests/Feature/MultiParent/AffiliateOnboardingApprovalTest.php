@@ -67,7 +67,10 @@ it('creates a requested affiliate atomically on approval and records rejection r
         ->assertOk();
     $created = Affiliate::where('slug', 'approved-affiliate')->sole();
     expect($created->parent_business_id)->toBe($fixture['parent']->id)
-        ->and($request->fresh()->affiliate_id)->toBe($created->id);
+        ->and($request->fresh()->affiliate_id)->toBe($created->id)
+        ->and($created->processingProfile?->management_mode)->toBe('parent_managed')
+        ->and($created->processingProfile?->processing_engine)->toBe('multi_parent')
+        ->and($created->processingProfile?->status)->toBe('active');
 
     $rejected = AffiliateOnboardingRequest::create([
         'parent_business_id' => $fixture['parent']->id, 'requested_by_parent_admin_id' => $fixture['parentAdmin']->id,

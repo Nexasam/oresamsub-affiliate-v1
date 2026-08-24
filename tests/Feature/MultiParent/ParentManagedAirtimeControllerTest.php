@@ -88,6 +88,26 @@ it('routes one eligible airtime number through the parent-managed orchestrator a
         ->and(Transaction::withoutGlobalScope('affiliate')->count())->toBe(0);
 });
 
+it('initializes a missing processing profile before routing airtime', function () {
+    $f = airtimeControllerFixture();
+    $f['affiliate']->processingProfile()->delete();
+    config()->set('parent_businesses.features.parent_managed_purchases', true);
+    config()->set('parent_businesses.features.provider_routing', true);
+    $transaction = new Transaction(['status' => 1, 'txn_reference' => 'AIRTIME-HEALED-1', 'user_screen_message' => 'Airtime delivered']);
+
+    $this->mock(ParentManagedPurchaseOrchestrator::class, fn (MockInterface $mock) => $mock
+        ->shouldReceive('purchase')->once()->andReturn(['transaction' => $transaction, 'provider_result' => ['successful' => true]]));
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldNotReceive('execute'));
+
+    $this->withoutMiddleware()->actingAs($f['customer'])->withSession(['affiliate' => $f['affiliate']])->postJson('/user/airtime/store2', [
+        'network_id' => $f['network']->id, 'phone_number' => '08030000000', 'product_plan_id' => $f['affiliatePlan']->id,
+        'pin' => '1234', 'amount' => 1000, 'validatephonenetwork' => 0, 'wallet_category' => 'main_wallet',
+    ])->assertOk()->assertJsonPath('status', 1);
+
+    expect($f['affiliate']->fresh()->processingProfile?->processing_engine)->toBe('multi_parent')
+        ->and($f['affiliate']->fresh()->processingProfile?->management_mode)->toBe('parent_managed');
+});
+
 it('completes airtime from the customer request through provider routing and financial settlement', function () {
     $f = airtimeControllerFixture();
     config()->set('parent_businesses.features.parent_managed_purchases', true);

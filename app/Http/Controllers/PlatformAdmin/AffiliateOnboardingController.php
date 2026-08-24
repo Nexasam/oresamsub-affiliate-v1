@@ -5,6 +5,7 @@ namespace App\Http\Controllers\PlatformAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateOnboardingRequest;
+use App\Services\AffiliateProcessingProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,14 +25,14 @@ class AffiliateOnboardingController extends Controller
         ]);
     }
 
-    public function review(Request $request, AffiliateOnboardingRequest $onboarding): JsonResponse|RedirectResponse
+    public function review(Request $request, AffiliateOnboardingRequest $onboarding, AffiliateProcessingProfileService $profiles): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'action' => ['required', Rule::in(['approve', 'reject'])],
             'reason' => ['nullable', 'required_if:action,reject', 'string', 'min:5', 'max:1000'],
         ]);
 
-        $onboarding = DB::transaction(function () use ($onboarding, $data, $request) {
+        $onboarding = DB::transaction(function () use ($onboarding, $data, $request, $profiles) {
             $onboarding = AffiliateOnboardingRequest::lockForUpdate()->findOrFail($onboarding->id);
             if ($onboarding->status !== 'pending') {
                 throw ValidationException::withMessages(['action' => 'Only a pending onboarding request can be reviewed.']);
@@ -48,6 +49,7 @@ class AffiliateOnboardingController extends Controller
                         'parent_email' => "parent+{$onboarding->requested_slug}@affiliate.local", 'activation_status' => 1,
                     ]);
                 $affiliate->update(['parent_business_id' => $onboarding->parent_business_id, 'parent_reseller_level_id' => $onboarding->parent_reseller_level_id]);
+                $profiles->ensure($affiliate->fresh('parentBusiness'));
                 $onboarding->update(['affiliate_id' => $affiliate->id, 'status' => 'approved', 'reviewed_by_admin_id' => $request->user('platform_admin')->id, 'reviewed_at' => now(), 'rejection_reason' => null]);
             } else {
                 $onboarding->update(['status' => 'rejected', 'reviewed_by_admin_id' => $request->user('platform_admin')->id, 'reviewed_at' => now(), 'rejection_reason' => $data['reason']]);

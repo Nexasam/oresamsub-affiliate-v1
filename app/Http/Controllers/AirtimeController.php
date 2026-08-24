@@ -6,6 +6,7 @@ use App\Http\Services\Api\v1\VendorUsersApi\Products\ProductsService;
 use App\Mail\WalletFundingNotification;
 use App\Models\AffiliateProductPlan;
 use App\Models\Affiliate;
+use App\Services\AffiliateProcessingProfileService;
 use App\Models\AffiliateUserPlan;
 use App\Models\Automation;
 use App\Models\BulkDataProductPlans;
@@ -482,7 +483,11 @@ class AirtimeController extends Controller
             }
         }
 
-        $profile = Affiliate::query()->find($plan_details->affiliate_id)?->processingProfile;
+        $affiliate = Affiliate::query()->find($plan_details->affiliate_id);
+        $profile = $affiliate?->processingProfile;
+        if (! $profile && $affiliate?->parent_business_id) {
+            $profile = app(AffiliateProcessingProfileService::class)->ensure($affiliate);
+        }
         if ($profile?->processing_engine === 'multi_parent') {
             if ($profile->status !== 'active' || $profile->management_mode !== 'parent_managed') {
                 return response()->json(['status' => -1, 'message' => 'This affiliate is not configured for parent-managed Airtime purchasing.']);

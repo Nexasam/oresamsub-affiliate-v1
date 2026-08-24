@@ -13,23 +13,15 @@ use App\Http\Services\VirtualAccountService;
 class VirtualAccountsController extends Controller
 {
     public function generate(Request $request){
+        $data['user'] = $request->user();
 
-        //generate xixa
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'nullable|exists:users,id',
-          ]);
-    
-        if ($validator->stopOnFirstFailure()->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+        // Affiliate admins retain the existing ability to generate for one of
+        // their customers. Customer requests always target the authenticated
+        // account, even if a forged user_id is submitted.
+        if ($request->filled('user_id') && $request->user()->role?->role_name === 'Admin') {
+            $data['user'] = User::query()->findOrFail($request->integer('user_id'));
         }
 
-        $user_id = $request->user_id ?? '';
-
-        if($user_id == ''){
-            $data['user'] = auth()->user();
-        }else{
-            $data['user'] = User::where('id',$user_id)->first();
-        }
         $generate_vas = (new VirtualAccountService())->generate_accounts($data);
         // return $generate_vas;
 

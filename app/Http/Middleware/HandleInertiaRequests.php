@@ -62,6 +62,10 @@ class HandleInertiaRequests extends Middleware
             'affiliate' => session('affiliate'),
             'siteLogo' => $siteLogo?->image_name,
             'sitename' => $affiliate?->name ?? 'Oresamsub',
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'failure' => fn () => $request->session()->get('failure'),
+            ],
             'customerUi' => [
                 'version' => $customerUiVersion,
                 'canSwitch' => (bool) config('customer-ui.v2_enabled') && ! config('customer-ui.force_v1'),

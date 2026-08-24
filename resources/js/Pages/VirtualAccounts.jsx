@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { usePage, Link } from "@inertiajs/react";
+import { usePage, router } from "@inertiajs/react";
+import { Landmark, Loader2 } from "lucide-react";
 import DashboardLayout from "@/Layouts/CustomerLayout";
 import WalletBalance from "@/Components/WalletBalance";
 import PrimaryLink from "@/Components/PrimaryLink";
@@ -7,11 +8,33 @@ import PrimaryLink from "@/Components/PrimaryLink";
 
 export default function VirtualAccounts() {
   const { props } = usePage();
-  const { auth, virtualccts, fundingHistory = [] } = props;
+  const { auth, virtualccts = [], fundingHistory = [] } = props;
   const user = auth.user;
 
   const [copiedAcct, setCopiedAcct] = useState(null);
   const [showBalance, setShowBalance] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [generationNotice, setGenerationNotice] = useState(null);
+
+  const generateVirtualAccount = () => {
+    setGenerationNotice(null);
+    router.post(route("user.virtual_accounts.generate"), {}, {
+      preserveScroll: true,
+      onStart: () => setGenerating(true),
+      onSuccess: (page) => {
+        const failure = page.props?.flash?.failure;
+        setGenerationNotice({
+          type: failure ? "error" : "success",
+          message: failure || page.props?.flash?.success || "Virtual account generation completed.",
+        });
+      },
+      onError: () => setGenerationNotice({
+        type: "error",
+        message: "The account could not be generated. Please try again or contact support.",
+      }),
+      onFinish: () => setGenerating(false),
+    });
+  };
 
   const handleCopy = (accountNumber) => {
     navigator.clipboard.writeText(accountNumber);
@@ -71,11 +94,31 @@ export default function VirtualAccounts() {
                 </div>
               </div>
             ))
-          ) : (
-            <p className="text-center text-sm text-gray-500">
-              No virtual accounts available yet.
-            </p>
-          )}
+          ) : virtualccts.length === 0 ? (
+            <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 px-5 py-8 text-center dark:border-emerald-800 dark:bg-emerald-950/20">
+              <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20">
+                <Landmark size={24} />
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">No virtual account yet</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Generate a dedicated account and use it to fund your wallet.
+              </p>
+              <button
+                type="button"
+                onClick={generateVirtualAccount}
+                disabled={generating}
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {generating ? <Loader2 size={17} className="animate-spin" /> : <Landmark size={17} />}
+                {generating ? "Generating account..." : "Generate virtual account"}
+              </button>
+              {generationNotice && (
+                <p className={`mt-4 text-sm ${generationNotice.type === "success" ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                  {generationNotice.message}
+                </p>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 

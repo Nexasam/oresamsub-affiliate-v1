@@ -58,6 +58,34 @@ it('generates and stores securewaveng virtual accounts once', function () {
     Http::assertSentCount(1);
 });
 
+it('lets a customer generate only their own virtual account', function () {
+    $fixture = virtualAccountFixture('securewaveng');
+    $fixture['user']->forceFill(['email_verified_at' => now()])->save();
+    $otherUser = User::factory()->create([
+        'affiliate_id' => $fixture['affiliate']->id,
+        'user_plan_id' => $fixture['user']->user_plan_id,
+        'email' => 'other-va-customer@example.test',
+    ]);
+    Http::fake(['securewaveng.com/*' => Http::response(['status' => true, 'data' => [[
+        'status' => 1, 'account_reference' => 'SELF-SERVICE-VA', 'account_bank' => 'Wema',
+        'bank_code' => 'WEMA', 'account_name' => 'Authenticated Customer',
+        'account_email' => $fixture['user']->email, 'account_number' => '9876543299',
+    ]]], 200)]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $this->withSession(['affiliate' => $fixture['affiliate']])
+        ->actingAs($fixture['user'])
+        ->post('/user/virtual_accounts/generate', ['user_id' => $otherUser->id])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('user_virtual_accounts', [
+        'user_id' => $fixture['user']->id,
+        'account_reference' => 'SELF-SERVICE-VA',
+    ]);
+    $this->assertDatabaseMissing('user_virtual_accounts', ['user_id' => $otherUser->id]);
+});
+
 it('uses securewaveng business_id credentials while retaining contract_code compatibility', function () {
     $fixture = virtualAccountFixture('securewaveng');
     $fixture['config']->update(['credentials' => [

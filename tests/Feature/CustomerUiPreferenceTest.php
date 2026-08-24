@@ -1,8 +1,11 @@
 <?php
 
 use App\Models\Affiliate;
+use App\Models\ParentAdmin;
 use App\Models\User;
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
@@ -89,4 +92,20 @@ test('the resolver honours user preference affiliate default and force v1', func
 test('guests cannot change the customer interface', function () {
     $this->patch(route('customer-ui.update'), ['version' => 'v2'])
         ->assertRedirect(route('login'));
+});
+
+test('shared inertia data ignores a parent administrator for customer ui resolution', function () {
+    config()->set('customer-ui.v2_enabled', true);
+    config()->set('customer-ui.force_v1', false);
+
+    $request = Request::create('/parent-admin', 'GET');
+    $request->setUserResolver(fn () => new ParentAdmin([
+        'id' => 2,
+        'name' => 'Parent Owner',
+        'email' => 'parent@example.test',
+    ]));
+
+    $shared = app(HandleInertiaRequests::class)->share($request);
+
+    expect($shared['customerUi']['version'])->toBe('v1');
 });

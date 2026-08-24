@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\ParentAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ParentAdmin\ResolveTransactionReconciliationRequest;
 use App\Models\Affiliate;
 use App\Models\Transaction;
 use App\Services\Providers\ParentManagedManualPurchaseService;
+use App\Services\Providers\ParentPurchaseReconciliationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -63,6 +65,20 @@ class TransactionController extends Controller
         return redirect()->route('parent-admin.transactions.index')
             ->with('success', $validated['outcome'] === 'successful'
                 ? 'Transaction marked successful and settlement captured.'
+                : 'Transaction marked failed; settlement released and customer refunded.');
+    }
+
+    public function resolveReconciliation(
+        ResolveTransactionReconciliationRequest $request,
+        int $transaction,
+        ParentPurchaseReconciliationService $reconciliation,
+    ): RedirectResponse {
+        $record = Transaction::withoutGlobalScope('affiliate')->findOrFail($transaction);
+        $reconciliation->resolve($record, $request->user('parent_admin'), $request->validated());
+
+        return redirect()->route('parent-admin.transactions.index')
+            ->with('success', $request->validated('outcome') === 'successful'
+                ? 'Transaction confirmed successful and settlement captured.'
                 : 'Transaction marked failed; settlement released and customer refunded.');
     }
 }

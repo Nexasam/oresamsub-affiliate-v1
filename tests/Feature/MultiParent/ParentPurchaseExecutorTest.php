@@ -6,6 +6,7 @@ use App\Models\AffiliateProcessingProfile;
 use App\Models\AffiliateServiceProfitCap;
 use App\Models\AffiliateSettlementWallet;
 use App\Models\ParentBusiness;
+use App\Models\ParentAdmin;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ParentProviderConnection;
 use App\Models\Product;
@@ -317,6 +318,99 @@ it('refunds a conclusive provider failure and releases settlement exactly once',
         ->and(\App\Models\WalletLog::withoutGlobalScope('affiliate')->where('user_id', $customer->id)->where('transaction_category', 'PARENT_MANAGED_DATA_REFUND')->count())->toBe(1);
 
     expect(app(TransactionFinancialReconciliationService::class)->audit($result['transaction'])['balanced'])->toBeTrue();
+});
+
+it('lets the owning parent confirm an uncertain purchase as successful from the transactions UI', function () {
+    $f = executableAirtimePurchase('parent-reconciliation-success');
+    $admin = ParentAdmin::create([
+        'parent_business_id' => $f['parent']->id, 'name' => 'Reconciliation Operator',
+        'email' => 'reconciliation-success@example.test', 'password' => 'password', 'active' => true,
+    ]);
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldReceive('execute')->once()->andReturn([
+        'status' => 0, 'successful' => false, 'ambiguous' => true,
+        'routing_status' => 'reconciliation_required', 'user_message' => 'Uncertain',
+        'admin_message' => 'Provider timed out', 'provider_reference' => 'UPSTREAM-CONFIRMED-1',
+        'parent_provider_connection_id' => $f['connection']->id,
+        'product_plan_provider_route_id' => $f['route']->id,
+        'provider_plan_id_snapshot' => $f['route']->provider_plan_id,
+        'provider_response' => ['status' => 'pending'],
+    ]));
+    $purchase = app(ParentManagedPurchaseOrchestrator::class)->purchase($f['customer'], $f['affiliatePlan']->fresh(), [
+        'reference' => 'AIRTIME-RECONCILE-SUCCESS', 'service' => 'airtime', 'amount' => '1000.00',
+        'phone_number' => '08030000000', 'network' => 'MTN',
+    ], 1, '1000.00');
+
+    $this->actingAs($admin, 'parent_admin')->patch('/parent-admin/transactions/'.$purchase['transaction']->id.'/reconciliation', [
+        'outcome' => 'successful', 'provider_confirmed' => '1',
+        'provider_reference' => 'UPSTREAM-CONFIRMED-1',
+        'note' => 'Confirmed delivered on provider dashboard.',
+    ])->assertRedirect('/parent-admin/transactions');
+
+    $transaction = $purchase['transaction']->fresh();
+    $wallet = AffiliateSettlementWallet::where('affiliate_id', $f['affiliate']->id)->first();
+    expect($transaction->routing_status)->toBe('successful')
+        ->and((int) $transaction->status)->toBe(1)
+        ->and((int) $transaction->manually_processed_by)->toBe($admin->id)
+        ->and($transaction->provider_reference)->toBe('UPSTREAM-CONFIRMED-1')
+        ->and($f['customer']->fresh()->main_wallet)->toBe('510.00')
+        ->and($wallet->available_balance)->toBe('530.00')
+        ->and($wallet->reserved_balance)->toBe('0.00');
+});
+
+it('requires explicit provider confirmation before manually resolving an uncertain purchase', function () {
+    $f = executableAirtimePurchase('parent-reconciliation-confirmation');
+    $admin = ParentAdmin::create([
+        'parent_business_id' => $f['parent']->id, 'name' => 'Reconciliation Operator',
+        'email' => 'reconciliation-confirmation@example.test', 'password' => 'password', 'active' => true,
+    ]);
+    $transaction = Transaction::withoutGlobalScope('affiliate')->create([
+        'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+        'user_id' => $f['customer']->id, 'affiliate_product_plan_id' => $f['affiliatePlan']->id,
+        'api_id' => 'AIRTIME', 'txn_reference' => 'AIRTIME-RECONCILE-CONFIRMATION',
+        'transaction_category' => 'airtime', 'wallet_category' => 'main_wallet', 'amount' => '990.00',
+        'balance_before' => '1500.00', 'balance_after' => '510.00', 'description' => 'Uncertain purchase',
+        'status' => 0, 'routing_status' => 'reconciliation_required', 'customer_price_snapshot' => '990.00',
+        'affiliate_cost_snapshot' => '970.00',
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->patch('/parent-admin/transactions/'.$transaction->id.'/reconciliation', [
+        'outcome' => 'successful', 'note' => 'Not actually confirmed yet.',
+    ])->assertSessionHasErrors('provider_confirmed');
+
+    expect($transaction->fresh()->routing_status)->toBe('reconciliation_required');
+});
+
+it('lets the owning parent fail an uncertain purchase and refund exactly once', function () {
+    $f = executableAirtimePurchase('parent-reconciliation-failure');
+    $admin = ParentAdmin::create([
+        'parent_business_id' => $f['parent']->id, 'name' => 'Failure Operator',
+        'email' => 'reconciliation-failure@example.test', 'password' => 'password', 'active' => true,
+    ]);
+    $this->mock(ParentPurchaseExecutor::class, fn (MockInterface $mock) => $mock->shouldReceive('execute')->once()->andReturn([
+        'status' => 0, 'successful' => false, 'ambiguous' => true, 'routing_status' => 'reconciliation_required',
+        'user_message' => 'Uncertain', 'admin_message' => 'Provider timed out',
+        'parent_provider_connection_id' => $f['connection']->id,
+        'product_plan_provider_route_id' => $f['route']->id,
+        'provider_plan_id_snapshot' => $f['route']->provider_plan_id,
+    ]));
+    $purchase = app(ParentManagedPurchaseOrchestrator::class)->purchase($f['customer'], $f['affiliatePlan']->fresh(), [
+        'reference' => 'AIRTIME-RECONCILE-FAILED', 'service' => 'airtime', 'amount' => '1000.00',
+        'phone_number' => '08030000000', 'network' => 'MTN',
+    ], 1, '1000.00');
+
+    $payload = ['outcome' => 'failed', 'provider_confirmed' => '1', 'note' => 'Provider dashboard confirmed that the request failed.'];
+    $url = '/parent-admin/transactions/'.$purchase['transaction']->id.'/reconciliation';
+    $this->actingAs($admin, 'parent_admin')->patch($url, $payload)->assertRedirect('/parent-admin/transactions');
+    $this->actingAs($admin, 'parent_admin')->patch($url, $payload)->assertSessionHasErrors('transaction');
+
+    $transaction = $purchase['transaction']->fresh();
+    $wallet = AffiliateSettlementWallet::where('affiliate_id', $f['affiliate']->id)->first();
+    expect($transaction->routing_status)->toBe('failed')
+        ->and((int) $transaction->status)->toBe(2)
+        ->and($f['customer']->fresh()->main_wallet)->toBe('1500.00')
+        ->and($wallet->available_balance)->toBe('1500.00')
+        ->and($wallet->reserved_balance)->toBe('0.00')
+        ->and(WalletLog::withoutGlobalScope('affiliate')->where('transaction_id', $transaction->id)->where('transaction_category', 'PARENT_MANAGED_AIRTIME_REFUND')->count())->toBe(1);
 });
 
 it('flags a parent-managed purchase whose financial snapshots no longer reconcile', function () {

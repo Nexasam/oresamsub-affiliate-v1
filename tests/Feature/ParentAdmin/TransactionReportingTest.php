@@ -29,7 +29,10 @@ it('shows only the current parents transactions including legacy rows without a 
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions')
         ->assertOk()->assertSee('OWN-LEGACY')->assertSee('OWN-ROUTED')->assertDontSee('FOREIGN-TXN')
-        ->assertSee('Needs reconciliation');
+        ->assertSee('Needs reconciliation')
+        ->assertSee('Confirm successful')
+        ->assertSee('Fail & refund')
+        ->assertSee('data-testid="reconciliation-modal"', false);
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions?routing_status=reconciliation_exhausted')
         ->assertOk()->assertSee('OWN-MANUAL-REVIEW')->assertSee('Manual review');
 });

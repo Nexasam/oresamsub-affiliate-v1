@@ -75,6 +75,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('provider-connections', [ProviderConnectionController::class, 'index'])->name('provider-connections.index');
         Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
         Route::patch('transactions/{transaction}/manual-completion', [TransactionController::class, 'completeManual'])->name('transactions.manual-completion');
+        Route::patch('transactions/{transaction}/reconciliation', [TransactionController::class, 'resolveReconciliation'])->name('transactions.reconciliation.resolve');
         Route::get('profits', [ProfitController::class, 'index'])->name('profits.index');
         Route::get('profits/export', [ProfitController::class, 'export'])->name('profits.export');
         Route::get('provider-connections/data', [ProviderConnectionController::class, 'data'])->name('provider-connections.data');

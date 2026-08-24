@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
   Activity, CircleUserRound, CreditCard, Headphones, Home, Menu,
-  Moon, PackageOpen, ReceiptText, Smartphone, Sun, Wifi, X, Zap,
+  LogOut, Moon, PackageOpen, ReceiptText, Smartphone, Sun, Wifi, X, Zap,
 } from "lucide-react";
 import PwaInstallPopup from "@/Components/PwaInstallPopup";
 import UiVersionSwitch from "@/Components/V2/UiVersionSwitch";
@@ -112,6 +112,14 @@ export default function DashboardLayoutV2({ children, title }) {
             <span>Get support</span>
           </a>
           <UiVersionSwitch />
+          <button
+            type="button"
+            onClick={() => router.post("/logout2", {}, { replace: true, preserveState: false })}
+            className="rg-v2-side-link w-full text-rose-600 hover:text-rose-700 dark:text-rose-400"
+          >
+            <LogOut size={19} strokeWidth={1.9} />
+            <span>Log out</span>
+          </button>
         </div>
       </aside>
 

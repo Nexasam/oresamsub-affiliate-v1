@@ -121,7 +121,7 @@ class ParentManagedPurchaseOrchestrator
     {
         return DB::transaction(function () use ($transaction, $affiliate, $customer, $result) {
             $locked = Transaction::withoutGlobalScope('affiliate')->lockForUpdate()->findOrFail($transaction->id);
-            if (! in_array($locked->routing_status, ['processing', 'reconciliation_required'], true)) {
+            if (! in_array($locked->routing_status, ['processing', 'reconciliation_required', 'reconciliation_exhausted'], true)) {
                 return $locked;
             }
 

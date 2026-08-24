@@ -148,8 +148,8 @@ document.addEventListener('alpine:init', () => {
         users: [], transactions: [], bankCodes: [], fundingOptions: [], customer:null, creditTarget:null, loading: false, busy: false, notice: '', error: '', userSearch: '', showUserModal: false, showCreditModal:false, showCustomerModal:false,
         creditForm:{amount:'',reason:''},
         newBankCode:{funding_option_id:'',bank_name:'',bank_code:'',bank_charges:0,visibility_status:1,rate_category:'Flat',capped_at:100},
-        affiliateForm:@js($affiliate->only(['name','contact_email','contact_phone','domain_url','website_url','parent_email','parent_key','address'])),
-        affiliateFields:[{key:'name',label:'Name'},{key:'contact_email',label:'Contact email',type:'email'},{key:'contact_phone',label:'Contact phone'},{key:'domain_url',label:'Domain'},{key:'website_url',label:'Website URL',type:'url'},{key:'parent_email',label:'Parent email',type:'email'},{key:'address',label:'Address'}],
+        affiliateForm:@js($affiliate->only(['name','contact_email','contact_phone','domain_url','parent_email','parent_key','address'])),
+        affiliateFields:[{key:'name',label:'Name'},{key:'contact_email',label:'Contact email',type:'email'},{key:'contact_phone',label:'Contact phone'},{key:'domain_url',label:'Domain'},{key:'parent_email',label:'Parent email',type:'email'},{key:'address',label:'Address'}],
         newUser: { first_name:'', last_name:'', username:'', email:'', phone_number:'', password:'', role:'User' },
         async request(method, url, data = null) {
             this.error = '';

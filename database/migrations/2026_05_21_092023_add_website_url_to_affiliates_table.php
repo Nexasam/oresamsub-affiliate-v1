@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('affiliates', function (Blueprint $table) {
-            $table->dropColumn('website_url');
+            $table->dropColumn('parent_website');
         });
     }
 };

@@ -45,6 +45,30 @@ function platformOperationsAdmin(): Admin
     ]);
 }
 
+it('uses domain url as the canonical affiliate website field', function () {
+    $admin = platformOperationsAdmin();
+    $affiliate = platformOperationsAffiliate(['domain_url' => 'old.example.com']);
+
+    $this->actingAs($admin, 'platform_admin')
+        ->patchJson("/admin/affiliates/{$affiliate->id}", [
+            'name' => 'Archived Affiliate',
+            'domain_url' => 'archived.example.com',
+            // Older cached screens may still submit this obsolete field.
+            'website_url' => 'https://stale.example.com',
+        ])
+        ->assertOk();
+
+    expect($affiliate->fresh())
+        ->name->toBe('Archived Affiliate')
+        ->domain_url->toBe('archived.example.com');
+
+    $this->actingAs($admin, 'platform_admin')
+        ->get("/admin/affiliates/{$affiliate->id}")
+        ->assertOk()
+        ->assertDontSee('Website URL')
+        ->assertDontSee("key:'website_url'", false);
+});
+
 it('stores affiliate-specific margin defaults without changing existing plans by default', function () {
     $admin = platformOperationsAdmin();
     $affiliate = platformOperationsAffiliate();

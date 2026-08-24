@@ -60,7 +60,6 @@ class AffiliateController extends Controller
             'activation_status' => ['sometimes', Rule::in([0, 1, '0', '1'])],
             'address' => ['sometimes', 'nullable', 'string', 'max:500'],
             'domain_url' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'website_url' => ['sometimes', 'nullable', 'url', 'max:255'],
             'parent_key' => ['sometimes', 'nullable', 'string', 'max:255'],
             'parent_email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'affiliate_plan_id' => ['sometimes', 'integer'],
@@ -257,10 +256,9 @@ class AffiliateController extends Controller
                 $option->api_secret_key_masked = $this->maskSecret($option->api_secret_key);
                 $option->setHidden(['api_public_key', 'api_secret_key']);
                 $suffix = $option->webhook_string?->webhook_suffix_string;
-                $host = parse_url(
-                    str_contains((string) ($affiliate->domain_url ?: $affiliate->website_url), '://')
-                        ? ($affiliate->domain_url ?: $affiliate->website_url)
-                        : 'https://'.($affiliate->domain_url ?: $affiliate->website_url),
+                $domain = trim((string) $affiliate->domain_url);
+                $host = $domain === '' ? null : parse_url(
+                    str_contains($domain, '://') ? $domain : 'https://'.$domain,
                     PHP_URL_HOST
                 );
                 $option->webhook_url = $suffix && $host

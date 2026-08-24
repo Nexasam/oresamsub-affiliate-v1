@@ -4,7 +4,7 @@
 @section('heading', 'Manage product plans')
 
 @section('content')
-<div class="space-y-5" x-data="{ mode: 'single' }">
+<div class="space-y-5" x-data="{ mode: 'single', drawerOpen: false, selectedPlan: null, selectedIds: [], openDrawer(plan) { this.selectedPlan = JSON.parse(JSON.stringify(plan)); this.drawerOpen = true }, closeDrawer() { this.drawerOpen = false; this.selectedPlan = null } }" @keydown.escape.window="closeDrawer()">
     <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">Only plans owned by <strong>{{ auth('parent_admin')->user()->parentBusiness->name }}</strong> appear here. Global categories are shared; provider routing and reseller prices belong to this parent.</div>
     @if(session('success'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</div>@endif
     @if($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Please correct the following:</p><ul class="mt-2 list-disc space-y-1 pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
@@ -55,7 +55,100 @@
         </form>
     </section>
 
-    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="border-b p-5"><h2 class="font-semibold">Parent product plans</h2><p class="text-sm text-slate-500">{{ $plans->total() }} plans</p></div><div class="overflow-x-auto"><table class="w-full min-w-[1100px] text-left text-sm"><thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="p-4">Plan</th><th class="p-4">Category</th><th class="p-4">Cost</th><th class="p-4">Route</th><th class="p-4">Availability</th><th class="p-4"></th></tr></thead><tbody class="divide-y">@forelse($plans as $plan)@php($formId="plan-{$plan->id}")<tr><td class="p-4"><input form="{{ $formId }}" name="product_plan_name" value="{{ $plan->product_plan_name }}" class="w-56 rounded-lg border-slate-200"><p class="text-xs text-slate-400">{{ $plan->api_id }}</p></td><td class="p-4"><select form="{{ $formId }}" name="product_plan_category_id" class="w-64 rounded-lg border-slate-200">@foreach($categories as $category)<option value="{{ $category->id }}" @selected($plan->product_plan_category_id===$category->id)>{{ $category->product_plan_category_name }}</option>@endforeach</select></td><td class="p-4"><input form="{{ $formId }}" name="cost_price" value="{{ $plan->cost_price }}" type="number" min="0" step=".01" class="w-28 rounded-lg border-slate-200"></td><td class="p-4">{{ $plan->providerRoutes->first()?->provider_plan_id ?: 'Draft — no route' }}</td><td class="p-4">@foreach(['visibility'=>'Active','affiliate_visibility'=>'Affiliates','public_visibility'=>'Public'] as $field=>$label)<input form="{{ $formId }}" type="hidden" name="{{ $field }}" value="0"><label class="block text-xs"><input form="{{ $formId }}" name="{{ $field }}" value="1" type="checkbox" @checked($plan->{$field})> {{ $label }}</label>@endforeach</td><td class="p-4"><div class="flex items-center gap-2"><form id="{{ $formId }}" method="POST" action="{{ route('parent-admin.product-plans.update',$plan) }}">@csrf @method('PATCH')<button class="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white">Save</button></form><a href="{{ route('parent-admin.product-plans.edit', $plan) }}" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700">Edit</a></div></td></tr>@empty<tr><td colspan="6" class="p-8 text-center text-slate-500">No product plans found.</td></tr>@endforelse</tbody></table></div><div class="p-4">{{ $plans->links() }}</div></section>
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-end justify-between gap-4 border-b p-4">
+            <div><h2 class="font-semibold">Parent product plans</h2><p class="text-xs text-slate-500">{{ $plans->total() }} plans · 25 per page</p></div>
+            <form method="GET" action="{{ route('parent-admin.product-plans.index') }}" class="flex flex-1 flex-wrap justify-end gap-2">
+                <input name="search" value="{{ request('search') }}" placeholder="Search name, category or network" class="min-w-48 flex-1 rounded-lg border-slate-200 text-sm md:max-w-xs">
+                <select name="category_id" class="max-w-56 rounded-lg border-slate-200 text-sm"><option value="">All categories</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->product_plan_category_name }}</option>@endforeach</select>
+                <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Filter</button>
+                @if(request()->hasAny(['search','category_id']))<a href="{{ route('parent-admin.product-plans.index') }}" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">Clear</a>@endif
+            </form>
+        </div>
+
+        <form method="POST" action="{{ route('parent-admin.product-plans.bulk-update') }}">@csrf @method('PATCH')
+            <div class="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-4 py-2.5">
+                <button type="button" class="text-xs font-semibold text-blue-700" @click="selectedIds = @js($plans->pluck('id')->map(fn($id)=>(string)$id)->values())">Select visible plans</button>
+                <button type="button" class="text-xs font-semibold text-slate-500" @click="selectedIds = []">Clear selection</button>
+                <span class="text-xs text-slate-400" x-text="`${selectedIds.length} selected`"></span>
+                <div class="ml-auto flex flex-wrap gap-2">
+                    <select name="action" required class="rounded-lg border-slate-200 py-1.5 text-xs"><option value="">Bulk action</option><option value="activate">Activate</option><option value="deactivate">Deactivate</option><option value="show_affiliates">Show for affiliates</option><option value="hide_affiliates">Hide from affiliates</option><option value="show_public">Show publicly</option><option value="hide_public">Hide publicly</option></select>
+                    <button :disabled="selectedIds.length === 0" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Apply</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[850px] text-left text-sm">
+                    <thead class="bg-white text-[10px] uppercase tracking-wider text-slate-400"><tr><th class="w-10 px-3 py-2"></th><th class="px-3 py-2">Plan</th><th class="px-3 py-2">Category</th><th class="px-3 py-2">Cost</th><th class="px-3 py-2">Route</th><th class="px-3 py-2">Status</th><th class="w-20 px-3 py-2"></th></tr></thead>
+                    <tbody class="divide-y divide-slate-100">
+                    @forelse($plans as $plan)
+                        @php
+                            $primaryRoute = $plan->providerRoutes->firstWhere('priority', 1);
+                            $drawerPlan = [
+                                'id' => $plan->id,
+                                'product_plan_name' => $plan->product_plan_name,
+                                'product_plan_category_id' => $plan->product_plan_category_id,
+                                'api_id' => $plan->api_id,
+                                'cost_price' => $plan->cost_price,
+                                'admin_cost_price' => $plan->admin_cost_price,
+                                'data_size_in_mb' => $plan->data_size_in_mb,
+                                'validity_in_days' => $plan->validity_in_days,
+                                'profit_category' => $plan->profit_category ?: 'flat',
+                                'visibility' => (bool) $plan->visibility,
+                                'affiliate_visibility' => (bool) $plan->affiliate_visibility,
+                                'public_visibility' => (bool) $plan->public_visibility,
+                                'commission_feature' => (int) $plan->commission_feature,
+                                'upline_commission_option' => $plan->upline_commission_option ?: 'flat',
+                                'upline_flat_commission' => $plan->upline_flat_commission ?: 0,
+                                'upline_percentage_commission' => $plan->upline_percentage_commission ?: 0,
+                                'upline_commission_cap' => $plan->upline_commission_cap ?: 1000,
+                                'route' => ['parent_provider_connection_id' => $primaryRoute?->parent_provider_connection_id, 'provider_plan_id' => $primaryRoute?->provider_plan_id],
+                                'prices' => $levels->map(fn($level) => ['parent_reseller_level_id' => $level->id, 'name' => $level->name, 'selling_price' => $plan->parentPrices->firstWhere('parent_reseller_level_id', $level->id)?->selling_price, 'max_profit' => $plan->parentPrices->firstWhere('parent_reseller_level_id', $level->id)?->max_profit])->values(),
+                                'configuration_url' => route('parent-admin.product-plans.configuration.update', $plan),
+                                'edit_url' => route('parent-admin.product-plans.edit', $plan),
+                            ];
+                        @endphp
+                        <tr class="hover:bg-slate-50/80">
+                            <td class="px-3 py-2"><input type="checkbox" name="plan_ids[]" value="{{ $plan->id }}" x-model="selectedIds" class="rounded border-slate-300"></td>
+                            <td class="max-w-64 px-3 py-2"><p class="truncate text-xs font-semibold text-slate-900" title="{{ $plan->product_plan_name }}">{{ $plan->product_plan_name }}</p><p class="truncate text-[10px] text-slate-400">{{ $plan->api_id ?: 'No internal reference' }}</p></td>
+                            <td class="max-w-48 px-3 py-2"><p class="truncate text-xs text-slate-600" title="{{ $plan->product_plan_category?->product_plan_category_name }}">{{ $plan->product_plan_category?->product_plan_category_name ?: '—' }}</p></td>
+                            <td class="whitespace-nowrap px-3 py-2 text-xs font-semibold">₦{{ number_format((float)$plan->cost_price, 2) }}</td>
+                            <td class="max-w-44 px-3 py-2"><p class="truncate text-xs text-slate-600" title="{{ $primaryRoute?->provider_plan_id }}">{{ $primaryRoute?->provider_plan_id ?: 'Draft — no route' }}</p><p class="truncate text-[10px] text-slate-400">{{ $primaryRoute?->parentProviderConnection?->name }}</p></td>
+                            <td class="px-3 py-2"><div class="flex flex-wrap gap-1">@foreach(['visibility'=>'Active','affiliate_visibility'=>'Affiliates','public_visibility'=>'Public'] as $field=>$label)<span class="rounded-full px-2 py-0.5 text-[9px] font-bold {{ $plan->{$field} ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400' }}">{{ $label }}</span>@endforeach</div></td>
+                            <td class="px-3 py-2 text-right"><button type="button" data-testid="open-plan-drawer-{{ $plan->id }}" data-update-url="{{ route('parent-admin.product-plans.configuration.update', $plan) }}" data-edit-url="{{ route('parent-admin.product-plans.edit', $plan) }}" @click='openDrawer(@js($drawerPlan))' class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Edit</button></td>
+                        </tr>
+                    @empty<tr><td colspan="7" class="p-8 text-center text-slate-500">No product plans found.</td></tr>@endforelse
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        <div class="border-t p-3">{{ $plans->links() }}</div>
+    </section>
+
+    <div x-cloak x-show="drawerOpen" x-transition.opacity class="fixed inset-0 z-[70] bg-slate-950/50" @click="closeDrawer()"></div>
+    <aside data-testid="product-plan-drawer" x-cloak :class="drawerOpen ? 'translate-x-0' : 'translate-x-full'" class="fixed inset-y-0 right-0 z-[80] flex w-full max-w-2xl flex-col bg-slate-50 shadow-2xl transition-transform duration-200" role="dialog" aria-modal="true" aria-label="Edit product plan">
+        <div class="flex items-center justify-between border-b bg-white px-5 py-4"><div class="min-w-0"><p class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Full configuration editor</p><h2 class="truncate font-semibold" x-text="selectedPlan?.product_plan_name || 'Product plan'"></h2></div><button type="button" @click="closeDrawer()" class="rounded-lg border px-3 py-2 text-sm">Close</button></div>
+        <form x-show="selectedPlan" :action="selectedPlan?.configuration_url" method="POST" class="flex min-h-0 flex-1 flex-col">@csrf @method('PUT')
+            <input type="hidden" name="editing_plan_id" :value="selectedPlan?.id">
+            <div class="flex-1 space-y-5 overflow-y-auto p-5">
+                <details class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950"><summary class="cursor-pointer font-semibold">Airtime setup guide</summary><p class="mt-2">For airtime, enter costs and reseller prices per ₦1,000 face value and use Percentage mode. Fixed-value data and cable plans use their actual naira costs.</p></details>
+                <section class="rounded-xl border bg-white p-4"><h3 class="text-sm font-semibold">Plan details</h3><div class="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label class="text-xs">Name<input name="product_plan_name" x-model="selectedPlan.product_plan_name" required class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label>
+                    <label class="text-xs">Category<select name="product_plan_category_id" x-model.number="selectedPlan.product_plan_category_id" required class="mt-1 w-full rounded-lg border-slate-200 text-sm">@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->product_plan_category_name }}</option>@endforeach</select></label>
+                    <label class="text-xs">Internal reference<input name="api_id" x-model="selectedPlan.api_id" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label>
+                    <label class="text-xs">Provider cost<input name="cost_price" x-model="selectedPlan.cost_price" required type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label>
+                    <label class="text-xs">Admin/reference cost<input name="admin_cost_price" x-model="selectedPlan.admin_cost_price" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label>
+                    <label class="text-xs">Data size MB<input name="data_size_in_mb" x-model="selectedPlan.data_size_in_mb" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label>
+                    <label class="text-xs">Validity days<input name="validity_in_days" x-model="selectedPlan.validity_in_days" type="number" min="0" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label>
+                    <label class="text-xs">Profit mode<select name="profit_category" x-model="selectedPlan.profit_category" class="mt-1 w-full rounded-lg border-slate-200 text-sm"><option value="flat">Flat</option><option value="percent">Percentage</option></select></label>
+                </div></section>
+                <section class="rounded-xl border bg-white p-4"><h3 class="text-sm font-semibold">Primary provider route</h3><div class="mt-3 grid gap-3 sm:grid-cols-2"><label class="text-xs">Connection<select name="route[parent_provider_connection_id]" x-model="selectedPlan.route.parent_provider_connection_id" class="mt-1 w-full rounded-lg border-slate-200 text-sm"><option value="">No route</option>@foreach($connections as $connection)<option value="{{ $connection->id }}">{{ $connection->name }}</option>@endforeach</select></label><label class="text-xs">Provider external plan ID<input name="route[provider_plan_id]" x-model="selectedPlan.route.provider_plan_id" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label></div></section>
+                <section class="rounded-xl border bg-white p-4"><h3 class="text-sm font-semibold">Reseller prices</h3><div class="mt-3 grid gap-3 sm:grid-cols-2"><template x-for="(price,index) in selectedPlan?.prices || []" :key="price.parent_reseller_level_id"><div class="rounded-lg bg-slate-50 p-3"><strong class="text-xs" x-text="price.name"></strong><input type="hidden" :name="`prices[${index}][parent_reseller_level_id]`" :value="price.parent_reseller_level_id"><div class="mt-2 grid grid-cols-2 gap-2"><label class="text-[10px]">Selling price<input :name="`prices[${index}][selling_price]`" x-model="price.selling_price" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label><label class="text-[10px]">Maximum profit<input :name="`prices[${index}][max_profit]`" x-model="price.max_profit" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label></div></div></template></div></section>
+                <input type="hidden" name="commission_feature" :value="selectedPlan?.commission_feature || 0"><input type="hidden" name="upline_commission_option" :value="selectedPlan?.upline_commission_option || 'flat'"><input type="hidden" name="upline_flat_commission" :value="selectedPlan?.upline_flat_commission || 0"><input type="hidden" name="upline_percentage_commission" :value="selectedPlan?.upline_percentage_commission || 0"><input type="hidden" name="upline_commission_cap" :value="selectedPlan?.upline_commission_cap || 1000">
+                <section class="rounded-xl border bg-white p-4"><div class="flex flex-wrap gap-4 text-xs">@foreach(['visibility'=>'Active','affiliate_visibility'=>'Affiliates','public_visibility'=>'Public'] as $field=>$label)<input type="hidden" name="{{ $field }}" value="0"><label><input name="{{ $field }}" value="1" type="checkbox" x-model="selectedPlan.{{ $field }}"> {{ $label }}</label>@endforeach</div></section>
+            </div>
+            <div class="flex items-center justify-between gap-3 border-t bg-white p-4"><a :href="selectedPlan?.edit_url" class="text-xs font-semibold text-slate-500">Open fallback page</a><button class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white">Save full configuration</button></div>
+        </form>
+    </aside>
 </div>
 @endsection
 

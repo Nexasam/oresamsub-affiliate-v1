@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ParentAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ParentAdmin\BulkStoreProductPlansRequest;
+use App\Http\Requests\ParentAdmin\BulkUpdateProductPlansRequest;
 use App\Http\Requests\ParentAdmin\SaveProductPlanConfigurationRequest;
 use App\Http\Requests\ParentAdmin\StoreProductPlanRequest;
 use App\Http\Requests\ParentAdmin\UpdateProductPlanRequest;
@@ -14,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class ProductPlanController extends Controller
 {
@@ -24,7 +26,7 @@ class ProductPlanController extends Controller
         $parent = $request->user('parent_admin')->parentBusiness;
 
         return view('parent-admin.product-plans.index', [
-            'plans' => $this->catalog->plans($parent),
+            'plans' => $this->catalog->plans($parent, 25, $request->only(['search', 'category_id'])),
             'categories' => ProductPlanCategory::query()
                 ->with(['product:id,product_name', 'network:id,network_name'])
                 ->orderBy('product_plan_category_name')->get(),
@@ -114,6 +116,34 @@ class ProductPlanController extends Controller
 
         return redirect()->route('parent-admin.product-plans.index')
             ->with('success', "{$plans->count()} product plans added.");
+    }
+
+    public function bulkUpdate(BulkUpdateProductPlansRequest $request): RedirectResponse
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        $plans = ProductPlan::query()->where('parent_business_id', $parent->id)
+            ->whereIn('id', $request->validated('plan_ids'))->get();
+        $action = $request->validated('action');
+
+        DB::transaction(function () use ($plans, $action): void {
+            foreach ($plans as $plan) {
+                $attributes = match ($action) {
+                    'activate' => ['visibility' => true],
+                    'deactivate' => ['visibility' => false, 'affiliate_visibility' => false, 'public_visibility' => false],
+                    'show_affiliates' => ['affiliate_visibility' => true],
+                    'hide_affiliates' => ['affiliate_visibility' => false],
+                    'show_public' => ['public_visibility' => true],
+                    'hide_public' => ['public_visibility' => false],
+                };
+                $plan->update($attributes);
+                if (array_key_exists('visibility', $attributes)) {
+                    $plan->providerRoutes()->where('priority', 1)->update(['active' => $attributes['visibility']]);
+                }
+            }
+        });
+
+        return redirect()->route('parent-admin.product-plans.index')
+            ->with('success', "{$plans->count()} product plans updated.");
     }
 
     public function update(UpdateProductPlanRequest $request, ProductPlan $plan): JsonResponse|RedirectResponse

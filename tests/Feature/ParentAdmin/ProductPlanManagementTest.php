@@ -115,7 +115,35 @@ it('renders a functional parent product plan workspace', function () {
         ->assertSee('Bulk addition')
         ->assertSee('Provider external plan ID')
         ->assertSee('Reseller acquisition prices')
-        ->assertSee('Parent product plans');
+        ->assertSee('Parent product plans')
+        ->assertSee('Select visible plans')
+        ->assertSee('Show for affiliates')
+        ->assertSee(route('parent-admin.product-plans.bulk-update'), false);
+});
+
+it('bulk updates only selected plans owned by the authenticated parent', function () {
+    [$parent, $admin] = catalogParent('bulk-visibility-parent');
+    [$foreignParent] = catalogParent('bulk-visibility-foreign');
+    $category = catalogCategory();
+    $first = ProductPlan::create(['parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'First', 'visibility' => true, 'affiliate_visibility' => true]);
+    $second = ProductPlan::create(['parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'Second', 'visibility' => true, 'affiliate_visibility' => true]);
+    $foreign = ProductPlan::create(['parent_business_id' => $foreignParent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'Foreign', 'visibility' => true, 'affiliate_visibility' => true]);
+
+    $this->actingAs($admin, 'parent_admin')->patch('/parent-admin/product-plans/bulk-update', [
+        'plan_ids' => [$first->id, $second->id],
+        'action' => 'hide_affiliates',
+    ])->assertRedirect(route('parent-admin.product-plans.index'));
+
+    expect((bool) $first->fresh()->affiliate_visibility)->toBeFalse()
+        ->and((bool) $second->fresh()->affiliate_visibility)->toBeFalse()
+        ->and((bool) $foreign->fresh()->affiliate_visibility)->toBeTrue();
+
+    $this->actingAs($admin, 'parent_admin')->patch('/parent-admin/product-plans/bulk-update', [
+        'plan_ids' => [$first->id, $foreign->id],
+        'action' => 'deactivate',
+    ])->assertSessionHasErrors('plan_ids');
+
+    expect((bool) $first->fresh()->visibility)->toBeTrue();
 });
 
 it('uses blade forms instead of alpine requests for product plan creation', function () {
@@ -342,8 +370,12 @@ it('fully edits an owned plan route settings and reseller prices', function () {
     $this->actingAs($admin, 'parent_admin')
         ->get('/parent-admin/product-plans')
         ->assertOk()
+        ->assertSee('data-testid="product-plan-drawer"', false)
+        ->assertSee('data-testid="open-plan-drawer-'.$plan->id.'"', false)
+        ->assertSee('Save full configuration')
+        ->assertSee(route('parent-admin.product-plans.configuration.update', $plan), false)
         ->assertSee(route('parent-admin.product-plans.edit', $plan), false)
-        ->assertDontSee('Full configuration editor');
+        ->assertDontSee('id="plan-'.$plan->id.'"', false);
 
     $payload = comprehensivePlanPayload($category, $connection, $levels, [
         'product_plan_name' => 'Edited MTN 1GB',

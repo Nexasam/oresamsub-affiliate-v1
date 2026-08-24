@@ -23,6 +23,7 @@ use App\Mail\WalletFundingNotification;
 use Illuminate\Support\Facades\Session;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use App\Traits\Dashboard\UserDashboardDataTrait;
 
@@ -618,17 +619,23 @@ class UsersController extends Controller
     {
       // Gate::authorize('create', User::class);
 
+      $affiliateId = (int) session('affiliate')?->id;
+      abort_unless($affiliateId, 422, 'The current affiliate could not be resolved.');
+
       //for ADMIN
       $validator = Validator::make($request->all(), [
-        'username' => ['required', 'string', 'unique:users,username'],
+        'username' => ['required', 'string', Rule::unique('users', 'username')->where('affiliate_id', $affiliateId)],
         'pin' => ['required','string','regex:/^\d{4,5}$/'],
         'first_name' => 'required|max:255',
         'last_name' => 'required|max:255',
         // 'other_names' => 'nullable|max:255',
-        'phone_number' => 'required|digits:11',
-        'email' => 'required|unique:users,email',
+        'phone_number' => ['required', 'digits:11', Rule::unique('users', 'phone_number')->where('affiliate_id', $affiliateId)],
+        'email' => ['required', 'email', Rule::unique('users', 'email')->where('affiliate_id', $affiliateId)],
         // 'role_id' => 'required|unique:roles,id',
-        'user_plan_id' => 'required|exists:user_plans,id',
+        'user_plan_id' => [
+          'required',
+          Rule::exists('affiliate_user_plans', 'id')->where('affiliate_id', $affiliateId),
+        ],
         'password' => ['required', 'confirmed', Password::min(8)
         ->letters()
         ->mixedCase()
@@ -651,6 +658,7 @@ class UsersController extends Controller
       // $data['other_names'] = $request->other_names;
       $data['phone_number'] = $request->phone_number;
       $data['email'] = $request->email;
+      $data['affiliate_id'] = $affiliateId;
       $data['role_id'] = $role_details->id;
       $data['user_plan_id'] = $request->user_plan_id;
       $data['password'] = Hash::make($request->password);

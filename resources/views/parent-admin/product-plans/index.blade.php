@@ -4,7 +4,7 @@
 @section('heading', 'Manage product plans')
 
 @section('content')
-<div class="space-y-5" x-data="{ mode: 'single', drawerOpen: false, selectedPlan: null, selectedIds: [], openDrawer(plan) { this.selectedPlan = JSON.parse(JSON.stringify(plan)); this.drawerOpen = true }, closeDrawer() { this.drawerOpen = false; this.selectedPlan = null } }" @keydown.escape.window="closeDrawer()">
+<div class="space-y-5" x-data="{ mode: 'single', drawerOpen: false, selectedPlan: null, selectedIds: [], selectionScope: 'selected', openDrawer(plan) { this.selectedPlan = JSON.parse(JSON.stringify(plan)); this.drawerOpen = true }, closeDrawer() { this.drawerOpen = false; this.selectedPlan = null } }" @keydown.escape.window="closeDrawer()">
     <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">Only plans owned by <strong>{{ auth('parent_admin')->user()->parentBusiness->name }}</strong> appear here. Global categories are shared; provider routing and reseller prices belong to this parent.</div>
     @if(session('success'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</div>@endif
     @if($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Please correct the following:</p><ul class="mt-2 list-disc space-y-1 pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
@@ -57,23 +57,28 @@
 
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-wrap items-end justify-between gap-4 border-b p-4">
-            <div><h2 class="font-semibold">Parent product plans</h2><p class="text-xs text-slate-500">{{ $plans->total() }} plans · 25 per page</p></div>
+            <div><h2 class="font-semibold">Parent product plans</h2><p class="text-xs text-slate-500">{{ $plans->total() }} plans · {{ $pageSize === 'all' ? 'Showing all' : $pageSize.' per page' }}</p></div>
             <form method="GET" action="{{ route('parent-admin.product-plans.index') }}" class="flex flex-1 flex-wrap justify-end gap-2">
                 <input name="search" value="{{ request('search') }}" placeholder="Search name, category or network" class="min-w-48 flex-1 rounded-lg border-slate-200 text-sm md:max-w-xs">
                 <select name="category_id" class="max-w-56 rounded-lg border-slate-200 text-sm"><option value="">All categories</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>{{ $category->product_plan_category_name }}</option>@endforeach</select>
+                <select name="per_page" class="rounded-lg border-slate-200 text-sm" aria-label="Plans per page">@foreach($pageSizes as $size)<option value="{{ $size }}" @selected($pageSize === $size)>{{ $size === 'all' ? 'All plans' : $size.' per page' }}</option>@endforeach</select>
                 <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Filter</button>
                 @if(request()->hasAny(['search','category_id']))<a href="{{ route('parent-admin.product-plans.index') }}" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">Clear</a>@endif
             </form>
         </div>
 
-        <form method="POST" action="{{ route('parent-admin.product-plans.bulk-update') }}">@csrf @method('PATCH')
+        <form method="POST" action="{{ route('parent-admin.product-plans.bulk-update') }}" @submit="if (!confirm(selectionScope === 'all' ? `Apply this action to all {{ $plans->total() }} matching plans?` : `Apply this action to ${selectedIds.length} selected plans?`)) $event.preventDefault()">@csrf @method('PATCH')
+            <input type="hidden" name="selection_scope" :value="selectionScope">
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="category_id" value="{{ request('category_id') }}">
             <div class="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-4 py-2.5">
-                <button type="button" class="text-xs font-semibold text-blue-700" @click="selectedIds = @js($plans->pluck('id')->map(fn($id)=>(string)$id)->values())">Select visible plans</button>
-                <button type="button" class="text-xs font-semibold text-slate-500" @click="selectedIds = []">Clear selection</button>
-                <span class="text-xs text-slate-400" x-text="`${selectedIds.length} selected`"></span>
+                <button type="button" class="text-xs font-semibold text-blue-700" @click="selectionScope='selected'; selectedIds = @js($plans->pluck('id')->map(fn($id)=>(string)$id)->values())">Select this page</button>
+                <button type="button" class="text-xs font-semibold text-blue-700" @click="selectionScope='all'; selectedIds=[]">Select all {{ $plans->total() }}{{ request()->hasAny(['search','category_id']) ? ' filtered plans' : ' plans' }}</button>
+                <button type="button" class="text-xs font-semibold text-slate-500" @click="selectionScope='selected'; selectedIds = []">Clear selection</button>
+                <span class="text-xs text-slate-400" x-text="selectionScope === 'all' ? 'All {{ $plans->total() }} matching plans selected' : `${selectedIds.length} selected`"></span>
                 <div class="ml-auto flex flex-wrap gap-2">
                     <select name="action" required class="rounded-lg border-slate-200 py-1.5 text-xs"><option value="">Bulk action</option><option value="activate">Activate</option><option value="deactivate">Deactivate</option><option value="show_affiliates">Show for affiliates</option><option value="hide_affiliates">Hide from affiliates</option><option value="show_public">Show publicly</option><option value="hide_public">Hide publicly</option></select>
-                    <button :disabled="selectedIds.length === 0" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Apply</button>
+                    <button :disabled="selectionScope === 'selected' && selectedIds.length === 0" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Apply</button>
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -108,7 +113,7 @@
                             ];
                         @endphp
                         <tr class="hover:bg-slate-50/80">
-                            <td class="px-3 py-2"><input type="checkbox" name="plan_ids[]" value="{{ $plan->id }}" x-model="selectedIds" class="rounded border-slate-300"></td>
+                            <td class="px-3 py-2"><input type="checkbox" name="plan_ids[]" value="{{ $plan->id }}" x-model="selectedIds" @change="selectionScope='selected'" class="rounded border-slate-300"></td>
                             <td class="max-w-64 px-3 py-2"><p class="truncate text-xs font-semibold text-slate-900" title="{{ $plan->product_plan_name }}">{{ $plan->product_plan_name }}</p><p class="truncate text-[10px] text-slate-400">{{ $plan->api_id ?: 'No internal reference' }}</p></td>
                             <td class="max-w-48 px-3 py-2"><p class="truncate text-xs text-slate-600" title="{{ $plan->product_plan_category?->product_plan_category_name }}">{{ $plan->product_plan_category?->product_plan_category_name ?: '—' }}</p></td>
                             <td class="whitespace-nowrap px-3 py-2 text-xs font-semibold">₦{{ number_format((float)$plan->cost_price, 2) }}</td>

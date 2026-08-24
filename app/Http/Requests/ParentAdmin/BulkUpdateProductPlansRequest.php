@@ -6,9 +6,15 @@ use App\Models\ProductPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use Illuminate\Support\Collection;
 
 class BulkUpdateProductPlansRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['selection_scope' => $this->input('selection_scope', 'selected')]);
+    }
+
     public function authorize(): bool
     {
         return $this->user('parent_admin') !== null;
@@ -17,8 +23,11 @@ class BulkUpdateProductPlansRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'plan_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'selection_scope' => ['required', Rule::in(['selected', 'all'])],
+            'plan_ids' => ['required_if:selection_scope,selected', 'nullable', 'array', 'min:1', 'max:2000'],
             'plan_ids.*' => ['required', 'integer', 'distinct'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'category_id' => ['nullable', 'integer', 'exists:product_plan_categories,id'],
             'action' => ['required', Rule::in([
                 'activate', 'deactivate', 'show_affiliates', 'hide_affiliates',
                 'show_public', 'hide_public',
@@ -29,12 +38,21 @@ class BulkUpdateProductPlansRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
             $parent = $this->user('parent_admin')->parentBusiness;
             $ids = collect($this->input('plan_ids', []))->map(fn ($id) => (int) $id)->unique()->values();
-            $plans = ProductPlan::query()->where('parent_business_id', $parent->id)->whereIn('id', $ids)->get();
+            $plans = $this->selectedPlans();
 
-            if ($plans->count() !== $ids->count()) {
+            if ($this->input('selection_scope') === 'selected' && $plans->count() !== $ids->count()) {
                 $validator->errors()->add('plan_ids', 'One or more selected plans do not belong to this parent.');
+                return;
+            }
+
+            if ($plans->isEmpty()) {
+                $validator->errors()->add('plan_ids', 'No product plans match this selection.');
                 return;
             }
 
@@ -58,5 +76,27 @@ class BulkUpdateProductPlansRequest extends FormRequest
                 }
             }
         }];
+    }
+
+    public function selectedPlans(): Collection
+    {
+        $parent = $this->user('parent_admin')->parentBusiness;
+        $query = ProductPlan::query()->where('parent_business_id', $parent->id);
+
+        if ($this->input('selection_scope') === 'all') {
+            $query->when($this->input('search'), function ($query, string $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('product_plan_name', 'like', "%{$search}%")
+                        ->orWhereHas('product_plan_category', function ($category) use ($search) {
+                            $category->where('product_plan_category_name', 'like', "%{$search}%")
+                                ->orWhereHas('network', fn ($network) => $network->where('network_name', 'like', "%{$search}%"));
+                        });
+                });
+            })->when($this->input('category_id'), fn ($query, $categoryId) => $query->where('product_plan_category_id', $categoryId));
+        } else {
+            $query->whereIn('id', collect($this->input('plan_ids', []))->map(fn ($id) => (int) $id));
+        }
+
+        return $query->get();
     }
 }

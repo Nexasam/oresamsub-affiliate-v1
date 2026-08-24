@@ -24,9 +24,17 @@ class ProductPlanController extends Controller
     public function index(Request $request): View
     {
         $parent = $request->user('parent_admin')->parentBusiness;
+        $requestedPageSize = (string) $request->input('per_page', '50');
+        $allowedPageSizes = ['50', '100', '200', '500', '1000', '2000', 'all'];
+        $pageSize = in_array($requestedPageSize, $allowedPageSizes, true) ? $requestedPageSize : '50';
+        $perPage = $pageSize === 'all'
+            ? max(1, ProductPlan::query()->where('parent_business_id', $parent->id)->count())
+            : (int) $pageSize;
 
         return view('parent-admin.product-plans.index', [
-            'plans' => $this->catalog->plans($parent, 25, $request->only(['search', 'category_id'])),
+            'plans' => $this->catalog->plans($parent, $perPage, $request->only(['search', 'category_id'])),
+            'pageSize' => $pageSize,
+            'pageSizes' => $allowedPageSizes,
             'categories' => ProductPlanCategory::query()
                 ->with(['product:id,product_name', 'network:id,network_name'])
                 ->orderBy('product_plan_category_name')->get(),
@@ -120,9 +128,7 @@ class ProductPlanController extends Controller
 
     public function bulkUpdate(BulkUpdateProductPlansRequest $request): RedirectResponse
     {
-        $parent = $request->user('parent_admin')->parentBusiness;
-        $plans = ProductPlan::query()->where('parent_business_id', $parent->id)
-            ->whereIn('id', $request->validated('plan_ids'))->get();
+        $plans = $request->selectedPlans();
         $action = $request->validated('action');
 
         DB::transaction(function () use ($plans, $action): void {
@@ -142,7 +148,7 @@ class ProductPlanController extends Controller
             }
         });
 
-        return redirect()->route('parent-admin.product-plans.index')
+        return redirect()->route('parent-admin.product-plans.index', array_filter($request->only(['search', 'category_id'])))
             ->with('success', "{$plans->count()} product plans updated.");
     }
 

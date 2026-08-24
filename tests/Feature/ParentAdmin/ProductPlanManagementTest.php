@@ -116,7 +116,8 @@ it('renders a functional parent product plan workspace', function () {
         ->assertSee('Provider external plan ID')
         ->assertSee('Reseller acquisition prices')
         ->assertSee('Parent product plans')
-        ->assertSee('Select visible plans')
+        ->assertSee('Select this page')
+        ->assertSee('Select all')
         ->assertSee('Show for affiliates')
         ->assertSee(route('parent-admin.product-plans.bulk-update'), false);
 });
@@ -144,6 +145,64 @@ it('bulk updates only selected plans owned by the authenticated parent', functio
     ])->assertSessionHasErrors('plan_ids');
 
     expect((bool) $first->fresh()->visibility)->toBeTrue();
+});
+
+it('bulk updates every plan owned by the parent when all results are selected', function () {
+    [$parent, $admin] = catalogParent('bulk-all-parent');
+    [$foreignParent] = catalogParent('bulk-all-foreign');
+    $category = catalogCategory();
+    $first = ProductPlan::create(['parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'First plan', 'visibility' => true, 'affiliate_visibility' => true]);
+    $second = ProductPlan::create(['parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'Second plan', 'visibility' => true, 'affiliate_visibility' => true]);
+    $foreign = ProductPlan::create(['parent_business_id' => $foreignParent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'Foreign plan', 'visibility' => true, 'affiliate_visibility' => true]);
+
+    $this->actingAs($admin, 'parent_admin')->patch('/parent-admin/product-plans/bulk-update', [
+        'selection_scope' => 'all',
+        'action' => 'hide_affiliates',
+    ])->assertRedirect(route('parent-admin.product-plans.index'));
+
+    expect((bool) $first->fresh()->affiliate_visibility)->toBeFalse()
+        ->and((bool) $second->fresh()->affiliate_visibility)->toBeFalse()
+        ->and((bool) $foreign->fresh()->affiliate_visibility)->toBeTrue();
+});
+
+it('limits all-results bulk updates to the submitted search filters', function () {
+    [$parent, $admin] = catalogParent('bulk-filtered-parent');
+    $category = catalogCategory();
+    $matching = ProductPlan::create(['parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'GLO 5GB', 'visibility' => true, 'public_visibility' => true]);
+    $other = ProductPlan::create(['parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id, 'product_plan_name' => 'MTN 1GB', 'visibility' => true, 'public_visibility' => true]);
+
+    $this->actingAs($admin, 'parent_admin')->patch('/parent-admin/product-plans/bulk-update', [
+        'selection_scope' => 'all',
+        'search' => 'GLO',
+        'action' => 'hide_public',
+    ])->assertRedirect(route('parent-admin.product-plans.index', ['search' => 'GLO']));
+
+    expect((bool) $matching->fresh()->public_visibility)->toBeFalse()
+        ->and((bool) $other->fresh()->public_visibility)->toBeTrue();
+});
+
+it('supports configurable product plan page sizes including all results', function () {
+    [$parent, $admin] = catalogParent('page-size-parent');
+    $category = catalogCategory();
+    foreach (range(1, 55) as $number) {
+        ProductPlan::create([
+            'parent_business_id' => $parent->id,
+            'product_plan_category_id' => $category->id,
+            'product_plan_name' => "Plan {$number}",
+            'visibility' => true,
+        ]);
+    }
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/product-plans?per_page=50')
+        ->assertOk()
+        ->assertSee('50 per page')
+        ->assertSee('value="all"', false);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/product-plans?per_page=all')
+        ->assertOk()
+        ->assertSee('55 plans · Showing all');
 });
 
 it('uses blade forms instead of alpine requests for product plan creation', function () {

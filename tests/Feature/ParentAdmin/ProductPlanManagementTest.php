@@ -357,7 +357,7 @@ it('fully edits an owned plan route settings and reseller prices', function () {
     $levels = catalogLevels($parent);
     $plan = ProductPlan::create([
         'parent_business_id' => $parent->id, 'product_plan_category_id' => $category->id,
-        'product_plan_name' => 'Draft', 'cost_price' => 100, 'profit_category' => 'flat',
+        'product_plan_name' => "Provider's GLO 5GB", 'cost_price' => 100, 'profit_category' => 'flat',
         'visibility' => false, 'affiliate_visibility' => false, 'public_visibility' => false,
     ]);
 
@@ -367,15 +367,25 @@ it('fully edits an owned plan route settings and reseller prices', function () {
         ->assertSee('Airtime setup guide')
         ->assertSee('per ₦1,000 face value');
 
-    $this->actingAs($admin, 'parent_admin')
-        ->get('/parent-admin/product-plans')
-        ->assertOk()
+    $indexResponse = $this->actingAs($admin, 'parent_admin')
+        ->get('/parent-admin/product-plans');
+
+    $indexResponse->assertOk()
         ->assertSee('data-testid="product-plan-drawer"', false)
         ->assertSee('data-testid="open-plan-drawer-'.$plan->id.'"', false)
         ->assertSee('Save full configuration')
         ->assertSee(route('parent-admin.product-plans.configuration.update', $plan), false)
         ->assertSee(route('parent-admin.product-plans.edit', $plan), false)
         ->assertDontSee('id="plan-'.$plan->id.'"', false);
+
+    preg_match(
+        '/data-testid="open-plan-drawer-'.$plan->id.'"[^>]*data-plan="([^"]+)"/',
+        $indexResponse->getContent(),
+        $drawerButton
+    );
+    $drawerPayload = json_decode(html_entity_decode($drawerButton[1] ?? '', ENT_QUOTES), true);
+
+    expect($drawerPayload['product_plan_name'] ?? null)->toBe("Provider's GLO 5GB");
 
     $payload = comprehensivePlanPayload($category, $connection, $levels, [
         'product_plan_name' => 'Edited MTN 1GB',

@@ -392,6 +392,12 @@
                         <span class="side-menu__label">Settlement Funding</span>
                     </a>
                 </li>
+                <li class="slide">
+                    <a href="{{ route('admin.settlement-wallet.activity') }}" class="side-menu__item">
+                        <i class="ti ti-arrows-exchange side-menu__icon"></i>
+                        <span class="side-menu__label">Wallet Activity</span>
+                    </a>
+                </li>
                 @endif
 
                 @if(Route::has('admin.profits.index'))

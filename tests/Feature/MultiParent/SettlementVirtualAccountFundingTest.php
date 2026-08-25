@@ -209,6 +209,13 @@ it('lets an affiliate admin view only its complete settlement ledger', function 
         ->assertDontSee('HIDDEN-CREDIT-1');
 });
 
+it('shows settlement wallet activity in the affiliate admin sidebar', function () {
+    $sidebar = file_get_contents(resource_path('views/partials/sidebar.blade.php'));
+
+    expect($sidebar)->toContain("route('admin.settlement-wallet.activity')")
+        ->and($sidebar)->toContain('Wallet Activity');
+});
+
 it('returns the affiliate to settlement funding with a safe provider error', function () {
     $f = settlementFundingFixture();
     $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);

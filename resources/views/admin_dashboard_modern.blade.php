@@ -31,10 +31,38 @@
                     <a href="{{ route('admin.settlement-funding.index') }}" class="workspace-btn-secondary">Manage funding</a>
                 </div>
                 <div class="workspace-panel-body grid gap-4 lg:grid-cols-[220px_1fr]">
-                    <div class="rounded-xl bg-slate-950 p-4 text-white dark:bg-slate-800">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Available</p>
-                        <p class="mt-2 text-2xl font-bold">₦{{ number_format((float) ($settlement_wallet?->available_balance ?? 0), 2) }}</p>
-                        <p class="mt-2 text-xs text-slate-400">Reserved ₦{{ number_format((float) ($settlement_wallet?->reserved_balance ?? 0), 2) }}</p>
+                    <div
+                        class="rounded-xl bg-slate-950 p-4 text-white dark:bg-slate-800"
+                        x-data="{
+                            available: @js((string) ($settlement_wallet?->available_balance ?? '0.00')),
+                            reserved: @js((string) ($settlement_wallet?->reserved_balance ?? '0.00')),
+                            refreshing: false,
+                            format(value) { return Number(value || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+                            async refreshBalance() {
+                                if (this.refreshing) return;
+                                this.refreshing = true;
+                                try {
+                                    const response = await fetch(@js(route('admin.settlement-wallet.refresh')), {
+                                        method: 'POST',
+                                        credentials: 'same-origin',
+                                        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                                    });
+                                    if (!response.ok) throw new Error('Unable to refresh balance');
+                                    const balance = await response.json();
+                                    this.available = balance.available_balance;
+                                    this.reserved = balance.reserved_balance;
+                                } finally { this.refreshing = false; }
+                            }
+                        }"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Available</p>
+                            <button type="button" @click="refreshBalance" :disabled="refreshing" class="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-slate-300 transition hover:bg-white/20 hover:text-white disabled:opacity-50" title="Refresh settlement balance" aria-label="Refresh settlement balance">
+                                <svg class="h-4 w-4" :class="refreshing ? 'animate-spin' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/></svg>
+                            </button>
+                        </div>
+                        <p class="mt-2 text-2xl font-bold">₦<span x-text="format(available)">{{ number_format((float) ($settlement_wallet?->available_balance ?? 0), 2) }}</span></p>
+                        <p class="mt-2 text-xs text-slate-400">Reserved ₦<span x-text="format(reserved)">{{ number_format((float) ($settlement_wallet?->reserved_balance ?? 0), 2) }}</span></p>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         @forelse($settlement_accounts as $account)

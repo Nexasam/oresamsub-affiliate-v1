@@ -92,7 +92,41 @@ it('shows the affiliate settlement balance and business account on the admin das
 
     $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
         ->get('/dashboard')->assertOk()
-        ->assertSee('Settlement wallet')->assertSee('₦975.00')->assertSee('0666666666');
+        ->assertSee('Settlement wallet')->assertSee('975.00')->assertSee('0666666666');
+});
+
+it('reads a fresh settlement balance instead of a stale affiliate session relation', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id, 'email_verified_at' => now()]);
+    $wallet = $f['affiliate']->settlementWallet()->create(['parent_business_id' => $f['parent']->id, 'available_balance' => '100.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $staleAffiliate = $f['affiliate']->fresh()->load('settlementWallet');
+    $wallet->update(['available_balance' => '295.60']);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $response = $this->actingAs($admin)->withSession(['affiliate' => $staleAffiliate])->get('/dashboard');
+    $response->assertOk();
+    expect($response->viewData('settlement_wallet')?->available_balance)->toBe('295.60');
+    $response->assertSee('295.60')->assertDontSee('100.00');
+});
+
+it('refreshes the affiliate session and returns current settlement balances', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id, 'email_verified_at' => now()]);
+    $wallet = $f['affiliate']->settlementWallet()->create(['parent_business_id' => $f['parent']->id, 'available_balance' => '100.00', 'reserved_balance' => '5.00', 'currency' => 'NGN', 'status' => 'active']);
+    $staleAffiliate = $f['affiliate']->fresh()->load('settlementWallet');
+    $wallet->update(['available_balance' => '295.60', 'reserved_balance' => '10.00']);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $staleAffiliate])
+        ->postJson('/admin/settlement-wallet/refresh')
+        ->assertOk()
+        ->assertJsonPath('available_balance', '295.60')
+        ->assertJsonPath('reserved_balance', '10.00');
+
+    expect(session('affiliate')->settlementWallet->available_balance)->toBe('295.60');
 });
 
 it('shows recent settlement funding transactions on the affiliate admin dashboard', function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Affiliate;
 use Inertia\Inertia;
 use App\Models\UserPlan;
 use App\Models\WalletLog;
@@ -11,6 +12,7 @@ use App\Models\Transaction;
 use App\Models\Announcement;
 use App\Models\SiteTemplate;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Models\UserProductPlan;
 use App\Traits\GetAffiliateInfo;
 use App\Models\AdminColorSetting;
@@ -26,11 +28,23 @@ use Illuminate\Support\Facades\Route;
 use App\Models\FundingOptionBankCodes;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\AffiliateFundingOptionBankCodes;
+use Illuminate\Support\Facades\Session;
 
 class UserDashboardController extends Controller
 {
  
   use GetAffiliateInfo;
+
+  public function refreshSettlementWallet(Request $request): JsonResponse
+  {
+    $affiliate = Affiliate::with('settlementWallet')->findOrFail($request->user()->affiliate_id);
+    Session::put('affiliate', $affiliate);
+
+    return response()->json([
+      'available_balance' => $affiliate->settlementWallet?->available_balance ?? '0.00',
+      'reserved_balance' => $affiliate->settlementWallet?->reserved_balance ?? '0.00',
+    ]);
+  }
 
   public function index(){
 
@@ -225,12 +239,15 @@ class UserDashboardController extends Controller
       }
 
     }else{
-      $affiliate = session('affiliate');
+      $affiliateId = auth()->user()->affiliate_id ?: session('affiliate')?->id;
+      $affiliate = $affiliateId ? Affiliate::with('settlementWallet')->find($affiliateId) : null;
+      if ($affiliate) {
+        Session::put('affiliate', $affiliate);
+      }
       $data['settlement_wallet'] = null;
       $data['settlement_accounts'] = collect();
       $data['settlement_funding_entries'] = collect();
       if (config('parent_businesses.features.multi_parent_funding') && $affiliate?->parent_business_id) {
-        $affiliate->loadMissing('settlementWallet');
         $data['settlement_wallet'] = $affiliate->settlementWallet;
         $data['settlement_accounts'] = $affiliate->settlementVirtualAccounts()
           ->where('status', 'active')->orderBy('bank_name')->get();

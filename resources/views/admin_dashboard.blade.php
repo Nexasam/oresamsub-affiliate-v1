@@ -403,6 +403,27 @@
               </div>
               @endif
 
+              @if(config('parent_businesses.features.multi_parent_funding') && session('affiliate')?->parent_business_id)
+              <div class="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                  <div><p class="font-semibold text-gray-700 dark:text-gray-200">Settlement wallet activity</p><p class="text-xs text-gray-500">Every debit, credit, release and funding movement.</p></div>
+                  <a href="{{ route('admin.settlement-wallet.activity') }}" class="text-xs font-semibold text-indigo-600">View full ledger</a>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full min-w-[900px] text-left text-xs">
+                    <thead class="bg-gray-50 text-gray-500 dark:bg-gray-800"><tr><th class="px-4 py-3">Date</th><th>Activity</th><th>Reference</th><th>Service</th><th>Method</th><th>Reason</th><th>Movement</th><th>Balance</th></tr></thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @forelse($settlement_activity_entries as $entry)
+                      <tr><td class="whitespace-nowrap px-4 py-3 text-gray-500">{{ $entry->created_at?->format('d M Y, H:i') }}</td><td class="font-semibold">{{ $entry->displayLabel() }}</td><td class="font-mono">{{ str($entry->purchaseReference())->limit(28) }}</td><td>{{ $entry->displayService() ?: '—' }}</td><td>{{ $entry->displayMethod() }}</td><td>{{ str($entry->reason)->limit(38) }}</td><td class="font-bold {{ $entry->displayColor() }}">{{ $entry->displaySign() }}₦{{ number_format((float)$entry->amount,2) }}</td><td class="font-semibold">₦{{ number_format((float)$entry->balance_after,2) }}</td></tr>
+                    @empty
+                      <tr><td colspan="8" class="px-4 py-5 text-center text-gray-500">No settlement wallet activity yet.</td></tr>
+                    @endforelse
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              @endif
+
 
 
         </div>

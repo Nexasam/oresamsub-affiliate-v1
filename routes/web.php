@@ -123,6 +123,7 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
                 //   INERTIAJS
                 Route::middleware('verified')->get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');   
                 Route::middleware(['verified', 'admin'])->post('/admin/settlement-wallet/refresh', [UserDashboardController::class, 'refreshSettlementWallet'])->name('admin.settlement-wallet.refresh');
+                Route::middleware(['verified', 'admin'])->get('/admin/settlement-wallet/activity', [\App\Http\Controllers\AffiliateSettlementActivityController::class, 'index'])->name('admin.settlement-wallet.activity');
                 Route::get('/pricing', [InertiaDashboardController::class, 'pricing'])->name('inertia.pricing.index');   
                 Route::get('/data', [InertiaDashboardController::class, 'data'])->name('inertia.data.index');   
                 Route::get('/airtime', [InertiaDashboardController::class, 'airtime'])->name('inertia.airtime.index');   

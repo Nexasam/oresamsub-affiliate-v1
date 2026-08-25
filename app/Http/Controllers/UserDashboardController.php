@@ -247,12 +247,15 @@ class UserDashboardController extends Controller
       $data['settlement_wallet'] = null;
       $data['settlement_accounts'] = collect();
       $data['settlement_funding_entries'] = collect();
+      $data['settlement_activity_entries'] = collect();
       if (config('parent_businesses.features.multi_parent_funding') && $affiliate?->parent_business_id) {
         $data['settlement_wallet'] = $affiliate->settlementWallet;
         $data['settlement_accounts'] = $affiliate->settlementVirtualAccounts()
           ->where('status', 'active')->orderBy('bank_name')->get();
         $data['settlement_funding_entries'] = $affiliate->settlementWallet?->ledgerEntries()
           ->where('entry_type', 'settlement_funding')->latest()->limit(8)->get() ?? collect();
+        $data['settlement_activity_entries'] = $affiliate->settlementWallet?->ledgerEntries()
+          ->latest()->limit(8)->get() ?? collect();
       }
       $data['main_wallet_balances'] = User::select('main_wallet')->sum('main_wallet');
       $data['bulk_data_wallet_sum'] = UserBulkDataWallet::select('bulk_wallet_balance_mb')->sum('bulk_wallet_balance_mb');

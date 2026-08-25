@@ -149,6 +149,66 @@ it('shows recent settlement funding transactions on the affiliate admin dashboar
         ->assertSee('SETTLEMENT-PAY-DASHBOARD')->assertSee('₦1,000.00')->assertSee('₦25.00')->assertSee('₦975.00');
 });
 
+it('shows recent settlement debits and credits on the affiliate admin dashboard', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id]);
+    $wallet = $f['affiliate']->settlementWallet()->create(['parent_business_id' => $f['parent']->id, 'available_balance' => '530.00', 'reserved_balance' => '470.00', 'currency' => 'NGN', 'status' => 'active']);
+    $wallet->ledgerEntries()->create([
+        'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+        'entry_type' => 'purchase_reservation', 'amount' => '470.00', 'balance_before' => '1000.00',
+        'balance_after' => '530.00', 'reference' => 'DATA-SETTLEMENT-1:reserve',
+        'actor_type' => 'customer', 'actor_id' => $admin->id,
+        'reason' => 'Settlement purchase_reservation for DATA-SETTLEMENT-1',
+        'metadata' => ['service' => 'data', 'method' => 'parent_managed'],
+    ]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->get('/dashboard')->assertOk()
+        ->assertSee('Settlement wallet activity')
+        ->assertSee('DATA-SETTLEMENT-1')
+        ->assertSee('-₦470.00')
+        ->assertSee('Purchase reservation');
+});
+
+it('lets an affiliate admin view only its complete settlement ledger', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $userPlanId, 'role_id' => $adminRole->id, 'email_verified_at' => now()]);
+    $wallet = $f['affiliate']->settlementWallet()->create(['parent_business_id' => $f['parent']->id, 'available_balance' => '1500.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $wallet->ledgerEntries()->create([
+        'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+        'entry_type' => 'manual_credit', 'amount' => '1500.00', 'balance_before' => '0.00',
+        'balance_after' => '1500.00', 'reference' => 'VISIBLE-CREDIT-1', 'actor_type' => 'parent_admin',
+        'actor_id' => 1, 'reason' => 'Verified bank transfer', 'metadata' => ['method' => 'bank_transfer'],
+    ]);
+
+    $otherParent = ParentBusiness::create(['name' => 'Other Parent', 'slug' => 'other-ledger-parent']);
+    $otherLevel = $otherParent->resellerLevels()->create(['name' => 'Basic', 'position' => 1, 'status' => 'active']);
+    $otherAffiliate = Affiliate::create([
+        'parent_business_id' => $otherParent->id, 'parent_reseller_level_id' => $otherLevel->id, 'name' => 'Other Child', 'slug' => 'other-ledger-child',
+        'affiliate_plan_id' => 1, 'ip_address' => '127.30.0.1', 'contact_phone' => '08130000009',
+        'contact_email' => 'other-ledger@example.test', 'parent_key' => 'other-ledger-key', 'parent_email' => 'other-parent@example.test',
+    ]);
+    $otherWallet = $otherAffiliate->settlementWallet()->create(['parent_business_id' => $otherParent->id, 'available_balance' => '500.00', 'reserved_balance' => '0.00', 'currency' => 'NGN', 'status' => 'active']);
+    $otherWallet->ledgerEntries()->create([
+        'parent_business_id' => $otherParent->id, 'affiliate_id' => $otherAffiliate->id,
+        'entry_type' => 'manual_credit', 'amount' => '500.00', 'balance_before' => '0.00',
+        'balance_after' => '500.00', 'reference' => 'HIDDEN-CREDIT-1', 'actor_type' => 'parent_admin',
+        'actor_id' => 2, 'reason' => 'Must remain private',
+    ]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->get('/admin/settlement-wallet/activity')->assertOk()
+        ->assertSee('Settlement wallet activity')
+        ->assertSee('VISIBLE-CREDIT-1')
+        ->assertDontSee('HIDDEN-CREDIT-1');
+});
+
 it('returns the affiliate to settlement funding with a safe provider error', function () {
     $f = settlementFundingFixture();
     $userPlanId = DB::table('affiliate_user_plans')->insertGetId(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => '1', 'is_default' => '1', 'visibility' => '1', 'created_at' => now(), 'updated_at' => now()]);

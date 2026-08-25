@@ -139,6 +139,33 @@
                 </table>
             </div>
         </section>
+
+        @if(config('parent_businesses.features.multi_parent_funding') && session('affiliate')?->parent_business_id)
+        <section class="workspace-panel">
+            <div class="workspace-panel-header"><div><h2 class="font-semibold">Settlement wallet activity</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Why your business settlement balance was debited or credited.</p></div><a href="{{ route('admin.settlement-wallet.activity') }}" class="workspace-btn-secondary">View full ledger</a></div>
+            <div class="workspace-table-wrap">
+                <table class="workspace-table min-w-[920px]">
+                    <thead><tr><th>Date</th><th>Activity</th><th>Reference</th><th>Service</th><th>Method</th><th>Reason</th><th>Movement</th><th>Balance</th></tr></thead>
+                    <tbody>
+                    @forelse($settlement_activity_entries as $entry)
+                        <tr>
+                            <td class="whitespace-nowrap text-xs text-slate-500"><x-workspace.date :value="$entry->created_at" /></td>
+                            <td class="font-semibold">{{ $entry->displayLabel() }}</td>
+                            <td><span class="block max-w-48 truncate font-mono text-xs" title="{{ $entry->purchaseReference() }}">{{ $entry->purchaseReference() }}</span></td>
+                            <td>{{ $entry->displayService() ?: '—' }}</td>
+                            <td>{{ $entry->displayMethod() }}</td>
+                            <td><span class="block max-w-52 truncate" title="{{ $entry->reason }}">{{ $entry->reason }}</span></td>
+                            <td class="whitespace-nowrap font-bold {{ $entry->displayColor() }} dark:brightness-125">{{ $entry->displaySign() }}₦{{ number_format((float) $entry->amount, 2) }}</td>
+                            <td class="whitespace-nowrap font-semibold">₦{{ number_format((float) $entry->balance_after, 2) }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="8" class="workspace-empty">No settlement wallet activity yet.</td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        @endif
     </div>
 </div>
 @endsection

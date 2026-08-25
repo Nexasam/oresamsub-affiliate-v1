@@ -35,6 +35,11 @@
         @endif
     </header>
 
+    <div data-testid="auth-trust-message" class="auth-trust">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.8 7 10 4.1-1.2 7-5.4 7-10V6l-7-3Zm3.2 6.8-4.1 4.1-2.3-2.3 1.1-1.1 1.2 1.2 3-3 1.1 1.1Z"/></svg>
+        Protected and private
+    </div>
+
     @if(session('success') || session('status'))
         <div class="auth-alert auth-alert--success" role="status">{{ session('success') ?? session('status') }}</div>
     @endif

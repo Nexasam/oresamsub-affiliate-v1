@@ -1,199 +1,76 @@
 import { useState } from "react";
 import { Link, useForm, usePage } from "@inertiajs/react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, UserRound } from "lucide-react";
 import AuthLayout from "@/Layouts/AuthLayout";
 
 export default function Login() {
   const { props } = usePage();
   const [showPassword, setShowPassword] = useState(false);
+  const primaryColor = props.userDashboardPrimaryColor || "#2563eb";
+  const affiliate = props.affiliate || {};
+  const businessName = affiliate?.name || props.sitename || "your account";
+  const logo = props.siteLogo
+    ? `/assets/landing_page_assets/img/site_logo/${props.siteLogo}`
+    : affiliate?.logo || "/assets/logo_imgs/oresamsublogo.jpeg";
 
+  const { data, setData, post, processing, errors } = useForm({ email: "", password: "" });
 
-
-  const {
-    userDashboardPrimaryColor,
-    userDashboardSecondaryColor,
-    userDashboardAnnouncementColor,
-    affiliate,
-    siteLogo
-  } = props;
-
-  // 🎨 Safe color helper (fallback prevents crash)
-  const primaryColor = userDashboardPrimaryColor || "#0d6efd";
-  const secondaryColor = userDashboardSecondaryColor || "#198754";
-  const announcementColor = userDashboardAnnouncementColor || "#ffc107";
-  const affiliateInfo = affiliate || "ore";
-
-
-  const { data, setData, post, processing, errors } = useForm({
-    email: "",
-    password: "",
-  });
-
-  function submit(e) {
-    e.preventDefault();
-    // post(route("login")); // Laravel route('login')
-    // post('/login2'); // Laravel route('login')
-    post(route('inertia.login.store')); // Laravel route('login')
-  }
+  const submit = (event) => {
+    event.preventDefault();
+    post(route("inertia.login.store"));
+  };
 
   return (
     <AuthLayout title="Login">
-      <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-        <p>{props.user}</p>
-        {/* Background pattern */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="w-full h-full bg-gray-50 dark:bg-gray-900 bg-[radial-gradient(circle,_rgba(0,0,0,0.05)_1px,_transparent_1px)] dark:bg-[radial-gradient(circle,_rgba(255,255,255,0.05)_1px,_transparent_1px)] [background-size:22px_22px]" />
-        </div>
-
-        {/* Login Card */}
-        {/* <div className="relative z-10 pt-10 pb-6 max-w-full w-full mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"> */}
-
-        <div className="relative z-10 pt-10 pb-6 max-w-full w-full mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-t-4"
-          style={{ borderColor: primaryColor }}>
-
-          <div className="flex justify-center mb-4">
-            <img
-                src={
-                  siteLogo
-                    ? `/assets/landing_page_assets/img/site_logo/${siteLogo}`
-                    : "/assets/logo_imgs/oresamsublogo.jpeg"
-                }
-                alt={affiliateInfo?.name || "Logo"}
-                className="h-20 w-20 rounded-full shadow-md object-cover"
-              />
+      <div data-testid="customer-login-card" className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 p-5 shadow-[0_28px_80px_rgba(15,23,42,.12)] backdrop-blur-xl dark:border-slate-800 dark:bg-[#0d1522]/95 sm:p-8">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt={`${businessName} logo`} className="h-12 w-12 rounded-2xl object-cover shadow-md ring-1 ring-slate-200 dark:ring-slate-700" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-extrabold text-slate-900 dark:text-white">{businessName}</p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Secure customer account</p>
           </div>
-           
-          <h2 className="text-2xl mt-3 font-bold text-center mb-6 text-gray-900 dark:text-white">
-            Login to {affiliateInfo.name}
-          </h2>
-
-          {/* Alerts from backend */}
-          {props.flash?.error && (
-            <div className="mb-4 text-red-600 text-sm text-center">{props.flash.error}</div>
-          )}
-          {props.flash?.success && (
-            <div className="bg-green-100 border border-green-300 text-green-700 text-sm p-2 rounded mb-4 text-center">
-              {props.flash.success}
-            </div>
-          )}
-          {props.flash?.failure && (
-            <div className="bg-red-100 border border-red-300 text-red-700 text-sm p-2 rounded mb-4 text-center">
-              {props.flash.failure}
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={submit}>
-            {/* Email */}
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm mb-1">
-                Email
-              </label>
-              <input
-                type="text"
-                id="email"
-                value={data.email}
-                onChange={(e) => setData("email", e.target.value)}
-                required
-                placeholder="Email or Username or Phone"
-                className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
-            </div>
-
-            {/* Password */}
-            <div className="mb-0">
-              <label htmlFor="password" className="block text-sm mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={data.password}
-                  onChange={(e) => setData("password", e.target.value)}
-                  required
-                  className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
-                >
-                  {showPassword ? "🙈" : "👁️"}
-                </button>
-              </div>
-              {errors.password && (
-                <div className="text-red-500 text-sm mt-1">{errors.password}</div>
-              )}
-            </div>
-
-            {/* Forgot password */}
-            <div className="mb-2 text-right">
-              <Link
-                href={route("password.request")}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                style={{
-                  color: props.userDashboardPrimaryColor,
-                }}
-              >
-                Forgot your password?
-              </Link>
-            </div>
-
-            {/* Submit */}
-            <div className="mt-6">
-                  <button
-                    type="submit"
-                    disabled={processing}
-                    className="w-full py-2 px-4 text-white rounded-lg transition disabled:opacity-50 shadow hover:shadow-md"
-                    style={{
-                      backgroundColor: props.userDashboardPrimaryColor,
-                      border: `2px solid ${props.userDashboardPrimaryColor}`,
-                      boxShadow: `0 0 6px ${props.userDashboardPrimaryColor}40`,
-                    }}
-                  >
-                    {processing ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
-                          />
-                        </svg>
-                        Logging in...
-                      </span>
-                    ) : (
-                      "🔐 Login"
-                    )}
-                  </button>
-
-            </div>
-          </form>
-
-          {/* Register link */}
-          <p className="text-xs text-center mt-6 text-gray-500 dark:text-gray-400">
-            Don&apos;t have an account?{" "} 
-                <a
-                  href={route("register")}
-                  className="font-semibold transition-colors duration-200 hover:opacity-80"
-                  style={{
-                    color: props.userDashboardPrimaryColor,
-                  }}
-                >
-                  Register
-                </a>
-          </p>
         </div>
+
+        <header className="mb-7 mt-8">
+          <h2 className="text-[30px] font-extrabold tracking-[-.04em] text-slate-950 dark:text-white">Welcome back</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Enter your details to continue to your account.</p>
+        </header>
+
+        {props.flash?.success && <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">{props.flash.success}</div>}
+        {(props.flash?.error || props.flash?.failure) && <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">{props.flash.error || props.flash.failure}</div>}
+
+        <form onSubmit={submit} className="space-y-5">
+          <div>
+            <label htmlFor="email" className="mb-2 block text-[13px] font-bold text-slate-700 dark:text-slate-300">Email, username or phone</label>
+            <div className="relative">
+              <UserRound className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input id="email" type="text" value={data.email} onChange={(event) => setData("email", event.target.value)} required autoComplete="username" placeholder="Enter your login detail" className="min-h-[52px] w-full rounded-2xl border-slate-300 bg-white py-3 pl-11 pr-4 text-[15px] text-slate-950 shadow-sm transition placeholder:text-slate-400 focus:border-[var(--auth-primary)] focus:ring-[var(--auth-primary)] dark:border-slate-700 dark:bg-slate-950/60 dark:text-white" />
+            </div>
+            {errors.email && <p className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">{errors.email}</p>}
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-4">
+              <label htmlFor="password" className="text-[13px] font-bold text-slate-700 dark:text-slate-300">Password</label>
+              <Link href={route("password.request")} className="text-xs font-bold hover:underline" style={{ color: primaryColor }}>Forgot password?</Link>
+            </div>
+            <div className="relative">
+              <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input id="password" type={showPassword ? "text" : "password"} value={data.password} onChange={(event) => setData("password", event.target.value)} required autoComplete="current-password" placeholder="Enter your password" className="min-h-[52px] w-full rounded-2xl border-slate-300 bg-white py-3 pl-11 pr-12 text-[15px] text-slate-950 shadow-sm transition placeholder:text-slate-400 focus:border-[var(--auth-primary)] focus:ring-[var(--auth-primary)] dark:border-slate-700 dark:bg-slate-950/60 dark:text-white" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-2.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white" aria-label={showPassword ? "Hide password" : "Show password"}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.password && <p className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">{errors.password}</p>}
+          </div>
+
+          <button type="submit" disabled={processing} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0" style={{ background: `linear-gradient(135deg, ${primaryColor}, var(--auth-secondary))`, boxShadow: `0 14px 30px ${primaryColor}30` }}>
+            {processing ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Signing in…</> : <>Sign in <ArrowRight size={17} /></>}
+          </button>
+        </form>
+
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400 lg:hidden"><ShieldCheck size={15} style={{ color: primaryColor }} /> Protected and private</div>
+        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">New here? <a href={route("register")} className="font-extrabold hover:underline" style={{ color: primaryColor }}>Create an account</a></p>
       </div>
     </AuthLayout>
   );

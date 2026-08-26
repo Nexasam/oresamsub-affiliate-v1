@@ -11,7 +11,7 @@ class SaveProviderAdapterRequest extends FormRequest
 {
     public const METHODS = ['GET', 'POST'];
 
-    public const CREDENTIAL_FIELDS = ['api_public_key', 'api_secret_key', 'api_password'];
+    public const CREDENTIAL_FIELDS = ['api_public_key', 'api_secret_key', 'api_password', 'api_token', 'business_id', 'contract_code', 'username', 'account_id'];
 
     protected function prepareForValidation(): void
     {
@@ -22,7 +22,7 @@ class SaveProviderAdapterRequest extends FormRequest
         $this->merge([
             'name' => trim((string) $this->input('name')),
             'slug' => Str::slug((string) $this->input('slug')),
-            'adapter' => Str::of((string) $this->input('adapter'))->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->toString(),
+            'adapter_key' => Str::of((string) ($this->input('adapter_key') ?: $this->input('adapter')))->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->toString(),
             'capabilities' => [
                 'services' => array_values(array_map(
                     fn ($service) => $products->normalize((string) $service),
@@ -40,16 +40,17 @@ class SaveProviderAdapterRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'alpha_dash:ascii', 'max:255', Rule::unique('provider_connections', 'slug')->ignore($adapter)],
-            'adapter' => ['required', 'regex:/^[a-z][a-z0-9_]*$/', 'max:255', Rule::unique('provider_connections', 'adapter')->ignore($adapter)],
+            'slug' => ['required', 'alpha_dash:ascii', 'max:255', Rule::unique('provider_adapters', 'slug')->ignore($adapter)],
+            'adapter_key' => ['required', 'regex:/^[a-z][a-z0-9_]*$/', 'max:255', Rule::unique('provider_adapters', 'adapter_key')->ignore($adapter)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'capabilities' => ['required', 'array:services,methods,credential_fields'],
             'capabilities.services' => ['required', 'array', 'min:1', 'max:100'],
             'capabilities.services.*' => ['required', 'distinct', Rule::in(app(ProviderProductRegistry::class)->slugs(includeLegacy: true))],
             'capabilities.methods' => ['required', 'array', 'min:1', 'max:2'],
             'capabilities.methods.*' => ['required', 'distinct', Rule::in(self::METHODS)],
-            'capabilities.credential_fields' => ['present', 'array', 'max:3'],
+            'capabilities.credential_fields' => ['present', 'array', 'max:8'],
             'capabilities.credential_fields.*' => ['required', 'distinct', Rule::in(self::CREDENTIAL_FIELDS)],
+            'settings' => ['nullable', 'array'],
         ];
     }
 }

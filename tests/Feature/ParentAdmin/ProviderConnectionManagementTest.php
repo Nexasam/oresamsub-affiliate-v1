@@ -67,9 +67,9 @@ it('renders the parent provider connection workspace', function () {
     [, $admin] = providerWorkspace();
 
     $this->actingAs($admin, 'parent_admin')->get('/parent-admin/provider-connections?create=1')
-        ->assertOk()->assertSee('Provider connections')->assertSee('Product request configuration')
-        ->assertSee('Each product has its own payload, headers, network IDs and response rules.')
-        ->assertSee('Actual provider charge path')
+        ->assertOk()->assertSee('Provider connections')->assertSee('Simple provider setup')
+        ->assertSee('Technology adapter')
+        ->assertSee('My provider website is not listed')
         ->assertDontSee('structuredClone(this.form)', false)
         ->assertDontSee('axios({method,url,data:this.payload()})', false);
 });
@@ -105,17 +105,15 @@ it('uses a blade form for parent connection submission and redirects with feedba
         ->assertSessionHas('success', 'Provider connection created and submitted for platform approval.');
 });
 
-it('renders typed header values with bearer prefix and suffix controls', function () {
+it('does not expose technical header controls to parent administrators', function () {
     [, $admin] = providerWorkspace('typed-header-provider');
 
     $this->actingAs($admin, 'parent_admin')
         ->get('/parent-admin/provider-connections?create=1')
         ->assertOk()
-        ->assertSee('Prefix (optional)')
-        ->assertSee('Suffix (optional)')
-        ->assertSee('headerTypeChanged(row)', false)
-        ->assertSee('request_headers][${index}][prefix]', false)
-        ->assertSee('request_headers][${index}][suffix]', false);
+        ->assertSee('Provider credentials')
+        ->assertDontSee('Prefix (optional)')
+        ->assertDontSee('request_headers][${index}][prefix]', false);
 });
 
 it('server renders an owned connection for editing through a normal put form', function () {

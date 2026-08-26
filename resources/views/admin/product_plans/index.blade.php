@@ -35,7 +35,7 @@
                                 <button type="button" class="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-blue-700 bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
                                 <p class="mt-1 text-[11px] text-slate-500" x-text="row.profit_editable ? profitSummary(row) : 'Add this plan first'"></p>
                             </td>
-                            <td><div class="space-y-2"><div x-html="row.admin_visibility || ''"></div><div x-html="row.affiliate_visibility || ''"></div></div></td>
+                            <td><div class="space-y-2"><div x-html="row.admin_visibility || ''"></div><div x-html="row.affiliate_visibility || ''"></div><p class="text-[10px] font-semibold" :class="row.effective_availability ? 'text-emerald-600' : 'text-slate-500'" x-text="row.effective_availability ? 'Available to customers' : 'Unavailable to customers'"></p></div></td>
                             <td><div x-html="row.affiliate_status || ''"></div></td>
                         </tr></template>
                         <tr x-show="!loading && visible.length === 0"><td colspan="7" class="workspace-empty">No plans match your filters.</td></tr>
@@ -187,7 +187,7 @@
         profitModal: false, profitSaving: false, profitError: '', selectedPlan: null, profitValues: {},
         async load() { this.loading = true; this.error = ''; try { const response = await fetch(@js(route('admin.product_plans.admin_fetch_product_plans')), {headers:{'Accept':'application/json'}}); if (!response.ok) throw new Error('Product plans could not be loaded.'); const payload = await response.json(); this.rows = payload.data || []; } catch (error) { this.error = error.message; } finally { this.loading = false; } },
         plain(value) { const el = document.createElement('div'); el.innerHTML = value || ''; return (el.textContent || '').toLowerCase(); },
-        get filtered() { const term = this.search.toLowerCase().trim(); return this.rows.filter(row => (!term || `${row.product_plan_name} ${row.network_name} ${row.category}`.toLowerCase().includes(term)) && (!this.availability || this.plain(row.affiliate_visibility).includes(this.availability))); },
+        get filtered() { const term = this.search.toLowerCase().trim(); return this.rows.filter(row => (!term || `${row.product_plan_name} ${row.network_name} ${row.category}`.toLowerCase().includes(term)) && (!this.availability || (this.availability === 'available' ? row.effective_availability : !row.effective_availability))); },
         get pages() { return Math.max(1, Math.ceil(this.filtered.length / this.perPage)); },
         get visible() { if (this.page > this.pages) this.page = this.pages; const start=(this.page-1)*this.perPage; return this.filtered.slice(start,start+this.perPage); },
         get pageSummary() { if (!this.filtered.length) return 'No plans'; const start=(this.page-1)*this.perPage+1; return `Showing ${start}–${Math.min(start+this.perPage-1,this.filtered.length)} of ${this.filtered.length}`; },

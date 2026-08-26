@@ -36,12 +36,16 @@ class PurchaseRouteResolver
             $this->fail('The selected plan does not belong to the affiliate parent.');
         }
 
-        if (! (bool) $affiliatePlan->visibility || ! (bool) $affiliatePlan->visibility_from_admin) {
-            $this->fail('The affiliate plan is not available for purchase.');
-        }
-
-        if (! (bool) $plan->visibility || ! (bool) $plan->affiliate_visibility) {
-            $this->fail('The parent product plan is not available for affiliates.');
+        $availability = $affiliatePlan->availabilityState();
+        if (! $availability['available']) {
+            $this->fail(match ($availability['reason']) {
+                'parent_disabled', 'parent_hidden_from_affiliates' => 'The parent product plan is not available for affiliates.',
+                'affiliate_disabled', 'platform_disabled' => 'The affiliate plan is not available for purchase.',
+                'route_inactive' => 'No active primary provider route is configured for this plan.',
+                'connection_inactive' => 'The primary provider connection is not active and approved.',
+                'adapter_inactive' => 'The configured provider adapter is inactive.',
+                default => 'The selected plan is unavailable for purchase.',
+            });
         }
 
         $route = $plan->providerRoutes

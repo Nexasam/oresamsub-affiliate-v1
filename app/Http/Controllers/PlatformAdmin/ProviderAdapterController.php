@@ -4,7 +4,7 @@ namespace App\Http\Controllers\PlatformAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PlatformAdmin\SaveProviderAdapterRequest;
-use App\Models\ProviderConnection;
+use App\Models\ProviderAdapter;
 use App\Support\ProviderProductRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -21,8 +21,12 @@ class ProviderAdapterController extends Controller
     public function data(): JsonResponse
     {
         return response()->json([
-            'adapters' => ProviderConnection::query()->withCount('parentConnections')->orderBy('name')->get()
-                ->each(fn (ProviderConnection $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities)),
+            'adapters' => ProviderAdapter::query()->withCount('connections')->orderBy('name')->get()
+                ->each(function (ProviderAdapter $adapter) {
+                    $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities);
+                    $adapter->setAttribute('adapter', $adapter->adapter_key);
+                    $adapter->setAttribute('parent_connections_count', $adapter->connections_count);
+                }),
             'allowed' => [
                 'services' => $this->products->products(),
                 'methods' => SaveProviderAdapterRequest::METHODS,
@@ -33,14 +37,14 @@ class ProviderAdapterController extends Controller
 
     public function store(SaveProviderAdapterRequest $request): JsonResponse
     {
-        $adapter = ProviderConnection::create($request->validated());
+        $adapter = ProviderAdapter::create($request->validated());
 
         return response()->json(['message' => 'Provider adapter created.', 'adapter' => $adapter], 201);
     }
 
-    public function update(SaveProviderAdapterRequest $request, ProviderConnection $providerAdapter): JsonResponse
+    public function update(SaveProviderAdapterRequest $request, ProviderAdapter $providerAdapter): JsonResponse
     {
-        $providerAdapter->update($request->validated());
+        $providerAdapter->update([...$request->validated(), 'version' => $providerAdapter->version + 1]);
 
         return response()->json(['message' => 'Provider adapter updated.', 'adapter' => $providerAdapter->fresh()]);
     }

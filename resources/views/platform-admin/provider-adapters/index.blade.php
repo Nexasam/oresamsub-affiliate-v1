@@ -11,7 +11,7 @@
             <div class="max-w-3xl">
                 <p class="text-xs font-semibold uppercase tracking-[.22em] text-emerald-400">Approved adapter catalogue</p>
                 <h2 class="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Control which integration engines parents may configure.</h2>
-                <p class="mt-3 text-sm leading-6 text-slate-300">Adapters define safe capabilities only. API URLs, credentials, request mappings and provider rules remain inside each parent business connection.</p>
+                <p class="mt-3 text-sm leading-6 text-slate-300">Adapters define the complete reusable request, validation and response flow. Provider connections inherit it; parents only supply credentials.</p>
             </div>
             <button @click="openCreate()" class="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300">Add provider adapter</button>
         </div>
@@ -91,6 +91,12 @@
                         <span x-show="errors['capabilities.services']" class="mt-2 block text-xs text-rose-600" x-text="firstError('capabilities.services')"></span>
                     </fieldset>
 
+                    <label class="block text-sm font-semibold text-slate-800">Complete adapter configuration (JSON)
+                        <textarea x-model="form.settingsJson" rows="12" class="mt-2 w-full rounded-xl border-slate-200 font-mono text-xs focus:border-emerald-500 focus:ring-emerald-500" placeholder='{"http_method":"POST","product_configs":{}}'></textarea>
+                        <span class="mt-1 block text-xs font-normal text-slate-500">Endpoints, mappings, headers, validation flows and response rules entered here prefill every provider connection using this adapter.</span>
+                        <span x-show="errors.settings" class="mt-1 block text-xs text-rose-600" x-text="firstError('settings')"></span>
+                    </label>
+
                     <fieldset>
                         <legend class="text-sm font-semibold text-slate-800">Allowed HTTP methods</legend>
                         <div class="mt-3 flex flex-wrap gap-3">
@@ -122,21 +128,23 @@
 @push('scripts')
 <script>
 function providerAdapters() {
-    const emptyForm = () => ({ id: null, name: '', slug: '', adapter: '', status: 'active', capabilities: { services: [], methods: ['POST'], credential_fields: [] } });
+    const emptyForm = () => ({ id: null, name: '', slug: '', adapter: '', status: 'active', settingsJson: '{}', capabilities: { services: [], methods: ['POST'], credential_fields: [] } });
     return {
         adapters: [], allowed: { services: [], methods: [], credential_fields: [] }, loading: true, saving: false,
         modal: false, search: '', message: '', messageType: 'success', errors: {}, form: emptyForm(),
         get filteredAdapters() { const term = this.search.trim().toLowerCase(); return term ? this.adapters.filter(item => `${item.name} ${item.slug} ${item.adapter}`.toLowerCase().includes(term)) : this.adapters; },
         async load() { this.loading = true; try { const response = await fetch('{{ route('platform-admin.provider-adapters.data') }}', { headers: { Accept: 'application/json' } }); const data = await response.json(); this.adapters = data.adapters; this.allowed = data.allowed; } finally { this.loading = false; } },
         openCreate() { this.form = emptyForm(); this.errors = {}; this.modal = true; },
-        openEdit(adapter) { this.form = { id: adapter.id, name: adapter.name, slug: adapter.slug, adapter: adapter.adapter, status: adapter.status, capabilities: { services: [...(adapter.capabilities?.services || [])], methods: [...(adapter.capabilities?.methods || [])], credential_fields: [...(adapter.capabilities?.credential_fields || [])] } }; this.errors = {}; this.modal = true; },
+        openEdit(adapter) { this.form = { id: adapter.id, name: adapter.name, slug: adapter.slug, adapter: adapter.adapter, status: adapter.status, settingsJson: JSON.stringify(adapter.settings || {}, null, 2), capabilities: { services: [...(adapter.capabilities?.services || [])], methods: [...(adapter.capabilities?.methods || [])], credential_fields: [...(adapter.capabilities?.credential_fields || [])] } }; this.errors = {}; this.modal = true; },
         credentialSummary(adapter) { const fields = adapter.capabilities?.credential_fields || []; return fields.length ? `Credentials: ${fields.join(', ')}` : 'No credentials required'; },
         firstError(key) { return this.errors[key]?.[0] || ''; },
         async save() {
             this.saving = true; this.errors = {}; this.message = '';
             const url = this.form.id ? `{{ url('/admin/provider-adapters') }}/${this.form.id}` : '{{ route('platform-admin.provider-adapters.store') }}';
             try {
-                const response = await fetch(url, { method: this.form.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify(this.form) });
+                let settings; try { settings = JSON.parse(this.form.settingsJson || '{}'); } catch (error) { this.errors = { settings: ['Adapter configuration must be valid JSON.'] }; return; }
+                const payload = { ...this.form, settings }; delete payload.settingsJson;
+                const response = await fetch(url, { method: this.form.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify(payload) });
                 const data = await response.json();
                 if (!response.ok) { this.errors = data.errors || {}; this.message = data.message || 'Adapter could not be saved.'; this.messageType = 'error'; return; }
                 this.modal = false; this.message = data.message; this.messageType = 'success'; await this.load();

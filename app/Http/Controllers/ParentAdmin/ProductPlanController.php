@@ -152,6 +152,19 @@ class ProductPlanController extends Controller
             ->with('success', "{$plans->count()} product plans updated.");
     }
 
+    public function disable(Request $request, ProductPlan $plan): RedirectResponse
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        abort_unless((int) $plan->parent_business_id === (int) $parent->id, 404);
+
+        DB::transaction(function () use ($plan): void {
+            $plan->update(['visibility' => false, 'affiliate_visibility' => false, 'public_visibility' => false]);
+            $plan->providerRoutes()->where('priority', 1)->update(['active' => false]);
+        });
+
+        return redirect()->route('parent-admin.dashboard')->with('success', 'Plan disabled across all affiliates. Affiliate prices and local settings were preserved.');
+    }
+
     public function update(UpdateProductPlanRequest $request, ProductPlan $plan): JsonResponse|RedirectResponse
     {
         $plan = $this->catalog->updatePlan(

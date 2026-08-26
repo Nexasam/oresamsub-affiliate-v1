@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ParentAdmin\AffiliateProfitCapService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 
 class AffiliateProductPlan extends AffiliateScopedModel
@@ -29,6 +30,61 @@ class AffiliateProductPlan extends AffiliateScopedModel
     // TODO: revamp productplan with global scope for visibility in all its instance in the code
 
     protected $guarded = ['id'];
+
+    public function scopeCustomerAvailable(Builder $query): Builder
+    {
+        return $query
+            ->where($query->qualifyColumn('visibility'), 1)
+            ->where($query->qualifyColumn('visibility_from_admin'), 1)
+            ->whereHas('product_plan', fn (Builder $plan) => $plan
+                ->where('visibility', 1)
+                ->where('affiliate_visibility', 1)
+                ->whereHas('providerRoutes', fn (Builder $route) => $route
+                    ->where('priority', 1)
+                    ->where('active', true)
+                    ->whereHas('parentProviderConnection', fn (Builder $connection) => $connection
+                        ->where('status', 'active')
+                        ->where('approval_status', 'approved')
+                        ->whereHas('providerConnection', fn (Builder $adapter) => $adapter->where('status', 'active'))
+                    )
+                )
+            );
+    }
+
+    /** @return array{available: bool, reason: string|null} */
+    public function availabilityState(): array
+    {
+        $this->loadMissing('product_plan.providerRoutes.parentProviderConnection.providerConnection');
+        $parentState = $this->parentAvailabilityState();
+        if (! $parentState['available']) return $parentState;
+        if (! (bool) $this->visibility) return ['available' => false, 'reason' => 'affiliate_disabled'];
+        if (! (bool) $this->visibility_from_admin) return ['available' => false, 'reason' => 'platform_disabled'];
+
+        return ['available' => true, 'reason' => null];
+    }
+
+    /** @return array{available: bool, reason: string|null} */
+    public function parentAvailabilityState(): array
+    {
+        $this->loadMissing('product_plan.providerRoutes.parentProviderConnection.providerConnection');
+        $plan = $this->product_plan;
+
+        if (! $plan || ! (bool) $plan->visibility) return ['available' => false, 'reason' => 'parent_disabled'];
+        if (! (bool) $plan->affiliate_visibility) return ['available' => false, 'reason' => 'parent_hidden_from_affiliates'];
+
+        $route = $plan->providerRoutes->first(fn ($route) => (int) $route->priority === 1 && (bool) $route->active);
+        if (! $route) return ['available' => false, 'reason' => 'route_inactive'];
+
+        $connection = $route->parentProviderConnection;
+        if (! $connection || $connection->status !== 'active' || $connection->approval_status !== 'approved') {
+            return ['available' => false, 'reason' => 'connection_inactive'];
+        }
+        if (! $connection->providerConnection || $connection->providerConnection->status !== 'active') {
+            return ['available' => false, 'reason' => 'adapter_inactive'];
+        }
+
+        return ['available' => true, 'reason' => null];
+    }
 
     /**
      * each card belongs to a product plan

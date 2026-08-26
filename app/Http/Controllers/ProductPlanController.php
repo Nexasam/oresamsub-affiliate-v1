@@ -89,6 +89,11 @@ class ProductPlanController extends Controller
 
       $detail = AffiliateProductPlan::where('product_plan_id',$request->productPlanId)->first();
       $update = $detail->visibility ? 0 : 1;
+      if ($update === 1 && ! $detail->parentAvailabilityState()['available']) {
+        throw \Illuminate\Validation\ValidationException::withMessages([
+          'product_plan_id' => 'This plan is disabled by the parent and cannot be activated yet.',
+        ]);
+      }
       $detail->update([
         'visibility' => $update
       ]);
@@ -132,6 +137,7 @@ class ProductPlanController extends Controller
                 'product_plan_category.product',
                 'affiliate_product_plan' => fn ($query) => $query->where('affiliate_id', $affiliate->id),
                 'parentPrices' => fn ($query) => $query->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id),
+                'providerRoutes.parentProviderConnection.providerConnection',
             ])
             ->where('parent_business_id', $affiliate->parent_business_id)
             ->orderBy('updated_at', 'desc')
@@ -359,24 +365,56 @@ class ProductPlanController extends Controller
                 ? null
                 : $profitLimits->limits($affiliate, $data)['acquisition_discount'])
             ->addColumn('profit_editable', fn ($data) => in_array($data->id, $affiliatePlanIds, true))
+            ->addColumn('parent_availability', function ($data) {
+                $affiliatePlan = $data->affiliate_product_plan;
+                if (! $affiliatePlan) {
+                    return ! (bool) $data->visibility || ! (bool) $data->affiliate_visibility
+                        ? 'Disabled by parent'
+                        : ($data->providerRoutes->contains(fn ($route) => (int) $route->priority === 1 && (bool) $route->active)
+                            ? 'Available from parent'
+                            : 'Parent route unavailable');
+                }
+
+                return match ($affiliatePlan->parentAvailabilityState()['reason']) {
+                    null => 'Available from parent',
+                    'parent_disabled', 'parent_hidden_from_affiliates' => 'Disabled by parent',
+                    'route_inactive' => 'Parent route unavailable',
+                    'connection_inactive' => 'Parent connection unavailable',
+                    'adapter_inactive' => 'Provider adapter unavailable',
+                    default => 'Unavailable from parent',
+                };
+            })
+            ->addColumn('affiliate_toggle_enabled', fn ($data) => $data->affiliate_product_plan
+                ? (bool) $data->affiliate_product_plan->parentAvailabilityState()['available']
+                : false)
+            ->addColumn('effective_availability', fn ($data) => $data->affiliate_product_plan
+                ? (bool) $data->affiliate_product_plan->availabilityState()['available']
+                : false)
           
           
 
             ->addColumn('admin_visibility', function ($data) {
-              return $data->visibility == 1 
-                  ? '<span class="text-green-600 dark:text-green-400">Available</span>'
-                  : '<span class="text-red-600 dark:text-red-400">Not Available</span>';
+              $affiliatePlan = $data->affiliate_product_plan;
+              $state = $affiliatePlan?->parentAvailabilityState();
+              return ($state['available'] ?? false)
+                  ? '<span class="font-semibold text-emerald-600 dark:text-emerald-400">Available from parent</span>'
+                  : '<span class="font-semibold text-amber-700 dark:text-amber-400">Disabled by parent</span>';
              })
           
             ->addColumn('affiliate_visibility',function($data){
               $escapedUrl = htmlspecialchars(json_encode($data->id));
               $token = htmlspecialchars(json_encode(csrf_token()));
               $checked = $data->affiliate_product_plan?->visibility == 1 ? 'checked':'';
+              $parentEnabled = $data->affiliate_product_plan
+                  ? (bool) $data->affiliate_product_plan->parentAvailabilityState()['available']
+                  : false;
+              $disabled = $parentEnabled ? '' : 'disabled title="The parent must restore this plan before you can activate it."';
               $actual_value = $data->affiliate_product_plan?->visibility;
               $checkedd = htmlspecialchars(json_encode($actual_value));
               $toggle_btn = '<div class="flex items-center">';
-              $toggle_btn .=  '<input onchange="toggleProductPlanVisibility('.$escapedUrl.','.$token.','.$checkedd.')" type="checkbox" id="hs-basic-with-description-checked'.$data->id.'" class="ti-switch" '.$checked.'>';
+              $toggle_btn .=  '<input onchange="toggleProductPlanVisibility('.$escapedUrl.','.$token.','.$checkedd.')" type="checkbox" id="hs-basic-with-description-checked'.$data->id.'" class="ti-switch disabled:cursor-not-allowed disabled:opacity-50" '.$checked.' '.$disabled.'>';
               $toggle_btn .=  '<label for="hs-basic-with-description-checked" class="text-sm text-gray-500 ms-3 dark:text-white/70 "></label>';
+              if (! $parentEnabled) $toggle_btn .= '<span class="ml-2 text-[10px] font-semibold text-amber-700">Disabled by parent</span>';
               $toggle_btn .=  ' <span class="badge rounded-sm bg-success/10 text-success hidden" id="nnotification'.$data->id.'"></span>  </div>';
               
               return $toggle_btn;
@@ -494,11 +532,9 @@ class ProductPlanController extends Controller
               if($existing){
                 //update
                 $existing->update([
+                  'product_plan_name' => $plan->product_plan_name,
                   'data_size_in_mb' => $plan->data_size_in_mb,
                   'validity_in_days' => $plan->validity_in_days,
-                  'visibility' => $plan->visibility,
-                  'visibility_from_admin' => $plan->visibility,
-                  'public_visibility' => $plan->visibility,
                 ]);
                 $updated++;
               }else{
@@ -516,7 +552,9 @@ class ProductPlanController extends Controller
                   'user_level_6_profit' => $defaultMargin,
                   'data_size_in_mb' => $plan->data_size_in_mb,
                   'validity_in_days' => $plan->validity_in_days,
-                  'visibility' => $plan->visibility
+                  'visibility' => 1,
+                  'visibility_from_admin' => 1,
+                  'public_visibility' => 1,
                 ]);
                 $created++;
               }

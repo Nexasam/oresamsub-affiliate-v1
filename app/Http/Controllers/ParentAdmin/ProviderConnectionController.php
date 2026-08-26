@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ParentAdmin\SaveProviderConnectionRequest;
 use App\Models\ParentProviderConnection;
 use App\Models\ProviderConnection;
+use App\Models\ProviderAdapter;
 use App\Services\ParentAdmin\ProviderConnectionService;
 use App\Support\ProviderProductRegistry;
 use Illuminate\Http\JsonResponse;
@@ -29,15 +30,16 @@ class ProviderConnectionController extends Controller
 
         if ($request->filled('edit')) {
             $editingConnection = $parent->providerConnections()
-                ->with('providerConnection')
+                ->with(['providerConnection', 'providerAdapter'])
                 ->findOrFail($request->integer('edit'));
         }
 
-        $adapters = ProviderConnection::where('status', 'active')->orderBy('name')->get()
-            ->each(fn (ProviderConnection $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities));
+        $adapters = ProviderAdapter::where('status', 'active')->orderBy('name')->get()
+            ->each(fn (ProviderAdapter $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities));
+        $providerOptions = ProviderConnection::where('status', 'active')->whereNotNull('provider_adapter_id')->orderBy('name')->get();
 
-        if ($editingConnection && $editingConnection->providerConnection?->status === 'inactive') {
-            $inactiveAdapter = $editingConnection->providerConnection;
+        if ($editingConnection && $editingConnection->providerAdapter?->status === 'inactive') {
+            $inactiveAdapter = $editingConnection->providerAdapter;
             $inactiveAdapter->capabilities = $this->products->normalizeCapabilities($inactiveAdapter->capabilities);
             $adapters->push($inactiveAdapter);
         }
@@ -45,6 +47,7 @@ class ProviderConnectionController extends Controller
         return view('parent-admin.provider-connections.index', [
             'connections' => $connections,
             'adapters' => $adapters->unique('id')->values(),
+            'providerOptions' => $providerOptions,
             'products' => $this->products->products(),
             'runtimeFields' => SaveProviderConnectionRequest::RUNTIME_FIELDS,
             'credentialFields' => SaveProviderConnectionRequest::CREDENTIAL_FIELDS,
@@ -59,12 +62,13 @@ class ProviderConnectionController extends Controller
         $connections = $parent->providerConnections()->with('providerConnection')->latest()->get()
             ->map(fn ($connection) => $this->connections->present($connection));
 
-        $adapters = ProviderConnection::where('status', 'active')->orderBy('name')->get()
-            ->each(fn (ProviderConnection $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities));
+        $adapters = ProviderAdapter::where('status', 'active')->orderBy('name')->get()
+            ->each(fn (ProviderAdapter $adapter) => $adapter->capabilities = $this->products->normalizeCapabilities($adapter->capabilities));
 
         return response()->json([
             'connections' => $connections,
             'adapters' => $adapters,
+            'provider_connections' => ProviderConnection::where('status', 'active')->whereNotNull('provider_adapter_id')->orderBy('name')->get(),
             'runtime_fields' => SaveProviderConnectionRequest::RUNTIME_FIELDS,
             'credential_fields' => SaveProviderConnectionRequest::CREDENTIAL_FIELDS,
             'products' => $this->products->products(),

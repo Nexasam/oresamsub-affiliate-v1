@@ -18,7 +18,8 @@ class ProviderConnectionService
             abort_unless($connection->parent_business_id === $parent->id, 404);
         }
         $duplicate = $parent->providerConnections()
-            ->where('provider_connection_id', $data['provider_connection_id'])
+            ->when(isset($data['provider_connection_id']), fn ($query) => $query->where('provider_connection_id', $data['provider_connection_id']))
+            ->when(! isset($data['provider_connection_id']), fn ($query) => $query->whereNull('provider_connection_id')->where('proposed_base_url', $data['proposed_base_url'] ?? null))
             ->where('name', $data['name'])
             ->when($connection, fn ($query) => $query->where('id', '!=', $connection->id))
             ->exists();
@@ -28,8 +29,10 @@ class ProviderConnectionService
 
         return DB::transaction(function () use ($parent, $data, $connection) {
             $existingConnection = $connection;
-            $settings = $data['settings'];
-            $settings = $this->synchronizeSharedResponseDefaults($settings);
+            $settings = $data['settings'] ?? ($connection?->settings ?? []);
+            if (isset($data['settings'])) {
+                $settings = $this->synchronizeSharedResponseDefaults($settings);
+            }
             $settings['is_primary'] = (bool) $data['is_primary'];
 
             $credentials = $connection?->credentials ?? [];
@@ -40,9 +43,17 @@ class ProviderConnectionService
             }
 
             $attributes = [
-                'provider_connection_id' => $data['provider_connection_id'],
+                'provider_adapter_id' => $data['provider_adapter_id']
+                    ?? \App\Models\ProviderConnection::find($data['provider_connection_id'] ?? null)?->provider_adapter_id
+                    ?? $connection?->provider_adapter_id,
+                'provider_connection_id' => $data['provider_connection_id'] ?? null,
+                'request_type' => filled($data['provider_connection_id'] ?? null) ? 'existing' : 'discovery',
                 'name' => $data['name'],
                 'base_url' => $data['base_url'] ?? null,
+                'proposed_provider_name' => $data['proposed_provider_name'] ?? null,
+                'proposed_base_url' => $data['proposed_base_url'] ?? null,
+                'proposed_documentation_url' => $data['proposed_documentation_url'] ?? null,
+                'discovery_notes' => $data['discovery_notes'] ?? null,
                 'credentials' => $credentials ?: null,
                 'settings' => $settings,
                 'status' => $data['status'],
@@ -76,7 +87,7 @@ class ProviderConnectionService
                 $connection = $parent->providerConnections()->create($attributes);
             }
 
-            return $connection->fresh('providerConnection:id,name,slug,adapter,capabilities,status');
+            return $connection->fresh(['providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,status', 'providerAdapter:id,name,slug,adapter_key,capabilities,status']);
         });
     }
 
@@ -85,8 +96,14 @@ class ProviderConnectionService
         return [
             'id' => $connection->id,
             'provider_connection_id' => $connection->provider_connection_id,
+            'provider_adapter_id' => $connection->provider_adapter_id,
+            'request_type' => $connection->request_type,
             'name' => $connection->name,
             'base_url' => $connection->base_url,
+            'proposed_provider_name' => $connection->proposed_provider_name,
+            'proposed_base_url' => $connection->proposed_base_url,
+            'proposed_documentation_url' => $connection->proposed_documentation_url,
+            'discovery_notes' => $connection->discovery_notes,
             'status' => $connection->status,
             'approval_status' => $connection->approval_status,
             'submitted_at' => $connection->submitted_at,
@@ -98,7 +115,10 @@ class ProviderConnectionService
                 ...$connection->providerConnection->toArray(),
                 'capabilities' => $this->products->normalizeCapabilities($connection->providerConnection->capabilities),
             ] : null,
-            'credential_status' => collect(['api_public_key', 'api_secret_key', 'api_password'])
+            'provider_adapter' => $connection->providerAdapter,
+            'credential_status' => collect(data_get($connection->providerConnection?->capabilities, 'credential_fields')
+                ?? data_get($connection->providerAdapter?->capabilities, 'credential_fields')
+                ?? \App\Http\Requests\ParentAdmin\SaveProviderConnectionRequest::CREDENTIAL_FIELDS)
                 ->mapWithKeys(fn ($key) => [$key => filled(($connection->credentials ?? [])[$key] ?? null)])->all(),
         ];
     }
@@ -110,6 +130,7 @@ class ProviderConnectionService
         }
 
         if ((int) $connection->provider_connection_id !== (int) $attributes['provider_connection_id']
+            || (int) $connection->provider_adapter_id !== (int) $attributes['provider_adapter_id']
             || (string) $connection->base_url !== (string) $attributes['base_url']) {
             return true;
         }

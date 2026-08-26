@@ -6,6 +6,7 @@ use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
 use App\Models\Product;
 use App\Models\ProviderConnection;
+use App\Models\ProviderAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -42,8 +43,8 @@ it('protects the provider adapter catalogue with the platform admin guard', func
 });
 
 it('renders the provider adapter catalogue and lists existing definitions', function () {
-    $adapter = ProviderConnection::create([
-        'name' => 'Existing adapter', 'slug' => 'existing-adapter', 'adapter' => 'existing_adapter',
+    $adapter = ProviderAdapter::create([
+        'name' => 'Existing adapter', 'slug' => 'existing-adapter', 'adapter_key' => 'existing_adapter',
         'capabilities' => ['services' => ['data'], 'methods' => ['POST'], 'credential_fields' => []],
         'status' => 'active',
     ]);
@@ -89,7 +90,7 @@ it('creates a normalized approved adapter definition', function () {
         ->assertJsonPath('adapter.slug', 'configurable-http')
         ->assertJsonPath('adapter.adapter', 'configurable_http');
 
-    $adapter = ProviderConnection::sole();
+    $adapter = ProviderAdapter::sole();
     expect($adapter->capabilities)->toBe([
         'services' => ['data', 'airtime'],
         'methods' => ['POST', 'GET'],
@@ -98,8 +99,8 @@ it('creates a normalized approved adapter definition', function () {
 });
 
 it('updates and deactivates adapters without exposing a delete route', function () {
-    $adapter = ProviderConnection::create([
-        'name' => 'HTTP adapter', 'slug' => 'http-adapter', 'adapter' => 'http_adapter',
+    $adapter = ProviderAdapter::create([
+        'name' => 'HTTP adapter', 'slug' => 'http-adapter', 'adapter_key' => 'http_adapter',
         'capabilities' => ['services' => ['data'], 'methods' => ['POST'], 'credential_fields' => []],
         'status' => 'active',
     ]);
@@ -120,8 +121,8 @@ it('updates and deactivates adapters without exposing a delete route', function 
 });
 
 it('rejects duplicate machine keys and unsupported capabilities', function () {
-    ProviderConnection::create([
-        'name' => 'Existing', 'slug' => 'existing', 'adapter' => 'existing_adapter',
+    ProviderAdapter::create([
+        'name' => 'Existing', 'slug' => 'existing', 'adapter_key' => 'existing_adapter',
         'capabilities' => [], 'status' => 'active',
     ]);
     $admin = platformAdapterAdmin();
@@ -132,17 +133,17 @@ it('rejects duplicate machine keys and unsupported capabilities', function () {
             'services' => ['crypto'], 'methods' => ['DELETE'], 'credential_fields' => ['plain_token'],
         ],
     ]))->assertUnprocessable()->assertJsonValidationErrors([
-        'slug', 'adapter', 'capabilities.services.0', 'capabilities.methods.0', 'capabilities.credential_fields.0',
+        'slug', 'adapter_key', 'capabilities.services.0', 'capabilities.methods.0', 'capabilities.credential_fields.0',
     ]);
 });
 
 it('shows only active adapters to parents while preserving saved inactive connections', function () {
-    $active = ProviderConnection::create([
-        'name' => 'Active adapter', 'slug' => 'active-adapter', 'adapter' => 'active_adapter',
+    $active = ProviderAdapter::create([
+        'name' => 'Active adapter', 'slug' => 'active-adapter', 'adapter_key' => 'active_adapter',
         'capabilities' => [], 'status' => 'active',
     ]);
-    $inactive = ProviderConnection::create([
-        'name' => 'Inactive adapter', 'slug' => 'inactive-adapter', 'adapter' => 'inactive_adapter',
+    $inactive = ProviderAdapter::create([
+        'name' => 'Inactive adapter', 'slug' => 'inactive-adapter', 'adapter_key' => 'inactive_adapter',
         'capabilities' => [], 'status' => 'inactive',
     ]);
     $parent = ParentBusiness::create(['name' => 'Parent', 'slug' => 'adapter-parent']);
@@ -150,8 +151,9 @@ it('shows only active adapters to parents while preserving saved inactive connec
         'parent_business_id' => $parent->id, 'name' => 'Parent Owner', 'email' => 'parent-adapters@example.test',
         'password' => 'secret-password', 'active' => true,
     ]);
+    $provider = ProviderConnection::create(['provider_adapter_id' => $inactive->id, 'name' => 'Inactive provider', 'slug' => 'inactive-provider', 'adapter' => 'inactive_adapter', 'status' => 'inactive']);
     $saved = ParentProviderConnection::create([
-        'parent_business_id' => $parent->id, 'provider_connection_id' => $inactive->id, 'name' => 'Legacy inactive',
+        'parent_business_id' => $parent->id, 'provider_adapter_id' => $inactive->id, 'provider_connection_id' => $provider->id, 'name' => 'Legacy inactive',
     ]);
 
     $response = $this->actingAs($parentAdmin, 'parent_admin')->getJson('/parent-admin/provider-connections/data')->assertOk();

@@ -12,7 +12,10 @@ use Throwable;
 
 class ConfigurableProviderClient
 {
-    public function __construct(private readonly ProviderProductRegistry $products) {}
+    public function __construct(
+        private readonly ProviderProductRegistry $products,
+        private readonly ProviderConnectionConfigurationResolver $configuration,
+    ) {}
 
     public function execute(ParentProviderConnection $connection, string $productSlug, array $runtime): array
     {
@@ -25,7 +28,7 @@ class ConfigurableProviderClient
             return $this->failure('This provider connection is inactive.');
         }
 
-        $settings = $connection->settings ?? [];
+        $settings = $this->configuration->settings($connection);
         $productSlug = $this->products->normalize($productSlug);
         $capabilities = $this->products->normalizeCapabilities($connection->providerConnection?->capabilities);
         if (! in_array($productSlug, $capabilities['services'] ?? [], true)) {
@@ -96,7 +99,7 @@ class ConfigurableProviderClient
             return $this->failure('This provider connection is inactive.');
         }
 
-        $settings = $connection->settings ?? [];
+        $settings = $this->configuration->settings($connection);
         $productSlug = $this->products->normalize($productSlug);
         $capabilities = $this->products->normalizeCapabilities($connection->providerConnection?->capabilities);
         if (! in_array($productSlug, $capabilities['services'] ?? [], true)) {
@@ -154,7 +157,7 @@ class ConfigurableProviderClient
     public function requery(ParentProviderConnection $connection, string $productSlug, array $runtime): array
     {
         $connection->loadMissing('providerConnection');
-        $settings = $connection->settings ?? [];
+        $settings = $this->configuration->settings($connection);
         $productSlug = $this->products->normalize($productSlug);
         $productSettings = $this->productSettings($settings, $productSlug);
         $endpoint = $productSettings['requery_endpoint'] ?? $settings['requery_endpoint'] ?? null;
@@ -205,7 +208,7 @@ class ConfigurableProviderClient
             $endpoint = $legacyKey ? ($endpoints[$legacyKey] ?? null) : null;
         }
 
-        return $endpoint ?: $connection->base_url;
+        return $endpoint ?: $this->configuration->baseUrl($connection);
     }
 
     private function mapValues(array $mappings, array $runtime, array $credentials, array $networkMapping): array

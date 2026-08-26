@@ -26,6 +26,10 @@ class DataPlansService{
         $product_id = $data['product_id'];
         $amount = $data['amount'] ?? 0;
         $is_api = $data['is_api'] ?? NULL;
+        $affiliate = Affiliate::with(['parentBusiness', 'processingProfile'])->find($user_details->affiliate_id);
+        $isMultiParent = $affiliate
+            && $affiliate->parent_business_id
+            && $affiliate->processingProfile?->processing_engine === 'multi_parent';
 
         $slug = Product::select('slug')->where('id',$product_id)->first()->slug;
 
@@ -41,6 +45,7 @@ class DataPlansService{
 
             $product_plans_arr = ProductPlan::whereIn('product_plan_category_id', $product_plan_categories_id_arr)
             ->where('visibility', 1)
+            ->when($isMultiParent, fn ($query) => $query->where('affiliate_visibility', 1))
             ->pluck('id')
             ->toArray();
 
@@ -60,6 +65,7 @@ class DataPlansService{
 
             $product_plans_arr = ProductPlan::whereIn('product_plan_category_id', $product_plan_categories_id_arr)
             ->where('visibility', 1)
+            ->when($isMultiParent, fn ($query) => $query->where('affiliate_visibility', 1))
             ->pluck('id')
             ->toArray();
             logger('mamamaaaa: '.json_encode($product_plans_arr));
@@ -69,6 +75,7 @@ class DataPlansService{
 
         $product_plans = AffiliateProductPlan::with('product_plan')->whereIn('product_plan_id', $product_plans_arr)
         ->where('visibility', 1)
+        ->when($isMultiParent, fn ($query) => $query->customerAvailable())
         ->orderByRaw('CASE WHEN CAST(data_size_in_mb AS UNSIGNED) < 500 THEN 1 ELSE 0 END') // Push <500MB to bottom
         ->orderByRaw('CAST(data_size_in_mb AS UNSIGNED)') // Then order by size
         ->orderByRaw('CAST(validity_in_days AS UNSIGNED) DESC') // Then by validity

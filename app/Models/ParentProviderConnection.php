@@ -32,6 +32,11 @@ class ParentProviderConnection extends Model
         return $this->belongsTo(ProviderConnection::class);
     }
 
+    public function providerAdapter(): BelongsTo
+    {
+        return $this->belongsTo(ProviderAdapter::class);
+    }
+
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'approved_by_admin_id');

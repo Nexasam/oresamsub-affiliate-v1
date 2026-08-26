@@ -3,6 +3,7 @@
 namespace App\Http\Requests\ParentAdmin;
 
 use App\Models\ProviderConnection;
+use App\Models\ProviderAdapter;
 use App\Support\ProviderProductRegistry;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,7 @@ class SaveProviderConnectionRequest extends FormRequest
         'meter_number', 'meter_type', 'smartcard_number', 'customer_name', 'quantity', 'exam_type', 'service_provider',
     ];
 
-    public const CREDENTIAL_FIELDS = ['api_public_key', 'api_secret_key', 'api_password'];
+    public const CREDENTIAL_FIELDS = ['api_public_key', 'api_secret_key', 'api_password', 'api_token', 'business_id', 'contract_code', 'username', 'account_id'];
 
     public function authorize(): bool
     {
@@ -24,6 +25,9 @@ class SaveProviderConnectionRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (! $this->has('settings')) {
+            return;
+        }
         $settings = $this->input('settings', []);
         $productConfigs = $settings['product_configs'] ?? [];
         $products = app(ProviderProductRegistry::class);
@@ -52,6 +56,9 @@ class SaveProviderConnectionRequest extends FormRequest
 
     public function rules(): array
     {
+        if (! $this->has('settings')) {
+            return $this->simpleRules();
+        }
         $existingProviderId = $this->route('connection')?->provider_connection_id;
 
         return [
@@ -144,6 +151,10 @@ class SaveProviderConnectionRequest extends FormRequest
 
     public function after(): array
     {
+        if (! $this->has('settings')) {
+            return [$this->validateSimpleSubmission(...)];
+        }
+
         return [function (Validator $validator) {
             $settings = $this->input('settings', []);
             $products = app(ProviderProductRegistry::class);
@@ -229,6 +240,45 @@ class SaveProviderConnectionRequest extends FormRequest
                 }
             }
         }];
+    }
+
+    private function simpleRules(): array
+    {
+        return [
+            'provider_adapter_id' => ['required', 'integer', Rule::exists('provider_adapters', 'id')->where('status', 'active')],
+            'provider_connection_id' => ['nullable', 'integer', Rule::exists('provider_connections', 'id')->where('status', 'active')],
+            'name' => ['required', 'string', 'max:255'],
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+            'is_primary' => ['required', 'boolean'],
+            'credentials' => ['nullable', 'array'],
+            'credentials.*' => ['nullable', 'string', 'max:4096'],
+            'proposed_provider_name' => ['required_without:provider_connection_id', 'nullable', 'string', 'max:255'],
+            'proposed_base_url' => ['required_without:provider_connection_id', 'nullable', 'url:http,https', 'max:2048'],
+            'proposed_documentation_url' => ['nullable', 'url:http,https', 'max:2048'],
+            'discovery_notes' => ['nullable', 'string', 'max:3000'],
+        ];
+    }
+
+    private function validateSimpleSubmission(Validator $validator): void
+    {
+        $adapter = ProviderAdapter::find($this->integer('provider_adapter_id'));
+        $provider = $this->filled('provider_connection_id') ? ProviderConnection::find($this->integer('provider_connection_id')) : null;
+        if ($provider && (int) $provider->provider_adapter_id !== (int) $adapter?->id) {
+            $validator->errors()->add('provider_connection_id', 'The selected provider connection does not use this adapter.');
+        }
+
+        $fields = $provider?->capabilities['credential_fields'] ?? $adapter?->capabilities['credential_fields'] ?? [];
+        $saved = $this->route('connection')?->credentials ?? [];
+        foreach ($this->input('credentials', []) ?? [] as $field => $value) {
+            if (! in_array($field, $fields, true)) {
+                $validator->errors()->add("credentials.{$field}", 'This credential is not required by the selected adapter.');
+            }
+        }
+        foreach ($fields as $field) {
+            if (blank($this->input("credentials.{$field}")) && blank($saved[$field] ?? null)) {
+                $validator->errors()->add("credentials.{$field}", str($field)->headline().' is required.');
+            }
+        }
     }
 
     private function validateMappings(Validator $validator, array $mappings, array $credentialFields, string $path): void

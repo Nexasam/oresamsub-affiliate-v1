@@ -42,6 +42,19 @@
         @csrf @if($editingConnection) @method('PUT') @endif
         <div class="workspace-panel-header"><div><h2 class="font-semibold">{{ $editingConnection ? 'Update connection' : 'Connect a provider' }}</h2><p class="mt-1 text-sm text-slate-500">No technical API mapping is required from you.</p></div></div>
         <div class="grid gap-5 p-5 md:grid-cols-2">
+            @if($editingConnection)
+            <input type="hidden" name="provider_adapter_id" value="{{ $initial['provider_adapter_id'] }}">
+            @if($initial['provider_connection_id'])<input type="hidden" name="provider_connection_id" value="{{ $initial['provider_connection_id'] }}">@endif
+            @if(!$initial['provider_connection_id'])
+            <input type="hidden" name="proposed_provider_name" value="{{ $initial['proposed_provider_name'] }}">
+            <input type="hidden" name="proposed_base_url" value="{{ $initial['proposed_base_url'] }}">
+            <input type="hidden" name="proposed_documentation_url" value="{{ $initial['proposed_documentation_url'] }}">
+            <input type="hidden" name="discovery_notes" value="{{ $initial['discovery_notes'] }}">
+            @endif
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Technology adapter</p><p class="mt-1 font-semibold">{{ data_get($saved, 'provider_adapter.name') ?: 'Legacy adapter' }}</p></div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Provider website</p><p class="mt-1 font-semibold">{{ data_get($saved, 'provider_connection.name') ?: ($saved['proposed_provider_name'] ?: 'Unlisted provider') }}</p></div>
+            <div class="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><strong>Provider identity is locked.</strong> To use a different adapter or provider website, create a new connection instead.</div>
+            @else
             <label class="grid gap-1 text-sm font-semibold">Technology adapter<select name="provider_adapter_id" x-model="form.provider_adapter_id" @change="adapterChanged" required class="rounded-xl border-slate-200"><option value="">Choose adapter</option><template x-for="adapter in adapters" :key="adapter.id"><option :value="adapter.id" x-text="adapter.name"></option></template></select><span class="text-xs font-normal text-slate-500">Example: MSORG.</span></label>
             <label class="grid gap-1 text-sm font-semibold">Provider website<select name="provider_connection_id" x-model="form.provider_connection_id" @change="form.unlisted = form.provider_connection_id === ''" :disabled="!form.provider_adapter_id || form.unlisted" class="rounded-xl border-slate-200"><option value="">My provider is not listed</option><template x-for="provider in matchingProviders" :key="provider.id"><option :value="provider.id" x-text="provider.name"></option></template></select><span class="text-xs font-normal text-slate-500">Only providers using the selected adapter are shown.</span></label>
             <label class="flex items-center gap-2 md:col-span-2"><input type="checkbox" x-model="form.unlisted" @change="if(form.unlisted) form.provider_connection_id=''" class="rounded border-slate-300"> <span class="text-sm font-semibold">My provider website is not listed</span></label>
@@ -53,6 +66,7 @@
                 <label class="grid gap-1 text-sm font-semibold">Notes<textarea name="discovery_notes" x-model="form.discovery_notes" rows="3" class="rounded-xl border-slate-200" placeholder="This website uses the selected adapter."></textarea></label>
                 <div class="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">The platform team will verify this website and create a reusable provider connection before approving your request.</div>
             </div></template>
+            @endif
 
             <label class="grid gap-1 text-sm font-semibold">Connection name<input name="name" x-model="form.name" required class="rounded-xl border-slate-200" placeholder="Primary provider"></label>
             <label class="grid gap-1 text-sm font-semibold">Status<select name="status" x-model="form.status" class="rounded-xl border-slate-200"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>

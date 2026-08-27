@@ -66,7 +66,9 @@ it('renders a redacted pending connection review queue', function () {
     $admin = connectionReviewer();
 
     $this->actingAs($admin, 'platform_admin')->get('/admin/provider-connections')
-        ->assertOk()->assertSee('Provider connection reviews')->assertSee('Pending approval');
+        ->assertOk()->assertSee('Provider connection reviews')->assertSee('Pending approval')
+        ->assertSee('dark:bg-slate-900', false)
+        ->assertSee('dark:text-slate-100', false);
 
     $response = $this->actingAs($admin, 'platform_admin')->getJson('/admin/provider-connections/data')
         ->assertOk()

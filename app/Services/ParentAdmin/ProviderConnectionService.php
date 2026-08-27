@@ -16,6 +16,17 @@ class ProviderConnectionService
     {
         if ($connection) {
             abort_unless($connection->parent_business_id === $parent->id, 404);
+            $submittedProviderId = isset($data['provider_connection_id']) ? (int) $data['provider_connection_id'] : null;
+            $submittedAdapterId = isset($data['provider_adapter_id'])
+                ? (int) $data['provider_adapter_id']
+                : \App\Models\ProviderConnection::find($submittedProviderId)?->provider_adapter_id;
+
+            if ($submittedProviderId !== ($connection->provider_connection_id ? (int) $connection->provider_connection_id : null)
+                || ($connection->provider_adapter_id && (int) $submittedAdapterId !== (int) $connection->provider_adapter_id)) {
+                throw ValidationException::withMessages([
+                    'provider_connection_id' => "A saved connection's adapter and provider cannot be changed. Create a new connection instead.",
+                ]);
+            }
         }
         $duplicate = $parent->providerConnections()
             ->when(isset($data['provider_connection_id']), fn ($query) => $query->where('provider_connection_id', $data['provider_connection_id']))

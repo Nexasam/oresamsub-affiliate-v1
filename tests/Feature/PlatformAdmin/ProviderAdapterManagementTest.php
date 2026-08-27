@@ -62,7 +62,10 @@ it('renders the provider adapter catalogue and lists existing definitions', func
         ->assertSee('Network mapping')
         ->assertSee('Success conditions')
         ->assertSee('Customer validation')
-        ->assertSee('Advanced JSON');
+        ->assertSee('Advanced JSON')
+        ->assertSee('Apply JSON to guided form')
+        ->assertSee('applyExpertJson()', false)
+        ->assertSee('expertDirty', false);
 
     $this->actingAs($admin, 'platform_admin')
         ->getJson('/admin/provider-adapters/data')

@@ -125,7 +125,7 @@
 <script>
 function providerAdapters() {
     const blankSettings = () => ({ http_method: 'POST', timeout_seconds: 30, endpoints: {}, product_configs: {} });
-    const emptyForm = () => ({ id: null, name: '', slug: '', adapter: '', status: 'active', settings: blankSettings(), expertJson: '{}', expertOpen: false, capabilities: { services: [], methods: ['POST'], credential_fields: [] } });
+    const emptyForm = () => ({ id: null, name: '', slug: '', adapter: '', status: 'active', settings: blankSettings(), expertJson: JSON.stringify(blankSettings(), null, 2), expertOpen: false, expertDirty: false, capabilities: { services: [], methods: ['POST'], credential_fields: [] } });
     return {
         adapters: [], allowed: { services: [], methods: [], credential_fields: [] }, loading: true, saving: false,
         modal: false, search: '', message: '', messageType: 'success', errors: {}, form: emptyForm(), activeService: '',
@@ -135,7 +135,7 @@ function providerAdapters() {
         get selectedServices() { return this.allowed.services.filter(service => this.form.capabilities.services.includes(service.slug)); },
         async load() { this.loading = true; try { const response = await fetch('{{ route('platform-admin.provider-adapters.data') }}', { headers: { Accept: 'application/json' } }); const data = await response.json(); this.adapters = data.adapters; this.allowed = data.allowed; } finally { this.loading = false; } },
         openCreate() { this.form = emptyForm(); this.errors = {}; this.activeService = ''; this.modal = true; this.$nextTick(() => this.ensureSettings()); },
-        openEdit(adapter) { this.form = { id: adapter.id, name: adapter.name, slug: adapter.slug, adapter: adapter.adapter, status: adapter.status, settings: JSON.parse(JSON.stringify(adapter.settings || blankSettings())), expertJson: '{}', expertOpen: false, capabilities: { services: [...(adapter.capabilities?.services || [])], methods: [...(adapter.capabilities?.methods || [])], credential_fields: [...(adapter.capabilities?.credential_fields || [])] } }; this.errors = {}; this.modal = true; this.$nextTick(() => this.ensureSettings()); },
+        openEdit(adapter) { const settings = JSON.parse(JSON.stringify(adapter.settings || blankSettings())); this.form = { id: adapter.id, name: adapter.name, slug: adapter.slug, adapter: adapter.adapter, status: adapter.status, settings, expertJson: JSON.stringify(this.cleanSettings(settings), null, 2), expertOpen: false, expertDirty: false, capabilities: { services: [...(adapter.capabilities?.services || [])], methods: [...(adapter.capabilities?.methods || [])], credential_fields: [...(adapter.capabilities?.credential_fields || [])] } }; this.errors = {}; this.modal = true; this.$nextTick(() => this.ensureSettings()); },
         credentialSummary(adapter) { const fields = adapter.capabilities?.credential_fields || []; return fields.length ? `Credentials: ${fields.join(', ')}` : 'No credentials required'; },
         firstError(key) { return this.errors[key]?.[0] || ''; },
         uid() { return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`; },
@@ -155,14 +155,15 @@ function providerAdapters() {
         addValidationMapping(slug) { this.config(slug).validation.request_parameters.push(this.row()); },
         addValidationHeader(slug) { this.config(slug).validation.request_headers.push(this.row({ type: 'credential', value: this.form.capabilities.credential_fields[0] || '' })); },
         addValidationCondition(slug) { this.config(slug).validation.success_conditions.push({ _id: this.uid(), key: '', value: '' }); },
-        toggleExpert(event) { this.form.expertOpen = event.target.open; if (event.target.open) this.form.expertJson = JSON.stringify(this.cleanSettings(this.form.settings), null, 2); },
+        toggleExpert(event) { this.form.expertOpen = event.target.open; if (event.target.open && !this.form.expertDirty) this.form.expertJson = JSON.stringify(this.cleanSettings(this.form.settings), null, 2); },
+        applyExpertJson() { try { const settings = JSON.parse(this.form.expertJson || '{}'); if (!settings || Array.isArray(settings) || typeof settings !== 'object') throw new Error('invalid'); this.form.settings = settings; this.ensureSettings(); this.form.expertJson = JSON.stringify(this.cleanSettings(this.form.settings), null, 2); this.form.expertDirty = false; delete this.errors.settings; this.message = 'Advanced JSON applied to the guided form. Save the adapter to persist it.'; this.messageType = 'success'; } catch (error) { this.errors = { ...this.errors, settings: ['Adapter configuration must be a valid JSON object.'] }; } },
         cleanSettings(value) { if (Array.isArray(value)) return value.map(item => this.cleanSettings(item)); if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([key]) => key !== '_id').map(([key,item]) => [key,this.cleanSettings(item)])); return value; },
         async save() {
             this.saving = true; this.errors = {}; this.message = '';
             const url = this.form.id ? `{{ url('/admin/provider-adapters') }}/${this.form.id}` : '{{ route('platform-admin.provider-adapters.store') }}';
             try {
                 this.ensureSettings();
-                let settings = this.cleanSettings(this.form.settings); if (this.form.expertOpen) { try { settings = JSON.parse(this.form.expertJson || '{}'); } catch (error) { this.errors = { settings: ['Adapter configuration must be valid JSON.'] }; return; } }
+                let settings = this.cleanSettings(this.form.settings); if (this.form.expertDirty) { try { settings = JSON.parse(this.form.expertJson || '{}'); } catch (error) { this.errors = { settings: ['Adapter configuration must be valid JSON.'] }; return; } }
                 const payload = { ...this.form, settings }; delete payload.expertJson; delete payload.expertOpen;
                 const response = await fetch(url, { method: this.form.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify(payload) });
                 const data = await response.json();

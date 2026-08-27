@@ -127,6 +127,7 @@ it('server renders an owned connection for editing through a normal put form', f
         ->get("/parent-admin/provider-connections?edit={$connection->id}")
         ->assertOk()
         ->assertSee('Affatech Primary')
+        ->assertSee('Provider identity is locked')
         ->assertSee('name="_method" value="PUT"', false)
         ->assertSee(route('parent-admin.provider-connections.update', $connection), false);
 });
@@ -158,6 +159,60 @@ it('keeps approval for non-sensitive connection changes', function () {
         'is_primary' => false,
         'credentials' => ['api_public_key' => null, 'api_secret_key' => null, 'api_password' => null],
     ]))->assertOk()->assertJsonPath('connection.approval_status', 'approved');
+});
+
+it('does not allow an existing provider connection identity to be overwritten', function () {
+    [$parent, $admin, $originalProvider] = providerWorkspace('immutable-provider-identity');
+    $replacementProvider = ProviderConnection::create([
+        'name' => 'MSORG Provider',
+        'slug' => 'msorg-immutable-provider-identity',
+        'adapter' => 'msorg_immutable_provider_identity',
+        'capabilities' => ['services' => ['data', 'airtime', 'cable', 'electricity']],
+        'status' => 'active',
+    ]);
+    $connection = $parent->providerConnections()->create([
+        'provider_connection_id' => $originalProvider->id,
+        'name' => 'OresamSub V2 Primary',
+        'settings' => ['is_primary' => true],
+        'status' => 'active',
+        'approval_status' => 'approved',
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->putJson("/parent-admin/provider-connections/{$connection->id}", providerPayload($replacementProvider->id, [
+            'name' => 'Gongoz',
+        ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('provider_connection_id');
+
+    expect($connection->fresh()->provider_connection_id)->toBe($originalProvider->id)
+        ->and($connection->name)->toBe('OresamSub V2 Primary')
+        ->and($parent->providerConnections()->count())->toBe(1);
+});
+
+it('creates multiple independent connections for the same parent', function () {
+    [$parent, $admin, $oresamsub] = providerWorkspace('multiple-independent-providers');
+    $msorg = ProviderConnection::create([
+        'name' => 'Gongoz',
+        'slug' => 'gongoz-multiple-independent-providers',
+        'adapter' => 'msorg_multiple_independent_providers',
+        'capabilities' => ['services' => ['data', 'airtime', 'cable', 'electricity']],
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->postJson(
+        '/parent-admin/provider-connections',
+        providerPayload($oresamsub->id, ['name' => 'OresamSub V2 Primary'])
+    )->assertCreated();
+
+    $this->actingAs($admin, 'parent_admin')->postJson(
+        '/parent-admin/provider-connections',
+        providerPayload($msorg->id, ['name' => 'Gongoz Backup', 'is_primary' => false])
+    )->assertCreated();
+
+    expect($parent->providerConnections()->count())->toBe(2)
+        ->and($parent->providerConnections()->where('name', 'OresamSub V2 Primary')->value('provider_connection_id'))->toBe($oresamsub->id)
+        ->and($parent->providerConnections()->where('name', 'Gongoz Backup')->value('provider_connection_id'))->toBe($msorg->id);
 });
 
 it('returns sensitive connection changes to pending approval', function () {

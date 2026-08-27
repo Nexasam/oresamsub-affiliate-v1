@@ -378,6 +378,12 @@ it('returns a conclusive failure for provider business errors', function () {
 
 it('logs the provider request boundary and redacted response for transaction diagnosis', function () {
     $connection = executableProviderConnection();
+    $settings = $connection->settings;
+    $settings['product_configs']['data']['request_headers'] = [
+        ['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer '],
+        ['key' => 'Content-Type', 'type' => 'literal', 'value' => 'application/json'],
+    ];
+    $connection->update(['settings' => $settings]);
     Log::spy();
     Http::fake(['provider.example/*' => Http::response([
         'status' => false,
@@ -395,12 +401,15 @@ it('logs the provider request boundary and redacted response for transaction dia
         'api_token' => '[REDACTED]',
     ]);
 
+    Http::assertSent(fn (Request $request) => $request->header('Content-Type') === ['application/json']);
+
     Log::shouldHaveReceived('info')->with('provider.request.prepared', Mockery::on(
         fn (array $context) => $context['reference'] === 'ORDER-LOG-1'
             && $context['connection_id'] === $connection->id
             && $context['endpoint'] === 'https://provider.example/data'
             && $context['payload']['data_phone'] === '[REDACTED]'
-            && ! array_key_exists('headers', $context)
+            && $context['headers']['Authorization'] === 'Bearer [REDACTED]'
+            && $context['headers']['Content-Type'] === 'application/json'
     ))->once();
     Log::shouldHaveReceived('info')->with('provider.response.received', Mockery::on(
         fn (array $context) => $context['reference'] === 'ORDER-LOG-1'

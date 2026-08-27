@@ -53,6 +53,7 @@ class ConfigurableProviderClient
                 $connection->credentials ?? [],
                 $productSettings['network_mapping'] ?? []
             );
+            $headers = $this->withoutFrameworkJsonHeaders($headers);
 
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
             $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
@@ -60,6 +61,7 @@ class ConfigurableProviderClient
             $logContext = $this->logContext($connection, $productSlug, $runtime, $method, $endpoint);
             Log::info('provider.request.prepared', $logContext + [
                 'payload' => $this->redact($payload),
+                'headers' => $this->safeHeaders($this->effectiveJsonHeaders($headers)),
             ]);
             $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
 
@@ -117,6 +119,7 @@ class ConfigurableProviderClient
         try {
             $payload = $this->mapValues($validation['request_parameters'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
             $headers = $this->mapHeaders($validation['request_headers'] ?? $productSettings['request_headers'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
+            $headers = $this->withoutFrameworkJsonHeaders($headers);
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
             $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
             $method = strtoupper($validation['http_method'] ?? $settings['http_method'] ?? 'POST');
@@ -173,6 +176,7 @@ class ConfigurableProviderClient
             ];
             $payload = $this->mapValues($mappings, $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
             $headers = $this->mapHeaders($productSettings['request_headers'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
+            $headers = $this->withoutFrameworkJsonHeaders($headers);
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
             $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
             $method = strtoupper($productSettings['requery_http_method'] ?? $settings['requery_http_method'] ?? 'POST');
@@ -392,6 +396,43 @@ class ConfigurableProviderClient
         return ($parts['scheme'] ?? 'https').'://'.$parts['host']
             .(isset($parts['port']) ? ':'.$parts['port'] : '')
             .($parts['path'] ?? '');
+    }
+
+    /** @return array<string, mixed> */
+    private function withoutFrameworkJsonHeaders(array $headers): array
+    {
+        return collect($headers)->reject(
+            fn ($value, $key) => in_array(strtolower((string) $key), ['accept', 'content-type'], true)
+        )->all();
+    }
+
+    /** @return array<string, mixed> */
+    private function effectiveJsonHeaders(array $headers): array
+    {
+        return ['Accept' => 'application/json', 'Content-Type' => 'application/json'] + $headers;
+    }
+
+    /** @return array<string, string> */
+    private function safeHeaders(array $headers): array
+    {
+        return collect($headers)->mapWithKeys(function ($value, $key) {
+            $key = (string) $key;
+            $value = (string) $value;
+
+            if (strcasecmp($key, 'Authorization') === 0) {
+                $scheme = preg_match('/^\s*(Bearer|Token)\s+/i', $value, $matches)
+                    ? ucfirst(strtolower($matches[1])).' '
+                    : '';
+
+                return [$key => $scheme.'[REDACTED]'];
+            }
+
+            if (preg_match('/credential|password|secret|token|api[_-]?key/i', $key)) {
+                return [$key => '[REDACTED]'];
+            }
+
+            return [$key => $value];
+        })->all();
     }
 
     private function redact(mixed $value, ?string $key = null): mixed

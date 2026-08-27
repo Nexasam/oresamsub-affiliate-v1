@@ -3,6 +3,7 @@
 use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
 use App\Models\ProviderConnection;
+use App\Models\ProviderAdapter;
 use App\Services\Providers\ConfigurableProviderClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
@@ -117,6 +118,57 @@ it('executes any configured product endpoint with mapped runtime values and cred
     });
 });
 
+it('inherits adapter authorization headers when the shared connection only overrides its endpoint', function () {
+    $parent = ParentBusiness::create(['name' => 'MSORG Parent', 'slug' => 'msorg-parent']);
+    $adapter = ProviderAdapter::create([
+        'name' => 'MSORG',
+        'slug' => 'msorg-layered',
+        'adapter_key' => 'msorg_layered',
+        'capabilities' => ['services' => ['data'], 'credential_fields' => ['api_token']],
+        'settings' => [
+            'http_method' => 'POST',
+            'endpoints' => ['data' => '/api/data/'],
+            'product_configs' => ['data' => [
+                'request_parameters' => [['key' => 'plan', 'type' => 'runtime', 'value' => 'plan']],
+                'request_headers' => [[
+                    'key' => 'Authorization', 'type' => 'credential', 'value' => 'api_token', 'prefix' => 'Token ',
+                ]],
+                'success_conditions' => [['key' => 'Status', 'value' => 'successful']],
+                'success_message_path' => 'api_response',
+                'failure_message_path' => 'api_response',
+            ]],
+        ],
+        'version' => 1,
+        'status' => 'active',
+    ]);
+    $provider = ProviderConnection::create([
+        'provider_adapter_id' => $adapter->id,
+        'name' => 'Gongoz',
+        'slug' => 'gongoz-layered',
+        'adapter' => 'msorg_layered',
+        'capabilities' => ['services' => ['data']],
+        'base_url' => 'https://gongoz.example',
+        'settings' => ['endpoints' => ['data' => '/api/data/']],
+        'status' => 'active',
+    ]);
+    $connection = ParentProviderConnection::create([
+        'parent_business_id' => $parent->id,
+        'provider_adapter_id' => $adapter->id,
+        'provider_connection_id' => $provider->id,
+        'name' => 'Gongoz parent',
+        'credentials' => ['api_token' => 'gongoz-secret'],
+        'settings' => ['is_primary' => false],
+        'status' => 'active',
+        'approval_status' => 'approved',
+    ]);
+    Http::fake(['gongoz.example/*' => Http::response(['Status' => 'successful', 'api_response' => 'Delivered'])]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection, 'data', ['plan' => '389']);
+
+    expect($result['successful'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request->header('Authorization')[0] === 'Token gongoz-secret');
+});
+
 it('resolves reusable relative adapter endpoints against the provider connection base URL', function () {
     $connection = executableProviderConnection([
         'settings' => [
@@ -201,12 +253,12 @@ it('ignores a missing or invalid configured actual provider charge', function (m
         ->and($result['actual_provider_charge'])->toBeNull();
 })->with(['missing' => null, 'non numeric' => 'unknown', 'negative' => '-1.00', 'zero' => '0']);
 
-it('adds the required separator when a bearer header prefix was saved without a trailing space', function () {
+it('adds the required separator when an authorization prefix was saved without a trailing space', function (string $prefix) {
     $connection = executableProviderConnection([
         'settings' => ['product_configs' => ['data' => [
             'request_parameters' => [['key' => 'request_id', 'type' => 'runtime', 'value' => 'reference']],
             'request_headers' => [[
-                'key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer',
+                'key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => $prefix,
             ]],
             'success_conditions' => [['key' => 'status', 'value' => 'success']],
         ]]],
@@ -215,8 +267,8 @@ it('adds the required separator when a bearer header prefix was saved without a 
 
     app(ConfigurableProviderClient::class)->execute($connection, 'data', ['reference' => 'ORDER-BEARER-SPACE']);
 
-    Http::assertSent(fn (Request $request) => $request->header('Authorization')[0] === 'Bearer provider-secret-token');
-});
+    Http::assertSent(fn (Request $request) => $request->header('Authorization')[0] === $prefix.' provider-secret-token');
+})->with(['Bearer', 'Token']);
 
 it('falls back to legacy shared mappings when a product configuration has not been migrated', function () {
     $connection = executableProviderConnection(['settings' => ['product_configs' => []]]);

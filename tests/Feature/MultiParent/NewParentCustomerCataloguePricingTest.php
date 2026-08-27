@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Services\DataPlansService;
+use App\Http\Services\CustomerPlansPricingService;
 use App\Models\AffiliateProcessingProfile;
 use App\Models\AffiliateServiceProfitCap;
 use App\Models\AffiliateUserPlan;
@@ -34,4 +35,24 @@ it('reads the exact persisted custom override for the affiliates assigned resell
     ProductPlanParentPrice::create(['parent_business_id' => $f['parent']->id, 'product_plan_id' => $f['plan']->id, 'parent_reseller_level_id' => $level3->id, 'selling_price' => 595]);
 
     expect(app(AffiliateAcquisitionPriceResolver::class)->display($f['affiliate']->fresh(), $f['plan']->fresh()))->toBe('595.00');
+});
+
+it('uses unified multi-parent pricing on the customer pricing page', function () {
+    $f = affiliateProfitFixture('pricing-page');
+    $customerPlan = AffiliateUserPlan::create(['affiliate_id' => $f['affiliate']->id, 'user_plan_name' => 'Basic', 'plan_level' => 1, 'visibility' => 1]);
+    $customer = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'user_plan_id' => $customerPlan->id]);
+    AffiliateProcessingProfile::create(['affiliate_id' => $f['affiliate']->id, 'parent_business_id' => $f['parent']->id, 'management_mode' => 'parent_managed', 'processing_engine' => 'multi_parent']);
+    ProductPlanParentPrice::create(['parent_business_id' => $f['parent']->id, 'product_plan_id' => $f['plan']->id, 'parent_reseller_level_id' => $f['level']->id, 'selling_price' => 540, 'max_profit' => 100]);
+    AffiliateServiceProfitCap::create(['parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id, 'product_id' => $f['product']->id, 'customer_level' => 1, 'calculation_type' => 'flat', 'max_value' => 70]);
+    $f['affiliatePlan']->update(['user_level_1_profit' => 50]);
+    session(['affiliate' => $f['affiliate']]);
+
+    $price = app(CustomerPlansPricingService::class)->get_customer_price_per_plan([
+        'plan_details' => $f['affiliatePlan']->fresh(),
+        'product_id' => $f['product']->id,
+        'user' => $customer,
+        'amount' => 0,
+    ]);
+
+    expect($price['sellingprice'])->toBe('590.00');
 });

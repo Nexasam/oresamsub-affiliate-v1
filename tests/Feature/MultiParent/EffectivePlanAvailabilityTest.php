@@ -186,6 +186,62 @@ it('finds MTN plans from the canonical category when the inherited network field
     expect($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
 });
 
+it('finds MTN plans even when the inherited category row is missing', function () {
+    $f = effectiveAvailabilityFixture('missing-mtn-category');
+    $mtn = Network::create(['api_id' => 'mtn-missing-category', 'network_name' => 'MTN']);
+    $f['category']->update(['network_id' => $mtn->id]);
+    AffiliateProductPlanCategory::withoutGlobalScope('affiliate')
+        ->where('affiliate_id', $f['affiliate']->id)
+        ->delete();
+
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+
+    $plans = app(DataPlansService::class)->fetch_user_data_plans([
+        'user' => $customer,
+        'network_id' => $mtn->id,
+        'product_id' => $f['product']->id,
+        'amount' => 0,
+    ])['plans'];
+
+    expect($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
+});
+
+it('finds MTN plans when duplicate network rows use different ids', function () {
+    $f = effectiveAvailabilityFixture('duplicate-mtn-network');
+    $categoryMtn = Network::create(['api_id' => 'mtn-category-row', 'network_name' => 'MTN']);
+    $buttonMtn = Network::create(['api_id' => 'mtn-button-row', 'network_name' => 'MTN']);
+    $f['category']->update(['network_id' => $categoryMtn->id]);
+
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+
+    $plans = app(DataPlansService::class)->fetch_user_data_plans([
+        'user' => $customer,
+        'network_id' => $buttonMtn->id,
+        'product_id' => $f['product']->id,
+        'amount' => 0,
+    ])['plans'];
+
+    expect($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
+});
+
 it('keeps an affiliate local visibility preference when plans are synchronized', function () {
     $f = effectiveAvailabilityFixture('sync');
     $f['affiliatePlan']->update(['visibility' => 0, 'public_visibility' => 0]);

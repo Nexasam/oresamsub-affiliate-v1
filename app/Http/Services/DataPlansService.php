@@ -5,15 +5,13 @@ namespace App\Http\Services;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\UserPlan;
-use App\Models\ProductPlan;
 use App\Models\AffiliateUserPlan;
 use App\Models\PlanProfitSetting;
-use App\Models\ProductPlanCategory;
 use App\Models\AffiliateProductPlan;
 use Illuminate\Support\Facades\Hash;
 use App\Models\ProductPlanCustomPricing;
-use App\Models\AffiliateProductPlanCategory;
 use App\Models\Affiliate;
+use App\Models\Network;
 use App\Services\Pricing\MultiParentPricingResolver;
 use function GuzzleHttp\json_encode;
 
@@ -26,6 +24,9 @@ class DataPlansService{
         $product_id = $data['product_id'];
         $amount = $data['amount'] ?? 0;
         $is_api = $data['is_api'] ?? NULL;
+        $networkName = filled($network_id)
+            ? Network::query()->whereKey($network_id)->value('network_name')
+            : null;
         $affiliate = Affiliate::with(['parentBusiness', 'processingProfile'])->find($user_details->affiliate_id);
         $isMultiParent = $affiliate
             && $affiliate->parent_business_id
@@ -33,50 +34,19 @@ class DataPlansService{
 
         $slug = Product::select('slug')->where('id',$product_id)->first()->slug;
 
-        //you need to note later if the user selelcted a type:
-        if($product_plan_category_id == NULL){
-          
-            $product_plan_categories_id_arr = AffiliateProductPlanCategory::whereHas(
-                'sourceCategory',
-                fn ($query) => $query->where('product_id', $product_id)
-                    ->when(! empty($network_id), fn ($query) => $query->where('network_id', $network_id))
-            )
-            ->pluck('plan_category_id')
-            ->toArray();
-
-            $product_plans_arr = ProductPlan::whereIn('product_plan_category_id', $product_plan_categories_id_arr)
-            ->where('visibility', 1)
-            ->when($isMultiParent, fn ($query) => $query->where('affiliate_visibility', 1))
-            ->pluck('id')
-            ->toArray();
-
-            logger('papapaaaaa: '.json_encode($product_plan_categories_id_arr));
-            
-        }else{
-   
-            // $product_plan_categories_id_arr = [$product_plan_category_id];
-            // where('product_id',$product_id)
-            $product_plan_categories_id_arr = AffiliateProductPlanCategory::where('id',$product_plan_category_id)
-            ->whereHas(
-                'sourceCategory',
-                fn ($query) => $query->where('product_id', $product_id)
-                    ->when(! empty($network_id), fn ($query) => $query->where('network_id', $network_id))
-            )
-            ->pluck('plan_category_id')
-            ->toArray();
-
-
-            $product_plans_arr = ProductPlan::whereIn('product_plan_category_id', $product_plan_categories_id_arr)
-            ->where('visibility', 1)
-            ->when($isMultiParent, fn ($query) => $query->where('affiliate_visibility', 1))
-            ->pluck('id')
-            ->toArray();
-            logger('mamamaaaa: '.json_encode($product_plans_arr));
-
-        }
-
-
-        $product_plans = AffiliateProductPlan::with('product_plan')->whereIn('product_plan_id', $product_plans_arr)
+        $product_plans = AffiliateProductPlan::with('product_plan')
+        ->whereHas('product_plan.product_plan_category', function ($query) use ($product_id, $network_id, $networkName) {
+            $query->where('product_id', $product_id)
+                ->when(! empty($network_id), function ($query) use ($network_id, $networkName) {
+                    if (filled($networkName)) {
+                        $query->whereHas('network', fn ($network) => $network
+                            ->whereRaw('LOWER(TRIM(network_name)) = ?', [strtolower(trim($networkName))]));
+                    } else {
+                        $query->where('network_id', $network_id);
+                    }
+                });
+        })
+        ->when(filled($product_plan_category_id), fn ($query) => $query->where('plan_category_id', $product_plan_category_id))
         ->where('visibility', 1)
         ->when($isMultiParent, fn ($query) => $query->customerAvailable())
         ->orderByRaw('CASE WHEN CAST(data_size_in_mb AS UNSIGNED) < 500 THEN 1 ELSE 0 END') // Push <500MB to bottom

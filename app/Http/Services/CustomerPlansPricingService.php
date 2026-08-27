@@ -15,14 +15,20 @@ use function GuzzleHttp\json_encode;
 use Illuminate\Support\Facades\Hash;
 use App\Models\ProductPlanCustomPricing;
 use App\Models\AffiliateProductPlanCategory;
+use App\Models\Affiliate;
 
 class CustomerPlansPricingService{
 
     public function fetch_plans_with_pricing($data){
         $user_details = $data['user'];
+        $affiliate = Affiliate::with('processingProfile')->find($user_details?->affiliate_id);
+        $isMultiParent = $affiliate
+            && $affiliate->parent_business_id
+            && $affiliate->processingProfile?->processing_engine === 'multi_parent';
     
         $product_plans = AffiliateProductPlan::with('product_plan.product_plan_category.network','product_plan.product_plan_category.product')
         ->where('visibility', 1)
+        ->when($isMultiParent, fn ($query) => $query->customerAvailable())
         ->orderByRaw('CASE WHEN CAST(data_size_in_mb AS UNSIGNED) < 500 THEN 1 ELSE 0 END') // Push <500MB to bottom
         ->orderByRaw('CAST(data_size_in_mb AS UNSIGNED)') // Then order by size
         ->orderByRaw('CAST(validity_in_days AS UNSIGNED) DESC') // Then by validity
@@ -95,6 +101,47 @@ class CustomerPlansPricingService{
         $user_details = $data['user'];
         $amount = $data['amount'] ?? 0;
         $slug = Product::select('slug')->where('id',$product_id)->first()->slug;
+
+        $affiliate = Affiliate::with('processingProfile')->find($user_details?->affiliate_id);
+        $isMultiParent = $affiliate
+            && $affiliate->parent_business_id
+            && $affiliate->processingProfile?->processing_engine === 'multi_parent';
+
+        if ($isMultiParent) {
+            $customerLevel = (int) (AffiliateUserPlan::whereKey($user_details->user_plan_id)->value('plan_level') ?? 1);
+            $network = $product_plan->product_plan?->product_plan_category?->network?->network_name;
+
+            if (in_array($slug, ['airtime', 'utility_bills'], true)) {
+                $margin = (string) ($product_plan->{"user_level_{$customerLevel}_profit"} ?? 0);
+
+                return [
+                    'status' => 1,
+                    'plan_level' => $customerLevel,
+                    'network' => $network ?? ($slug === 'utility_bills' ? 'PREPAID' : null),
+                    'cost_price' => null,
+                    'rate' => 'percent',
+                    'sellingprice' => $margin,
+                    'message' => $margin,
+                ];
+            }
+
+            $resolved = app(DataPlansService::class)->get_customer_price_per_plan([
+                'plan_details' => $product_plan,
+                'product_id' => $product_id,
+                'user' => $user_details,
+                'amount' => $amount,
+            ]);
+
+            return [
+                'status' => 1,
+                'plan_level' => $customerLevel,
+                'network' => $network,
+                'cost_price' => null,
+                'rate' => 'flat',
+                'sellingprice' => $resolved['message'],
+                'message' => $resolved['message'],
+            ];
+        }
 
         // logger()->info('wetin dey hhappen here: '.json_encode($data));
 

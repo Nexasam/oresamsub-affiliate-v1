@@ -47,7 +47,7 @@ function planHealthFixture(string $suffix = 'main'): array
 
 it('groups recent failures by plan and connection on the owning parent dashboard', function () {
     $f = planHealthFixture();
-    foreach (['HEALTH-FAIL-1', 'HEALTH-FAIL-2'] as $reference) {
+    foreach (['HEALTH-FAIL-1', 'HEALTH-FAIL-2', 'HEALTH-FAIL-3'] as $reference) {
         Transaction::withoutGlobalScope('affiliate')->create([
             'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
             'user_id' => $f['customer']->id, 'api_id' => 'MTN-1GB', 'affiliate_product_plan_id' => $f['affiliatePlan']->id,
@@ -60,9 +60,40 @@ it('groups recent failures by plan and connection on the owning parent dashboard
 
     $this->actingAs($f['admin'], 'parent_admin')->get('/parent-admin')
         ->assertOk()->assertSee('Plan health alerts')->assertSee('MTN 1GB Health')
-        ->assertSee('2 recent failures')->assertSee('Provider wallet is low.')
+        ->assertSee('3 recent failures')->assertSee('Provider wallet is low.')
         ->assertSee('Health Primary')->assertSee($f['affiliate']->name)
-        ->assertSee('https://provider.example.test')->assertSee('HEALTH-FAIL-2');
+        ->assertSee('https://provider.example.test')->assertSee('HEALTH-FAIL-3')
+        ->assertSee('Switch provider')->assertSee('MTN-1GB');
+});
+
+it('shows only threshold-qualified unresolved or failed route incidents', function () {
+    $f = planHealthFixture('threshold');
+    foreach (range(1, 4) as $index) {
+        Transaction::withoutGlobalScope('affiliate')->create([
+            'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+            'user_id' => $f['customer']->id, 'api_id' => 'MTN-1GB', 'affiliate_product_plan_id' => $f['affiliatePlan']->id,
+            'parent_provider_connection_id' => $f['connection']->id, 'product_plan_provider_route_id' => $f['route']->id,
+            'wallet_category' => 'main_wallet', 'balance_before' => 1000, 'balance_after' => 1000,
+            'description' => 'Old failed purchase', 'txn_reference' => "HEALTH-OLD-{$index}", 'transaction_category' => 'data',
+            'amount' => 500, 'status' => 2, 'routing_status' => 'failed', 'admin_screen_message' => 'Old provider issue.',
+            'created_at' => now()->subHours(2), 'updated_at' => now()->subHours(2),
+        ]);
+    }
+
+    $this->actingAs($f['admin'], 'parent_admin')->get('/parent-admin')
+        ->assertOk()->assertSee('No recent plan failures need attention.');
+
+    Transaction::withoutGlobalScope('affiliate')->create([
+        'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+        'user_id' => $f['customer']->id, 'api_id' => 'MTN-1GB', 'affiliate_product_plan_id' => $f['affiliatePlan']->id,
+        'parent_provider_connection_id' => $f['connection']->id, 'product_plan_provider_route_id' => $f['route']->id,
+        'wallet_category' => 'main_wallet', 'balance_before' => 1000, 'balance_after' => 500,
+        'description' => 'Recovered purchase', 'txn_reference' => 'HEALTH-RECOVERED', 'transaction_category' => 'data',
+        'amount' => 500, 'status' => 1, 'routing_status' => 'successful', 'admin_screen_message' => 'Manually confirmed successful.',
+    ]);
+
+    $this->actingAs($f['admin'], 'parent_admin')->get('/parent-admin')
+        ->assertOk()->assertSee('No recent plan failures need attention.');
 });
 
 it('disables a failing parent plan without changing affiliate local preferences', function () {
@@ -76,4 +107,24 @@ it('disables a failing parent plan without changing affiliate local preferences'
         ->and((bool) $f['plan']->fresh()->affiliate_visibility)->toBeFalse()
         ->and((bool) $f['route']->fresh()->active)->toBeFalse()
         ->and((bool) $f['affiliatePlan']->fresh()->visibility)->toBeTrue();
+});
+
+it('creates one deduplicated parent health notification for a threshold incident', function () {
+    $f = planHealthFixture('notification');
+    foreach (range(1, 3) as $index) {
+        Transaction::withoutGlobalScope('affiliate')->create([
+            'parent_business_id' => $f['parent']->id, 'affiliate_id' => $f['affiliate']->id,
+            'user_id' => $f['customer']->id, 'api_id' => 'MTN-1GB', 'affiliate_product_plan_id' => $f['affiliatePlan']->id,
+            'parent_provider_connection_id' => $f['connection']->id, 'product_plan_provider_route_id' => $f['route']->id,
+            'wallet_category' => 'main_wallet', 'balance_before' => 1000, 'balance_after' => 1000,
+            'description' => 'Failed purchase', 'txn_reference' => "HEALTH-NOTIFY-{$index}", 'transaction_category' => 'data',
+            'amount' => 500, 'status' => 2, 'routing_status' => 'failed', 'admin_screen_message' => 'Provider is unhealthy.',
+        ]);
+    }
+
+    $this->actingAs($f['admin'], 'parent_admin')->get('/parent-admin')->assertOk();
+    $this->actingAs($f['admin'], 'parent_admin')->get('/parent-admin')->assertOk();
+
+    expect($f['admin']->notifications()->count())->toBe(1)
+        ->and($f['admin']->notifications()->first()->data['failure_count'])->toBe(3);
 });

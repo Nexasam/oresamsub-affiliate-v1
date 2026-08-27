@@ -9,6 +9,7 @@ use App\Models\AffiliateServiceProfitCap;
 use App\Models\AffiliateUserPlan;
 use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
+use App\Models\Network;
 use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
@@ -88,6 +89,101 @@ it('returns only effectively available plans to a customer catalogue', function 
 
     $f['plan']->update(['visibility' => 0]);
     expect(app(DataPlansService::class)->fetch_user_data_plans($payload)['plans'][0]['product_plan_id'])->toBeNull();
+});
+
+it('keeps approved MTN plans visible when another MTN plan uses a pending connection', function () {
+    $f = effectiveAvailabilityFixture('mixed-mtn-routes');
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+
+    $pendingProvider = ProviderConnection::create([
+        'name' => 'Gongoz',
+        'slug' => 'gongoz-mixed-mtn-routes',
+        'adapter' => 'configurable_http',
+        'capabilities' => ['services' => ['data']],
+        'status' => 'active',
+    ]);
+    $pendingConnection = ParentProviderConnection::create([
+        'parent_business_id' => $f['parent']->id,
+        'provider_connection_id' => $pendingProvider->id,
+        'name' => 'Gongoz pending',
+        'status' => 'active',
+        'approval_status' => 'pending',
+    ]);
+    $pendingPlan = ProductPlan::create([
+        'parent_business_id' => $f['parent']->id,
+        'product_plan_category_id' => $f['category']->id,
+        'product_plan_name' => 'MTN 2GB Gongoz',
+        'cost_price' => 800,
+        'visibility' => 1,
+        'affiliate_visibility' => 1,
+        'public_visibility' => 1,
+    ]);
+    $pendingPlan->providerRoutes()->create([
+        'parent_business_id' => $f['parent']->id,
+        'parent_provider_connection_id' => $pendingConnection->id,
+        'provider_plan_id' => 'GONGOZ-MTN-2GB',
+        'priority' => 1,
+        'active' => true,
+    ]);
+    AffiliateProductPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'product_plan_id' => $pendingPlan->id,
+        'plan_category_id' => AffiliateProductPlanCategory::withoutGlobalScope('affiliate')
+            ->where('affiliate_id', $f['affiliate']->id)
+            ->where('plan_category_id', $f['category']->id)
+            ->value('id'),
+        'product_plan_name' => 'MTN 2GB Gongoz',
+        'visibility' => 1,
+        'visibility_from_admin' => 1,
+        'public_visibility' => 1,
+        'user_level_1_profit' => 50,
+    ]);
+
+    $plans = app(DataPlansService::class)->fetch_user_data_plans([
+        'user' => $customer,
+        'network_id' => null,
+        'product_id' => $f['product']->id,
+        'amount' => 0,
+    ])['plans'];
+
+    expect($plans)->toHaveCount(1)
+        ->and($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id)
+        ->and($plans[0]['product_plan_name'])->toBe('MTN 1GB');
+});
+
+it('finds MTN plans from the canonical category when the inherited network field is stale', function () {
+    $f = effectiveAvailabilityFixture('stale-mtn-network');
+    $mtn = Network::create(['api_id' => 'mtn-stale-network', 'network_name' => 'MTN']);
+    $f['category']->update(['network_id' => $mtn->id]);
+
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+
+    $plans = app(DataPlansService::class)->fetch_user_data_plans([
+        'user' => $customer,
+        'network_id' => $mtn->id,
+        'product_id' => $f['product']->id,
+        'amount' => 0,
+    ])['plans'];
+
+    expect($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
 });
 
 it('keeps an affiliate local visibility preference when plans are synchronized', function () {

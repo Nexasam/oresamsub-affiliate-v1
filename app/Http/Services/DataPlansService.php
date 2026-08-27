@@ -36,10 +36,11 @@ class DataPlansService{
         //you need to note later if the user selelcted a type:
         if($product_plan_category_id == NULL){
           
-            $product_plan_categories_id_arr = AffiliateProductPlanCategory::where('product_id',$product_id)
-            ->when(!empty($network_id), function($query) use ($network_id) {
-                            $query->where('network_id',$network_id);
-            })
+            $product_plan_categories_id_arr = AffiliateProductPlanCategory::whereHas(
+                'sourceCategory',
+                fn ($query) => $query->where('product_id', $product_id)
+                    ->when(! empty($network_id), fn ($query) => $query->where('network_id', $network_id))
+            )
             ->pluck('plan_category_id')
             ->toArray();
 
@@ -56,9 +57,11 @@ class DataPlansService{
             // $product_plan_categories_id_arr = [$product_plan_category_id];
             // where('product_id',$product_id)
             $product_plan_categories_id_arr = AffiliateProductPlanCategory::where('id',$product_plan_category_id)
-            ->when(!empty($network_id), function($query) use ($network_id) {
-                            $query->where('network_id',$network_id);
-            })
+            ->whereHas(
+                'sourceCategory',
+                fn ($query) => $query->where('product_id', $product_id)
+                    ->when(! empty($network_id), fn ($query) => $query->where('network_id', $network_id))
+            )
             ->pluck('plan_category_id')
             ->toArray();
 

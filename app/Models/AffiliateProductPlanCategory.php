@@ -31,6 +31,11 @@ class AffiliateProductPlanCategory extends AffiliateScopedModel
         return $this->belongsTo(Network::class,'network_id','id');
     }
 
+    public function sourceCategory()
+    {
+        return $this->belongsTo(ProductPlanCategory::class, 'plan_category_id');
+    }
+
     public function automation(){
         return $this->belongsTo(Automation::class,'automation_id','id');
     }

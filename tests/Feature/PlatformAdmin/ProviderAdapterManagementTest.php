@@ -5,8 +5,8 @@ use App\Models\ParentAdmin;
 use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
 use App\Models\Product;
-use App\Models\ProviderConnection;
 use App\Models\ProviderAdapter;
+use App\Models\ProviderConnection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -55,13 +55,65 @@ it('renders the provider adapter catalogue and lists existing definitions', func
         ->get('/admin/provider-adapters')
         ->assertOk()
         ->assertSee('Provider adapters')
-        ->assertSee('Approved adapter catalogue');
+        ->assertSee('Approved adapter catalogue')
+        ->assertSee('Service endpoints')
+        ->assertSee('Request mapping')
+        ->assertSee('Request headers')
+        ->assertSee('Network mapping')
+        ->assertSee('Success conditions')
+        ->assertSee('Customer validation')
+        ->assertSee('Advanced JSON');
 
     $this->actingAs($admin, 'platform_admin')
         ->getJson('/admin/provider-adapters/data')
         ->assertOk()
         ->assertJsonPath('adapters.0.id', $adapter->id)
         ->assertJsonPath('allowed.services.0.slug', 'data');
+});
+
+it('stores the complete guided per-product adapter configuration', function () {
+    $payload = platformAdapterPayload([
+        'capabilities' => [
+            'services' => ['cable_subscription'],
+            'methods' => ['POST'],
+            'credential_fields' => ['api_public_key'],
+        ],
+        'settings' => [
+            'http_method' => 'POST',
+            'timeout_seconds' => 30,
+            'endpoints' => ['cable_subscription' => 'https://provider.test/cable'],
+            'product_configs' => ['cable_subscription' => [
+                'request_parameters' => [['key' => 'smartcard', 'type' => 'runtime', 'value' => 'smartcard_number']],
+                'request_headers' => [['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key', 'prefix' => 'Bearer ']],
+                'network_mapping' => ['GOTV' => 'gotv'],
+                'success_conditions' => [['key' => 'success', 'value' => 'true']],
+                'success_message_path' => 'message',
+                'failure_message_path' => 'message',
+                'actual_charge_path' => 'data.amount_charged',
+                'expected_success_code' => 200,
+                'validation' => [
+                    'endpoint' => 'https://provider.test/validate-cable',
+                    'http_method' => 'POST',
+                    'request_parameters' => [['key' => 'smartcard', 'type' => 'runtime', 'value' => 'smartcard_number']],
+                    'request_headers' => [],
+                    'success_conditions' => [['key' => 'success', 'value' => 'true']],
+                    'success_message_path' => 'message',
+                    'failure_message_path' => 'message',
+                    'customer_name_path' => 'data.customer_name',
+                    'customer_address_path' => 'data.address',
+                ],
+            ]],
+        ],
+    ]);
+
+    $this->actingAs(platformAdapterAdmin(), 'platform_admin')
+        ->postJson('/admin/provider-adapters', $payload)
+        ->assertCreated();
+
+    $settings = ProviderAdapter::sole()->settings;
+    expect(data_get($settings, 'endpoints.cable_subscription'))->toBe('https://provider.test/cable')
+        ->and(data_get($settings, 'product_configs.cable_subscription.actual_charge_path'))->toBe('data.amount_charged')
+        ->and(data_get($settings, 'product_configs.cable_subscription.validation.customer_name_path'))->toBe('data.customer_name');
 });
 
 it('uses every global product as an available adapter service', function () {

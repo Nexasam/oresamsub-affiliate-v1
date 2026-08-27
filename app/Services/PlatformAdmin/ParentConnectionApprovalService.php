@@ -57,7 +57,7 @@ class ParentConnectionApprovalService
 
             $parentConnection->fill(['approval_status' => 'approved', 'approved_at' => now(), 'approved_by_admin_id' => $reviewer->id, 'rejection_reason' => null])->save();
 
-            return $parentConnection->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,status']);
+            return $parentConnection->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,settings,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status']);
         });
     }
 

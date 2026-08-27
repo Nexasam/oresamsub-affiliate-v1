@@ -60,7 +60,7 @@ class LegacyProviderConfigurationPromotionService
             ]);
 
             return [
-                'connection' => $source->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status']),
+                'connection' => $source->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,settings,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status']),
                 'strategy' => $strategy,
                 'adapter_created' => $adapter !== null,
             ];

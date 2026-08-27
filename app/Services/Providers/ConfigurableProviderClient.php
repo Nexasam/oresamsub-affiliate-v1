@@ -76,6 +76,7 @@ class ConfigurableProviderClient
                 'stage' => 'transport',
                 'error' => 'Provider connection failed or timed out.',
             ]);
+
             return $this->failure('The provider response is uncertain and requires reconciliation.', ambiguous: true);
         } catch (Throwable $exception) {
             Log::warning('provider.request.failed', $this->logContext($connection, $productSlug, $runtime, $method ?? null, $endpoint ?? null) + [
@@ -108,7 +109,7 @@ class ConfigurableProviderClient
 
         $productSettings = $this->productSettings($settings, $productSlug);
         $validation = $productSettings['validation'] ?? null;
-        $endpoint = is_array($validation) ? ($validation['endpoint'] ?? null) : null;
+        $endpoint = is_array($validation) ? $this->absoluteEndpoint($connection, $validation['endpoint'] ?? null) : null;
         if (! $endpoint) {
             return $this->failure("No customer validation endpoint is configured for {$productSlug}.");
         }
@@ -141,6 +142,7 @@ class ConfigurableProviderClient
                 'stage' => 'transport',
                 'error' => 'Provider connection failed or timed out.',
             ]);
+
             return $this->failure('Customer validation could not be confirmed because the provider did not respond.', ambiguous: true);
         } catch (Throwable $exception) {
             Log::warning('provider.validation.request.failed', $this->logContext($connection, $productSlug.'.validation', $runtime, $method ?? null, $endpoint ?? null) + [
@@ -160,7 +162,7 @@ class ConfigurableProviderClient
         $settings = $this->configuration->settings($connection);
         $productSlug = $this->products->normalize($productSlug);
         $productSettings = $this->productSettings($settings, $productSlug);
-        $endpoint = $productSettings['requery_endpoint'] ?? $settings['requery_endpoint'] ?? null;
+        $endpoint = $this->absoluteEndpoint($connection, $productSettings['requery_endpoint'] ?? $settings['requery_endpoint'] ?? null);
         if (! $endpoint) {
             return $this->failure('No provider requery endpoint is configured.', ambiguous: true);
         }
@@ -181,6 +183,7 @@ class ConfigurableProviderClient
             return $this->failure('The provider requery response remains uncertain.', ambiguous: true);
         } catch (Throwable $exception) {
             report($exception);
+
             return $this->failure($this->safeConfigurationMessage($exception), ambiguous: true);
         }
     }
@@ -208,7 +211,21 @@ class ConfigurableProviderClient
             $endpoint = $legacyKey ? ($endpoints[$legacyKey] ?? null) : null;
         }
 
-        return $endpoint ?: $this->configuration->baseUrl($connection);
+        return $this->absoluteEndpoint($connection, $endpoint) ?: $this->configuration->baseUrl($connection);
+    }
+
+    private function absoluteEndpoint(ParentProviderConnection $connection, ?string $endpoint): ?string
+    {
+        if (! $endpoint || preg_match('#^https?://#i', $endpoint)) {
+            return $endpoint;
+        }
+
+        $baseUrl = $this->configuration->baseUrl($connection);
+        if (! $baseUrl) {
+            return null;
+        }
+
+        return rtrim($baseUrl, '/').'/'.ltrim($endpoint, '/');
     }
 
     private function mapValues(array $mappings, array $runtime, array $credentials, array $networkMapping): array

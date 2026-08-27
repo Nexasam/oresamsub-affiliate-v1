@@ -117,6 +117,31 @@ it('executes any configured product endpoint with mapped runtime values and cred
     });
 });
 
+it('resolves reusable relative adapter endpoints against the provider connection base URL', function () {
+    $connection = executableProviderConnection([
+        'settings' => [
+            'endpoints' => ['data' => '/api/data'],
+            'product_configs' => ['data' => [
+                'request_parameters' => [['key' => 'phone', 'type' => 'runtime', 'value' => 'phone_number']],
+                'request_headers' => [],
+                'network_mapping' => [],
+                'success_conditions' => [['key' => 'success', 'value' => 'true']],
+                'success_message_path' => 'message',
+                'failure_message_path' => 'message',
+            ]],
+        ],
+    ]);
+    $connection->providerConnection->update(['base_url' => 'https://parent-provider.test']);
+    Http::fake(['parent-provider.test/*' => Http::response(['success' => true, 'message' => 'Delivered'])]);
+
+    $result = app(ConfigurableProviderClient::class)->execute($connection->fresh(), 'data', [
+        'phone_number' => '08030000000', 'reference' => 'RELATIVE-1',
+    ]);
+
+    expect($result['successful'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request->url() === 'https://parent-provider.test/api/data');
+});
+
 it('uses mappings headers network IDs and response rules from the selected product only', function () {
     $connection = executableProviderConnection();
     Http::fake(['provider.example/*' => Http::response([
@@ -318,14 +343,14 @@ it('logs the provider request boundary and redacted response for transaction dia
         'api_token' => '[REDACTED]',
     ]);
 
-    Log::shouldHaveReceived('info')->with('provider.request.prepared', \Mockery::on(
+    Log::shouldHaveReceived('info')->with('provider.request.prepared', Mockery::on(
         fn (array $context) => $context['reference'] === 'ORDER-LOG-1'
             && $context['connection_id'] === $connection->id
             && $context['endpoint'] === 'https://provider.example/data'
             && $context['payload']['data_phone'] === '[REDACTED]'
             && ! array_key_exists('headers', $context)
     ))->once();
-    Log::shouldHaveReceived('info')->with('provider.response.received', \Mockery::on(
+    Log::shouldHaveReceived('info')->with('provider.response.received', Mockery::on(
         fn (array $context) => $context['reference'] === 'ORDER-LOG-1'
             && $context['http_status'] === 200
             && $context['response']['error']['message'] === 'Upstream wallet is insufficient'

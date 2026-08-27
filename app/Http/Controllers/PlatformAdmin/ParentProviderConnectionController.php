@@ -25,7 +25,7 @@ class ParentProviderConnectionController extends Controller
     public function data(): JsonResponse
     {
         $connections = ParentProviderConnection::query()
-            ->with(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status'])
+            ->with(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,settings,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status'])
             ->orderByRaw("CASE approval_status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END")
             ->latest('submitted_at')
             ->get()
@@ -59,7 +59,7 @@ class ParentProviderConnectionController extends Controller
                 'rejection_reason' => $request->validated('reason'),
             ]);
 
-            return $connection->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status']);
+            return $connection->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,settings,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status']);
         });
 
         return response()->json([
@@ -90,6 +90,8 @@ class ParentProviderConnectionController extends Controller
 
     private function present(ParentProviderConnection $connection): array
     {
+        [$effectiveSettings, $configurationSource] = $this->effectiveConfiguration($connection);
+
         return [
             'id' => $connection->id,
             'request_type' => $connection->request_type,
@@ -104,7 +106,8 @@ class ParentProviderConnectionController extends Controller
             'submitted_at' => $connection->submitted_at,
             'approved_at' => $connection->approved_at,
             'rejection_reason' => $connection->rejection_reason,
-            'settings' => $this->redactedSettings($connection->settings ?? []),
+            'settings' => $this->redactedSettings($effectiveSettings),
+            'configuration_source' => $configurationSource,
             'parent_business' => $connection->parentBusiness,
             'provider_connection' => $connection->providerConnection,
             'provider_adapter' => $connection->providerAdapter,
@@ -121,6 +124,24 @@ class ParentProviderConnectionController extends Controller
                         && $this->canonicalSettings($connection->providerConnection?->settings) !== $this->canonicalSettings(Arr::except($connection->settings ?? [], ['is_primary']))),
             ],
         ];
+    }
+
+    private function effectiveConfiguration(ParentProviderConnection $connection): array
+    {
+        $parentSettings = Arr::except($connection->settings ?? [], ['is_primary']);
+        if ($parentSettings !== []) {
+            return [$parentSettings, 'parent'];
+        }
+
+        if (filled($connection->providerConnection?->settings)) {
+            return [$connection->providerConnection->settings, 'connection'];
+        }
+
+        if (filled($connection->providerAdapter?->settings)) {
+            return [$connection->providerAdapter->settings, 'adapter'];
+        }
+
+        return [[], 'none'];
     }
 
     private function hasTechnicalSettings(array $settings): bool

@@ -86,23 +86,19 @@
                         <legend class="text-sm font-semibold text-slate-800">Supported services</legend>
                         <p class="mt-1 text-xs text-slate-500">Parents can configure endpoints only for selected services.</p>
                         <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <template x-for="service in allowed.services" :key="service.slug"><label class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm"><input type="checkbox" :value="service.slug" x-model="form.capabilities.services" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"><span x-text="service.name"></span></label></template>
+                            <template x-for="service in allowed.services" :key="service.slug"><label class="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm"><input type="checkbox" :value="service.slug" x-model="form.capabilities.services" @change="ensureSettings()" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"><span x-text="service.name"></span></label></template>
                         </div>
                         <span x-show="errors['capabilities.services']" class="mt-2 block text-xs text-rose-600" x-text="firstError('capabilities.services')"></span>
                     </fieldset>
 
-                    <label class="block text-sm font-semibold text-slate-800">Complete adapter configuration (JSON)
-                        <textarea x-model="form.settingsJson" rows="12" class="mt-2 w-full rounded-xl border-slate-200 font-mono text-xs focus:border-emerald-500 focus:ring-emerald-500" placeholder='{"http_method":"POST","product_configs":{}}'></textarea>
-                        <span class="mt-1 block text-xs font-normal text-slate-500">Endpoints, mappings, headers, validation flows and response rules entered here prefill every provider connection using this adapter.</span>
-                        <span x-show="errors.settings" class="mt-1 block text-xs text-rose-600" x-text="firstError('settings')"></span>
-                    </label>
-
                     <fieldset>
                         <legend class="text-sm font-semibold text-slate-800">Allowed HTTP methods</legend>
                         <div class="mt-3 flex flex-wrap gap-3">
-                            <template x-for="method in allowed.methods" :key="method"><label class="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm"><input type="checkbox" :value="method" x-model="form.capabilities.methods" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"><span x-text="method"></span></label></template>
+                            <template x-for="method in allowed.methods" :key="method"><label class="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm"><input type="checkbox" :value="method" x-model="form.capabilities.methods" @change="ensureSettings()" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"><span x-text="method"></span></label></template>
                         </div>
                     </fieldset>
+
+                    @include('platform-admin.provider-adapters._configuration-builder')
 
                     <fieldset>
                         <legend class="text-sm font-semibold text-slate-800">Credential fields</legend>
@@ -128,22 +124,46 @@
 @push('scripts')
 <script>
 function providerAdapters() {
-    const emptyForm = () => ({ id: null, name: '', slug: '', adapter: '', status: 'active', settingsJson: '{}', capabilities: { services: [], methods: ['POST'], credential_fields: [] } });
+    const blankSettings = () => ({ http_method: 'POST', timeout_seconds: 30, endpoints: {}, product_configs: {} });
+    const emptyForm = () => ({ id: null, name: '', slug: '', adapter: '', status: 'active', settings: blankSettings(), expertJson: '{}', expertOpen: false, capabilities: { services: [], methods: ['POST'], credential_fields: [] } });
     return {
         adapters: [], allowed: { services: [], methods: [], credential_fields: [] }, loading: true, saving: false,
-        modal: false, search: '', message: '', messageType: 'success', errors: {}, form: emptyForm(),
+        modal: false, search: '', message: '', messageType: 'success', errors: {}, form: emptyForm(), activeService: '',
+        runtimeFields: @json(\App\Http\Requests\ParentAdmin\SaveProviderConnectionRequest::RUNTIME_FIELDS),
+        networkKeys: ['MTN','GLO','AIRTEL','9MOBILE','DSTV','GOTV','STARTIMES','PREPAID','POSTPAID'],
         get filteredAdapters() { const term = this.search.trim().toLowerCase(); return term ? this.adapters.filter(item => `${item.name} ${item.slug} ${item.adapter}`.toLowerCase().includes(term)) : this.adapters; },
+        get selectedServices() { return this.allowed.services.filter(service => this.form.capabilities.services.includes(service.slug)); },
         async load() { this.loading = true; try { const response = await fetch('{{ route('platform-admin.provider-adapters.data') }}', { headers: { Accept: 'application/json' } }); const data = await response.json(); this.adapters = data.adapters; this.allowed = data.allowed; } finally { this.loading = false; } },
-        openCreate() { this.form = emptyForm(); this.errors = {}; this.modal = true; },
-        openEdit(adapter) { this.form = { id: adapter.id, name: adapter.name, slug: adapter.slug, adapter: adapter.adapter, status: adapter.status, settingsJson: JSON.stringify(adapter.settings || {}, null, 2), capabilities: { services: [...(adapter.capabilities?.services || [])], methods: [...(adapter.capabilities?.methods || [])], credential_fields: [...(adapter.capabilities?.credential_fields || [])] } }; this.errors = {}; this.modal = true; },
+        openCreate() { this.form = emptyForm(); this.errors = {}; this.activeService = ''; this.modal = true; this.$nextTick(() => this.ensureSettings()); },
+        openEdit(adapter) { this.form = { id: adapter.id, name: adapter.name, slug: adapter.slug, adapter: adapter.adapter, status: adapter.status, settings: JSON.parse(JSON.stringify(adapter.settings || blankSettings())), expertJson: '{}', expertOpen: false, capabilities: { services: [...(adapter.capabilities?.services || [])], methods: [...(adapter.capabilities?.methods || [])], credential_fields: [...(adapter.capabilities?.credential_fields || [])] } }; this.errors = {}; this.modal = true; this.$nextTick(() => this.ensureSettings()); },
         credentialSummary(adapter) { const fields = adapter.capabilities?.credential_fields || []; return fields.length ? `Credentials: ${fields.join(', ')}` : 'No credentials required'; },
         firstError(key) { return this.errors[key]?.[0] || ''; },
+        uid() { return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`; },
+        row(row = {}) { return { _id: this.uid(), key: '', type: 'runtime', value: 'phone_number', prefix: '', suffix: '', ...row }; },
+        blankConfig() { return { request_parameters: [this.row()], request_headers: [], network_mapping: {}, success_conditions: [{ _id: this.uid(), key: 'success', value: 'true' }], success_message_path: 'message', failure_message_path: 'message', actual_charge_path: '', expected_success_code: 200, expected_failure_code: null }; },
+        ensureSettings() { this.form.settings = { ...blankSettings(), ...(this.form.settings || {}) }; this.form.settings.endpoints ||= {}; this.form.settings.product_configs ||= {}; this.selectedServices.forEach(service => { this.form.settings.endpoints[service.slug] ??= ''; this.form.settings.product_configs[service.slug] ||= this.blankConfig(); const config = this.form.settings.product_configs[service.slug]; config.request_parameters = (config.request_parameters || []).map(row => this.row(row)); config.request_headers = (config.request_headers || []).map(row => this.row(row)); config.success_conditions = (config.success_conditions || []).map(row => ({ _id: this.uid(), ...row })); config.network_mapping ||= {}; if (config.validation) this.normalizeValidation(config.validation); }); if (!this.form.capabilities.methods.includes(this.form.settings.http_method)) this.form.settings.http_method = this.form.capabilities.methods[0] || 'POST'; this.activeService = this.selectedServices.some(service => service.slug === this.activeService) ? this.activeService : (this.selectedServices[0]?.slug || ''); },
+        config(slug) { this.form.settings.product_configs[slug] ||= this.blankConfig(); return this.form.settings.product_configs[slug]; },
+        addMapping(slug) { this.config(slug).request_parameters.push(this.row()); },
+        addHeader(slug) { this.config(slug).request_headers.push(this.row({ type: 'credential', value: this.form.capabilities.credential_fields[0] || '' })); },
+        addCondition(slug) { this.config(slug).success_conditions.push({ _id: this.uid(), key: '', value: '' }); },
+        mappingTypeChanged(row) { row.value = row.type === 'credential' ? (this.form.capabilities.credential_fields[0] || '') : row.type === 'runtime' ? 'phone_number' : ''; },
+        isValidatable(slug) { return ['cable_subscription','utility_bills','cable','electricity'].includes(slug); },
+        hasValidation(slug) { return !!this.config(slug).validation; },
+        blankValidation(slug) { const field = ['utility_bills','electricity'].includes(slug) ? 'meter_number' : 'smartcard_number'; return { endpoint: '', http_method: 'POST', request_parameters: [this.row({ value: field })], request_headers: [], success_conditions: [{ _id: this.uid(), key: 'success', value: 'true' }], success_message_path: 'message', failure_message_path: 'message', customer_name_path: 'data.customer_name', customer_address_path: 'data.address', expected_success_code: 200 }; },
+        normalizeValidation(validation) { validation.request_parameters = (validation.request_parameters || []).map(row => this.row(row)); validation.request_headers = (validation.request_headers || []).map(row => this.row(row)); validation.success_conditions = (validation.success_conditions || []).map(row => ({ _id: this.uid(), ...row })); },
+        toggleValidation(slug, enabled) { if (enabled) this.config(slug).validation = this.blankValidation(slug); else delete this.config(slug).validation; },
+        addValidationMapping(slug) { this.config(slug).validation.request_parameters.push(this.row()); },
+        addValidationHeader(slug) { this.config(slug).validation.request_headers.push(this.row({ type: 'credential', value: this.form.capabilities.credential_fields[0] || '' })); },
+        addValidationCondition(slug) { this.config(slug).validation.success_conditions.push({ _id: this.uid(), key: '', value: '' }); },
+        toggleExpert(event) { this.form.expertOpen = event.target.open; if (event.target.open) this.form.expertJson = JSON.stringify(this.cleanSettings(this.form.settings), null, 2); },
+        cleanSettings(value) { if (Array.isArray(value)) return value.map(item => this.cleanSettings(item)); if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([key]) => key !== '_id').map(([key,item]) => [key,this.cleanSettings(item)])); return value; },
         async save() {
             this.saving = true; this.errors = {}; this.message = '';
             const url = this.form.id ? `{{ url('/admin/provider-adapters') }}/${this.form.id}` : '{{ route('platform-admin.provider-adapters.store') }}';
             try {
-                let settings; try { settings = JSON.parse(this.form.settingsJson || '{}'); } catch (error) { this.errors = { settings: ['Adapter configuration must be valid JSON.'] }; return; }
-                const payload = { ...this.form, settings }; delete payload.settingsJson;
+                this.ensureSettings();
+                let settings = this.cleanSettings(this.form.settings); if (this.form.expertOpen) { try { settings = JSON.parse(this.form.expertJson || '{}'); } catch (error) { this.errors = { settings: ['Adapter configuration must be valid JSON.'] }; return; } }
+                const payload = { ...this.form, settings }; delete payload.expertJson; delete payload.expertOpen;
                 const response = await fetch(url, { method: this.form.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify(payload) });
                 const data = await response.json();
                 if (!response.ok) { this.errors = data.errors || {}; this.message = data.message || 'Adapter could not be saved.'; this.messageType = 'error'; return; }

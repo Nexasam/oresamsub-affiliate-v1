@@ -52,3 +52,40 @@ it('reuses an approved connection for the same adapter and normalized provider h
     expect(ProviderConnection::count())->toBe(1)
         ->and($pending->fresh()->provider_connection_id)->toBe($shared->id);
 });
+
+it('shows adapter configuration during approval when a parent connects directly from an adapter', function () {
+    $reviewer = Admin::create(['name' => 'Reviewer', 'email' => 'adapter-preview@example.test', 'password' => 'password', 'active' => true]);
+    $adapter = ProviderAdapter::create([
+        'name' => 'MSORG Preview', 'slug' => 'msorg-preview', 'adapter_key' => 'msorg_preview',
+        'capabilities' => ['services' => ['data'], 'credential_fields' => ['api_public_key']],
+        'settings' => [
+            'http_method' => 'POST',
+            'endpoints' => ['data' => 'https://template.test/api/data'],
+            'product_configs' => ['data' => [
+                'request_parameters' => [['key' => 'mobile', 'type' => 'runtime', 'value' => 'phone_number']],
+                'success_conditions' => [['key' => 'success', 'value' => 'true']],
+            ]],
+        ],
+        'status' => 'active',
+    ]);
+    $parent = ParentBusiness::create(['name' => 'Direct Adapter Parent', 'slug' => 'direct-adapter-parent']);
+    $pending = ParentProviderConnection::create([
+        'parent_business_id' => $parent->id,
+        'provider_adapter_id' => $adapter->id,
+        'provider_connection_id' => null,
+        'request_type' => 'discovery',
+        'name' => 'Direct adapter request',
+        'proposed_provider_name' => 'Direct Website',
+        'proposed_base_url' => 'https://direct-website.test/api',
+        'credentials' => ['api_public_key' => 'hidden'],
+        'settings' => ['is_primary' => true],
+        'approval_status' => 'pending',
+    ]);
+
+    $this->actingAs($reviewer, 'platform_admin')->getJson('/admin/provider-connections/data')
+        ->assertOk()
+        ->assertJsonPath('connections.0.configuration_source', 'adapter')
+        ->assertJsonPath('connections.0.settings.endpoints.data', 'https://template.test/api/data')
+        ->assertJsonPath('connections.0.settings.product_configs.data.request_parameters.0.key', 'mobile')
+        ->assertJsonMissing(['hidden']);
+});

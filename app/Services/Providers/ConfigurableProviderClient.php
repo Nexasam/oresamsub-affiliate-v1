@@ -12,6 +12,8 @@ use Throwable;
 
 class ConfigurableProviderClient
 {
+    private const USER_AGENT = 'ResellGrid-ProviderClient/1.0';
+
     public function __construct(
         private readonly ProviderProductRegistry $products,
         private readonly ProviderConnectionConfigurationResolver $configuration,
@@ -56,7 +58,7 @@ class ConfigurableProviderClient
             $headers = $this->withoutFrameworkJsonHeaders($headers);
 
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
-            $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
+            $request = $this->providerRequest($headers, $timeout);
             $method = strtoupper($settings['http_method'] ?? 'POST');
             $logContext = $this->logContext($connection, $productSlug, $runtime, $method, $endpoint);
             Log::info('provider.request.prepared', $logContext + [
@@ -67,9 +69,7 @@ class ConfigurableProviderClient
 
             Log::info('provider.response.received', $logContext + [
                 'http_status' => $response->status(),
-                'response' => is_array($response->json())
-                    ? $this->redact($response->json())
-                    : ['format' => 'non_json', 'body_length' => strlen($response->body())],
+                'response' => $this->safeResponseForLog($response),
             ]);
 
             return $this->interpret($response, $productSettings);
@@ -121,7 +121,7 @@ class ConfigurableProviderClient
             $headers = $this->mapHeaders($validation['request_headers'] ?? $productSettings['request_headers'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
             $headers = $this->withoutFrameworkJsonHeaders($headers);
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
-            $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
+            $request = $this->providerRequest($headers, $timeout);
             $method = strtoupper($validation['http_method'] ?? $settings['http_method'] ?? 'POST');
             $logContext = $this->logContext($connection, $productSlug.'.validation', $runtime, $method, $endpoint);
             Log::info('provider.validation.request.prepared', $logContext + ['payload' => $this->redact($payload)]);
@@ -132,9 +132,7 @@ class ConfigurableProviderClient
                 'http_status' => $response->status(),
                 'successful' => (bool) ($result['successful'] ?? false),
                 'message' => $result['message'] ?? null,
-                'response' => is_array($decoded)
-                    ? $this->redact($decoded)
-                    : ['format' => 'non_json', 'body_length' => strlen($response->body())],
+                'response' => $this->safeResponseForLog($response),
             ]);
             $result['customer_name'] = is_array($decoded) ? data_get($decoded, $validation['customer_name_path'] ?? 'data.customer_name') : null;
             $result['customer_address'] = is_array($decoded) ? data_get($decoded, $validation['customer_address_path'] ?? 'data.address') : null;
@@ -178,9 +176,14 @@ class ConfigurableProviderClient
             $headers = $this->mapHeaders($productSettings['request_headers'] ?? [], $runtime, $connection->credentials ?? [], $productSettings['network_mapping'] ?? []);
             $headers = $this->withoutFrameworkJsonHeaders($headers);
             $timeout = min(120, max(5, (int) ($settings['timeout_seconds'] ?? 30)));
-            $request = Http::acceptJson()->asJson()->connectTimeout(min(10, $timeout))->timeout($timeout)->withHeaders($headers);
+            $request = $this->providerRequest($headers, $timeout);
             $method = strtoupper($productSettings['requery_http_method'] ?? $settings['requery_http_method'] ?? 'POST');
+            $logContext = $this->logContext($connection, $productSlug.'.requery', $runtime, $method, $endpoint);
             $response = $method === 'GET' ? $request->get($endpoint, $payload) : $request->post($endpoint, $payload);
+            Log::info('provider.requery.response.received', $logContext + [
+                'http_status' => $response->status(),
+                'response' => $this->safeResponseForLog($response),
+            ]);
 
             return $this->interpret($response, $productSettings);
         } catch (ConnectionException) {
@@ -410,6 +413,39 @@ class ConfigurableProviderClient
     private function effectiveJsonHeaders(array $headers): array
     {
         return ['Accept' => 'application/json', 'Content-Type' => 'application/json'] + $headers;
+    }
+
+    private function providerRequest(array $headers, int $timeout): \Illuminate\Http\Client\PendingRequest
+    {
+        return Http::acceptJson()
+            ->asJson()
+            ->withUserAgent(self::USER_AGENT)
+            ->connectTimeout(min(10, $timeout))
+            ->timeout($timeout)
+            ->withHeaders($headers);
+    }
+
+    /** @return array<string, mixed> */
+    private function safeResponseForLog(Response $response): array
+    {
+        $decoded = $response->json();
+        if (is_array($decoded)) {
+            return $this->redact($decoded);
+        }
+
+        $body = $response->body();
+        preg_match('/<title[^>]*>(.*?)<\/title>/is', $body, $matches);
+        $title = isset($matches[1])
+            ? trim((string) preg_replace('/\s+/', ' ', strip_tags($matches[1])))
+            : null;
+
+        return array_filter([
+            'format' => 'non_json',
+            'body_length' => strlen($body),
+            'content_type' => $response->header('Content-Type'),
+            'cf_ray' => $response->header('CF-Ray'),
+            'page_title' => $title !== '' ? mb_substr((string) $title, 0, 160) : null,
+        ], fn ($value) => $value !== null && $value !== '');
     }
 
     /** @return array<string, string> */

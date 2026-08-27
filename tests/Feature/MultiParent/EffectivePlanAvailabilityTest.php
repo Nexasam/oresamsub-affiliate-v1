@@ -18,6 +18,7 @@ use App\Models\ProductPlanParentPrice;
 use App\Models\ProviderConnection;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -104,7 +105,6 @@ it('keeps approved MTN plans visible when another MTN plan uses a pending connec
         'affiliate_id' => $f['affiliate']->id,
         'user_plan_id' => $customerPlan->id,
     ]);
-
     $pendingProvider = ProviderConnection::create([
         'name' => 'Gongoz',
         'slug' => 'gongoz-mixed-mtn-routes',
@@ -285,6 +285,44 @@ it('keeps valid MTN plans when another available MTN plan has invalid pricing', 
         ->and($dataPlans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id)
         ->and($pricingPlans)->toHaveCount(1)
         ->and($pricingPlans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
+});
+
+it('skips stale affiliate plans whose source plan no longer exists', function () {
+    $f = effectiveAvailabilityFixture('stale-source-plan');
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+    AffiliateProcessingProfile::where('affiliate_id', $f['affiliate']->id)
+        ->update(['processing_engine' => 'legacy_oresamsub']);
+
+    DB::statement('PRAGMA defer_foreign_keys = ON');
+    DB::table('affiliate_product_plans')->insert([
+        'affiliate_id' => $f['affiliate']->id,
+        'product_plan_id' => 999999,
+        'product_plan_name' => 'Removed source plan',
+        'visibility' => 1,
+        'visibility_from_admin' => 1,
+        'public_visibility' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    session(['affiliate' => $f['affiliate']]);
+
+    $plans = app(CustomerPlansPricingService::class)
+        ->fetch_plans_with_pricing(['user' => $customer])['plans'];
+
+    expect($plans)->toHaveCount(1)
+        ->and($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
+
+    DB::table('affiliate_product_plans')->where('product_plan_id', 999999)->delete();
+    DB::statement('PRAGMA defer_foreign_keys = OFF');
 });
 
 it('keeps an affiliate local visibility preference when plans are synchronized', function () {

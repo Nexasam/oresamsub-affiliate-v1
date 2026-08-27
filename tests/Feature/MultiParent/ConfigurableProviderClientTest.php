@@ -114,7 +114,8 @@ it('executes any configured product endpoint with mapped runtime values and cred
     Http::assertSent(function (Request $request) {
         return $request->url() === 'https://provider.example/epins'
             && $request['request_id'] === 'ORDER-10001'
-            && $request->header('Authorization')[0] === 'Bearer provider-secret-token';
+            && $request->header('Authorization')[0] === 'Bearer provider-secret-token'
+            && $request->header('User-Agent')[0] === 'ResellGrid-ProviderClient/1.0';
     });
 });
 
@@ -421,14 +422,27 @@ it('logs the provider request boundary and redacted response for transaction dia
 
 it('fails safely for invalid json responses', function () {
     $connection = executableProviderConnection();
-    Http::fake(['provider.example/*' => Http::response('<html>bad gateway</html>', 502)]);
+    Log::spy();
+    Http::fake(['provider.example/*' => Http::response(
+        '<html><head><title>Attention Required</title></head><body>Cloudflare block</body></html>',
+        403,
+        ['Content-Type' => 'text/html; charset=UTF-8', 'CF-Ray' => 'abc123-LAS']
+    )]);
 
     $result = app(ConfigurableProviderClient::class)->execute($connection, 'result_checker', [
         'phone_number' => '08030000000', 'plan' => 'NECO', 'reference' => 'ORDER-7',
     ]);
 
-    expect($result)->toMatchArray(['successful' => false, 'ambiguous' => false, 'http_status' => 502])
+    expect($result)->toMatchArray(['successful' => false, 'ambiguous' => false, 'http_status' => 403])
         ->and($result['provider_response'])->toBeNull();
+    Log::shouldHaveReceived('info')->with('provider.response.received', Mockery::on(
+        fn (array $context) => $context['http_status'] === 403
+            && data_get($context, 'response.format') === 'non_json'
+            && data_get($context, 'response.content_type') === 'text/html; charset=UTF-8'
+            && data_get($context, 'response.cf_ray') === 'abc123-LAS'
+            && data_get($context, 'response.page_title') === 'Attention Required'
+            && ! array_key_exists('body', $context['response'])
+    ))->once();
 });
 
 it('requeries an uncertain purchase through the separately configured status endpoint', function () {
@@ -449,7 +463,8 @@ it('requeries an uncertain purchase through the separately configured status end
 
     expect($result)->toMatchArray(['successful' => true, 'ambiguous' => false, 'message' => 'Confirmed']);
     Http::assertSent(fn (Request $request) => $request->url() === 'https://provider.example/data/status'
-        && $request['request_id'] === 'ORDER-REQUERY-1');
+        && $request['request_id'] === 'ORDER-REQUERY-1'
+        && $request->header('User-Agent')[0] === 'ResellGrid-ProviderClient/1.0');
 });
 
 it('validates a cable customer through its separate configured operation without vending', function () {
@@ -493,7 +508,8 @@ it('validates a cable customer through its separate configured operation without
     Http::assertSent(fn (Request $request) => $request->url() === 'https://provider.example/cable/validate'
         && $request['smartcard'] === '1234567890'
         && $request['service'] === 'DSTV'
-        && $request->header('Authorization')[0] === 'Bearer provider-secret-token');
+        && $request->header('Authorization')[0] === 'Bearer provider-secret-token'
+        && $request->header('User-Agent')[0] === 'ResellGrid-ProviderClient/1.0');
 });
 
 it('logs a redacted provider response when customer validation fails', function () {

@@ -30,6 +30,7 @@ class CustomerPlansPricingService{
     
         $product_plans = AffiliateProductPlan::with('product_plan.product_plan_category.network','product_plan.product_plan_category.product')
         ->where('visibility', 1)
+        ->whereHas('product_plan.product_plan_category.product')
         ->when($isMultiParent, fn ($query) => $query->customerAvailable())
         ->orderByRaw('CASE WHEN CAST(data_size_in_mb AS UNSIGNED) < 500 THEN 1 ELSE 0 END') // Push <500MB to bottom
         ->orderByRaw('CAST(data_size_in_mb AS UNSIGNED)') // Then order by size

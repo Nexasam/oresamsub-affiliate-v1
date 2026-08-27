@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\ProductPlanCustomPricing;
 use App\Models\AffiliateProductPlanCategory;
 use App\Models\Affiliate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class CustomerPlansPricingService{
 
@@ -44,29 +46,44 @@ class CustomerPlansPricingService{
                 $dat['product_id'] = $product_plan->product_plan->product_plan_category->product->id;
                 $dat['user'] = $user_details;
                 $dat['amount'] = 0;
-                $generalres = $this->get_customer_price_per_plan($dat);
+                try {
+                    $generalres = $this->get_customer_price_per_plan($dat);
+                } catch (ValidationException $exception) {
+                    Log::warning('Customer pricing page skipped plan with invalid pricing.', [
+                        'affiliate_id' => $affiliate?->id,
+                        'affiliate_product_plan_id' => $product_plan->id,
+                        'product_plan_id' => $product_plan->product_plan_id,
+                        'service' => $product_plan->product_plan?->product_plan_category?->product?->slug,
+                        'network' => $product_plan->product_plan?->product_plan_category?->network?->network_name,
+                        'errors' => $exception->errors(),
+                    ]);
+                    continue;
+                }
 
                 $selling_price = $generalres['sellingprice'];
                 $rate = $generalres['rate'];
                 $network = $generalres['network'];
                 $cost_price = $generalres['cost_price'];
 
-                $product_planss[$key]['rate'] = $rate;
-                $product_planss[$key]['category'] = Product::where('id',$product_plan->product_plan->product_plan_category->product->id)->value('slug');
-                $product_planss[$key]['plan_category'] = $product_plan->product_plan->product_plan_category->product_plan_category_name;
-                $product_planss[$key]['plan_category_id'] = $product_plan->product_plan->product_plan_category->id;
-                $product_planss[$key]['rate'] = $rate;
-                $product_planss[$key]['network'] = $network;
-                $product_planss[$key]['cost_price'] = $cost_price;
-                $product_planss[$key]['product_plan_id'] = $product_plan->id;
-                $product_planss[$key]['selling_price'] = $selling_price;
-                $product_planss[$key]['product_plan_name'] = $product_plan->product_plan_name;
-                $product_planss[$key]['data_size_in_mb'] = $product_plan->data_size_in_mb;
-                $product_planss[$key]['validity_in_days'] = $product_plan->validity_in_days; 
+                $outputKey = count($product_planss);
+                $product_planss[$outputKey]['rate'] = $rate;
+                $product_planss[$outputKey]['category'] = Product::where('id',$product_plan->product_plan->product_plan_category->product->id)->value('slug');
+                $product_planss[$outputKey]['plan_category'] = $product_plan->product_plan->product_plan_category->product_plan_category_name;
+                $product_planss[$outputKey]['plan_category_id'] = $product_plan->product_plan->product_plan_category->id;
+                $product_planss[$outputKey]['rate'] = $rate;
+                $product_planss[$outputKey]['network'] = $network;
+                $product_planss[$outputKey]['cost_price'] = $cost_price;
+                $product_planss[$outputKey]['product_plan_id'] = $product_plan->id;
+                $product_planss[$outputKey]['selling_price'] = $selling_price;
+                $product_planss[$outputKey]['product_plan_name'] = $product_plan->product_plan_name;
+                $product_planss[$outputKey]['data_size_in_mb'] = $product_plan->data_size_in_mb;
+                $product_planss[$outputKey]['validity_in_days'] = $product_plan->validity_in_days;
                             
             }
 
-        }else{
+        }
+
+        if ($product_planss === []) {
             $product_planss[0]['rate'] = null;
             $product_planss[0]['category'] = null;
             $product_planss[0]['network'] = null;

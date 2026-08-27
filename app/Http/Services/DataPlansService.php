@@ -13,6 +13,8 @@ use App\Models\ProductPlanCustomPricing;
 use App\Models\Affiliate;
 use App\Models\Network;
 use App\Services\Pricing\MultiParentPricingResolver;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use function GuzzleHttp\json_encode;
 
 class DataPlansService{
@@ -68,30 +70,45 @@ class DataPlansService{
                 $dat['plan_details'] = $product_plan;
                 $dat['network_id'] = $network_id;
                 $dat['amount'] = $amount;
-                $generalres = $this->get_customer_price_per_plan($dat);
+                try {
+                    $generalres = $this->get_customer_price_per_plan($dat);
+                } catch (ValidationException $exception) {
+                    Log::warning('Customer catalogue skipped plan with invalid pricing.', [
+                        'affiliate_id' => $affiliate?->id,
+                        'affiliate_product_plan_id' => $product_plan->id,
+                        'product_plan_id' => $product_plan->product_plan_id,
+                        'service' => $slug,
+                        'network_id' => $network_id ?: null,
+                        'errors' => $exception->errors(),
+                    ]);
+                    continue;
+                }
                 $selling_price = $generalres['message'];
                 $plan_level = $generalres['plan_level'];
+                $outputKey = count($product_planss);
     
              
                 if($is_api != NULL){
                   //api route
-                  $product_planss[$key]['plan_id'] =  (int)$product_plan->api_id ?? NULL; //api for api calls
-                  $product_planss[$key]['cost_price'] = $selling_price; //their cost price will be selling price 
+                  $product_planss[$outputKey]['plan_id'] =  (int)$product_plan->api_id ?? NULL; //api for api calls
+                  $product_planss[$outputKey]['cost_price'] = $selling_price; //their cost price will be selling price
                  }else{
                   //likely web/mobile route
-                  $product_planss[$key]['product_plan_id'] = $product_plan->id;
-                  $product_planss[$key]['selling_price'] = $selling_price;
-                  $product_planss[$key]['automation_id'] = $product_plan->automation_id;  
+                  $product_planss[$outputKey]['product_plan_id'] = $product_plan->id;
+                  $product_planss[$outputKey]['selling_price'] = $selling_price;
+                  $product_planss[$outputKey]['automation_id'] = $product_plan->automation_id;
                 }
 
 
-                $product_planss[$key]['product_plan_name'] = $product_plan->product_plan_name;
-                $product_planss[$key]['data_size_in_mb'] = $product_plan->data_size_in_mb;
-                $product_planss[$key]['validity_in_days'] = $product_plan->validity_in_days; 
+                $product_planss[$outputKey]['product_plan_name'] = $product_plan->product_plan_name;
+                $product_planss[$outputKey]['data_size_in_mb'] = $product_plan->data_size_in_mb;
+                $product_planss[$outputKey]['validity_in_days'] = $product_plan->validity_in_days;
                              
             }
 
-        }else{
+        }
+
+        if ($product_planss === []) {
             $product_planss[0]['cost_price'] = NULL;
             $product_planss[0]['product_plan_id'] = NULL;
             $product_planss[0]['api_id'] = NULL;

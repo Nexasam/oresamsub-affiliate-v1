@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Services\DataPlansService;
+use App\Http\Services\CustomerPlansPricingService;
 use App\Models\Affiliate;
 use App\Models\AffiliateProductPlan;
 use App\Models\AffiliateProductPlanCategory;
@@ -240,6 +241,50 @@ it('finds MTN plans when duplicate network rows use different ids', function () 
     ])['plans'];
 
     expect($plans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
+});
+
+it('keeps valid MTN plans when another available MTN plan has invalid pricing', function () {
+    $f = effectiveAvailabilityFixture('mixed-mtn-pricing');
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+
+    $invalidPlan = $f['plan']->replicate();
+    $invalidPlan->product_plan_name = 'MTN invalid pricing';
+    $invalidPlan->save();
+    $invalidPlan->providerRoutes()->create([
+        'parent_business_id' => $f['parent']->id,
+        'parent_provider_connection_id' => $f['route']->parent_provider_connection_id,
+        'provider_plan_id' => 'INVALID-PRICE',
+        'priority' => 1,
+        'active' => true,
+    ]);
+    AffiliateProductPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'product_plan_id' => $invalidPlan->id,
+        'product_plan_name' => 'MTN invalid pricing',
+        'visibility' => 1,
+        'visibility_from_admin' => 1,
+        'public_visibility' => 1,
+        'user_level_1_profit' => 50,
+    ]);
+    session(['affiliate' => $f['affiliate']]);
+
+    $payload = ['user' => $customer, 'network_id' => null, 'product_id' => $f['product']->id, 'amount' => 0];
+    $dataPlans = app(DataPlansService::class)->fetch_user_data_plans($payload)['plans'];
+    $pricingPlans = app(CustomerPlansPricingService::class)->fetch_plans_with_pricing(['user' => $customer])['plans'];
+
+    expect($dataPlans)->toHaveCount(1)
+        ->and($dataPlans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id)
+        ->and($pricingPlans)->toHaveCount(1)
+        ->and($pricingPlans[0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
 });
 
 it('keeps an affiliate local visibility preference when plans are synchronized', function () {

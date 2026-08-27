@@ -67,9 +67,61 @@ it('promotes legacy technical settings into an unused shared connection without 
         ->and($shared->settings)->not->toHaveKey('is_primary')
         ->and(json_encode($shared->settings))->not->toContain('never-promote-this-secret')
         ->and($parentConnection->fresh()->credentials['api_public_key'])->toBe('never-promote-this-secret')
-        ->and($parentConnection->fresh()->settings['is_primary'])->toBeTrue()
+        ->and($parentConnection->fresh()->settings)->toBe(['is_primary' => true])
         ->and(DB::table('provider_configuration_promotions')->where('parent_provider_connection_id', $parentConnection->id)->count())->toBe(1)
         ->and(DB::table('provider_configuration_promotions')->value('source_snapshot'))->not->toContain('never-promote-this-secret');
+});
+
+it('reuses a compatible existing adapter and cannot promote the same legacy copy twice', function () {
+    $source = legacyParentConnection();
+    $canonical = ProviderAdapter::create([
+        'name' => 'Legacy Provider',
+        'slug' => 'legacy-provider-adapter',
+        'adapter_key' => 'legacy_provider_adapter',
+        'capabilities' => $source->providerConnection->capabilities,
+        'settings' => [
+            'http_method' => 'POST',
+            'timeout_seconds' => 30,
+            'request_headers' => [['key' => 'Authorization', 'type' => 'credential', 'value' => 'api_public_key']],
+            'success_conditions' => [['key' => 'success', 'value' => 'true']],
+        ],
+        'status' => 'active',
+    ]);
+    $source->providerConnection->update(['provider_adapter_id' => $canonical->id]);
+    $source->update(['provider_adapter_id' => $canonical->id]);
+    $admin = legacyPromotionReviewer();
+
+    $this->actingAs($admin, 'platform_admin')
+        ->postJson("/admin/provider-connections/{$source->id}/promote-legacy-configuration", ['promote_to_adapter' => true])
+        ->assertOk()
+        ->assertJsonPath('promotion.adapter_created', false);
+
+    expect(ProviderAdapter::count())->toBe(1)
+        ->and($source->fresh()->provider_adapter_id)->toBe($canonical->id)
+        ->and($source->fresh()->settings)->toBe(['is_primary' => true]);
+
+    $this->actingAs($admin, 'platform_admin')
+        ->postJson("/admin/provider-connections/{$source->id}/promote-legacy-configuration", ['promote_to_adapter' => true])
+        ->assertUnprocessable();
+
+    expect(ProviderAdapter::count())->toBe(1)
+        ->and(DB::table('provider_configuration_promotions')->count())->toBe(1);
+});
+
+it('previews and consolidates duplicate adapters without deleting audit rows', function () {
+    $settings = ['http_method' => 'POST', 'product_configs' => ['data' => ['success_conditions' => [['key' => 'success', 'value' => 'true']]]]];
+    $canonical = ProviderAdapter::create(['name' => 'OresamSub V2', 'slug' => 'oresamsubv2', 'adapter_key' => 'oresamsubv2', 'settings' => $settings, 'status' => 'active']);
+    $duplicate = ProviderAdapter::create(['name' => 'OresamSub V2 Adapter', 'slug' => 'oresamsub-v2-adapter_2', 'adapter_key' => 'oresam_sub_v2_adapter_2', 'settings' => $settings, 'status' => 'active']);
+    $provider = ProviderConnection::create(['provider_adapter_id' => $duplicate->id, 'name' => 'OresamSub', 'slug' => 'cleanup-oresamsub', 'adapter' => $duplicate->adapter_key, 'status' => 'active']);
+
+    $this->artisan('provider-adapters:deduplicate')->assertSuccessful();
+    expect($provider->fresh()->provider_adapter_id)->toBe($duplicate->id)
+        ->and($duplicate->fresh()->status)->toBe('active');
+
+    $this->artisan('provider-adapters:deduplicate --execute')->assertSuccessful();
+    expect($provider->fresh()->provider_adapter_id)->toBe($canonical->id)
+        ->and($duplicate->fresh()->status)->toBe('inactive')
+        ->and(ProviderAdapter::count())->toBe(2);
 });
 
 it('clones the shared connection before promotion when another parent already uses it', function () {

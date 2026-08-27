@@ -116,7 +116,8 @@ class ParentProviderConnectionController extends Controller
                 ?? SaveProviderConnectionRequest::CREDENTIAL_FIELDS)
                 ->mapWithKeys(fn ($key) => [$key => filled(($connection->credentials ?? [])[$key] ?? null)])->all(),
             'legacy_promotion' => [
-                'available' => $this->hasTechnicalSettings($connection->settings ?? []),
+                'available' => $this->hasTechnicalSettings($connection->settings ?? [])
+                    && ! DB::table('provider_configuration_promotions')->where('parent_provider_connection_id', $connection->id)->exists(),
                 'shared_has_configuration' => filled($connection->providerConnection?->settings),
                 'shared_parent_count' => $connection->providerConnection?->parentConnections()->count() ?? 0,
                 'will_clone' => ($connection->providerConnection?->parentConnections()->whereKeyNot($connection->id)->exists() ?? false)

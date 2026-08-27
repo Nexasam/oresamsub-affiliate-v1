@@ -27,8 +27,9 @@ class LegacyProviderConfigurationPromotionService
             [$target, $strategy] = $this->target($source, $technicalSettings);
 
             $adapter = null;
+            $adapterCreated = false;
             if ($promoteToAdapter) {
-                $adapter = $this->createAdapter($target, $technicalSettings);
+                [$adapter, $adapterCreated] = $this->resolveAdapter($target, $technicalSettings);
             }
 
             $target->update([
@@ -43,6 +44,7 @@ class LegacyProviderConfigurationPromotionService
             $source->update([
                 'provider_connection_id' => $target->id,
                 'provider_adapter_id' => $adapter?->id ?? $target->provider_adapter_id,
+                'settings' => Arr::only($source->settings ?? [], ['is_primary']),
             ]);
 
             DB::table('provider_configuration_promotions')->insert([
@@ -62,7 +64,7 @@ class LegacyProviderConfigurationPromotionService
             return [
                 'connection' => $source->fresh(['parentBusiness:id,name,slug', 'providerAdapter:id,name,slug,adapter_key,capabilities,settings,status', 'providerConnection:id,provider_adapter_id,name,slug,adapter,capabilities,base_url,settings,status']),
                 'strategy' => $strategy,
-                'adapter_created' => $adapter !== null,
+                'adapter_created' => $adapterCreated,
             ];
         });
     }
@@ -102,12 +104,18 @@ class LegacyProviderConfigurationPromotionService
         ]);
     }
 
-    private function createAdapter(ProviderConnection $target, array $settings): ProviderAdapter
+    private function resolveAdapter(ProviderConnection $target, array $settings): array
     {
-        $name = $target->name.' Adapter';
         $generic = $this->genericSettings($settings);
+        $existing = ProviderAdapter::query()->where('status', 'active')->get()
+            ->first(fn (ProviderAdapter $adapter) => $this->canonical($this->genericSettings($adapter->settings ?? [])) === $this->canonical($generic));
 
-        return ProviderAdapter::create([
+        if ($existing) {
+            return [$existing, false];
+        }
+
+        $name = $target->name.' Adapter';
+        $adapter = ProviderAdapter::create([
             'name' => $name,
             'slug' => $this->uniqueAdapterSlug($name),
             'adapter_key' => $this->uniqueAdapterKey($name),
@@ -116,6 +124,8 @@ class LegacyProviderConfigurationPromotionService
             'version' => 1,
             'status' => 'active',
         ]);
+
+        return [$adapter, true];
     }
 
     private function technicalSettings(array $settings): array
@@ -134,10 +144,24 @@ class LegacyProviderConfigurationPromotionService
 
     private function canonical(?array $value): string
     {
-        $value ??= [];
-        ksort($value);
+        $value = $this->sortRecursive($value ?? []);
 
         return json_encode($value);
+    }
+
+    private function sortRecursive(array $value): array
+    {
+        if (! array_is_list($value)) {
+            ksort($value);
+        }
+
+        foreach ($value as &$item) {
+            if (is_array($item)) {
+                $item = $this->sortRecursive($item);
+            }
+        }
+
+        return $value;
     }
 
     private function snapshot(?ProviderConnection $connection): ?array

@@ -39,6 +39,11 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        if ($request->is('/')
+            && strtolower($request->getHost()) === strtolower((string) config('resellgrid.marketing_host'))) {
+            return parent::share($request);
+        }
+
         // return [
         //     ...parent::share($request),
         //     //

@@ -480,7 +480,18 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
                 return view('auth.delete_account');
             })->name('account.deactivate');
 
-            Route::get('/', function () {
+            Route::get('/', function (\Illuminate\Http\Request $request) {
+                if (strtolower($request->getHost()) === strtolower((string) config('resellgrid.marketing_host'))) {
+                    $whatsappNumber = preg_replace('/\D+/', '', (string) config('resellgrid.whatsapp.number'));
+                    $whatsappMessage = (string) config('resellgrid.whatsapp.message');
+
+                    return view('resellgrid.landing', [
+                        'whatsappUrl' => $whatsappNumber !== ''
+                            ? 'https://wa.me/'.$whatsappNumber.'?text='.rawurlencode($whatsappMessage)
+                            : '#support',
+                        'whatsappConfigured' => $whatsappNumber !== '',
+                    ]);
+                }
           
                 //get template name:
                 $data = [];

@@ -21,6 +21,11 @@ class SetAffiliate
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('/')
+            && strtolower($request->getHost()) === strtolower((string) config('resellgrid.marketing_host'))) {
+            return $next($request);
+        }
+
         // CURRENT DOMAIN
         $currentDomain = $request->getHost();
         $currentDomain = preg_replace('/^www\./', '', strtolower($currentDomain));

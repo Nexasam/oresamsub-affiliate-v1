@@ -5,7 +5,9 @@ namespace App\Services\Funding;
 use App\Models\AffiliateFundingProviderConfig;
 use App\Models\User;
 use App\Models\UserVirtualAccount;
+use App\Support\PhoneNumberNormalizer;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class MultiParentVirtualAccountService
@@ -103,12 +105,23 @@ class MultiParentVirtualAccountService
             ->withHeaders(['x-api-key' => $this->credential($resolved, 'api_public_key')])
             ->post(data_get($resolved, 'provider.settings.virtual_account_url', 'https://securewaveng.com/api/virtual_accounts/generate'), [
                 'email' => $user->email, 'first_name' => $user->first_name, 'last_name' => $user->last_name,
-                'phone_number' => $user->phone_number, 'bank_code' => $bankCodes,
+                'phone_number' => PhoneNumberNormalizer::forProvider($user->phone_number), 'bank_code' => $bankCodes,
                 'business_id' => $this->credential($resolved, 'business_id', ['contract_code']), 'account_type' => 'static',
                 'id_type' => 'bvn', 'id_number' => $resolved['credentials']['biz_bvn'] ?? $user->bvn,
             ]);
         if ($response->status() === 401) {
             throw new \RuntimeException('SecureWaveNG authentication failed. Confirm the affiliate API public key, API secret key and business ID belong to the same active SecureWaveNG account.');
+        }
+        if ($response->status() === 422) {
+            Log::warning('funding.securewaveng.validation_failed', [
+                'affiliate_id' => $user->affiliate_id,
+                'user_id' => $user->id,
+                'http_status' => 422,
+                'error_fields' => array_keys((array) $response->json('errors', [])),
+            ]);
+            throw new \RuntimeException(
+                'We could not generate your virtual account. Please confirm your profile phone number or contact support.'
+            );
         }
         $response->throw();
         if ($response->json('status') !== true) {

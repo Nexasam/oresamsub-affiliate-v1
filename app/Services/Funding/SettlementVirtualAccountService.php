@@ -5,6 +5,7 @@ namespace App\Services\Funding;
 use App\Models\Affiliate;
 use App\Models\AffiliateSettlementVirtualAccount;
 use App\Models\ParentFundingProvider;
+use App\Support\PhoneNumberNormalizer;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
@@ -43,7 +44,7 @@ class SettlementVirtualAccountService
             ->withHeaders(['x-api-key' => $this->credential($credentials, 'api_public_key')])
             ->post(data_get($provider, 'fundingProvider.settings.virtual_account_url', 'https://securewaveng.com/api/virtual_accounts/generate'), [
                 'email' => $affiliate->contact_email, 'first_name' => $affiliate->name, 'last_name' => 'Business',
-                'phone_number' => $affiliate->contact_phone, 'bank_code' => $bankCodes,
+                'phone_number' => PhoneNumberNormalizer::forProvider($affiliate->contact_phone), 'bank_code' => $bankCodes,
                 'business_id' => $this->credential($credentials, 'business_id', ['contract_code']),
                 'account_type' => 'static', 'id_type' => 'bvn', 'id_number' => $credentials['biz_bvn'] ?? null,
                 'metadata' => ['wallet_purpose' => 'settlement', 'affiliate_id' => $affiliate->id],

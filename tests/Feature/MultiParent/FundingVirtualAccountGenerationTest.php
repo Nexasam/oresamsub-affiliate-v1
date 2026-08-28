@@ -58,6 +58,36 @@ it('generates and stores securewaveng virtual accounts once', function () {
     Http::assertSentCount(1);
 });
 
+it('normalizes a customer phone number before sending it to securewaveng', function () {
+    $fixture = virtualAccountFixture('securewaveng');
+    $fixture['user']->update(['phone_number' => '+234 (816) 850-9044']);
+    Http::fake(['securewaveng.com/*' => Http::response(['status' => true, 'data' => [[
+        'status' => 1, 'account_reference' => 'SW-NORMALIZED-PHONE', 'account_bank' => 'Wema',
+        'bank_code' => 'WEMA', 'account_name' => 'Test User', 'account_number' => '9876543212',
+    ]]], 200)]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    expect(app(MultiParentVirtualAccountService::class)->generateForUser($fixture['user'])['status'])->toBe(1);
+
+    Http::assertSent(fn ($request) => $request['phone_number'] === '2348168509044');
+});
+
+it('does not expose securewaveng validation details to the customer', function () {
+    $fixture = virtualAccountFixture('securewaveng');
+    Http::fake(['securewaveng.com/*' => Http::response([
+        'message' => 'The phone number field must be between 10 and 14 digits.',
+        'errors' => ['phone_number' => ['The phone number field must be between 10 and 14 digits.']],
+    ], 422)]);
+    config(['parent_businesses.features.multi_parent_funding' => true]);
+
+    $result = app(MultiParentVirtualAccountService::class)->generateForUser($fixture['user']);
+
+    expect($result['status'])->toBe(-1)
+        ->and($result['message'])->toContain('Please confirm your profile phone number')
+        ->and($result['message'])->not->toContain('between 10 and 14 digits')
+        ->and($result['message'])->not->toContain('HTTP request returned');
+});
+
 it('lets a customer generate only their own virtual account', function () {
     $fixture = virtualAccountFixture('securewaveng');
     $fixture['user']->forceFill(['email_verified_at' => now()])->save();

@@ -33,6 +33,10 @@ class ResellGridLandingPageTest extends TestCase
             ->assertSee('Built for affiliates')
             ->assertSee('One operational system')
             ->assertSee('Talk to us on WhatsApp')
+            ->assertSee('data-network-map', false)
+            ->assertSee('data-settlement-flow', false)
+            ->assertSee('data-scroll-progress', false)
+            ->assertSee('data-parallax', false)
             ->assertSee('/assets/resellgrid/landing.css', false)
             ->assertSee('/assets/resellgrid/landing.js', false);
     }

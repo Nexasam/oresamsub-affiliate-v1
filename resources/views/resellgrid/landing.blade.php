@@ -14,6 +14,7 @@
 </head>
 <body data-resellgrid-landing>
 <a class="skip-link" href="#main">Skip to content</a>
+<div class="scroll-progress" data-scroll-progress aria-hidden="true"></div>
 
 <header class="site-header" data-header>
     <div class="shell nav-wrap">
@@ -52,7 +53,7 @@
                 </div>
             </div>
 
-            <div class="hero-product" data-reveal>
+            <div class="hero-product" data-reveal data-parallax>
                 <div class="workspace-frame parent-frame">
                     <div class="frame-top"><span class="mini-mark"></span><b>Parent workspace</b><small>Live operations</small></div>
                     <div class="workspace-content">
@@ -81,15 +82,7 @@
                 <h2>Your working business becomes the engine for many.</h2>
                 <p>ResellGrid turns the systems you already rely on into a controlled distribution network—without forcing every affiliate to rebuild provider integrations from scratch.</p>
             </div>
-            <div class="growth-flow" aria-label="Provider connections flow through a parent business to affiliate websites and their customers">
-                <div><small>01</small><strong>Provider connections</strong><span>Approved APIs and reusable adapters</span></div>
-                <i aria-hidden="true">→</i>
-                <div class="flow-focus"><small>02</small><strong>Parent business</strong><span>Plans, prices, routes and settlement</span></div>
-                <i aria-hidden="true">→</i>
-                <div><small>03</small><strong>Affiliate websites</strong><span>Independently branded businesses</span></div>
-                <i aria-hidden="true">→</i>
-                <div><small>04</small><strong>Customers</strong><span>Fund, purchase and track services</span></div>
-            </div>
+            @include('resellgrid.partials.network-map')
         </div>
     </section>
 
@@ -164,6 +157,7 @@
                 <article><span>◎</span><h3>Operational safeguards</h3><p>Redacted diagnostics, reconciliation, health alerts, approvals, audit trails and controlled rollout.</p></article>
                 <article><span>↳</span><h3>Strict ownership</h3><p>Parent-scoped plans, funding, reports and administration with the correct control at every level.</p></article>
             </div>
+            @include('resellgrid.partials.settlement-flow')
         </div>
     </section>
 

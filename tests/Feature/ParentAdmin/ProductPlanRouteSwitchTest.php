@@ -75,17 +75,26 @@ it('bulk switches selected plans atomically and reuses remembered provider ids',
         'priority' => 2,
         'active' => false,
     ]);
+    $thirdShared = ProviderConnection::create(['name' => 'Bilink', 'slug' => 'route-bilink-bulk', 'adapter' => 'http', 'capabilities' => ['services' => ['data']], 'status' => 'active']);
+    $third = ParentProviderConnection::create(['parent_business_id' => $f['parent']->id, 'provider_connection_id' => $thirdShared->id, 'name' => 'Bilink', 'status' => 'active', 'approval_status' => 'approved']);
+    $thirdRoute = $secondPlan->providerRoutes()->create([
+        'parent_business_id' => $f['parent']->id,
+        'parent_provider_connection_id' => $third->id,
+        'provider_plan_id' => 'BILINK-390',
+        'priority' => 3,
+        'active' => false,
+    ]);
 
     $this->actingAs($f['admin'], 'parent_admin')->patch(route('parent-admin.product-plans.routes.bulk-switch'), [
-        'parent_provider_connection_id' => $f['second']->id,
         'plans' => [
-            ['product_plan_id' => $f['plan']->id, 'provider_plan_id' => '389'],
-            ['product_plan_id' => $secondPlan->id, 'provider_plan_id' => ''],
+            ['product_plan_id' => $f['plan']->id, 'parent_provider_connection_id' => $f['second']->id, 'provider_plan_id' => '389'],
+            ['product_plan_id' => $secondPlan->id, 'parent_provider_connection_id' => $third->id, 'provider_plan_id' => ''],
         ],
     ])->assertRedirect(route('parent-admin.product-plans.index'));
 
     expect($f['secondRoute']->fresh()->priority)->toBe(1)
-        ->and($remembered->fresh()->priority)->toBe(1)
+        ->and($thirdRoute->fresh()->priority)->toBe(1)
+        ->and($remembered->fresh()->priority)->toBeGreaterThan(1)
         ->and(ProductPlanRouteSwitch::query()->count())->toBe(2);
 });
 
@@ -100,10 +109,9 @@ it('rejects the whole bulk connection switch when one plan mapping is missing', 
 
     $this->actingAs($f['admin'], 'parent_admin')->from(route('parent-admin.product-plans.index'))
         ->patch(route('parent-admin.product-plans.routes.bulk-switch'), [
-            'parent_provider_connection_id' => $f['second']->id,
             'plans' => [
-                ['product_plan_id' => $f['plan']->id, 'provider_plan_id' => '389'],
-                ['product_plan_id' => $unmappedPlan->id, 'provider_plan_id' => ''],
+                ['product_plan_id' => $f['plan']->id, 'parent_provider_connection_id' => $f['second']->id, 'provider_plan_id' => '389'],
+                ['product_plan_id' => $unmappedPlan->id, 'parent_provider_connection_id' => $f['second']->id, 'provider_plan_id' => ''],
             ],
         ])->assertRedirect(route('parent-admin.product-plans.index'))
         ->assertSessionHasErrors('plans.1.provider_plan_id');

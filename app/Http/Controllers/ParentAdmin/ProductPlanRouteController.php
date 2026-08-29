@@ -32,23 +32,28 @@ class ProductPlanRouteController extends Controller
     public function bulkUpdate(BulkSwitchProductPlanRoutesRequest $request, ProductPlanRouteSwitchService $switcher): RedirectResponse
     {
         $parent = $request->user('parent_admin')->parentBusiness;
-        $connection = ParentProviderConnection::query()
-            ->where('parent_business_id', $parent->id)
-            ->findOrFail($request->integer('parent_provider_connection_id'));
         $submitted = collect($request->validated('plans'));
         $plans = ProductPlan::query()
             ->where('parent_business_id', $parent->id)
             ->whereIn('id', $submitted->pluck('product_plan_id'))
             ->with('providerRoutes')
             ->get()->keyBy('id');
+        $connections = ParentProviderConnection::query()
+            ->where('parent_business_id', $parent->id)
+            ->whereIn('id', $submitted->pluck('parent_provider_connection_id'))
+            ->get()->keyBy('id');
 
         if ($plans->count() !== $submitted->count()) {
             throw ValidationException::withMessages(['plans' => 'One or more selected plans do not belong to this parent.']);
         }
+        if ($connections->count() !== $submitted->pluck('parent_provider_connection_id')->unique()->count()) {
+            throw ValidationException::withMessages(['plans' => 'One or more selected connections do not belong to this parent.']);
+        }
 
-        DB::transaction(function () use ($submitted, $plans, $connection, $parent, $switcher): void {
+        DB::transaction(function () use ($submitted, $plans, $connections, $parent, $switcher): void {
             foreach ($submitted->values() as $index => $row) {
                 $plan = $plans->get((int) $row['product_plan_id']);
+                $connection = $connections->get((int) $row['parent_provider_connection_id']);
                 $providerPlanId = trim((string) ($row['provider_plan_id'] ?? ''));
                 if ($providerPlanId === '') {
                     $providerPlanId = (string) $plan->providerRoutes

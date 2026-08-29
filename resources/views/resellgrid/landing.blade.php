@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/resellgrid/landing.css">
+    <link rel="stylesheet" href="/assets/resellgrid/landing.css?v={{ filemtime(public_path('assets/resellgrid/landing.css')) }}">
 </head>
 <body data-resellgrid-landing>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -204,6 +204,6 @@
     <div class="shell footer-layout"><a class="brand" href="#top"><img src="/assets/resellgrid/resellgrid-mark.svg" alt="" width="30" height="30"><span>ResellGrid</span></a><p>Infrastructure for scalable VTU distribution.</p><span>© {{ date('Y') }} ResellGrid</span></div>
 </footer>
 
-<script src="/assets/resellgrid/landing.js" defer></script>
+<script src="/assets/resellgrid/landing.js?v={{ filemtime(public_path('assets/resellgrid/landing.js')) }}" defer></script>
 </body>
 </html>

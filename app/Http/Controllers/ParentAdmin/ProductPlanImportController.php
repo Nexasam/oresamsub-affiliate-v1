@@ -7,6 +7,7 @@ use App\Models\ParentBusiness;
 use App\Models\ProductPlan;
 use App\Services\ParentAdmin\ParentCatalogService;
 use App\Services\ParentAdmin\ProductPlanWorkbookService;
+use App\Services\ParentAdmin\ProductPlanRouteSwitchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -78,20 +79,20 @@ class ProductPlanImportController extends Controller
         return view('parent-admin.product-plans.import-preview', compact('rows', 'errors', 'token'));
     }
 
-    public function confirm(Request $request, ParentCatalogService $catalog)
+    public function confirm(Request $request, ParentCatalogService $catalog, ProductPlanRouteSwitchService $routeSwitcher)
     {
         $request->validate(['token' => ['required', 'uuid']]);
         $payload = $request->session()->pull('plan_import.'.$request->token);
         $parent = $request->user('parent_admin')->parentBusiness;
         abort_unless($payload && (int) $payload['parent'] === (int) $parent->id && $payload['expires'] >= time(), 410, 'Import preview expired.');
 
-        $counts = DB::transaction(function () use ($payload, $parent, $catalog) {
+        $counts = DB::transaction(function () use ($payload, $parent, $catalog, $routeSwitcher) {
             $counts = ['new' => 0, 'update' => 0];
             foreach ($payload['rows'] as $row) {
                 $attributes = $row['attributes'];
                 if ($row['classification'] === 'update') {
                     $plan = ProductPlan::query()->where('parent_business_id', $parent->id)->findOrFail($row['existing_plan_id']);
-                    $catalog->updateConfiguration($parent, $plan, $attributes);
+                    $catalog->updateConfiguration($parent, $plan, $attributes, $routeSwitcher);
                     $counts['update']++;
                 } else {
                     $catalog->createPlan($parent, $attributes);

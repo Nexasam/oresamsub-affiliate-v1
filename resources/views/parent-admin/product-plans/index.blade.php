@@ -4,7 +4,54 @@
 @section('heading', 'Manage product plans')
 
 @section('content')
-<div class="space-y-5" x-data="{ mode: 'single', drawerOpen: false, selectedPlan: null, selectedIds: [], selectionScope: 'selected', openDrawer(plan) { this.selectedPlan = JSON.parse(JSON.stringify(plan)); this.drawerOpen = true }, closeDrawer() { this.drawerOpen = false; this.selectedPlan = null } }" @keydown.escape.window="closeDrawer()">
+@php
+    $workspacePlans = $plans->getCollection()->mapWithKeys(function ($plan) use ($levels) {
+        $primaryRoute = $plan->providerRoutes->firstWhere('priority', 1);
+        $knownRoutes = $plan->providerRoutes->map(fn ($route) => [
+            'connection_id' => (string) $route->parent_provider_connection_id,
+            'connection_name' => $route->parentProviderConnection?->name ?: 'Unavailable connection',
+            'provider_plan_id' => $route->provider_plan_id,
+            'current' => (int) $route->priority === 1,
+            'last_used_at' => optional($route->updated_at)->toIso8601String(),
+        ])->values();
+        $history = $plan->routeSwitches->map(fn ($event) => [
+            'from' => $event->fromConnection?->name ?: 'Initial route',
+            'to' => $event->toConnection?->name ?: 'Unavailable connection',
+            'provider_plan_id' => $event->provider_plan_id,
+            'admin' => $event->parentAdmin?->name ?: 'System',
+            'created_at' => optional($event->created_at)->toIso8601String(),
+            'created_at_label' => optional($event->created_at)->format('d M Y, H:i'),
+        ])->values();
+
+        return [(string) $plan->id => [
+            'id' => $plan->id,
+            'product_plan_name' => $plan->product_plan_name,
+            'category_name' => $plan->product_plan_category?->product_plan_category_name ?: '—',
+            'product_plan_category_id' => $plan->product_plan_category_id,
+            'api_id' => $plan->api_id,
+            'cost_price' => $plan->cost_price,
+            'admin_cost_price' => $plan->admin_cost_price,
+            'data_size_in_mb' => $plan->data_size_in_mb,
+            'validity_in_days' => $plan->validity_in_days,
+            'profit_category' => $plan->profit_category ?: 'flat',
+            'visibility' => (bool) $plan->visibility,
+            'affiliate_visibility' => (bool) $plan->affiliate_visibility,
+            'public_visibility' => (bool) $plan->public_visibility,
+            'commission_feature' => (int) $plan->commission_feature,
+            'upline_commission_option' => $plan->upline_commission_option ?: 'flat',
+            'upline_flat_commission' => $plan->upline_flat_commission ?: 0,
+            'upline_percentage_commission' => $plan->upline_percentage_commission ?: 0,
+            'upline_commission_cap' => $plan->upline_commission_cap ?: 1000,
+            'route' => ['parent_provider_connection_id' => $primaryRoute?->parent_provider_connection_id, 'provider_plan_id' => $primaryRoute?->provider_plan_id],
+            'known_routes' => $knownRoutes,
+            'connection_history' => $history,
+            'prices' => $levels->map(fn($level) => ['parent_reseller_level_id' => $level->id, 'name' => $level->name, 'selling_price' => $plan->parentPrices->firstWhere('parent_reseller_level_id', $level->id)?->selling_price, 'max_profit' => $plan->parentPrices->firstWhere('parent_reseller_level_id', $level->id)?->max_profit])->values(),
+            'configuration_url' => route('parent-admin.product-plans.configuration.update', $plan),
+            'edit_url' => route('parent-admin.product-plans.edit', $plan),
+        ]];
+    });
+@endphp
+<div class="space-y-5" x-data="productPlanWorkspace" @keydown.escape.window="closeOverlays()">
     <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">Only plans owned by <strong>{{ auth('parent_admin')->user()->parentBusiness->name }}</strong> appear here. Global categories are shared; provider routing and reseller prices belong to this parent.</div>
     @if(session('success'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</div>@endif
     @if($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Please correct the following:</p><ul class="mt-2 list-disc space-y-1 pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
@@ -67,7 +114,7 @@
             </form>
         </div>
 
-        <form method="POST" action="{{ route('parent-admin.product-plans.bulk-update') }}" @submit="if (!confirm(selectionScope === 'all' ? `Apply this action to all {{ $plans->total() }} matching plans?` : `Apply this action to ${selectedIds.length} selected plans?`)) $event.preventDefault()">@csrf @method('PATCH')
+        <form method="POST" action="{{ route('parent-admin.product-plans.bulk-update') }}" @submit="handleBulkSubmit($event)">@csrf @method('PATCH')
             <input type="hidden" name="selection_scope" :value="selectionScope">
             <input type="hidden" name="search" value="{{ request('search') }}">
             <input type="hidden" name="category_id" value="{{ request('category_id') }}">
@@ -77,7 +124,7 @@
                 <button type="button" class="text-xs font-semibold text-slate-500" @click="selectionScope='selected'; selectedIds = []">Clear selection</button>
                 <span class="text-xs text-slate-400" x-text="selectionScope === 'all' ? 'All {{ $plans->total() }} matching plans selected' : `${selectedIds.length} selected`"></span>
                 <div class="ml-auto flex flex-wrap gap-2">
-                    <select name="action" required class="rounded-lg border-slate-200 py-1.5 text-xs"><option value="">Bulk action</option><option value="activate">Activate</option><option value="deactivate">Deactivate</option><option value="show_affiliates">Show for affiliates</option><option value="hide_affiliates">Hide from affiliates</option><option value="show_public">Show publicly</option><option value="hide_public">Hide publicly</option></select>
+                    <select name="action" x-model="bulkAction" required class="rounded-lg border-slate-200 py-1.5 text-xs"><option value="">Bulk action</option><option value="switch_connection">Switch connection</option><option value="activate">Activate</option><option value="deactivate">Deactivate</option><option value="show_affiliates">Show for affiliates</option><option value="hide_affiliates">Hide from affiliates</option><option value="show_public">Show publicly</option><option value="hide_public">Hide publicly</option></select>
                     <button :disabled="selectionScope === 'selected' && selectedIds.length === 0" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Apply</button>
                 </div>
             </div>
@@ -86,32 +133,7 @@
                     <thead class="bg-white text-[10px] uppercase tracking-wider text-slate-400"><tr><th class="w-10 px-3 py-2"></th><th class="px-3 py-2">Plan</th><th class="px-3 py-2">Category</th><th class="px-3 py-2">Cost</th><th class="px-3 py-2">Route</th><th class="px-3 py-2">Status</th><th class="w-20 px-3 py-2"></th></tr></thead>
                     <tbody class="divide-y divide-slate-100">
                     @forelse($plans as $plan)
-                        @php
-                            $primaryRoute = $plan->providerRoutes->firstWhere('priority', 1);
-                            $drawerPlan = [
-                                'id' => $plan->id,
-                                'product_plan_name' => $plan->product_plan_name,
-                                'product_plan_category_id' => $plan->product_plan_category_id,
-                                'api_id' => $plan->api_id,
-                                'cost_price' => $plan->cost_price,
-                                'admin_cost_price' => $plan->admin_cost_price,
-                                'data_size_in_mb' => $plan->data_size_in_mb,
-                                'validity_in_days' => $plan->validity_in_days,
-                                'profit_category' => $plan->profit_category ?: 'flat',
-                                'visibility' => (bool) $plan->visibility,
-                                'affiliate_visibility' => (bool) $plan->affiliate_visibility,
-                                'public_visibility' => (bool) $plan->public_visibility,
-                                'commission_feature' => (int) $plan->commission_feature,
-                                'upline_commission_option' => $plan->upline_commission_option ?: 'flat',
-                                'upline_flat_commission' => $plan->upline_flat_commission ?: 0,
-                                'upline_percentage_commission' => $plan->upline_percentage_commission ?: 0,
-                                'upline_commission_cap' => $plan->upline_commission_cap ?: 1000,
-                                'route' => ['parent_provider_connection_id' => $primaryRoute?->parent_provider_connection_id, 'provider_plan_id' => $primaryRoute?->provider_plan_id],
-                                'prices' => $levels->map(fn($level) => ['parent_reseller_level_id' => $level->id, 'name' => $level->name, 'selling_price' => $plan->parentPrices->firstWhere('parent_reseller_level_id', $level->id)?->selling_price, 'max_profit' => $plan->parentPrices->firstWhere('parent_reseller_level_id', $level->id)?->max_profit])->values(),
-                                'configuration_url' => route('parent-admin.product-plans.configuration.update', $plan),
-                                'edit_url' => route('parent-admin.product-plans.edit', $plan),
-                            ];
-                        @endphp
+                        @php $primaryRoute = $plan->providerRoutes->firstWhere('priority', 1); @endphp
                         <tr class="hover:bg-slate-50/80">
                             <td class="px-3 py-2"><input type="checkbox" name="plan_ids[]" value="{{ $plan->id }}" x-model="selectedIds" @change="selectionScope='selected'" class="rounded border-slate-300"></td>
                             <td class="max-w-64 px-3 py-2"><p class="truncate text-xs font-semibold text-slate-900" title="{{ $plan->product_plan_name }}">{{ $plan->product_plan_name }}</p><p class="truncate text-[10px] text-slate-400">{{ $plan->api_id ?: 'No internal reference' }}</p></td>
@@ -119,7 +141,7 @@
                             <td class="whitespace-nowrap px-3 py-2 text-xs font-semibold">₦{{ number_format((float)$plan->cost_price, 2) }}</td>
                             <td class="max-w-44 px-3 py-2"><p class="truncate text-xs text-slate-600" title="{{ $primaryRoute?->provider_plan_id }}">{{ $primaryRoute?->provider_plan_id ?: 'Draft — no route' }}</p><p class="truncate text-[10px] text-slate-400">{{ $primaryRoute?->parentProviderConnection?->name }}</p></td>
                             <td class="px-3 py-2"><div class="flex flex-wrap gap-1">@foreach(['visibility'=>'Active','affiliate_visibility'=>'Affiliates','public_visibility'=>'Public'] as $field=>$label)<span class="rounded-full px-2 py-0.5 text-[9px] font-bold {{ $plan->{$field} ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400' }}">{{ $label }}</span>@endforeach</div></td>
-                            <td class="px-3 py-2 text-right"><button type="button" data-testid="open-plan-drawer-{{ $plan->id }}" data-plan="{{ json_encode($drawerPlan) }}" data-update-url="{{ route('parent-admin.product-plans.configuration.update', $plan) }}" data-edit-url="{{ route('parent-admin.product-plans.edit', $plan) }}" @click="openDrawer(JSON.parse($el.dataset.plan))" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Edit</button></td>
+                            <td class="px-3 py-2 text-right"><button type="button" data-testid="open-plan-drawer-{{ $plan->id }}" @click="openDrawer('{{ $plan->id }}')" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Edit</button></td>
                         </tr>
                     @empty<tr><td colspan="7" class="p-8 text-center text-slate-500">No product plans found.</td></tr>@endforelse
                     </tbody>
@@ -147,6 +169,7 @@
                     <label class="text-xs">Profit mode<select name="profit_category" x-model="selectedPlan.profit_category" class="mt-1 w-full rounded-lg border-slate-200 text-sm"><option value="flat">Flat</option><option value="percent">Percentage</option></select></label>
                 </div></section>
                 <section class="rounded-xl border bg-white p-4"><h3 class="text-sm font-semibold">Primary provider route</h3><div class="mt-3 grid gap-3 sm:grid-cols-2"><label class="text-xs">Connection<select name="route[parent_provider_connection_id]" x-model="selectedPlan.route.parent_provider_connection_id" class="mt-1 w-full rounded-lg border-slate-200 text-sm"><option value="">No route</option>@foreach($connections as $connection)<option value="{{ $connection->id }}">{{ $connection->name }}</option>@endforeach</select></label><label class="text-xs">Provider external plan ID<input name="route[provider_plan_id]" x-model="selectedPlan.route.provider_plan_id" class="mt-1 w-full rounded-lg border-slate-200 text-sm"></label></div></section>
+                <section class="rounded-xl border bg-white p-4"><div class="flex items-center justify-between"><div><h3 class="text-sm font-semibold">Connection history</h3><p class="mt-1 text-[11px] text-slate-500">Previous routes remain remembered for faster switching.</p></div></div><div class="mt-3 space-y-2"><template x-if="(selectedPlan?.connection_history || []).length === 0"><p class="rounded-lg bg-slate-50 p-3 text-xs text-slate-500">No recorded switches yet. Existing remembered mappings appear below.</p></template><template x-for="event in selectedPlan?.connection_history || []" :key="`${event.created_at}-${event.to}`"><div class="rounded-lg border border-slate-100 p-3 text-xs"><div class="flex justify-between gap-3"><strong x-text="`${event.from} → ${event.to}`"></strong><span class="text-slate-400" x-text="event.created_at_label"></span></div><p class="mt-1 text-slate-500"><span x-text="event.provider_plan_id"></span> · <span x-text="event.admin"></span></p></div></template><div class="border-t pt-2"><template x-for="route in selectedPlan?.known_routes || []" :key="route.connection_id"><div class="flex items-center justify-between gap-3 py-1.5 text-xs"><span><strong x-text="route.connection_name"></strong> <span class="text-slate-400" x-text="route.provider_plan_id"></span></span><span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="route.current ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'" x-text="route.current ? 'Current' : 'Remembered'"></span></div></template></div></div></section>
                 <section class="rounded-xl border bg-white p-4"><h3 class="text-sm font-semibold">Reseller prices</h3><div class="mt-3 grid gap-3 sm:grid-cols-2"><template x-for="(price,index) in selectedPlan?.prices || []" :key="price.parent_reseller_level_id"><div class="rounded-lg bg-slate-50 p-3"><strong class="text-xs" x-text="price.name"></strong><input type="hidden" :name="`prices[${index}][parent_reseller_level_id]`" :value="price.parent_reseller_level_id"><div class="mt-2 grid grid-cols-2 gap-2"><label class="text-[10px]">Selling price<input :name="`prices[${index}][selling_price]`" x-model="price.selling_price" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label><label class="text-[10px]">Maximum profit<input :name="`prices[${index}][max_profit]`" x-model="price.max_profit" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label></div></div></template></div></section>
                 <input type="hidden" name="commission_feature" :value="selectedPlan?.commission_feature || 0"><input type="hidden" name="upline_commission_option" :value="selectedPlan?.upline_commission_option || 'flat'"><input type="hidden" name="upline_flat_commission" :value="selectedPlan?.upline_flat_commission || 0"><input type="hidden" name="upline_percentage_commission" :value="selectedPlan?.upline_percentage_commission || 0"><input type="hidden" name="upline_commission_cap" :value="selectedPlan?.upline_commission_cap || 1000">
                 <section class="rounded-xl border bg-white p-4"><div class="flex flex-wrap gap-4 text-xs">@foreach(['visibility'=>'Active','affiliate_visibility'=>'Affiliates','public_visibility'=>'Public'] as $field=>$label)<input type="hidden" name="{{ $field }}" value="0"><label><input name="{{ $field }}" value="1" type="checkbox" x-model="selectedPlan.{{ $field }}"> {{ $label }}</label>@endforeach</div></section>
@@ -154,9 +177,45 @@
             <div class="flex items-center justify-between gap-3 border-t bg-white p-4"><a :href="selectedPlan?.edit_url" class="text-xs font-semibold text-slate-500">Open fallback page</a><button class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white">Save full configuration</button></div>
         </form>
     </aside>
+
+    <div x-cloak x-show="switchModalOpen" class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 p-4" @click.self="closeSwitchModal()">
+        <section class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Switch selected product plan connections">
+            <div class="flex items-start justify-between border-b p-5"><div><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bulk connection switch</p><h2 class="mt-1 text-lg font-semibold">Review selected plans</h2><p class="mt-1 text-sm text-slate-500">Future purchases will use the new route. Prices and affiliate settings remain unchanged.</p></div><button type="button" @click="closeSwitchModal()" class="rounded-lg border px-3 py-2 text-sm">Close</button></div>
+            <form method="POST" action="{{ route('parent-admin.product-plans.routes.bulk-switch') }}" class="flex min-h-0 flex-1 flex-col" @submit="if (!confirm(`Switch ${switchRows.length} selected plans to this connection?`)) $event.preventDefault()">@csrf @method('PATCH')
+                <div class="flex-1 overflow-y-auto p-5">
+                    <label class="block text-sm font-semibold">New approved connection<select name="parent_provider_connection_id" x-model="targetConnectionId" @change="prefillProviderIds()" required class="mt-2 w-full rounded-xl border-slate-200"><option value="">Choose connection</option>@foreach($connections as $connection)<option value="{{ $connection->id }}">{{ $connection->name }} · {{ $connection->providerConnection?->name }}</option>@endforeach</select></label>
+                    <div class="mt-5 overflow-x-auto rounded-xl border"><table class="w-full min-w-[650px] text-left text-sm"><thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="p-3">Plan</th><th class="p-3">Current connection</th><th class="p-3">New provider plan ID</th><th class="p-3">Status</th></tr></thead><tbody class="divide-y"><template x-for="(row,index) in switchRows" :key="row.id"><tr><td class="p-3"><input type="hidden" :name="`plans[${index}][product_plan_id]`" :value="row.id"><strong class="block text-xs" x-text="row.product_plan_name"></strong><span class="text-[11px] text-slate-400" x-text="row.category_name"></span></td><td class="p-3 text-xs" x-text="row.current_connection || 'No route'"></td><td class="p-3"><input :name="`plans[${index}][provider_plan_id]`" x-model="row.provider_plan_id" required class="w-full rounded-lg border-slate-200 text-sm" placeholder="Required provider ID"></td><td class="p-3"><span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="row.provider_plan_id ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'" x-text="row.provider_plan_id ? (row.remembered ? 'Remembered' : 'Ready') : 'ID required'"></span></td></tr></template></tbody></table></div>
+                </div>
+                <div class="flex items-center justify-between border-t bg-slate-50 p-4"><p class="text-xs text-slate-500" x-text="`${switchRows.length} plans selected`"></p><button :disabled="!targetConnectionId || switchRows.some(row => !row.provider_plan_id)" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40">Confirm connection switch</button></div>
+            </form>
+        </section>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
-<script>document.addEventListener('alpine:init',()=>Alpine.data('bulkProductPlans',(categories,connections,levels)=>({categories,connections,levels,rows:[{id:crypto.randomUUID(),visibility:false,affiliate_visibility:false,public_visibility:false}]})))</script>
+<script>
+document.addEventListener('alpine:init',()=>{
+    Alpine.data('productPlanWorkspace',()=>({
+        mode:'single', drawerOpen:false, selectedPlan:null, selectedIds:[], selectionScope:'selected', bulkAction:'', switchModalOpen:false, switchRows:[], targetConnectionId:'',
+        plans:@json($workspacePlans),
+        openDrawer(id){ this.selectedPlan=JSON.parse(JSON.stringify(this.plans[String(id)])); this.drawerOpen=true },
+        closeDrawer(){ this.drawerOpen=false; this.selectedPlan=null },
+        closeSwitchModal(){ this.switchModalOpen=false; this.switchRows=[]; this.targetConnectionId='' },
+        closeOverlays(){ this.closeDrawer(); this.closeSwitchModal() },
+        handleBulkSubmit(event){
+            if(this.bulkAction==='switch_connection'){
+                event.preventDefault();
+                if(this.selectionScope==='all'){ alert('For connection switching, select the plans explicitly so every provider plan ID can be reviewed.'); return }
+                this.switchRows=this.selectedIds.map(id=>{const plan=JSON.parse(JSON.stringify(this.plans[String(id)])); const current=plan.known_routes.find(route=>route.current); return {...plan,current_connection:current?.connection_name || '',provider_plan_id:'',remembered:false} });
+                if(!this.switchRows.length){ alert('Select at least one product plan.'); return }
+                this.switchModalOpen=true; return;
+            }
+            if(!confirm(this.selectionScope==='all' ? `Apply this action to all {{ $plans->total() }} matching plans?` : `Apply this action to ${this.selectedIds.length} selected plans?`)) event.preventDefault();
+        },
+        prefillProviderIds(){ this.switchRows=this.switchRows.map(row=>{const remembered=row.known_routes.find(route=>String(route.connection_id)===String(this.targetConnectionId)); return {...row,provider_plan_id:remembered?.provider_plan_id || '',remembered:Boolean(remembered)} }) }
+    }));
+    Alpine.data('bulkProductPlans',(categories,connections,levels)=>({categories,connections,levels,rows:[{id:crypto.randomUUID(),visibility:false,affiliate_visibility:false,public_visibility:false}]}));
+});
+</script>
 @endpush

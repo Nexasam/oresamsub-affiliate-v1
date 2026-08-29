@@ -30,6 +30,11 @@ class ProductPlan extends Model
         return $this->hasMany(ProductPlanProviderRoute::class);
     }
 
+    public function routeSwitches(): HasMany
+    {
+        return $this->hasMany(ProductPlanRouteSwitch::class);
+    }
+
     /**
      * each card belongs to a product plan
      **/

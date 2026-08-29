@@ -30,7 +30,7 @@ function catalogCategory(): ProductPlanCategory
     $product = Product::create([
         'api_id' => 'parent-catalog-product',
         'product_name' => 'Data',
-        'slug' => 'parent-catalog-data',
+        'slug' => 'data',
     ]);
 
     return ProductPlanCategory::create([
@@ -433,18 +433,12 @@ it('fully edits an owned plan route settings and reseller prices', function () {
         ->assertSee('data-testid="product-plan-drawer"', false)
         ->assertSee('data-testid="open-plan-drawer-'.$plan->id.'"', false)
         ->assertSee('Save full configuration')
-        ->assertSee(route('parent-admin.product-plans.configuration.update', $plan), false)
-        ->assertSee(route('parent-admin.product-plans.edit', $plan), false)
+        ->assertSee('Connection history')
+        ->assertSee('Switch connection')
+        ->assertDontSee('JSON.parse($el.dataset.plan)', false)
         ->assertDontSee('id="plan-'.$plan->id.'"', false);
 
-    preg_match(
-        '/data-testid="open-plan-drawer-'.$plan->id.'"[^>]*data-plan="([^"]+)"/',
-        $indexResponse->getContent(),
-        $drawerButton
-    );
-    $drawerPayload = json_decode(html_entity_decode($drawerButton[1] ?? '', ENT_QUOTES), true);
-
-    expect($drawerPayload['product_plan_name'] ?? null)->toBe("Provider's GLO 5GB");
+    $indexResponse->assertSee("Provider's GLO 5GB");
 
     $payload = comprehensivePlanPayload($category, $connection, $levels, [
         'product_plan_name' => 'Edited MTN 1GB',

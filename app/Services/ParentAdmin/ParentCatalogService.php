@@ -23,8 +23,12 @@ class ParentCatalogService
                 'product_plan_category:id,product_id,network_id,product_plan_category_name',
                 'product_plan_category.product:id,product_name',
                 'product_plan_category.network:id,network_name',
-                'providerRoutes' => fn ($query) => $query->where('priority', 1)->orderBy('id'),
+                'providerRoutes' => fn ($query) => $query->orderBy('priority')->orderBy('id'),
                 'providerRoutes.parentProviderConnection:id,name',
+                'routeSwitches' => fn ($query) => $query->latest()->limit(20),
+                'routeSwitches.fromConnection:id,name',
+                'routeSwitches.toConnection:id,name',
+                'routeSwitches.parentAdmin:id,name',
                 'parentPrices.parentResellerLevel:id,name,position',
             ]);
 
@@ -106,25 +110,27 @@ class ParentCatalogService
         return $this->hydratePlan($plan);
     }
 
-    public function updateConfiguration(ParentBusiness $parent, ProductPlan $plan, array $attributes): ProductPlan
+    public function updateConfiguration(
+        ParentBusiness $parent,
+        ProductPlan $plan,
+        array $attributes,
+        ProductPlanRouteSwitchService $routeSwitcher,
+    ): ProductPlan
     {
         abort_unless($plan->parent_business_id === $parent->id, 404);
 
-        return DB::transaction(function () use ($parent, $plan, $attributes) {
+        return DB::transaction(function () use ($parent, $plan, $attributes, $routeSwitcher) {
             $route = $attributes['route'] ?? null;
             $prices = $attributes['prices'] ?? [];
             unset($attributes['route'], $attributes['prices']);
             $plan->update($attributes);
 
             if ($route && filled($route['parent_provider_connection_id'] ?? null) && filled($route['provider_plan_id'] ?? null)) {
-                $plan->providerRoutes()->updateOrCreate(['priority' => 1], [
-                    'parent_business_id' => $parent->id,
-                    'parent_provider_connection_id' => $route['parent_provider_connection_id'],
-                    'provider_plan_id' => $route['provider_plan_id'],
-                    'active' => (bool) $attributes['visibility'],
-                ]);
+                $connection = $parent->providerConnections()->findOrFail($route['parent_provider_connection_id']);
+                $routeSwitcher->switch($parent, $plan, $connection, (string) $route['provider_plan_id']);
+                $plan->providerRoutes()->where('priority', 1)->update(['active' => (bool) $attributes['visibility']]);
             } elseif (! $attributes['visibility']) {
-                $plan->providerRoutes()->where('priority', 1)->delete();
+                $plan->providerRoutes()->where('priority', 1)->update(['active' => false]);
             }
 
             if ($prices !== []) {

@@ -11,6 +11,7 @@ use App\Http\Requests\ParentAdmin\UpdateProductPlanRequest;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
 use App\Services\ParentAdmin\ParentCatalogService;
+use App\Services\ParentAdmin\ProductPlanRouteSwitchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,10 @@ use Illuminate\Support\Facades\DB;
 
 class ProductPlanController extends Controller
 {
-    public function __construct(private readonly ParentCatalogService $catalog) {}
+    public function __construct(
+        private readonly ParentCatalogService $catalog,
+        private readonly ProductPlanRouteSwitchService $routeSwitcher,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -85,7 +89,12 @@ class ProductPlanController extends Controller
 
     public function updateConfiguration(SaveProductPlanConfigurationRequest $request, ProductPlan $plan): RedirectResponse
     {
-        $this->catalog->updateConfiguration($request->user('parent_admin')->parentBusiness, $plan, $request->validated());
+        $this->catalog->updateConfiguration(
+            $request->user('parent_admin')->parentBusiness,
+            $plan,
+            $request->validated(),
+            $this->routeSwitcher,
+        );
 
         return redirect()->route('parent-admin.product-plans.index')->with('success', 'Product plan configuration updated.');
     }

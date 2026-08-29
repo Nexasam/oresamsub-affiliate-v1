@@ -6,6 +6,7 @@ use App\Models\ParentBusiness;
 use App\Models\ParentProviderConnection;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanProviderRoute;
+use App\Models\ProductPlanRouteSwitch;
 use App\Support\ProviderProductRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -53,6 +54,8 @@ class ProductPlanRouteSwitchService
             if ($target && $current && $target->is($current)) {
                 $target->update(['provider_plan_id' => $providerPlanId, 'active' => true]);
 
+                $this->recordSwitch($parent, $plan, $current, $target, $providerPlanId);
+
                 return $target->fresh();
             }
 
@@ -74,8 +77,22 @@ class ProductPlanRouteSwitchService
                 ]);
             }
 
+            $this->recordSwitch($parent, $plan, $current, $target, $providerPlanId);
+
             return $target->fresh();
         });
     }
-}
 
+    private function recordSwitch(ParentBusiness $parent, ProductPlan $plan, ?ProductPlanProviderRoute $from, ProductPlanProviderRoute $to, string $providerPlanId): void
+    {
+        ProductPlanRouteSwitch::create([
+            'parent_business_id' => $parent->id,
+            'product_plan_id' => $plan->id,
+            'from_parent_provider_connection_id' => $from?->parent_provider_connection_id,
+            'to_parent_provider_connection_id' => $to->parent_provider_connection_id,
+            'parent_admin_id' => auth('parent_admin')->id(),
+            'provider_plan_id' => $providerPlanId,
+            'source' => 'parent_admin',
+        ]);
+    }
+}

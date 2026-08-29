@@ -2,7 +2,7 @@
 @section('title', 'Transactions')
 @section('heading', 'Transactions & reconciliation')
 @section('content')
-<div class="space-y-5" x-data="{ reconciliationOpen: false, reconciliation: { action: '', outcome: '', reference: '', providerReference: '' }, openReconciliation(event, outcome) { this.reconciliation = { action: event.currentTarget.dataset.action, outcome, reference: event.currentTarget.dataset.reference, providerReference: event.currentTarget.dataset.providerReference || '' }; this.reconciliationOpen = true }, closeReconciliation() { this.reconciliationOpen = false } }" @keydown.escape.window="closeReconciliation()">
+<div class="space-y-5" x-data="{ reconciliationOpen: false, diagnosticsOpen: false, reconciliation: { action: '', outcome: '', reference: '', providerReference: '' }, diagnostics: {}, openReconciliation(event, outcome) { this.reconciliation = { action: event.currentTarget.dataset.action, outcome, reference: event.currentTarget.dataset.reference, providerReference: event.currentTarget.dataset.providerReference || '' }; this.reconciliationOpen = true }, closeReconciliation() { this.reconciliationOpen = false }, openDiagnostics(payload) { this.diagnostics = payload; this.diagnosticsOpen = true }, closeDiagnostics() { this.diagnosticsOpen = false } }" @keydown.escape.window="closeReconciliation(); closeDiagnostics()">
     <x-workspace.page-header title="Transactions & reconciliation" description="Track provider processing, investigate responses and complete pending cable or electricity requests." />
     @if(session('success'))<x-workspace.alert type="success">{{ session('success') }}</x-workspace.alert>@endif
     @if($errors->any())<x-workspace.alert type="error">{{ $errors->first() }}</x-workspace.alert>@endif
@@ -28,11 +28,35 @@
                     ? $transaction->admin_screen_message
                     : (filled($transaction->user_screen_message) ? $transaction->user_screen_message : 'No failure reason was recorded.');
                 $providerResponse = $transaction->provider_response;
+                $planName = $transaction->product_plan?->product_plan?->product_plan_name
+                    ?? $transaction->product_plan?->product_plan_name
+                    ?? $transaction->api_id;
+                $responsePreview = data_get($providerResponse, 'message')
+                    ?? data_get($providerResponse, 'api_response')
+                    ?? data_get($providerResponse, 'server_message')
+                    ?? data_get($providerResponse, 'data.message')
+                    ?? ($needsDiagnostics ? $failureReason : null);
+                $diagnostics = [
+                    'reference' => $transaction->txn_reference,
+                    'affiliate' => $transaction->affiliate?->name ?? '—',
+                    'service' => str($transaction->transaction_category)->replace('_', ' ')->title()->toString(),
+                    'plan' => $planName ?: '—',
+                    'amount' => '₦'.number_format($transaction->amount, 2),
+                    'provider' => $transaction->parentProviderConnection?->name ?? 'Legacy',
+                    'status' => str($transaction->routing_status ?: 'legacy')->replace('_', ' ')->title()->toString(),
+                    'providerReference' => $transaction->provider_reference ?: '—',
+                    'date' => $transaction->created_at,
+                    'failureReason' => $needsDiagnostics ? $failureReason : null,
+                    'response' => $providerResponse,
+                ];
             @endphp
             <tr>
                 <td class="w-28 px-2 py-3"><span class="block max-w-28 truncate font-mono text-[10px] font-medium text-slate-500" title="{{ $transaction->txn_reference }}">{{ str($transaction->txn_reference)->limit(18) }}</span></td>
                 <td class="px-3 py-3">{{ $transaction->affiliate?->name ?? '—' }}</td>
-                <td class="px-3 py-3">{{ str($transaction->transaction_category)->replace('_', ' ')->title() }}</td>
+                <td class="px-3 py-3">
+                    <span class="block font-medium text-slate-800 dark:text-slate-100">{{ str($transaction->transaction_category)->replace('_', ' ')->title() }}</span>
+                    @if(filled($planName))<span class="mt-0.5 block max-w-44 truncate text-[11px] text-slate-500" title="{{ $planName }}">{{ $planName }}</span>@endif
+                </td>
                 <td class="px-3 py-3">₦{{ number_format($transaction->amount, 2) }}</td>
                 <td class="px-3 py-3">
                     @if($transaction->routing_status === 'manual_pending')
@@ -53,20 +77,10 @@
                 <td class="px-3 py-3">{{ $transaction->parentProviderConnection?->name ?? 'Legacy' }}</td>
                 <td class="max-w-sm px-3 py-3">
                     @if(filled($providerResponse) || $needsDiagnostics)
-                        <details class="group">
-                            <summary class="cursor-pointer font-semibold {{ $needsDiagnostics ? 'text-rose-700' : 'text-blue-700' }}">View response</summary>
-                            <div class="mt-2 space-y-2 rounded-lg {{ $needsDiagnostics ? 'bg-rose-50' : 'bg-blue-50' }} p-3 text-xs text-slate-700">
-                                @if(filled($providerResponse))
-                                    <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono">{{ json_encode($providerResponse, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-                                @else
-                                    <p class="whitespace-pre-line break-words">{{ $failureReason }}</p>
-                                @endif
-                                <p><span class="font-semibold">Route status:</span> {{ str($transaction->routing_status ?: 'legacy')->replace('_', ' ')->title() }}</p>
-                                @if(filled($transaction->provider_reference))
-                                    <p><span class="font-semibold">Provider reference:</span> {{ $transaction->provider_reference }}</p>
-                                @endif
-                            </div>
-                        </details>
+                        <button type="button" @click="openDiagnostics({{ Js::from($diagnostics) }})" class="group block w-full rounded-lg p-2 text-left transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-slate-800">
+                            <span class="block max-w-72 truncate text-xs {{ $needsDiagnostics ? 'text-rose-700 dark:text-rose-300' : 'text-slate-700 dark:text-slate-200' }}" title="{{ is_scalar($responsePreview) ? $responsePreview : 'Provider response available' }}">{{ is_scalar($responsePreview) ? $responsePreview : 'Provider response available' }}</span>
+                            <span class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300">View details <span aria-hidden="true">→</span></span>
+                        </button>
                     @else
                         <span class="text-slate-400">—</span>
                     @endif
@@ -76,6 +90,27 @@
         @empty<tr><td colspan="8" class="px-4 py-12 text-center text-slate-500">No transactions match these filters.</td></tr>@endforelse
         </tbody></table></div><div class="border-t border-slate-200 p-4">{{ $transactions->links() }}</div>
     </div>
+
+    <div x-cloak x-show="diagnosticsOpen" x-transition.opacity class="fixed inset-0 z-[80] bg-slate-950/60" @click="closeDiagnostics()"></div>
+    <aside data-testid="transaction-diagnostics-drawer" x-cloak x-show="diagnosticsOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="fixed inset-y-0 right-0 z-[90] flex w-full max-w-xl flex-col bg-white shadow-2xl dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="transaction-diagnostics-title">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5 dark:border-slate-700">
+            <div class="min-w-0"><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Provider diagnostics</p><h2 id="transaction-diagnostics-title" class="mt-1 truncate text-lg font-bold" x-text="diagnostics.plan || 'Transaction details'"></h2><p class="mt-1 truncate font-mono text-[11px] text-slate-500" x-text="diagnostics.reference"></p></div>
+            <button type="button" @click="closeDiagnostics()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold dark:border-slate-600">Close</button>
+        </div>
+        <div class="flex-1 space-y-5 overflow-y-auto p-5">
+            <dl class="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/70">
+                <div><dt class="text-xs text-slate-500">Affiliate</dt><dd class="mt-1 font-semibold" x-text="diagnostics.affiliate"></dd></div>
+                <div><dt class="text-xs text-slate-500">Service</dt><dd class="mt-1 font-semibold" x-text="diagnostics.service"></dd></div>
+                <div><dt class="text-xs text-slate-500">Amount</dt><dd class="mt-1 font-semibold" x-text="diagnostics.amount"></dd></div>
+                <div><dt class="text-xs text-slate-500">Route status</dt><dd class="mt-1 font-semibold" x-text="diagnostics.status"></dd></div>
+                <div><dt class="text-xs text-slate-500">Provider</dt><dd class="mt-1 font-semibold" x-text="diagnostics.provider"></dd></div>
+                <div><dt class="text-xs text-slate-500">Provider reference</dt><dd class="mt-1 break-all font-mono text-xs" x-text="diagnostics.providerReference"></dd></div>
+                <div class="col-span-2"><dt class="text-xs text-slate-500">Date</dt><dd class="mt-1 font-semibold" x-text="diagnostics.date"></dd></div>
+            </dl>
+            <div x-show="diagnostics.failureReason" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"><p class="text-xs font-bold uppercase tracking-wide">Failure reason</p><p class="mt-2 whitespace-pre-wrap break-words" x-text="diagnostics.failureReason"></p></div>
+            <section><h3 class="text-sm font-bold">Full redacted provider response</h3><pre class="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100" x-text="diagnostics.response ? JSON.stringify(diagnostics.response, null, 2) : 'No provider response was stored.'"></pre></section>
+        </div>
+    </aside>
 
     <div x-cloak x-show="reconciliationOpen" x-transition.opacity class="fixed inset-0 z-[80] bg-slate-950/60" @click="closeReconciliation()"></div>
     <div data-testid="reconciliation-modal" x-cloak x-show="reconciliationOpen" class="fixed inset-0 z-[90] grid place-items-center overflow-y-auto p-4" role="dialog" aria-modal="true" aria-labelledby="reconciliation-title">

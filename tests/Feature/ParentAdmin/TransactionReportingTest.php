@@ -1,6 +1,10 @@
 <?php
 
 use App\Models\AffiliateUserPlan;
+use App\Models\AffiliateProductPlan;
+use App\Models\Product;
+use App\Models\ProductPlan;
+use App\Models\ProductPlanCategory;
 use App\Models\Role;
 use App\Models\Transaction;
 use App\Models\User;
@@ -106,4 +110,71 @@ it('shows a stored redacted provider response for successful transactions', func
         ->assertOk()
         ->assertSee('Provider response')
         ->assertSee('Transaction processed successfully.');
+});
+
+it('shows the purchased plan and an inline provider preview with full diagnostics in a drawer', function () {
+    [$parent, $admin, $levels] = managedParent('report-transaction-drawer');
+    $affiliate = unattachedAffiliate('report-drawer-affiliate');
+    $affiliate->update(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $levels[0]->id]);
+    $role = Role::create(['role_name' => 'User']);
+    $userPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+    ]);
+    $user = User::factory()->create([
+        'affiliate_id' => $affiliate->id,
+        'role_id' => $role->id,
+        'user_plan_id' => $userPlan->id,
+    ]);
+    $product = Product::create([
+        'api_id' => 'data-drawer',
+        'product_name' => 'Data',
+        'slug' => 'data-drawer',
+    ]);
+    $category = ProductPlanCategory::create([
+        'api_id' => 'mtn-data-drawer',
+        'product_id' => $product->id,
+        'product_plan_category_name' => 'MTN Data',
+    ]);
+    $parentPlan = ProductPlan::create([
+        'parent_business_id' => $parent->id,
+        'product_plan_category_id' => $category->id,
+        'product_plan_name' => '1GB MTN Weekly',
+    ]);
+    $affiliatePlan = AffiliateProductPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id,
+        'product_plan_id' => $parentPlan->id,
+        'product_plan_name' => 'MTN Weekly 1GB',
+    ]);
+
+    Transaction::withoutGlobalScope('affiliate')->create([
+        'parent_business_id' => $parent->id,
+        'affiliate_id' => $affiliate->id,
+        'user_id' => $user->id,
+        'api_id' => 'MTN-WEEKLY-1GB',
+        'affiliate_product_plan_id' => $affiliatePlan->id,
+        'wallet_category' => 'main_wallet',
+        'balance_before' => 1000,
+        'balance_after' => 530,
+        'description' => 'Successful data purchase',
+        'txn_reference' => 'SUCCESS-WITH-DRAWER',
+        'transaction_category' => 'data',
+        'amount' => 470,
+        'status' => 1,
+        'routing_status' => 'successful',
+        'provider_reference' => 'UPSTREAM-1001',
+        'provider_response' => [
+            'success' => true,
+            'message' => 'Transaction processed successfully.',
+            'data' => ['status' => 'completed'],
+        ],
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')->get('/parent-admin/transactions')
+        ->assertOk()
+        ->assertSee('1GB MTN Weekly')
+        ->assertSee('Transaction processed successfully.')
+        ->assertSee('data-testid="transaction-diagnostics-drawer"', false)
+        ->assertSee('UPSTREAM-1001');
 });

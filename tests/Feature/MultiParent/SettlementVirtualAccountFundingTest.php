@@ -6,6 +6,7 @@ use App\Models\FundingProvider;
 use App\Models\ParentBusiness;
 use App\Models\ParentFundingProvider;
 use App\Models\Role;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Funding\SettlementVirtualAccountService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -171,6 +172,64 @@ it('shows recent settlement debits and credits on the affiliate admin dashboard'
         ->assertSee('DATA-SETTLEMENT-1')
         ->assertSee('-₦470.00')
         ->assertSee('Purchase reservation');
+});
+
+it('shows recent transaction phone and redacted provider diagnostics in a dashboard drawer', function () {
+    $f = settlementFundingFixture();
+    $userPlanId = DB::table('affiliate_user_plans')->insertGetId([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => '1',
+        'is_default' => '1',
+        'visibility' => '1',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $customerRole = Role::create(['role_name' => 'User']);
+    $admin = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $userPlanId,
+        'role_id' => $adminRole->id,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $userPlanId,
+        'role_id' => $customerRole->id,
+        'first_name' => 'Tomiwa',
+        'last_name' => 'Joseph',
+    ]);
+    Transaction::withoutGlobalScope('affiliate')->create([
+        'parent_business_id' => $f['parent']->id,
+        'affiliate_id' => $f['affiliate']->id,
+        'user_id' => $customer->id,
+        'api_id' => 'MTN-1GB-WEEKLY',
+        'affiliate_product_plan_id' => 1,
+        'wallet_category' => 'main_wallet',
+        'balance_before' => 1000,
+        'balance_after' => 530,
+        'description' => 'Data purchase',
+        'txn_reference' => 'DASHBOARD-DRAWER-TXN',
+        'transaction_category' => 'data',
+        'phone_number' => '08168509044',
+        'amount' => 470,
+        'status' => 1,
+        'routing_status' => 'successful',
+        'provider_reference' => 'PROVIDER-DASHBOARD-1',
+        'provider_response' => ['success' => true, 'message' => 'Provider delivered 1GB successfully.'],
+    ]);
+    config()->set('parent_businesses.features.affiliate_blade_ui', true);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']]);
+    expect(Transaction::query()->where('txn_reference', 'DASHBOARD-DRAWER-TXN')->exists())->toBeTrue();
+
+    $response = $this->get('/dashboard');
+    expect($response->viewData('transactions')->pluck('txn_reference')->all())->toContain('DASHBOARD-DRAWER-TXN');
+    $response->assertOk()->assertViewIs('admin_dashboard_modern')
+        ->assertSee('DASHBOARD-DRAWER-TXN')
+        ->assertSee('08168509044')
+        ->assertSee('Provider delivered 1GB successfully.')
+        ->assertSee('data-testid="affiliate-transaction-drawer"', false);
 });
 
 it('lets an affiliate admin view only its complete settlement ledger', function () {

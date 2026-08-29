@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="main-content workspace-page">
+<div class="main-content workspace-page" x-data="{ transactionDrawerOpen: false, transactionDetails: {}, openTransactionDrawer(details) { this.transactionDetails = details; this.transactionDrawerOpen = true }, closeTransactionDrawer() { this.transactionDrawerOpen = false } }" @keydown.escape.window="closeTransactionDrawer()">
     <div class="workspace-stack">
         <x-workspace.page-header title="Welcome, {{ $user->first_name }}" description="Monitor customers, transactions, product plans and business funding from one place.">
             <a href="{{ route('admin.transactions.index') }}" class="workspace-btn-secondary">View transactions</a>
@@ -115,13 +115,48 @@
             <div class="workspace-panel-header"><div><h2 class="font-semibold">Recent transactions</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Latest customer purchase activity.</p></div><a href="{{ route('admin.transactions.index') }}" class="workspace-btn-secondary">View all</a></div>
             <div class="workspace-table-wrap">
                 <table class="workspace-table min-w-[760px]">
-                    <thead><tr><th>Reference</th><th>Customer</th><th>Service</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead>
+                    <thead><tr><th>Reference</th><th>Customer</th><th>Service</th><th>Amount</th><th>Status</th><th>Date</th><th>Provider response</th></tr></thead>
                     <tbody>
-                    @forelse(collect($transactions)->take(10) as $transaction)
+                    @if($transactions->isEmpty())
+                        <tr><td colspan="7" class="workspace-empty">No transactions yet.</td></tr>
+                    @else
+                    @foreach($transactions as $transaction)
+                        <?php
+                            $planName = $transaction->product_plan?->product_plan?->product_plan_name
+                                ?? $transaction->product_plan?->product_plan_name
+                                ?? $transaction->api_id;
+                            $providerResponse = $transaction->provider_response;
+                            $responsePreview = data_get($providerResponse, 'message')
+                                ?? data_get($providerResponse, 'api_response')
+                                ?? data_get($providerResponse, 'server_message')
+                                ?? data_get($providerResponse, 'data.message')
+                                ?? $transaction->admin_screen_message
+                                ?? $transaction->user_screen_message;
+                            $statusLabel = (int) $transaction->status === 1
+                                ? 'Successful'
+                                : ((int) $transaction->status === 2
+                                    ? 'Refunded'
+                                    : ((int) $transaction->status === 0 ? 'Pending' : str($transaction->routing_status ?: 'processing')->headline()->toString()));
+                            $drawerDetails = [
+                                'reference' => $transaction->txn_reference ?: '#'.$transaction->id,
+                                'customer' => trim(($transaction->user?->first_name ?? '').' '.($transaction->user?->last_name ?? '')) ?: '—',
+                                'phone' => $transaction->phone_number ?: ($transaction->user?->phone_number ?: '—'),
+                                'service' => str($transaction->transaction_category)->replace('_', ' ')->title()->toString(),
+                                'plan' => $planName ?: '—',
+                                'amount' => '₦'.number_format((float) $transaction->amount, 2),
+                                'status' => $statusLabel,
+                                'routeStatus' => str($transaction->routing_status ?: 'legacy')->replace('_', ' ')->title()->toString(),
+                                'provider' => $transaction->parentProviderConnection?->name ?? 'Legacy',
+                                'providerReference' => $transaction->provider_reference ?: '—',
+                                'date' => $transaction->created_at,
+                                'failureReason' => (int) $transaction->status === 2 ? ($transaction->admin_screen_message ?: $transaction->user_screen_message) : null,
+                                'response' => $providerResponse,
+                            ];
+                        ?>
                         <tr>
                             <td><span class="block max-w-44 truncate font-mono text-xs" title="{{ $transaction->txn_reference }}">{{ $transaction->txn_reference ?: '#'.$transaction->id }}</span></td>
                             <td>{{ $transaction->user?->first_name }} {{ $transaction->user?->last_name }}</td>
-                            <td>{{ str($transaction->transaction_category)->replace('_', ' ')->title() }}</td>
+                            <td><span class="block">{{ str($transaction->transaction_category)->replace('_', ' ')->title() }}</span>@if(filled($planName))<span class="mt-0.5 block max-w-40 truncate text-[11px] text-slate-500" title="{{ $planName }}">{{ $planName }}</span>@endif</td>
                             <td class="font-semibold">₦{{ number_format((float) $transaction->amount, 2) }}</td>
                             <td>
                                 @if((int)$transaction->status === 1)<x-workspace.status type="success">Successful</x-workspace.status>
@@ -130,15 +165,40 @@
                                 @else<x-workspace.status>{{ str($transaction->routing_status ?: 'processing')->headline() }}</x-workspace.status>@endif
                             </td>
                             <td class="whitespace-nowrap text-xs text-slate-500"><x-workspace.date :value="$transaction->created_at" /></td>
-                            <td><a href="{{ route('transactions.transaction_details', $transaction->id) }}" class="workspace-btn-secondary">Details</a></td>
+                            <td class="max-w-64">
+                                @if(filled($responsePreview))<span class="mb-1 block max-w-56 truncate text-xs text-slate-600 dark:text-slate-300" title="{{ is_scalar($responsePreview) ? $responsePreview : 'Provider response available' }}">{{ is_scalar($responsePreview) ? $responsePreview : 'Provider response available' }}</span>@endif
+                                <button type="button" @click="openTransactionDrawer({{ Js::from($drawerDetails) }})" class="workspace-btn-secondary">Details</button>
+                            </td>
                         </tr>
-                    @empty
-                        <tr><td colspan="7" class="workspace-empty">No transactions yet.</td></tr>
-                    @endforelse
+                    @endforeach
+                    @endif
                     </tbody>
                 </table>
             </div>
         </section>
+
+        <div x-cloak x-show="transactionDrawerOpen" x-transition.opacity class="fixed inset-0 z-[80] bg-slate-950/60" @click="closeTransactionDrawer()"></div>
+        <aside data-testid="affiliate-transaction-drawer" x-cloak x-show="transactionDrawerOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="fixed inset-y-0 right-0 z-[90] flex w-full max-w-xl flex-col bg-white shadow-2xl dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="affiliate-transaction-drawer-title">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5 dark:border-slate-700">
+                <div class="min-w-0"><p class="text-xs font-bold uppercase tracking-wider text-indigo-600">Transaction details</p><h2 id="affiliate-transaction-drawer-title" class="mt-1 truncate text-lg font-bold" x-text="transactionDetails.plan || transactionDetails.service"></h2><p class="mt-1 truncate font-mono text-[11px] text-slate-500" x-text="transactionDetails.reference"></p></div>
+                <button type="button" @click="closeTransactionDrawer()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold dark:border-slate-600">Close</button>
+            </div>
+            <div class="flex-1 space-y-5 overflow-y-auto p-5">
+                <dl class="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/70">
+                    <div><dt class="text-xs text-slate-500">Customer</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.customer"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Phone number</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.phone"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Service</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.service"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Amount</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.amount"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Status</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.status"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Route status</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.routeStatus"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Provider</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.provider"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Provider reference</dt><dd class="mt-1 break-all font-mono text-xs" x-text="transactionDetails.providerReference"></dd></div>
+                    <div class="col-span-2"><dt class="text-xs text-slate-500">Date</dt><dd class="mt-1 font-semibold" x-text="transactionDetails.date"></dd></div>
+                </dl>
+                <div x-show="transactionDetails.failureReason" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"><p class="text-xs font-bold uppercase tracking-wide">Failure reason</p><p class="mt-2 whitespace-pre-wrap break-words" x-text="transactionDetails.failureReason"></p></div>
+                <section><h3 class="text-sm font-bold">Full redacted API response</h3><pre class="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100" x-text="transactionDetails.response ? JSON.stringify(transactionDetails.response, null, 2) : 'No provider response was stored.'"></pre></section>
+            </div>
+        </aside>
 
         @if(config('parent_businesses.features.multi_parent_funding') && session('affiliate')?->parent_business_id)
         <section class="workspace-panel">

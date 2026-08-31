@@ -42,18 +42,20 @@
         <div class="hero-grid" aria-hidden="true"></div>
         <div class="shell hero-layout">
             <div class="hero-copy" data-reveal>
-                <h1>Turn one VTU business into a network of growing affiliate brands.</h1>
-                <p>Connect every affiliate website to your products, provider routes, pricing and settlement infrastructure—while each affiliate runs a branded customer experience of their own.</p>
+                <h1>Your VTU business shouldn’t stop at one website. <span>Turn it into a network.</span></h1>
+                <p>Launch and control multiple affiliate brands from one dependable engine—shared products, intelligent provider routing, protected pricing and settlement, with a distinct customer experience for every business.</p>
                 <div class="hero-actions">
                     <a class="button" href="{{ $whatsappUrl }}" @if($whatsappConfigured) target="_blank" rel="noopener" @endif>Talk to us on WhatsApp <span aria-hidden="true">↗</span></a>
                     <a class="text-link" href="#growth-model">See how it works <span aria-hidden="true">↓</span></a>
                 </div>
                 <div class="hero-proof" aria-label="Platform highlights">
-                    <span>Parent-controlled growth</span><span>Provider-independent</span><span>Built for real operations</span>
+                    <span><b>One</b> catalogue</span><span><b>Multiple</b> brands</span><span><b>Central</b> control</span>
                 </div>
             </div>
 
-            <div class="hero-product" data-reveal data-parallax>
+            <div class="hero-product hero-ecosystem" data-hero-ecosystem data-reveal data-parallax>
+                <div class="ecosystem-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+                <div class="provider-signal" aria-label="Provider network connected"><span class="signal-icon">↗</span><small>PROVIDER NETWORK</small><b>Routes connected</b></div>
                 <div class="workspace-frame parent-frame">
                     <div class="frame-top"><span class="mini-mark"></span><b>Parent workspace</b><small>Live operations</small></div>
                     <div class="workspace-content">
@@ -63,6 +65,9 @@
                         <div class="profit-line"><span>Realised profit</span><strong>Tracked per transaction</strong></div>
                     </div>
                 </div>
+                <div class="affiliate-nodes" aria-label="Connected affiliate brands">
+                    <span><i>01</i>Affiliate brand</span><span><i>02</i>Affiliate brand</span><span><i>03</i>Affiliate brand</span>
+                </div>
                 <div class="phone-frame" aria-label="V2 customer mobile interface preview">
                     <div class="phone-status"><span>9:41</span><span>● ● ●</span></div>
                     <div class="phone-brand"><span class="mini-mark"></span><b>My business</b><span>•••</span></div>
@@ -71,7 +76,11 @@
                     <div class="services"><span>Data</span><span>Airtime</span><span>Cable</span><span>Power</span></div>
                     <div class="phone-activity"><b>Recent activity</b><span>MTN Data <strong>Successful</strong></span><span>Airtime <strong>Successful</strong></span></div>
                 </div>
-                <div class="flow-note"><span></span>Pricing, routing and settlement stay connected</div>
+                <div class="event-stack" aria-live="polite">
+                    <div class="hero-event is-active" data-hero-event><span class="event-dot route"></span><p><b>Plan routed</b><small>MTN 1GB · Primary connection</small></p><time>now</time></div>
+                    <div class="hero-event" data-hero-event><span class="event-dot funded"></span><p><b>Affiliate funded</b><small>Settlement wallet credited</small></p><time>now</time></div>
+                    <div class="hero-event" data-hero-event><span class="event-dot profit"></span><p><b>Profit recorded</b><small>Transaction completed safely</small></p><time>now</time></div>
+                </div>
             </div>
         </div>
     </section>

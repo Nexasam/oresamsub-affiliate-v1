@@ -7,6 +7,7 @@ use App\Http\Services\VirtualAccountService;
 use App\Models\AdminColorSetting;
 use App\Models\LandingPagesSetting;
 use App\Models\SiteImage;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -56,15 +57,37 @@ class NewLoginController extends Controller
     // Handle login form submission
     public function store(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+        // Keep the former `email` payload working while the refreshed form uses
+        // the more accurate `login` name for email, username, or phone.
+        $request->merge([
+            'login' => trim((string) ($request->input('login') ?: $request->input('email'))),
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $credentials = $request->validate([
+            'login' => ['required', 'string', 'max:255'],
+            'password' => ['required'],
+        ], [
+            'login.required' => 'Enter your email, username or phone number.',
+        ]);
+
+        $affiliateId = session('affiliate')?->id;
+        $user = $affiliateId
+            ? User::withoutGlobalScope('affiliate')
+                ->where('affiliate_id', $affiliateId)
+                ->where(function ($query) use ($credentials) {
+                    $query->where('email', $credentials['login'])
+                        ->orWhere('username', $credentials['login'])
+                        ->orWhere('phone_number', $credentials['login']);
+                })
+                ->first()
+            : null;
+
+        if ($user && Auth::attempt([
+            'id' => $user->id,
+            'password' => $credentials['password'],
+        ], $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            $user = auth()->user();
             $data['user'] = $user;
     
             (new VirtualAccountService())->generate_accounts($data);
@@ -80,7 +103,7 @@ class NewLoginController extends Controller
 
 
         return back()->withErrors([
-            'email' => 'Invalid credentials.',
-        ])->onlyInput('email');
+            'login' => 'These login details do not match an account on this website.',
+        ])->onlyInput('login');
     }
 }

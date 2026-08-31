@@ -17,11 +17,13 @@ use App\Models\User;
 use App\Models\UserPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -85,16 +87,17 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // dd($request->all());
-        
+        $affiliateId = $this->currentAffiliateId();
+
         $request->validate([
-            'username' => ['required', 'string', 'unique:users,username'],
+            'username' => ['required', 'string', Rule::unique('users', 'username')->where('affiliate_id', $affiliateId)],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'pin' => ['required', 'numeric', 'string','regex:/^\d{4,5}$/'],
             // 'other_names' => ['nullable', 'string', 'max:255'],
-            'phone_number' => ['required','unique:users,phone_number', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:255', Rule::unique('users', 'phone_number')->where('affiliate_id', $affiliateId)],
             // 'upline_referral_phone_number' => ['nullable', 'string','exists:users,phone_number' ,'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users', 'email')->where('affiliate_id', $affiliateId)],
             'password' => ['required', 'confirmed', Password::min(6)]
             // 'password' => ['required', 'confirmed', Password::min(8)
             // ->letters()
@@ -102,7 +105,7 @@ class RegisteredUserController extends Controller
             // ->numbers()
             // ->symbols()
             // ->uncompromised()::defaults()],
-        ]);
+        ], $this->tenantUniqueMessages());
 
         // 	echo REGEX_CountMatches('as.sfad.asdferw.asdfsdf.@gmail.com','.');
         // 	echo $count = preg_match_all('/\b.\b/','as.sfad.asdferw.asdfsdf.l.@gmail.com');
@@ -128,7 +131,7 @@ class RegisteredUserController extends Controller
 
         $upline_details = NULL;
         if(isset($request->upline_referral_phone_number) &&  $request->upline_referral_phone_number != NULL){
-            $upline_details = User::where('phone_number',$request->upline_referral_phone_number)->first();
+            $upline_details = User::where('affiliate_id', $affiliateId)->where('phone_number',$request->upline_referral_phone_number)->first();
         }
         $upline_id = $upline_details != NULL && $request->upline_referral_phone_number != $request->phone_number ? $upline_details->id : NULL;
         // $upline_id = $upline_details->id;
@@ -144,6 +147,7 @@ class RegisteredUserController extends Controller
         $data['username'] = $request->username;
         $data['upline_id'] = $upline_id;
         $data['email'] = $request->email;
+        $data['affiliate_id'] = $affiliateId;
         $data['role_id'] = $role_details->id;
         $data['user_plan_id'] = $default_reseller_plan->id;
         $data['password'] = Hash::make($request->password);
@@ -152,7 +156,7 @@ class RegisteredUserController extends Controller
             $data['email_verified_at'] = date('Y-m-d H:i:s');
         }
 
-        $user = User::create($data);
+        $user = $this->createTenantUser($data);
 
         // $dataaa['user'] = $user;
         // (new VirtualAccountService())->generate_accounts($dataaa);
@@ -168,16 +172,17 @@ class RegisteredUserController extends Controller
 
     public function store2(Request $request): RedirectResponse
     {
+        $tenantId = $this->currentAffiliateId();
+
         // 1. Validate input
         $validated = $request->validate([
-            'username' => ['required', 'string', 'unique:users,username'],
+            'username' => ['required', 'string', Rule::unique('users', 'username')->where('affiliate_id', $tenantId)],
             'fullname' => ['required', 'string', 'max:255'],
           'phone_number' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('users')
-                    ->where(fn ($query) => $query->where('affiliate_id', $request->affiliate_id)),
+                Rule::unique('users', 'phone_number')->where('affiliate_id', $tenantId),
             ],
 
             'email' => [
@@ -186,8 +191,7 @@ class RegisteredUserController extends Controller
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique('users')
-                    ->where(fn ($query) => $query->where('affiliate_id', $request->affiliate_id)),
+                Rule::unique('users', 'email')->where('affiliate_id', $tenantId),
             ],
             'password' => ['required', 'confirmed', Password::min(6)],
             // 'pin' => ['required', 'digits:4'], // 🔥 ADD THIS
@@ -212,7 +216,7 @@ class RegisteredUserController extends Controller
                     }
                 }
             ],
-        ]);
+        ], $this->tenantUniqueMessages());
 
         // 2. Email security check
         $dotCount = substr_count($validated['email'], '.');
@@ -231,7 +235,7 @@ class RegisteredUserController extends Controller
             $request->filled('upline_referral_phone_number') &&
             $request->upline_referral_phone_number !== $validated['phone_number']
         ) {
-            $upline = User::where('phone_number', $request->upline_referral_phone_number)->first();
+            $upline = User::where('affiliate_id', $tenantId)->where('phone_number', $request->upline_referral_phone_number)->first();
             if ($upline) {
                 $uplineId = $upline->id;
             }
@@ -240,15 +244,11 @@ class RegisteredUserController extends Controller
         // 5. Role & Plan
         $roleId = Role::where('role_name', 'User')->value('id');
 
-        // 6. Detect Tenant (VERY IMPORTANT 🔥)
-        // adjust this based on your tenancy logic (subdomain, session, referral, etc.)
-        $tenantId = session('affiliate')->id ?? null;
-
          // $defaultPlanId = UserPlan::where('is_default', 1)->value('id');
          $defaultPlanId = AffiliateUserPlan::where('plan_level',"1")->first();
 
         // 7. Create user (NO email_verified_at ❌)
-        $user = User::create([
+        $user = $this->createTenantUser([
             'first_name' => $firstName,
             'last_name' => $lastName,
             'username' => $validated['username'],
@@ -275,6 +275,44 @@ class RegisteredUserController extends Controller
         // 10. Redirect to verify page
         return redirect()->route('verification.notice')
             ->with('success', 'Account created! Please verify your email.');
+    }
+
+    private function currentAffiliateId(): int
+    {
+        $affiliateId = (int) (session('affiliate')->id ?? 0);
+
+        abort_if($affiliateId < 1, 404, 'This affiliate website is not configured for registration.');
+
+        return $affiliateId;
+    }
+
+    private function tenantUniqueMessages(): array
+    {
+        return [
+            'username.unique' => 'This username already has an account on this website.',
+            'phone_number.unique' => 'This phone number already has an account on this website.',
+            'email.unique' => 'This email address already has an account on this website.',
+        ];
+    }
+
+    private function createTenantUser(array $attributes): User
+    {
+        try {
+            return User::create($attributes);
+        } catch (UniqueConstraintViolationException $exception) {
+            $message = strtolower($exception->getMessage());
+            $field = match (true) {
+                str_contains($message, 'phone_number') => 'phone_number',
+                str_contains($message, 'email') => 'email',
+                str_contains($message, 'username') => 'username',
+                default => 'email',
+            };
+
+            throw ValidationException::withMessages([
+                $field => $this->tenantUniqueMessages()["{$field}.unique"]
+                    ?? 'An account with these details already exists on this website.',
+            ]);
+        }
     }
 
 

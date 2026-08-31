@@ -50,4 +50,13 @@ class CustomerAuthenticationUiTest extends TestCase
         $this->assertStringContainsString('Welcome back', $login);
         $this->assertStringNotContainsString('<p>{props.user}</p>', $login);
     }
+
+    public function test_customer_login_invites_email_username_or_phone(): void
+    {
+        $login = file_get_contents(resource_path('views/auth/login.blade.php'));
+
+        $this->assertStringContainsString('name="login"', $login);
+        $this->assertStringContainsString('Email, username or phone', $login);
+        $this->assertStringContainsString('$errors->get(\'login\')', $login);
+    }
 }

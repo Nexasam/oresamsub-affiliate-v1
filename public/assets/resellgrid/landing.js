@@ -75,6 +75,15 @@
     });
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const heroEvents = [...document.querySelectorAll('[data-hero-event]')];
+    if (heroEvents.length > 1 && !reducedMotion) {
+        let activeHeroEvent = 0;
+        window.setInterval(() => {
+            heroEvents[activeHeroEvent].classList.remove('is-active');
+            activeHeroEvent = (activeHeroEvent + 1) % heroEvents.length;
+            heroEvents[activeHeroEvent].classList.add('is-active');
+        }, 2400);
+    }
     const parallax = document.querySelector('[data-parallax]');
     if (parallax && !reducedMotion) {
         parallax.addEventListener('pointermove', (event) => {

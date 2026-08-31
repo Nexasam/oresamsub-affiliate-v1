@@ -5,9 +5,9 @@
     <form method="POST" action="{{ route('inertia.login.store') }}" x-data="{ showPassword: false, submitting: false }" @submit="submitting = true" class="auth-grid">
         @csrf
         <div class="auth-field">
-            <label for="email">Email address</label>
-            <input class="auth-input" type="email" id="email" name="email" value="{{ old('email') }}" autocomplete="email" inputmode="email" placeholder="you@example.com" required autofocus>
-            <x-input-error :messages="$errors->get('email')" class="auth-error" />
+            <label for="login">Email, username or phone</label>
+            <input class="auth-input" type="text" id="login" name="login" value="{{ old('login', old('email')) }}" autocomplete="username" placeholder="Enter email, username or phone" required autofocus>
+            <x-input-error :messages="$errors->get('login')" class="auth-error" />
         </div>
         <div class="auth-field">
             <div class="flex items-center justify-between gap-3"><label for="password">Password</label><a class="auth-link text-xs" href="{{ route('password.request') }}">Forgot password?</a></div>

@@ -25,7 +25,7 @@
           @endif
 
           @if (! $site_logo)
-           <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ config('app.name') }}</h1>
+           <h1 class="block text-2xl font-bold text-gray-800 dark:text-gray-900">{{ session('affiliate')?->name ?? config('app.name') }}</h1>
           @endif
         </div>
 

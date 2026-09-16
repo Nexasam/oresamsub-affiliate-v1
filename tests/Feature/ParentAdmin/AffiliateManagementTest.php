@@ -9,6 +9,8 @@ use App\Models\ParentBusiness;
 use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanCategory;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 
@@ -180,6 +182,34 @@ it('exposes safe affiliate operations only to the owning parent', function () {
         ->assertNotFound();
 
     expect(Route::has('parent-admin.affiliates.users.credit'))->toBeFalse()
-        ->and(Route::has('parent-admin.affiliates.users.impersonate'))->toBeFalse()
+        ->and(Route::has('parent-admin.affiliates.users.impersonate'))->toBeTrue()
         ->and(Route::has('parent-admin.transactions.status.update'))->toBeFalse();
+});
+
+it('lists affiliate admins and customers for parent impersonation', function () {
+    [$parent, $admin, $levels] = managedParent('account-parent');
+    $affiliate = unattachedAffiliate('account-affiliate');
+    $affiliate->update(['parent_business_id' => $parent->id, 'parent_reseller_level_id' => $levels[0]->id]);
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $userRole = Role::create(['role_name' => 'User']);
+
+    User::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'role_id' => $adminRole->id, 'username' => 'affiliate-admin',
+        'first_name' => 'Affiliate', 'last_name' => 'Admin', 'email' => 'affiliate-admin@example.test',
+        'password' => 'password123', 'pin' => '4321',
+    ]);
+    User::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $affiliate->id, 'role_id' => $userRole->id, 'username' => 'affiliate-customer',
+        'first_name' => 'Affiliate', 'last_name' => 'Customer', 'email' => 'affiliate-customer@example.test',
+        'password' => 'password123', 'pin' => '4321',
+    ]);
+
+    $this->actingAs($admin, 'parent_admin')
+        ->get("/parent-admin/operations?affiliate_id={$affiliate->id}")
+        ->assertOk()
+        ->assertSee('Affiliate accounts')
+        ->assertSee('affiliate-admin@example.test')
+        ->assertSee('affiliate-customer@example.test')
+        ->assertSee('Login as affiliate admin')
+        ->assertSee('Login as user');
 });

@@ -71,6 +71,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
             Route::post('affiliates/{affiliate}/catalog/categories/generate', [PlatformAffiliateOperationsController::class, 'generateCategories'])->name('affiliates.catalog.categories.generate');
             Route::post('affiliates/{affiliate}/catalog/plans/generate', [PlatformAffiliateOperationsController::class, 'generatePlans'])->name('affiliates.catalog.plans.generate');
             Route::get('affiliates/{affiliate}/management-users', [PlatformAffiliateUsersController::class, 'data'])->name('affiliate-users.data');
+            Route::post('affiliates/{affiliate}/users/{user}/impersonate', [AffiliateImpersonationController::class, 'storeUser'])->name('affiliates.users.impersonate');
             Route::patch('affiliates/{affiliate}/management-users/{user}', [PlatformAffiliateUsersController::class, 'updateUser'])->name('affiliate-users.update');
             Route::patch('affiliates/{affiliate}/management-user-plans/{plan}', [PlatformAffiliateUsersController::class, 'updatePlan'])->name('affiliate-users.plans.update');
             Route::post('affiliates/{affiliate}/management-user-plans/generate', [PlatformAffiliateUsersController::class, 'generatePlans'])->name('affiliate-users.plans.generate');

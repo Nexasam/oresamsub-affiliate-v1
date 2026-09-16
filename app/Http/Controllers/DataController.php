@@ -463,7 +463,7 @@ class DataController extends Controller
             'phone_number' => 'required',
             'product_plan_category_id' => 'nullable', #watchh, changed 4th aug. 25
             'product_plan_id' => 'required',
-            'pin' => ['required','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
             'wallet_category'=>['required',Rule::in(['main_wallet','data_wallet'])],
             'validatephonenetwork'=>['required',Rule::in([0,1])],
         ]);
@@ -933,7 +933,7 @@ class DataController extends Controller
             'phone_number' => 'required',
             'product_plan_category_id' => 'nullable', #watchh, changed 4th aug. 25
             'product_plan_id' => 'required',
-            'pin' => ['required','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
             'wallet_category'=>['required',Rule::in(['main_wallet','data_wallet'])],
             'validatephonenetwork'=>['required',Rule::in([0,1])],
         ]);
@@ -1604,7 +1604,7 @@ class DataController extends Controller
         $validator = Validator::make($request->all(), [
             'bulk_data_plan_id' => 'required|exists:bulk_data_product_plans,id',
             'bulk_data_wallet_id' => 'required|exists:user_bulk_data_wallets,id',
-            'pin' => ['required','string','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
         ]);
         
         if ($validator->stopOnFirstFailure()->fails()) {

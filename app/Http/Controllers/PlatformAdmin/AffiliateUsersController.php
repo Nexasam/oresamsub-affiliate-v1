@@ -119,7 +119,7 @@ class AffiliateUsersController extends Controller
             'default_wallet_setting' => ['sometimes', Rule::in(['main_wallet', 'bulk_data_wallet'])],
             'email_verified' => ['sometimes', 'boolean'],
             'password' => ['sometimes', 'nullable', 'string', 'min:8', 'max:255'],
-            'pin' => ['sometimes', 'nullable', 'digits:6'],
+            'pin' => ['sometimes', 'nullable', 'digits:4'],
         ]);
 
         if (array_key_exists('email_verified', $data)) {

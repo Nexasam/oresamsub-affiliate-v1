@@ -410,7 +410,7 @@ class ElectricitySubscriptionController extends Controller
             'wallet_category' => 'required',
             'no_of_slots' => 'required',
             'amount' => 'required',
-            'pin' => ['required','string','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
         ]);
 
         // dd($request->all());

@@ -395,7 +395,7 @@ class AirtimeController extends Controller
             'phone_number' => 'required',
             'product_plan_category_id' => 'nullable',
             'product_plan_id' => 'required',
-            'pin' => ['required', 'regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
             'amount' => 'required|numeric|gt:49',
             'validatephonenetwork' => ['required', Rule::in([0, 1])],
         ]);

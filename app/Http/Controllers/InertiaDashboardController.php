@@ -148,7 +148,7 @@ class InertiaDashboardController extends Controller
     public function updatePin(Request $request)
     {
         $request->validate([
-            'current_pin' => ['required'],
+            'current_pin' => ['required', 'digits:4'],
             'new_pin' => ['required', 'confirmed', 'digits:4'], // Assuming 4-digit PIN
         ]);
 

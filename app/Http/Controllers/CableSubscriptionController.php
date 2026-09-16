@@ -389,7 +389,7 @@ class CableSubscriptionController extends Controller
             'cable_product_plan_id' => 'required',
             'wallet_category' => 'required',
             'no_of_slots' => 'required',
-            'pin' => ['required','string','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
         ]);
 
         // logger('PP'.$request->all());

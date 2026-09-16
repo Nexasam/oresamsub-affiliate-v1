@@ -98,7 +98,7 @@ class AffiliateController extends Controller
             'email' => ['required', 'email', Rule::unique('users')->where('affiliate_id', $affiliate->id)],
             'phone_number' => ['nullable', 'string', 'max:30', Rule::unique('users')->where('affiliate_id', $affiliate->id)],
             'other_names' => ['nullable', 'string', 'max:100'],
-            'pin' => ['required', 'digits:6'],
+            'pin' => ['required', 'digits:4'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::exists('roles', 'role_name')],
             'user_plan_id' => [

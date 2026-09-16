@@ -93,7 +93,7 @@ class RegisteredUserController extends Controller
             'username' => ['required', 'string', Rule::unique('users', 'username')->where('affiliate_id', $affiliateId)],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'pin' => ['required', 'numeric', 'string','regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
             // 'other_names' => ['nullable', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255', Rule::unique('users', 'phone_number')->where('affiliate_id', $affiliateId)],
             // 'upline_referral_phone_number' => ['nullable', 'string','exists:users,phone_number' ,'max:255'],

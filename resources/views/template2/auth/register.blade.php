@@ -107,7 +107,7 @@
             <!-- dark:text-gray-900 -->
             <label for="pin" class="block mb-1 sm:mb-2 text-sm font-medium text-gray-500 ">PIN</label>
             
-            <input type="password" name="pin" id="pin" aria-describedby="helper-text-explanation" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5  " placeholder="1234">
+            <input type="password" name="pin" id="pin" maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]{4}" aria-describedby="helper-text-explanation" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5  " placeholder="1234">
             <x-input-error :messages="$errors->get('pin')" class="mt-2" />
         </div>
     

@@ -67,12 +67,12 @@
                           {{-- <div class="grid w-full lg:w-1/2 lg:grid-cols-2 gap-6 space-y-4 lg:space-y-0"> --}}
                           <div class="grid lg:grid-cols-1 gap-6 space-y-4 lg:space-y-0">
                             <div class="space-y-2 max-w-lg">
-                                <label class="ti-form-label mb-0">PIN (4 or 5 Digits)</label>
-                                <input type="text" id="pin" name="pin" value="" class="my-auto ti-form-input" placeholder="PIN">
+                                <label class="ti-form-label mb-0">PIN (4 Digits)</label>
+                                <input type="text" id="pin" name="pin" value="" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" class="my-auto ti-form-input" placeholder="PIN">
                             </div>
                             <div class="space-y-2 max-w-lg">
-                                <label class="ti-form-label mb-0">Reenter PIN (4 or 5 Digits)</label>
-                                <input type="text" id="confirm_pin" name="confirm_pin" value="" class="my-auto ti-form-input" placeholder="Reenter PIN">
+                                <label class="ti-form-label mb-0">Reenter PIN (4 Digits)</label>
+                                <input type="text" id="confirm_pin" name="confirm_pin" value="" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" class="my-auto ti-form-input" placeholder="Reenter PIN">
                             </div>
                       
                               <div class="space-y-2 mt-5 max-w-lg">
@@ -105,4 +105,3 @@
 
        
 @endsection
-

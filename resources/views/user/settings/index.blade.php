@@ -235,7 +235,7 @@
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0">PIN</label>
-                                <input type="password" id="pin5" name="pin5" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" id="pin5" name="pin5" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin5">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
@@ -261,7 +261,7 @@
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.Current PIN')}}</label>
-                                <input type="password" id="current_pin" name="current_pin" class="my-auto ti-form-input" placeholder="">   
+                                <input type="password" id="current_pin" name="current_pin" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" class="my-auto ti-form-input" placeholder="">   
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin2">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
@@ -270,7 +270,7 @@
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0"> {{__('messages.New PIN')}}</label>
-                                <input type="password" id="new_pin" name="new_pin" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" id="new_pin" name="new_pin" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin3">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
@@ -279,7 +279,7 @@
 
                               <div class="space-y-2 mt-5">
                                 <label class="ti-form-label mb-0">{{__('messages.Confirm New PIN')}}</label>
-                                <input type="password" id="confirm_new_pin" name="confirm_new_pin" class="my-auto ti-form-input" placeholder=""> 
+                                <input type="password" id="confirm_new_pin" name="confirm_new_pin" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" class="my-auto ti-form-input" placeholder=""> 
                                 <div class="flex items-center">
                                   <input type="checkbox" id="hs-basic-with-description-unchecked" class="ti-switch show_pin4">
                                   <label for="hs-basic-with-description-unchecked" class="text-sm text-gray-500 ms-3 dark:text-white/70 ">{{__('messages.Show pin')}}</label>
@@ -473,4 +473,3 @@
 
        
 @endsection
-

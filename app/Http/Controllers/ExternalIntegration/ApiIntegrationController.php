@@ -98,9 +98,9 @@ class ApiIntegrationController extends Controller
     public function update_user_pin(Request $request){
         $request->validate([
             'user_id' => ['required', 'string', 'exists:users,id'],
-            'current_pin' => 'required', 
-            'new_pin' => ['required','string','regex:/^\d{4,5}$/'], 
-            'confirm_new_pin' => ['required','string','regex:/^\d{4,5}$/'], 
+            'current_pin' => ['required', 'digits:4'], 
+            'new_pin' => ['required', 'digits:4'], 
+            'confirm_new_pin' => ['required', 'digits:4'], 
         ]);
 
         $data['current_pin'] = $request->current_pin;
@@ -191,8 +191,8 @@ class ApiIntegrationController extends Controller
             
         $request->validate([
             'user_id' => ['required', 'string', 'exists:users,id'],
-            'pin' => ['required','integer','regex:/^\d{4,5}$/'], 
-            'confirm_pin' => ['required','integer','regex:/^\d{4,5}$/'], 
+            'pin' => ['required', 'digits:4'], 
+            'confirm_pin' => ['required', 'digits:4'], 
         ]);
 
         $data['pin'] = $request->pin;

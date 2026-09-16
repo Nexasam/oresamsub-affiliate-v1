@@ -24,8 +24,8 @@ class UserSettingsController extends Controller
     public function store_set_pin(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'pin' => ['required', 'string', 'regex:/^\d{4,5}$/'],
-            'confirm_pin' => ['required', 'string', 'regex:/^\d{4,5}$/'],
+            'pin' => ['required', 'digits:4'],
+            'confirm_pin' => ['required', 'digits:4'],
         ]);
     
         if ($validator->fails()) {
@@ -123,7 +123,7 @@ class UserSettingsController extends Controller
         'new_password' => 'required',
         'confirm_new_password' => 'required',
         // 'current_password' => 'nullable',
-        'pin5' => ['required','string','regex:/^\d{4,5}$/']
+        'pin5' => ['required', 'digits:4']
       ]);
       
 
@@ -199,7 +199,7 @@ class UserSettingsController extends Controller
         'first_name' => 'required|max:255',
         'last_name' => 'required|max:255',
         'other_names' => 'nullable|max:255',
-        'pin' => ['required','string','regex:/^\d{4,5}$/'],
+        'pin' => ['required', 'digits:4'],
       ]);
       
 
@@ -233,9 +233,9 @@ class UserSettingsController extends Controller
     public function update_pin(Request $request){
     
       $validator = Validator::make($request->all(), [
-        'current_pin' => ['required','string','regex:/^\d{4,5}$/'],
-        'new_pin' => ['required','string','regex:/^\d{4,5}$/'],
-        'confirm_new_pin' => ['required','string','regex:/^\d{4,5}$/']
+        'current_pin' => ['required', 'digits:4'],
+        'new_pin' => ['required', 'digits:4'],
+        'confirm_new_pin' => ['required', 'digits:4']
       ]);
       
 

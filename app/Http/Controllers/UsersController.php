@@ -213,7 +213,7 @@ class UsersController extends Controller
 
       $validator = Validator::make($request->all(), [
         'amount' => 'required|numeric',
-        'pin' => 'required|max:255',
+        'pin' => ['required', 'digits:4'],
         'user_id' => 'required|exists:users,id',
       ]);
       
@@ -346,7 +346,7 @@ class UsersController extends Controller
         'phone_number' => 'nullable',
         'customer_category' => 'nullable',
         'customer_landmark' => 'nullable',
-        'pin' => 'required','integer','regex:/^\d{4,5}$/',
+        'pin' => ['required', 'digits:4'],
         'user_plan_id' => ['required','string','exists:affiliate_user_plans,id'],
       ]);
       
@@ -625,7 +625,7 @@ class UsersController extends Controller
       //for ADMIN
       $validator = Validator::make($request->all(), [
         'username' => ['required', 'string', Rule::unique('users', 'username')->where('affiliate_id', $affiliateId)],
-        'pin' => ['required','string','regex:/^\d{4,5}$/'],
+        'pin' => ['required', 'digits:4'],
         'first_name' => 'required|max:255',
         'last_name' => 'required|max:255',
         // 'other_names' => 'nullable|max:255',

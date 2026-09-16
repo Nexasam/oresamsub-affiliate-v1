@@ -55,7 +55,7 @@
 
             <div class="mt-2">
                 <label for="pin5" class="block mb-2 text-sm font-medium text-gray-900">PIN</label>
-                <input type="password" name="pin5" id="pin5" aria-describedby="helper-text-explanation" class=" bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="">
+                <input type="password" name="pin5" id="pin5" maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]{4}" aria-describedby="helper-text-explanation" class=" bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="">
             </div>
 
 
@@ -80,17 +80,17 @@
             <p class="text-gray-500">Note: 4 digits required.</p>
             <div class="mt-3">
                 <label for="current_pin" class="block mb-2 text-sm font-medium text-gray-900">Current PIN</label>
-                <input type="password" name="current_pin" id="current_pin" aria-describedby="helper-text-explanation" class="show_pin1 bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="1111">
+                <input type="password" name="current_pin" id="current_pin" maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]{4}" aria-describedby="helper-text-explanation" class="show_pin1 bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="1111">
             </div>
 
             <div class="mt-2">
                 <label for="new_pin" class="block mb-2 text-sm font-medium text-gray-900">New PIN</label>
-                <input type="password" name="new_pin" id="new_pin" aria-describedby="helper-text-explanation" class="show_pin1 bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="1111">
+                <input type="password" name="new_pin" id="new_pin" maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]{4}" aria-describedby="helper-text-explanation" class="show_pin1 bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="1111">
             </div>
 
             <div class="mt-2">
                 <label for="confirm_new_pin" class="block mb-2 text-sm font-medium text-gray-900">Confirm New PIN</label>
-                <input type="password" name="confirm_new_pin" id="confirm_new_pin" aria-describedby="helper-text-explanation" class="show_pin1 bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="1111">
+                <input type="password" name="confirm_new_pin" id="confirm_new_pin" maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]{4}" aria-describedby="helper-text-explanation" class="show_pin1 bg-gray-50 border border-gray-300 text-[{{$site_primary_color}}] text-sm rounded-lg focus:ring-[{{$site_primary_color}}] focus:border-[{{$site_primary_color}}] block w-full p-2.5" placeholder="1111">
             </div>
 
 

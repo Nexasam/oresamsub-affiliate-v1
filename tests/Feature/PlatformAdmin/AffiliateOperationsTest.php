@@ -242,7 +242,7 @@ it('edits an affiliate user and its affiliate user plan', function () {
         ->patchJson("/admin/affiliates/{$affiliate->id}/management-users/{$user->id}", [
             'first_name' => 'After',
             'user_plan_id' => $plan->id,
-            'pin' => '567890',
+            'pin' => '5678',
         ])
         ->assertOk()
         ->assertJsonPath('user.first_name', 'After')
@@ -260,7 +260,7 @@ it('edits an affiliate user and its affiliate user plan', function () {
     expect($plan->fresh()->updated_user_plan_name)->toBe('Starter')
         ->and((float) $plan->fresh()->max_profit)->toBe(70.0)
         ->and($user->fresh()->user_plan_id)->toBe($plan->id)
-        ->and($user->fresh()->pin)->toBe('567890');
+        ->and($user->fresh()->pin)->toBe('5678');
 });
 
 it('lists users across all affiliates and identifies their affiliate', function () {
@@ -572,7 +572,7 @@ it('creates a short-lived tenant-bound impersonation handoff', function () {
         ->assertGone();
 });
 
-it('creates a fully configured affiliate user with a six digit pin', function () {
+it('creates a fully configured affiliate user with a four digit pin', function () {
     $admin = platformOperationsAdmin();
     $affiliate = platformOperationsAffiliate();
     Role::create(['role_name' => 'User']);
@@ -591,7 +591,7 @@ it('creates a fully configured affiliate user with a six digit pin', function ()
             'username' => 'detailed-customer',
             'email' => 'detailed-customer@example.com',
             'phone_number' => '08012345678',
-            'pin' => '654321',
+            'pin' => '6543',
             'password' => 'StrongPassword1!',
             'password_confirmation' => 'StrongPassword1!',
             'role' => 'User',
@@ -609,9 +609,37 @@ it('creates a fully configured affiliate user with a six digit pin', function ()
     $this->assertDatabaseHas('users', [
         'affiliate_id' => $affiliate->id,
         'username' => 'detailed-customer',
-        'pin' => '654321',
+        'pin' => '6543',
         'customer_category' => 'pos',
         'customer_landmark' => 'Central Market',
         'account_tier' => 2,
+    ]);
+});
+
+it('rejects affiliate users whose transaction pin is not four digits', function () {
+    $admin = platformOperationsAdmin();
+    $affiliate = platformOperationsAffiliate();
+    Role::create(['role_name' => 'User']);
+
+    $this->actingAs($admin, 'platform_admin')
+        ->postJson("/admin/affiliates/{$affiliate->id}/users", [
+            'first_name' => 'Invalid',
+            'last_name' => 'Pin',
+            'username' => 'invalid-pin-user',
+            'email' => 'invalid-pin@example.com',
+            'pin' => '12345',
+            'password' => 'StrongPassword1!',
+            'password_confirmation' => 'StrongPassword1!',
+            'role' => 'User',
+            'default_wallet_setting' => 'main_wallet',
+            'active' => 1,
+            'email_verified' => true,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('pin');
+
+    $this->assertDatabaseMissing('users', [
+        'affiliate_id' => $affiliate->id,
+        'username' => 'invalid-pin-user',
     ]);
 });

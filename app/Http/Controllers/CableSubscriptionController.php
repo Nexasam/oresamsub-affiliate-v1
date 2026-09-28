@@ -372,7 +372,10 @@ class CableSubscriptionController extends Controller
         $timestamp = date('Ymd_His_u'); // precise timestamp with microseconds
         $random    = bin2hex(random_bytes(3)); // 6 random hex chars
         
-        return "{$prefix}_{$timestamp}_{$userHash}_{$random}";
+        $affiliateSignature = Affiliate::transactionReferenceSignatureForUser($userUuid);
+        $reference = "{$prefix}_{$timestamp}_{$userHash}_{$random}";
+
+        return $affiliateSignature ? "{$affiliateSignature}-{$reference}" : $reference;
     }
 
 

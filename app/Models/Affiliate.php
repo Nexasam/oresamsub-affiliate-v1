@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Affiliate extends Model
 {
@@ -73,5 +74,43 @@ class Affiliate extends Model
     public function usesLegacyAdminSettings(): bool
     {
         return $this->processingProfile?->management_mode !== 'parent_managed';
+    }
+
+    public function transactionReferenceSignature(): string
+    {
+        return Str::slug((string) ($this->slug ?: $this->name), '-');
+    }
+
+    public static function transactionReferenceSignatureForUser(int|string|null $userId): ?string
+    {
+        if (! $userId) {
+            return static::transactionReferenceSignatureFromSession();
+        }
+
+        $affiliate = static::query()
+            ->select('affiliates.id', 'affiliates.name', 'affiliates.slug')
+            ->join('users', 'users.affiliate_id', '=', 'affiliates.id')
+            ->where('users.id', $userId)
+            ->first();
+
+        return $affiliate?->transactionReferenceSignature()
+            ?: static::transactionReferenceSignatureFromSession();
+    }
+
+    private static function transactionReferenceSignatureFromSession(): ?string
+    {
+        $affiliate = session('affiliate');
+
+        if (! $affiliate) {
+            return null;
+        }
+
+        if ($affiliate instanceof self) {
+            return $affiliate->transactionReferenceSignature();
+        }
+
+        $value = data_get($affiliate, 'slug') ?: data_get($affiliate, 'name');
+
+        return $value ? Str::slug((string) $value, '-') : null;
     }
 }

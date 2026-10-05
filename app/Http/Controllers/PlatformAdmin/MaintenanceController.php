@@ -26,6 +26,21 @@ class MaintenanceController extends Controller
         return $this->run([PHP_BINARY, 'artisan', 'optimize:clear'], 'Laravel caches cleared.');
     }
 
+    public function clearLogs(): RedirectResponse
+    {
+        $files = glob(storage_path('logs/*.log')) ?: [];
+        $cleared = 0;
+
+        foreach ($files as $file) {
+            if (is_file($file) && is_writable($file)) {
+                file_put_contents($file, '');
+                $cleared++;
+            }
+        }
+
+        return back()->with('success', "Cleared {$cleared} Laravel log file(s).");
+    }
+
     private function run(array $command, string $message): RedirectResponse
     {
         $process = new Process($command, base_path());

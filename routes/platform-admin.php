@@ -43,6 +43,7 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
         Route::get('maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
         Route::post('maintenance/git-pull', [MaintenanceController::class, 'gitPull'])->name('maintenance.git-pull');
         Route::post('maintenance/optimize-clear', [MaintenanceController::class, 'optimizeClear'])->name('maintenance.optimize-clear');
+        Route::post('maintenance/clear-logs', [MaintenanceController::class, 'clearLogs'])->name('maintenance.clear-logs');
         Route::get('provider-adapters', [ProviderAdapterController::class, 'index'])->name('provider-adapters.index');
         Route::get('provider-adapters/data', [ProviderAdapterController::class, 'data'])->name('provider-adapters.data');
         Route::post('provider-adapters', [ProviderAdapterController::class, 'store'])->name('provider-adapters.store');

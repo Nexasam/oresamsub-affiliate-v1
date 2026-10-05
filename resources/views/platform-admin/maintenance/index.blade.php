@@ -12,12 +12,12 @@
         <div class="mt-4 flex flex-wrap gap-3">
             <form method="POST" action="{{ route('platform-admin.maintenance.git-pull') }}">@csrf<button class="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white" onclick="return confirm('Run git pull origin main on this server?')">Git pull origin main</button></form>
             <form method="POST" action="{{ route('platform-admin.maintenance.optimize-clear') }}">@csrf<button class="rounded-xl border px-4 py-2.5 text-sm font-semibold">php artisan optimize:clear</button></form>
-            <form method="POST" action="{{ route('platform-admin.maintenance.clear-logs') }}">@csrf<button class="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700" onclick="return confirm('Clear all Laravel log files? This cannot be undone.')">Clear Laravel logs</button></form>
+            <form method="POST" action="{{ route('platform-admin.maintenance.clear-logs') }}">@csrf<button class="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700" onclick="return confirm('Clear all log files? This cannot be undone.')">Clear logs</button></form>
         </div>
     </section>
 
     <section class="rounded-2xl border bg-white p-5 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-semibold">Laravel log tail</h2><a href="{{ route('platform-admin.maintenance.index') }}" class="rounded-lg border px-3 py-2 text-sm font-semibold">Refresh</a></div>
+        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-semibold">Log tail</h2><a href="{{ route('platform-admin.maintenance.index') }}" class="rounded-lg border px-3 py-2 text-sm font-semibold">Refresh</a></div>
         <pre class="mt-3 max-h-[650px] overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">{{ $log }}</pre>
     </section>
 </div>

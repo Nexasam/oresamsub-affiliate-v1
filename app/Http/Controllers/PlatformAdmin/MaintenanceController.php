@@ -28,17 +28,34 @@ class MaintenanceController extends Controller
 
     public function clearLogs(): RedirectResponse
     {
-        $files = glob(storage_path('logs/*.log')) ?: [];
+        $logPath = storage_path('logs');
+        if (! is_dir($logPath)) {
+            mkdir($logPath, 0755, true);
+        }
+
+        $files = glob($logPath.'/*.log') ?: [];
         $cleared = 0;
+        $skipped = 0;
 
         foreach ($files as $file) {
-            if (is_file($file) && is_writable($file)) {
-                file_put_contents($file, '');
+            if (is_file($file) && is_writable($file) && @file_put_contents($file, '') !== false) {
                 $cleared++;
+            } else {
+                $skipped++;
             }
         }
 
-        return back()->with('success', "Cleared {$cleared} Laravel log file(s).");
+        $defaultLog = $logPath.'/laravel.log';
+        if (! is_file($defaultLog)) {
+            @touch($defaultLog);
+        }
+
+        $message = "Cleared {$cleared} log file(s).";
+        if ($skipped > 0) {
+            $message .= " Skipped {$skipped} missing or unwritable file(s).";
+        }
+
+        return back()->with('success', $message);
     }
 
     private function run(array $command, string $message): RedirectResponse

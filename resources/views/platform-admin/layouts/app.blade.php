@@ -88,6 +88,11 @@
                     <span>↗</span> Reports & profit
                 </a>
             @endif
+            @if (Route::has('platform-admin.maintenance.index'))
+                <a href="{{ route('platform-admin.maintenance.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium {{ request()->routeIs('platform-admin.maintenance.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>⌁</span> Maintenance
+                </a>
+            @endif
         </nav>
         <div class="border-t border-white/10 p-4">
             <div class="mb-3 px-3">

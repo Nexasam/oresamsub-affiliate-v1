@@ -107,6 +107,76 @@ class AffiliateSettlementWalletService
         });
     }
 
+    public function debit(
+        Affiliate $affiliate,
+        ParentAdmin $actor,
+        string $amount,
+        string $reference,
+        string $reason,
+    ): AffiliateSettlementWallet {
+        if (! $affiliate->parent_business_id || (int) $affiliate->parent_business_id !== (int) $actor->parent_business_id) {
+            $this->fail('affiliate', 'You cannot debit an affiliate outside your parent business.');
+        }
+
+        $amount = $this->normalizePositiveMoney($amount);
+        $reference = trim($reference);
+        $reason = trim($reason);
+
+        if ($reference === '') {
+            $this->fail('reference', 'A debit reference is required.');
+        }
+
+        if ($reason === '') {
+            $this->fail('reason', 'A debit reason is required.');
+        }
+
+        return DB::transaction(function () use ($affiliate, $actor, $amount, $reference, $reason) {
+            if (AffiliateSettlementLedgerEntry::query()
+                ->where('parent_business_id', $affiliate->parent_business_id)
+                ->where('reference', $reference)
+                ->exists()) {
+                $this->fail('reference', 'This settlement adjustment reference has already been used.');
+            }
+
+            $wallet = AffiliateSettlementWallet::query()
+                ->where('affiliate_id', $affiliate->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet || (int) $wallet->parent_business_id !== (int) $affiliate->parent_business_id) {
+                $this->fail('wallet', 'The affiliate settlement wallet is not configured.');
+            }
+
+            if ($wallet->status !== 'active') {
+                $this->fail('wallet', 'The affiliate settlement wallet is not active.');
+            }
+
+            $before = $wallet->available_balance;
+            $afterCents = $this->toCents($before) - $this->toCents($amount);
+            if ($afterCents < 0) {
+                $this->fail('amount', 'The affiliate settlement wallet has insufficient available balance.');
+            }
+
+            $after = $this->fromCents($afterCents);
+            $wallet->forceFill(['available_balance' => $after])->save();
+
+            $wallet->ledgerEntries()->create([
+                'parent_business_id' => $affiliate->parent_business_id,
+                'affiliate_id' => $affiliate->id,
+                'entry_type' => 'manual_debit',
+                'amount' => $amount,
+                'balance_before' => $before,
+                'balance_after' => $after,
+                'reference' => $reference,
+                'actor_type' => 'parent_admin',
+                'actor_id' => $actor->id,
+                'reason' => $reason,
+            ]);
+
+            return $wallet->fresh();
+        });
+    }
+
     public function creditFromWebhook(Affiliate $affiliate, string $amount, string $reference, array $metadata = []): AffiliateSettlementWallet
     {
         $amount = $this->normalizePositiveMoney($amount);

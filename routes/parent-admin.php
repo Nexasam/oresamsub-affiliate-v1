@@ -33,6 +33,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::get('onboarding', OnboardingController::class)->name('onboarding.index');
         Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
         Route::post('impersonation/exit', [\App\Http\Controllers\PlatformAdmin\ParentImpersonationController::class, 'destroy'])->name('impersonation.exit');
         Route::get('product-plans', [ProductPlanController::class, 'index'])->name('product-plans.index');
@@ -62,6 +63,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::middleware('parent.affiliate')->group(function () {
             Route::get('affiliates/{affiliate}/settlement-wallet', [AffiliateSettlementWalletController::class, 'show'])->name('affiliates.settlement-wallet.show');
             Route::post('affiliates/{affiliate}/settlement-wallet/credits', [AffiliateSettlementWalletController::class, 'credit'])->name('affiliates.settlement-wallet.credit');
+            Route::post('affiliates/{affiliate}/settlement-wallet/debits', [AffiliateSettlementWalletController::class, 'debit'])->name('affiliates.settlement-wallet.debit');
             Route::post('affiliates/{affiliate}/processing/change-requests', [AffiliateProcessingController::class, 'requestChange'])->name('affiliates.processing.change-requests.store');
             Route::get('affiliates/{affiliate}/catalog', [PlatformAffiliateOperationsController::class, 'catalog'])->name('affiliates.catalog');
             Route::patch('affiliates/{affiliate}/catalog/plans/{plan}', [PlatformAffiliateOperationsController::class, 'updatePlan'])->name('affiliates.catalog.plans.update');

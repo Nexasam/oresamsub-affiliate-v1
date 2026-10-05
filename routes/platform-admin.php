@@ -11,6 +11,7 @@ use App\Http\Controllers\PlatformAdmin\CatalogController;
 use App\Http\Controllers\PlatformAdmin\DashboardController;
 use App\Http\Controllers\PlatformAdmin\FundingProviderController;
 use App\Http\Controllers\PlatformAdmin\ImpersonationController;
+use App\Http\Controllers\PlatformAdmin\MaintenanceController;
 use App\Http\Controllers\PlatformAdmin\ParentBusinessController;
 use App\Http\Controllers\PlatformAdmin\ParentImpersonationController;
 use App\Http\Controllers\PlatformAdmin\ParentProviderConnectionController;
@@ -39,6 +40,9 @@ Route::prefix('admin')->name('platform-admin.')->group(function () {
         Route::patch('all-transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status.update');
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/data', [ReportController::class, 'data'])->name('reports.data');
+        Route::get('maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+        Route::post('maintenance/git-pull', [MaintenanceController::class, 'gitPull'])->name('maintenance.git-pull');
+        Route::post('maintenance/optimize-clear', [MaintenanceController::class, 'optimizeClear'])->name('maintenance.optimize-clear');
         Route::get('provider-adapters', [ProviderAdapterController::class, 'index'])->name('provider-adapters.index');
         Route::get('provider-adapters/data', [ProviderAdapterController::class, 'data'])->name('provider-adapters.data');
         Route::post('provider-adapters', [ProviderAdapterController::class, 'store'])->name('provider-adapters.store');

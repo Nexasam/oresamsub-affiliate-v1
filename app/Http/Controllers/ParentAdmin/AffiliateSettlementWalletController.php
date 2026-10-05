@@ -47,4 +47,13 @@ class AffiliateSettlementWalletController extends Controller
         return redirect()->route('parent-admin.affiliates.settlement-wallet.show', $affiliate)
             ->with('success', 'Affiliate settlement wallet credited successfully.');
     }
+
+    public function debit(CreditAffiliateSettlementWalletRequest $request, Affiliate $affiliate, AffiliateSettlementWalletService $service): RedirectResponse
+    {
+        $data = $request->validated();
+        $service->debit($affiliate, $request->user('parent_admin'), (string) $data['amount'], $data['reference'], $data['reason']);
+
+        return redirect()->route('parent-admin.affiliates.settlement-wallet.show', $affiliate)
+            ->with('success', 'Affiliate settlement wallet debited successfully.');
+    }
 }

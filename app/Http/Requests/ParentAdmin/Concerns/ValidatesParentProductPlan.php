@@ -35,7 +35,6 @@ trait ValidatesParentProductPlan
             "{$prefix}prices.*.parent_reseller_level_id" => ['required', 'integer'],
             "{$prefix}prices.*.selling_price" => ['nullable', 'numeric', 'min:0'],
             "{$prefix}prices.*.max_profit" => ['nullable', 'numeric', 'min:0'],
-            "{$prefix}apply_to_affiliate_plans" => ['sometimes', 'boolean'],
         ];
     }
 

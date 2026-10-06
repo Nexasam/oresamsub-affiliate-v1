@@ -3,7 +3,6 @@
 namespace App\Services\ParentAdmin;
 
 use App\Models\Affiliate;
-use App\Models\AffiliateProductPlan;
 use App\Models\ParentBusiness;
 use App\Models\ParentResellerLevel;
 use App\Models\ProductPlan;
@@ -123,8 +122,7 @@ class ParentCatalogService
         return DB::transaction(function () use ($parent, $plan, $attributes, $routeSwitcher) {
             $route = $attributes['route'] ?? null;
             $prices = $this->filledPrices($attributes['prices'] ?? []);
-            $applyToAffiliatePlans = (bool) ($attributes['apply_to_affiliate_plans'] ?? false);
-            unset($attributes['route'], $attributes['prices'], $attributes['apply_to_affiliate_plans']);
+            unset($attributes['route'], $attributes['prices']);
             $plan->update($attributes);
 
             if ($route && filled($route['parent_provider_connection_id'] ?? null) && filled($route['provider_plan_id'] ?? null)) {
@@ -137,9 +135,6 @@ class ParentCatalogService
 
             if ($prices !== []) {
                 $this->updatePrices($parent, $plan, $prices);
-                if ($applyToAffiliatePlans) {
-                    $this->applyMaxProfitToAffiliatePlans($parent, $plan, $prices);
-                }
             }
 
             return $this->hydratePlan($plan);
@@ -295,26 +290,4 @@ class ParentCatalogService
             ->delete();
     }
 
-    private function applyMaxProfitToAffiliatePlans(ParentBusiness $parent, ProductPlan $plan, array $prices): int
-    {
-        abort_unless($plan->parent_business_id === $parent->id, 404);
-
-        $values = [];
-        foreach (array_values($prices) as $index => $price) {
-            $level = $index + 1;
-            if ($level > 6 || ! array_key_exists('max_profit', $price) || $price['max_profit'] === null || $price['max_profit'] === '') {
-                continue;
-            }
-            $values["user_level_{$level}_profit"] = $price['max_profit'];
-        }
-
-        if ($values === []) {
-            return 0;
-        }
-
-        return AffiliateProductPlan::withoutGlobalScope('affiliate')
-            ->where('product_plan_id', $plan->id)
-            ->whereIn('affiliate_id', $parent->affiliates()->select('id'))
-            ->update($values);
-    }
 }

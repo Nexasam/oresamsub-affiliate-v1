@@ -17,6 +17,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProductPlanController extends Controller
 {
@@ -167,6 +169,63 @@ class ProductPlanController extends Controller
 
         return redirect()->route('parent-admin.product-plans.index', array_filter($request->only(['search', 'category_id'])))
             ->with('success', "{$plans->count()} product plans updated.");
+    }
+
+    public function bulkUpdateConfigurations(Request $request): JsonResponse
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        $data = $request->validate([
+            'plans' => ['required', 'array', 'min:1', 'max:15'],
+            'plans.*.id' => ['required', 'integer', 'distinct'],
+            'plans.*.product_plan_name' => ['required', 'string', 'max:255'],
+            'plans.*.product_plan_category_id' => ['required', 'integer', Rule::exists('product_plan_categories', 'id')],
+            'plans.*.api_id' => ['nullable', 'string', 'max:255'],
+            'plans.*.admin_cost_price' => ['nullable', 'numeric', 'min:0'],
+            'plans.*.cost_price' => ['required', 'numeric', 'min:0'],
+            'plans.*.data_size_in_mb' => ['nullable', 'numeric', 'min:0'],
+            'plans.*.validity_in_days' => ['nullable', 'integer', 'min:0'],
+            'plans.*.profit_category' => ['required', Rule::in(['flat', 'percent'])],
+            'plans.*.visibility' => ['required', 'boolean'],
+            'plans.*.affiliate_visibility' => ['required', 'boolean'],
+            'plans.*.public_visibility' => ['required', 'boolean'],
+            'plans.*.route' => ['nullable', 'array'],
+            'plans.*.route.parent_provider_connection_id' => ['nullable', 'integer'],
+            'plans.*.route.provider_plan_id' => ['nullable', 'string', 'max:255'],
+            'plans.*.prices' => ['nullable', 'array', 'max:6'],
+            'plans.*.prices.*.parent_reseller_level_id' => ['required', 'integer'],
+            'plans.*.prices.*.selling_price' => ['nullable', 'numeric', 'min:0'],
+            'plans.*.prices.*.max_profit' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $submitted = collect($data['plans']);
+        $plans = ProductPlan::query()
+            ->where('parent_business_id', $parent->id)
+            ->whereIn('id', $submitted->pluck('id'))
+            ->get()
+            ->keyBy('id');
+
+        if ($plans->count() !== $submitted->count()) {
+            throw ValidationException::withMessages(['plans' => 'One or more selected plans do not belong to this parent.']);
+        }
+
+        DB::transaction(function () use ($parent, $submitted, $plans): void {
+            foreach ($submitted as $row) {
+                $plan = $plans->get((int) $row['id']);
+                unset($row['id']);
+
+                $this->catalog->updateConfiguration(
+                    $parent,
+                    $plan,
+                    $row,
+                    $this->routeSwitcher,
+                );
+            }
+        });
+
+        return response()->json([
+            'message' => $submitted->count().' product plan configurations updated.',
+            'updated_count' => $submitted->count(),
+        ]);
     }
 
     public function disable(Request $request, ProductPlan $plan): RedirectResponse

@@ -126,6 +126,7 @@
                 <button type="button" class="text-xs font-semibold text-slate-500" @click="selectionScope='selected'; selectedIds = []">Clear selection</button>
                 <span class="text-xs text-slate-400" x-text="selectionScope === 'all' ? 'All {{ $plans->total() }} matching plans selected' : `${selectedIds.length} selected`"></span>
                 <div class="ml-auto flex flex-wrap gap-2">
+                    <button type="button" @click="openBulkEdit()" :disabled="selectionScope !== 'selected' || selectedIds.length === 0 || selectedIds.length > 15" class="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 disabled:cursor-not-allowed disabled:opacity-40">Bulk edit selected</button>
                     <select name="action" x-model="bulkAction" required class="rounded-lg border-slate-200 py-1.5 text-xs"><option value="">Bulk action</option><option value="switch_connection">Switch connection</option><option value="activate">Activate</option><option value="deactivate">Deactivate</option><option value="show_affiliates">Show for affiliates</option><option value="hide_affiliates">Hide from affiliates</option><option value="show_public">Show publicly</option><option value="hide_public">Hide publicly</option></select>
                     <button :disabled="selectionScope === 'selected' && selectedIds.length === 0" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Apply</button>
                 </div>
@@ -180,6 +181,52 @@
         </form>
     </aside>
 
+    <div x-cloak x-show="bulkEditOpen" class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 p-4" @click.self="closeBulkEdit()">
+        <section class="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Bulk edit product plans">
+            <div class="flex items-start justify-between border-b p-5"><div><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bulk edit</p><h2 class="mt-1 text-lg font-semibold">Edit selected product plans</h2><p class="mt-1 text-sm text-slate-500">Up to 15 plans at once. Keep each row compact and save everything together.</p></div><button type="button" @click="closeBulkEdit()" class="rounded-lg border px-3 py-2 text-sm">Close</button></div>
+            <form method="POST" action="{{ route('parent-admin.product-plans.bulk-configurations.update') }}" class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitAjax($event)">@csrf @method('PATCH')
+                <div class="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-5">
+                    <template x-for="(row,index) in bulkEditRows" :key="row.id">
+                        <article class="rounded-xl border bg-white p-4">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <strong class="text-sm" x-text="row.product_plan_name"></strong>
+                                <div class="flex flex-wrap gap-3 text-xs">
+                                    <input type="hidden" :name="`plans[${index}][id]`" :value="row.id">
+                                    <input type="hidden" :name="`plans[${index}][product_plan_category_id]`" :value="row.product_plan_category_id">
+                                    <input type="hidden" :name="`plans[${index}][visibility]`" :value="row.visibility ? 1 : 0">
+                                    <input type="hidden" :name="`plans[${index}][affiliate_visibility]`" :value="row.affiliate_visibility ? 1 : 0">
+                                    <input type="hidden" :name="`plans[${index}][public_visibility]`" :value="row.public_visibility ? 1 : 0">
+                                    <label><input type="checkbox" x-model="row.visibility"> Active</label>
+                                    <label><input type="checkbox" x-model="row.affiliate_visibility"> Affiliates</label>
+                                    <label><input type="checkbox" x-model="row.public_visibility"> Public</label>
+                                </div>
+                            </div>
+                            <div class="mt-3 grid gap-3 md:grid-cols-4">
+                                <label class="text-[11px]">Name<input :name="`plans[${index}][product_plan_name]`" x-model="row.product_plan_name" required class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                                <label class="text-[11px]">Internal ref<input :name="`plans[${index}][api_id]`" x-model="row.api_id" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                                <label class="text-[11px]">Provider cost<input :name="`plans[${index}][cost_price]`" x-model="row.cost_price" required type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                                <label class="text-[11px]">Admin cost<input :name="`plans[${index}][admin_cost_price]`" x-model="row.admin_cost_price" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                                <label class="text-[11px]">Data MB<input :name="`plans[${index}][data_size_in_mb]`" x-model="row.data_size_in_mb" type="number" min="0" step=".01" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                                <label class="text-[11px]">Validity<input :name="`plans[${index}][validity_in_days]`" x-model="row.validity_in_days" type="number" min="0" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                                <label class="text-[11px]">Profit mode<select :name="`plans[${index}][profit_category]`" x-model="row.profit_category" class="mt-1 w-full rounded-lg border-slate-200 text-xs"><option value="flat">Flat</option><option value="percent">Percentage</option></select></label>
+                                <label class="text-[11px]">Connection<select :name="`plans[${index}][route][parent_provider_connection_id]`" x-model="row.route.parent_provider_connection_id" class="mt-1 w-full rounded-lg border-slate-200 text-xs"><option value="">No route</option>@foreach($connections as $connection)<option value="{{ $connection->id }}">{{ $connection->name }}</option>@endforeach</select></label>
+                                <label class="text-[11px] md:col-span-2">Provider plan ID<input :name="`plans[${index}][route][provider_plan_id]`" x-model="row.route.provider_plan_id" class="mt-1 w-full rounded-lg border-slate-200 text-xs"></label>
+                            </div>
+                            <div class="mt-3 overflow-x-auto rounded-lg border">
+                                <table class="w-full min-w-[700px] text-left text-[11px]"><thead class="bg-slate-50 text-slate-500"><tr><th class="px-3 py-2">Level</th><th class="px-3 py-2">Selling price</th><th class="px-3 py-2">Max profit</th></tr></thead><tbody class="divide-y">
+                                    <template x-for="(price,priceIndex) in row.prices" :key="price.parent_reseller_level_id">
+                                        <tr><td class="px-3 py-2"><span x-text="price.name"></span><input type="hidden" :name="`plans[${index}][prices][${priceIndex}][parent_reseller_level_id]`" :value="price.parent_reseller_level_id"></td><td class="px-3 py-2"><input :name="`plans[${index}][prices][${priceIndex}][selling_price]`" x-model="price.selling_price" type="number" min="0" step=".01" class="w-full rounded-lg border-slate-200 text-xs"></td><td class="px-3 py-2"><input :name="`plans[${index}][prices][${priceIndex}][max_profit]`" x-model="price.max_profit" type="number" min="0" step=".01" class="w-full rounded-lg border-slate-200 text-xs"></td></tr>
+                                    </template>
+                                </tbody></table>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+                <div class="flex items-center justify-between border-t bg-white p-4"><p class="text-xs text-slate-500" x-text="`${bulkEditRows.length} plans ready`"></p><button :disabled="submitting" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40" x-text="submitting ? 'Saving...' : 'Save bulk edits'"></button></div>
+            </form>
+        </section>
+    </div>
+
     <div x-cloak x-show="switchModalOpen" class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 p-4" @click.self="closeSwitchModal()">
         <section class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Switch selected product plan connections">
             <div class="flex items-start justify-between border-b p-5"><div><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bulk connection switch</p><h2 class="mt-1 text-lg font-semibold">Review selected plans</h2><p class="mt-1 text-sm text-slate-500">Future purchases will use the new route. Prices and affiliate settings remain unchanged.</p></div><button type="button" @click="closeSwitchModal()" class="rounded-lg border px-3 py-2 text-sm">Close</button></div>
@@ -199,13 +246,22 @@
 <script>
 document.addEventListener('alpine:init',()=>{
     Alpine.data('productPlanWorkspace',()=>({
-        mode:'single', drawerOpen:false, selectedPlan:null, selectedIds:[], selectionScope:'selected', bulkAction:'', switchModalOpen:false, switchRows:[], targetConnectionId:'', submitting:false, notice:'', error:'',
+        mode:'single', drawerOpen:false, selectedPlan:null, selectedIds:[], selectionScope:'selected', bulkAction:'', switchModalOpen:false, switchRows:[], targetConnectionId:'', bulkEditOpen:false, bulkEditRows:[], submitting:false, notice:'', error:'',
         plans:@json($workspacePlans),
         connections:@json($connections->map(fn($connection)=>['id'=>(string)$connection->id,'label'=>$connection->name.' · '.($connection->providerConnection?->name ?: 'Provider')])->values()),
         openDrawer(id){ this.selectedPlan=JSON.parse(JSON.stringify(this.plans[String(id)])); this.drawerOpen=true },
         closeDrawer(){ this.drawerOpen=false; this.selectedPlan=null },
         closeSwitchModal(){ this.switchModalOpen=false; this.switchRows=[]; this.targetConnectionId='' },
-        closeOverlays(){ this.closeDrawer(); this.closeSwitchModal() },
+        closeBulkEdit(){ this.bulkEditOpen=false; this.bulkEditRows=[] },
+        closeOverlays(){ this.closeDrawer(); this.closeSwitchModal(); this.closeBulkEdit() },
+        openBulkEdit(){
+            this.notice=''; this.error='';
+            if(this.selectionScope !== 'selected'){ this.error='Bulk edit works with explicitly selected plans only.'; return }
+            if(this.selectedIds.length === 0){ this.error='Select at least one product plan to edit.'; return }
+            if(this.selectedIds.length > 15){ this.error='Bulk edit supports up to 15 product plans at a time.'; return }
+            this.bulkEditRows=this.selectedIds.map(id=>JSON.parse(JSON.stringify(this.plans[String(id)]))).filter(Boolean);
+            this.bulkEditOpen=true;
+        },
         async submitAjax(event){
             this.notice=''; this.error=''; this.submitting=true;
             const form=event.target;

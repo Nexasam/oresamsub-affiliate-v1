@@ -44,6 +44,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::post('product-plans', [ProductPlanController::class, 'store'])->name('product-plans.store');
         Route::post('product-plans/bulk', [ProductPlanController::class, 'bulkStore'])->name('product-plans.bulk-store');
         Route::patch('product-plans/bulk-update', [ProductPlanController::class, 'bulkUpdate'])->name('product-plans.bulk-update');
+        Route::patch('product-plans/bulk-configurations', [ProductPlanController::class, 'bulkUpdateConfigurations'])->name('product-plans.bulk-configurations.update');
         Route::patch('product-plans/{plan}/disable', [ProductPlanController::class, 'disable'])->name('product-plans.disable');
         Route::patch('product-plans/{plan}/provider-route', [ProductPlanRouteController::class, 'update'])->name('product-plans.routes.switch');
         Route::patch('product-plans/provider-routes/bulk-switch', [ProductPlanRouteController::class, 'bulkUpdate'])->name('product-plans.routes.bulk-switch');

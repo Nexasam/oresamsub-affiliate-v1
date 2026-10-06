@@ -274,12 +274,58 @@ document.addEventListener('alpine:init',()=>{
                     return;
                 }
                 this.notice=data.message || 'Saved successfully.';
-                window.setTimeout(()=>window.location.reload(),650);
+                this.applyLocalUpdate(form, data);
             }catch(e){
                 this.error='Network error. Please try again.';
             }finally{
                 this.submitting=false;
             }
+        },
+        applyLocalUpdate(form, data){
+            const action=form.action || '';
+            if(this.selectedPlan && action.includes('/configuration')){
+                this.plans[String(this.selectedPlan.id)]=JSON.parse(JSON.stringify(this.selectedPlan));
+                this.closeDrawer();
+                return;
+            }
+            if(action.includes('/bulk-configurations')){
+                this.bulkEditRows.forEach(row=>{ this.plans[String(row.id)]=JSON.parse(JSON.stringify(row)); });
+                this.closeBulkEdit();
+                return;
+            }
+            if(action.includes('/provider-routes/bulk-switch')){
+                this.switchRows.forEach(row=>{
+                    const plan=this.plans[String(row.id)];
+                    if(!plan) return;
+                    plan.route.parent_provider_connection_id=row.target_connection_id;
+                    plan.route.provider_plan_id=row.provider_plan_id;
+                    plan.known_routes=(plan.known_routes || []).map(route=>({...route,current:String(route.connection_id)===String(row.target_connection_id)}));
+                });
+                this.closeSwitchModal();
+                return;
+            }
+            if(action.includes('/bulk-update')){
+                this.applyBulkActionLocally();
+                return;
+            }
+            if(data.plan?.id){
+                this.plans[String(data.plan.id)]=data.plan;
+                form.reset();
+            }
+        },
+        applyBulkActionLocally(){
+            const ids=this.selectionScope==='selected' ? this.selectedIds : Object.keys(this.plans);
+            ids.forEach(id=>{
+                const plan=this.plans[String(id)];
+                if(!plan) return;
+                if(this.bulkAction==='activate') plan.visibility=true;
+                if(this.bulkAction==='deactivate'){ plan.visibility=false; plan.affiliate_visibility=false; plan.public_visibility=false; }
+                if(this.bulkAction==='show_affiliates') plan.affiliate_visibility=true;
+                if(this.bulkAction==='hide_affiliates') plan.affiliate_visibility=false;
+                if(this.bulkAction==='show_public') plan.public_visibility=true;
+                if(this.bulkAction==='hide_public') plan.public_visibility=false;
+            });
+            this.bulkAction='';
         },
         async submitBulk(event){
             if(this.bulkAction==='switch_connection'){

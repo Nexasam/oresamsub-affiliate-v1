@@ -175,7 +175,7 @@ class ProductPlanController extends Controller
     {
         $parent = $request->user('parent_admin')->parentBusiness;
         $data = $request->validate([
-            'plans' => ['required', 'array', 'min:1', 'max:15'],
+            'plans' => ['required', 'array', 'min:1', 'max:30'],
             'plans.*.id' => ['required', 'integer', 'distinct'],
             'plans.*.product_plan_name' => ['required', 'string', 'max:255'],
             'plans.*.product_plan_category_id' => ['required', 'integer', Rule::exists('product_plan_categories', 'id')],

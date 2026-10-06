@@ -8,6 +8,7 @@ use App\Http\Requests\ParentAdmin\SwitchProductPlanRouteRequest;
 use App\Models\ParentProviderConnection;
 use App\Models\ProductPlan;
 use App\Services\ParentAdmin\ProductPlanRouteSwitchService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -29,7 +30,7 @@ class ProductPlanRouteController extends Controller
         return redirect()->route('parent-admin.dashboard')->with('success', "Provider route switched to {$connection->name}.");
     }
 
-    public function bulkUpdate(BulkSwitchProductPlanRoutesRequest $request, ProductPlanRouteSwitchService $switcher): RedirectResponse
+    public function bulkUpdate(BulkSwitchProductPlanRoutesRequest $request, ProductPlanRouteSwitchService $switcher): JsonResponse|RedirectResponse
     {
         $parent = $request->user('parent_admin')->parentBusiness;
         $submitted = collect($request->validated('plans'));
@@ -67,6 +68,10 @@ class ProductPlanRouteController extends Controller
                 $switcher->switch($parent, $plan, $connection, $providerPlanId);
             }
         });
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $submitted->count().' product plan connections switched.', 'updated_count' => $submitted->count()]);
+        }
 
         return redirect()->route('parent-admin.product-plans.index')
             ->with('success', $submitted->count().' product plan connections switched.');

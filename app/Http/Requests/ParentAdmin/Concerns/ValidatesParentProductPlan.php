@@ -33,8 +33,9 @@ trait ValidatesParentProductPlan
             "{$prefix}route.provider_plan_id" => ['nullable', 'string', 'max:255'],
             "{$prefix}prices" => ['nullable', 'array', 'max:6'],
             "{$prefix}prices.*.parent_reseller_level_id" => ['required', 'integer'],
-            "{$prefix}prices.*.selling_price" => ['required', 'numeric', 'min:0'],
+            "{$prefix}prices.*.selling_price" => ['nullable', 'numeric', 'min:0'],
             "{$prefix}prices.*.max_profit" => ['nullable', 'numeric', 'min:0'],
+            "{$prefix}apply_to_affiliate_plans" => ['sometimes', 'boolean'],
         ];
     }
 
@@ -71,8 +72,9 @@ trait ValidatesParentProductPlan
             }
         }
 
+        $submittedPrices = collect($plan['prices'] ?? [])->filter(fn ($price) => filled($price['selling_price'] ?? null));
         $activeLevelIds = $parent->resellerLevels()->where('status', 'active')->orderBy('position')->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $priceLevelIds = collect($plan['prices'] ?? [])->pluck('parent_reseller_level_id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+        $priceLevelIds = $submittedPrices->pluck('parent_reseller_level_id')->map(fn ($id) => (int) $id)->sort()->values()->all();
         $expectedLevelIds = collect($activeLevelIds)->sort()->values()->all();
 
         if (count($priceLevelIds) !== count(array_unique($priceLevelIds))) {
@@ -87,7 +89,7 @@ trait ValidatesParentProductPlan
 
         if (is_numeric($plan['cost_price'] ?? null)) {
             $cost = BigDecimal::of((string) $plan['cost_price']);
-            foreach ($plan['prices'] ?? [] as $index => $price) {
+            foreach ($submittedPrices as $index => $price) {
                 if (is_numeric($price['selling_price'] ?? null)
                     && BigDecimal::of((string) $price['selling_price'])->isLessThan($cost)) {
                     $validator->errors()->add($key("prices.{$index}.selling_price"), 'A reseller price cannot be below the provider cost.');

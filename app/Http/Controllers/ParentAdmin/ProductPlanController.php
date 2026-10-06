@@ -87,14 +87,18 @@ class ProductPlanController extends Controller
         ]);
     }
 
-    public function updateConfiguration(SaveProductPlanConfigurationRequest $request, ProductPlan $plan): RedirectResponse
+    public function updateConfiguration(SaveProductPlanConfigurationRequest $request, ProductPlan $plan): JsonResponse|RedirectResponse
     {
-        $this->catalog->updateConfiguration(
+        $plan = $this->catalog->updateConfiguration(
             $request->user('parent_admin')->parentBusiness,
             $plan,
             $request->validated(),
             $this->routeSwitcher,
         );
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Product plan configuration updated.', 'plan' => $plan]);
+        }
 
         return redirect()->route('parent-admin.product-plans.index')->with('success', 'Product plan configuration updated.');
     }
@@ -135,7 +139,7 @@ class ProductPlanController extends Controller
             ->with('success', "{$plans->count()} product plans added.");
     }
 
-    public function bulkUpdate(BulkUpdateProductPlansRequest $request): RedirectResponse
+    public function bulkUpdate(BulkUpdateProductPlansRequest $request): JsonResponse|RedirectResponse
     {
         $plans = $request->selectedPlans();
         $action = $request->validated('action');
@@ -156,6 +160,10 @@ class ProductPlanController extends Controller
                 }
             }
         });
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => "{$plans->count()} product plans updated.", 'updated_count' => $plans->count()]);
+        }
 
         return redirect()->route('parent-admin.product-plans.index', array_filter($request->only(['search', 'category_id'])))
             ->with('success', "{$plans->count()} product plans updated.");

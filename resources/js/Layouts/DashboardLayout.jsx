@@ -27,10 +27,22 @@ export default function DashboardLayout({ children , title}) {
       return;
     }
 
-    router.post(adminUserMode.exitUrl, {}, {
-      preserveScroll: false,
-      onSuccess: () => window.location.assign(route("dashboard")),
-    });
+    const form = document.createElement("form");
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+    form.method = "POST";
+    form.action = adminUserMode.exitUrl;
+
+    if (token) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "_token";
+      input.value = token;
+      form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
   };
 
 

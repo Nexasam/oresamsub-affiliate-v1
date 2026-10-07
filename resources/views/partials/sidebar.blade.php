@@ -73,7 +73,7 @@
                 @if (auth()->user()->role->role_name === 'Admin')
                     @if ((bool) session('admin_user_mode', false))
                         <li class="slide bg-amber-700 p-2 rounded-2xl">
-                            <form method="POST" action="{{ route('admin.user-mode.exit') }}">
+                            <form method="POST" action="{{ route('admin.user-mode.exit') }}" onsubmit="return confirm('Exit User Mode and return to the admin dashboard?')">
                                 @csrf
                                 <button class="side-menu__item w-full" type="submit">
                                     <i class="ti ti-user-shield side-menu__icon"></i>

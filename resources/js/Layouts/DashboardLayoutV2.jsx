@@ -58,6 +58,17 @@ export default function DashboardLayoutV2({ children, title }) {
     }
   };
 
+  const exitUserMode = () => {
+    if (!window.confirm("Exit User Mode and return to the admin dashboard?")) {
+      return;
+    }
+
+    router.post(adminUserMode.exitUrl, {}, {
+      preserveScroll: false,
+      onSuccess: () => window.location.assign(route("dashboard")),
+    });
+  };
+
   return (
     <div
       className={`rg-v2-app ${impersonator ? "has-impersonation" : ""}`}
@@ -109,7 +120,7 @@ export default function DashboardLayoutV2({ children, title }) {
           {adminUserMode?.active ? (
             <button
               type="button"
-              onClick={() => router.post(adminUserMode.exitUrl)}
+              onClick={exitUserMode}
               className="rg-v2-side-link w-full text-amber-700 hover:text-amber-800 dark:text-amber-300"
             >
               <ShieldCheck size={19} strokeWidth={1.9} />
@@ -150,7 +161,7 @@ export default function DashboardLayoutV2({ children, title }) {
             {adminUserMode?.active ? (
               <button
                 type="button"
-                onClick={() => router.post(adminUserMode.exitUrl)}
+                onClick={exitUserMode}
                 className="hidden rounded-full bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-700 sm:inline-flex"
               >
                 Exit User Mode

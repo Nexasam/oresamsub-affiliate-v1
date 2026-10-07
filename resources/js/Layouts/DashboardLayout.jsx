@@ -22,6 +22,17 @@ export default function DashboardLayout({ children , title}) {
   const { auth, announcements, impersonator, userDashboardPrimaryColor, adminUserMode } = props;
   const user = auth.user;
 
+  const exitUserMode = () => {
+    if (!window.confirm("Exit User Mode and return to the admin dashboard?")) {
+      return;
+    }
+
+    router.post(adminUserMode.exitUrl, {}, {
+      preserveScroll: false,
+      onSuccess: () => window.location.assign(route("dashboard")),
+    });
+  };
+
 
 
   const [showBalance, setShowBalance] = useState(true);
@@ -83,7 +94,7 @@ export default function DashboardLayout({ children , title}) {
         {adminUserMode?.active && (
           <button
             type="button"
-            onClick={() => router.post(adminUserMode.exitUrl)}
+            onClick={exitUserMode}
             className="w-full rounded-xl bg-amber-100 px-4 py-3 text-left text-sm font-bold text-amber-900 shadow-sm ring-1 ring-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-700"
           >
             Exit User Mode

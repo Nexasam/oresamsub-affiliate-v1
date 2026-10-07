@@ -76,6 +76,10 @@ class HandleInertiaRequests extends Middleware
                 'canSwitch' => (bool) config('customer-ui.v2_enabled') && ! config('customer-ui.force_v1'),
                 'updateUrl' => route('customer-ui.update'),
             ],
+            'adminUserMode' => [
+                'active' => (bool) $request->session()->get('admin_user_mode', false),
+                'exitUrl' => route('admin.user-mode.exit'),
+            ],
         ]);
     }
 }

@@ -19,7 +19,7 @@ const getInitialTheme = () => {
 
 export default function DashboardLayout({ children , title}) {
   const { props } = usePage();
-  const { auth, announcements, impersonator, userDashboardPrimaryColor } = props;
+  const { auth, announcements, impersonator, userDashboardPrimaryColor, adminUserMode } = props;
   const user = auth.user;
 
 
@@ -78,6 +78,16 @@ export default function DashboardLayout({ children , title}) {
             </div>
             </button>
           </div>
+        )}
+
+        {adminUserMode?.active && (
+          <button
+            type="button"
+            onClick={() => router.post(adminUserMode.exitUrl)}
+            className="w-full rounded-xl bg-amber-100 px-4 py-3 text-left text-sm font-bold text-amber-900 shadow-sm ring-1 ring-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-700"
+          >
+            Exit User Mode
+          </button>
         )}
 
       {/* Greeting + Dark mode toggle */}

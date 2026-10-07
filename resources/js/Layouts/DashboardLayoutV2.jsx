@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
   Activity, CircleUserRound, CreditCard, Headphones, Home, Menu,
-  LogOut, Moon, PackageOpen, ReceiptText, Smartphone, Sun, Wifi, X, Zap,
+  LogOut, Moon, PackageOpen, ReceiptText, ShieldCheck, Smartphone, Sun, Wifi, X, Zap,
 } from "lucide-react";
 import PwaInstallPopup from "@/Components/PwaInstallPopup";
 import UiVersionSwitch from "@/Components/V2/UiVersionSwitch";
@@ -34,7 +34,7 @@ const initialDarkMode = () => {
 
 export default function DashboardLayoutV2({ children, title }) {
   const { props, url } = usePage();
-  const { auth, affiliate, impersonator, siteLogo, sitename, userDashboardPrimaryColor, userDashboardSecondaryColor } = props;
+  const { auth, affiliate, impersonator, siteLogo, sitename, userDashboardPrimaryColor, userDashboardSecondaryColor, adminUserMode } = props;
   const [darkMode, setDarkMode] = useState(initialDarkMode);
   const [menuOpen, setMenuOpen] = useState(false);
   const primary = normalizeColor(userDashboardPrimaryColor, "#2563eb");
@@ -106,6 +106,16 @@ export default function DashboardLayoutV2({ children, title }) {
         </nav>
 
         <div className="mt-auto space-y-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+          {adminUserMode?.active ? (
+            <button
+              type="button"
+              onClick={() => router.post(adminUserMode.exitUrl)}
+              className="rg-v2-side-link w-full text-amber-700 hover:text-amber-800 dark:text-amber-300"
+            >
+              <ShieldCheck size={19} strokeWidth={1.9} />
+              <span>Exit User Mode</span>
+            </button>
+          ) : null}
           <InstallAppButton />
           <a href={`https://wa.me/${supportNumber}`} target="_blank" rel="noreferrer" className="rg-v2-side-link">
             <Headphones size={19} strokeWidth={1.9} />
@@ -137,6 +147,15 @@ export default function DashboardLayoutV2({ children, title }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {adminUserMode?.active ? (
+              <button
+                type="button"
+                onClick={() => router.post(adminUserMode.exitUrl)}
+                className="hidden rounded-full bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-700 sm:inline-flex"
+              >
+                Exit User Mode
+              </button>
+            ) : null}
             <div className="hidden sm:block"><UiVersionSwitch compact /></div>
             <button type="button" onClick={() => setDarkMode(value => !value)} className="rg-v2-icon-button" aria-label="Toggle dark mode">
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}

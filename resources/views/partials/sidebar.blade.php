@@ -69,7 +69,7 @@
                 @endif
 
                 @if (auth()->user()->role->role_name === 'Admin')
-                    @if (session()->boolean('admin_user_mode'))
+                    @if ((bool) session('admin_user_mode', false))
                         <li class="slide bg-amber-700 p-2 rounded-2xl">
                             <form method="POST" action="{{ route('admin.user-mode.exit') }}">
                                 @csrf
@@ -146,7 +146,7 @@
 
 
 
-                @if (auth()->user()->role->role_name === 'User' || session()->boolean('admin_user_mode'))
+                @if (auth()->user()->role->role_name === 'User' || (bool) session('admin_user_mode', false))
                 <li class="slide__category"><span class="category-name">User Modules</span></li>
                 <li class="slide">
                     <a href="{{ route('user.data.buy_data') }}" class="side-menu__item">
@@ -174,7 +174,7 @@
                 </li>
                 @endif
 
-                @if (strtolower(auth()->user()->role->role_name) == 'admin' && ! session()->boolean('admin_user_mode'))
+                @if (strtolower(auth()->user()->role->role_name) == 'admin' && ! (bool) session('admin_user_mode', false))
 
                 <!-- Start::slide__category -->
                  <li class="slide__category"><span class="category-name">Admin Modules</span></li>

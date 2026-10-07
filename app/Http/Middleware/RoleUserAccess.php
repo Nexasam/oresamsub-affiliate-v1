@@ -23,7 +23,7 @@ class RoleUserAccess
     
         
 
-        $isAdminUserMode = auth()->user()->role->role_name === 'Admin' && $request->session()->boolean('admin_user_mode');
+        $isAdminUserMode = auth()->user()->role->role_name === 'Admin' && (bool) $request->session()->get('admin_user_mode', false);
 
         if(auth()->user()->role->role_name != 'User' && ! $isAdminUserMode){
             return redirect()->route('access_denied');

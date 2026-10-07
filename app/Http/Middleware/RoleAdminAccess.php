@@ -20,7 +20,7 @@ class RoleAdminAccess
         //TODO: later
         // $currentUrlWithoutQuery = URL::current();
         // $exceptions_for_admin = ['user.airtime.buy_airtime','user/airtime/buy_data','user.cable_subscription.buy_cable_subscription']
-        if(auth()->user()->role->role_name != 'Admin' || $request->session()->boolean('admin_user_mode')){
+        if(auth()->user()->role->role_name != 'Admin' || (bool) $request->session()->get('admin_user_mode', false)){
             return redirect()->route('access_denied');
         }
         return $next($request);

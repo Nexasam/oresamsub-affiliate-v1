@@ -58,7 +58,7 @@
                 </a>
               </div>
 
-              @if (session()->boolean('admin_user_mode'))
+              @if ((bool) session('admin_user_mode', false))
               <form method="POST" action="{{ route('admin.user-mode.exit') }}" class="hidden sm:block">
                 @csrf
                 <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-200">
@@ -249,7 +249,7 @@
                         {{__('messages.Settings')}}
 
                       </a>
-                    @elseif (! session()->boolean('admin_user_mode'))
+                    @elseif (! (bool) session('admin_user_mode', false))
                       <a href="{{ route('admin.settings.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
                         {{__('messages.Settings')}}
@@ -265,7 +265,7 @@
                       </a>
                     @endif
 
-                    @if (session()->boolean('admin_user_mode'))
+                    @if ((bool) session('admin_user_mode', false))
                     <form method="POST" action="{{ route('admin.user-mode.exit') }}">
                       @csrf
                       <button type="submit" class="ti-dropdown-item w-full text-left">

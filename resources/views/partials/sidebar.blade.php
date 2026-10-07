@@ -46,7 +46,9 @@
                     <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
                 </svg></div>
             <ul class="main-menu text-md ">
+                @if (auth()->user()->role->role_name === 'Admin' && ! (bool) session('admin_user_mode', false))
                 <li class="slide"><a href="{{ route('admin.onboarding.index') }}" class="side-menu__item"><i class="ri-list-check-3 side-menu__icon"></i><span class="side-menu__label">Onboarding checklist</span></a></li>
+                @endif
                 <!-- Start::slide__category -->
                 <li class="slide__category"><span class="category-name">Main</span></li>
                 <!-- End::slide__category -->

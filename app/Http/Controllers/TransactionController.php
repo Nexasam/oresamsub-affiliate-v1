@@ -81,7 +81,7 @@ class TransactionController extends Controller
 
 
     $siteTemplate = SiteTemplate::first();
-    if(! $siteTemplate || $siteTemplate->template_name == 'template_1' || $data['user']->role->role_name == 'Admin' ){
+    if(! $siteTemplate || $siteTemplate->template_name == 'template_1' || ($data['user']->role->role_name == 'Admin' && ! (bool) session('admin_user_mode', false)) ){
         return view('transaction_details')->with($data);
     }
 

@@ -58,6 +58,16 @@
                 </a>
               </div>
 
+              @if (session()->boolean('admin_user_mode'))
+              <form method="POST" action="{{ route('admin.user-mode.exit') }}" class="hidden sm:block">
+                @csrf
+                <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-200">
+                  <i class="ti ti-user"></i>
+                  User mode
+                </button>
+              </form>
+              @endif
+
               {{-- <div class="header-notification hs-dropdown ti-dropdown hidden sm:block"
                 data-hs-dropdown-placement="bottom-right">
                 <button id="dropdown-notification" type="button"
@@ -239,7 +249,7 @@
                         {{__('messages.Settings')}}
 
                       </a>
-                    @else
+                    @elseif (! session()->boolean('admin_user_mode'))
                       <a href="{{ route('admin.settings.index') }}" class="ti-dropdown-item">
                         <i class="ti ti-adjustments-horizontal text-lg"></i>
                         {{__('messages.Settings')}}
@@ -253,6 +263,16 @@
                         {{__('Business Profile')}}
 
                       </a>
+                    @endif
+
+                    @if (session()->boolean('admin_user_mode'))
+                    <form method="POST" action="{{ route('admin.user-mode.exit') }}">
+                      @csrf
+                      <button type="submit" class="ti-dropdown-item w-full text-left">
+                        <i class="ti ti-user-shield text-lg"></i>
+                        Exit User Mode
+                      </button>
+                    </form>
                     @endif
 
                     @if (auth()->user()->role->role_name == 'User')

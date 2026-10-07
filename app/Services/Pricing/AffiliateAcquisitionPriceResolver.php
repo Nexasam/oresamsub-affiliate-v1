@@ -3,6 +3,7 @@
 namespace App\Services\Pricing;
 
 use App\Models\Affiliate;
+use App\Models\AffiliateAcquisitionPriceOverride;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanParentPrice;
@@ -28,6 +29,18 @@ class AffiliateAcquisitionPriceResolver
             : new ParentResellerLevel(['id' => $affiliate->parent_reseller_level_id, 'position' => 0, 'name' => null]);
         if (! $level) {
             return ['price' => 'Invalid reseller level', 'source' => 'invalid', 'level_id' => (int) $affiliate->parent_reseller_level_id, 'level_position' => null, 'level_name' => null];
+        }
+
+        $affiliateOverride = $plan->exists && $affiliate->exists
+            ? AffiliateAcquisitionPriceOverride::query()
+                ->where('parent_business_id', $affiliate->parent_business_id)
+                ->where('affiliate_id', $affiliate->id)
+                ->where('product_plan_id', $plan->id)
+                ->first()
+            : null;
+
+        if ($affiliateOverride) {
+            return $this->result($this->money((string) $affiliateOverride->selling_price), 'affiliate_custom', $level);
         }
 
         $override = $plan->exists

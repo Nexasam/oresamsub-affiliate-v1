@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AddonController;
+use App\Http\Controllers\AdminUserModeController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\AffiliateOnboardingChecklistController;
@@ -111,6 +112,8 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
             // ORESAMSUB WEBPWA V1: ROUTES (wrapped in auth middleware)
             Route::middleware('auth')->get('/set-pin', [InertiaDashboardController::class, 'set_pin'])->name('inertia.setpin.index');   
+            Route::middleware(['auth','verified'])->post('/admin/user-mode/enter', [AdminUserModeController::class, 'enter'])->name('admin.user-mode.enter');
+            Route::middleware(['auth','verified'])->post('/admin/user-mode/exit', [AdminUserModeController::class, 'exit'])->name('admin.user-mode.exit');
             // Route::middleware('auth')->post('/store-set-pin', [InertiaDashboardController::class, 'store_set_pin'])->name('inertia.setpin.store');   
             // Route::get('oresamsub/set_pin', fn () => view('oresamsub.pages.set_pin'))->name('ore.set_pin'); //use the affiliate session to tell what to show
 

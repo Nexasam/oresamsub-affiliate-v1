@@ -68,6 +68,30 @@
                  </li>
                 @endif
 
+                @if (auth()->user()->role->role_name === 'Admin')
+                    @if (session()->boolean('admin_user_mode'))
+                        <li class="slide bg-amber-700 p-2 rounded-2xl">
+                            <form method="POST" action="{{ route('admin.user-mode.exit') }}">
+                                @csrf
+                                <button class="side-menu__item w-full" type="submit">
+                                    <i class="ti ti-user-shield side-menu__icon"></i>
+                                    <span class="side-menu__label">Exit User Mode</span>
+                                </button>
+                            </form>
+                        </li>
+                    @else
+                        <li class="slide">
+                            <form method="POST" action="{{ route('admin.user-mode.enter') }}">
+                                @csrf
+                                <button class="side-menu__item w-full" type="submit">
+                                    <i class="ti ti-user side-menu__icon"></i>
+                                    <span class="side-menu__label">Switch to User Mode</span>
+                                </button>
+                            </form>
+                        </li>
+                    @endif
+                @endif
+
                 <!-- Start::slide -->
                 <li class="slide  has-sub ">
                     <a href="{{ route('dashboard') }}" class="side-menu__item">
@@ -122,7 +146,35 @@
 
 
 
-                @if (strtolower(auth()->user()->role->role_name) == 'admin')
+                @if (auth()->user()->role->role_name === 'User' || session()->boolean('admin_user_mode'))
+                <li class="slide__category"><span class="category-name">User Modules</span></li>
+                <li class="slide">
+                    <a href="{{ route('user.data.buy_data') }}" class="side-menu__item">
+                        <i class="ti ti-device-sim side-menu__icon"></i>
+                        <span class="side-menu__label">Buy Data</span>
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="{{ route('user.airtime.buy_airtime') }}" class="side-menu__item">
+                        <i class="ti ti-phone side-menu__icon"></i>
+                        <span class="side-menu__label">Buy Airtime</span>
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="{{ route('user.wallet.index') }}" class="side-menu__item">
+                        <i class="ti ti-wallet side-menu__icon"></i>
+                        <span class="side-menu__label">Wallet</span>
+                    </a>
+                </li>
+                <li class="slide">
+                    <a href="{{ route('user.transactions.index') }}" class="side-menu__item">
+                        <i class="ti ti-receipt side-menu__icon"></i>
+                        <span class="side-menu__label">My Transactions</span>
+                    </a>
+                </li>
+                @endif
+
+                @if (strtolower(auth()->user()->role->role_name) == 'admin' && ! session()->boolean('admin_user_mode'))
 
                 <!-- Start::slide__category -->
                  <li class="slide__category"><span class="category-name">Admin Modules</span></li>

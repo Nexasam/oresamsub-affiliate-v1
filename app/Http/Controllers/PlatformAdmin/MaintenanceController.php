@@ -26,6 +26,11 @@ class MaintenanceController extends Controller
         return $this->run([PHP_BINARY, 'artisan', 'optimize:clear'], 'Laravel caches cleared.');
     }
 
+    public function migrateForce(): RedirectResponse
+    {
+        return $this->run([PHP_BINARY, 'artisan', 'migrate', '--force'], 'Database migrations completed.');
+    }
+
     public function clearLogs(): RedirectResponse
     {
         $logPath = storage_path('logs');

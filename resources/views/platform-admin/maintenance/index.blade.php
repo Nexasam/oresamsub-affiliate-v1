@@ -12,6 +12,7 @@
         <div class="mt-4 flex flex-wrap gap-3">
             <form method="POST" action="{{ route('platform-admin.maintenance.git-pull') }}">@csrf<button class="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white" onclick="return confirm('Run git pull origin main on this server?')">Git pull origin main</button></form>
             <form method="POST" action="{{ route('platform-admin.maintenance.optimize-clear') }}">@csrf<button class="rounded-xl border px-4 py-2.5 text-sm font-semibold">php artisan optimize:clear</button></form>
+            <form method="POST" action="{{ route('platform-admin.maintenance.migrate-force') }}">@csrf<button class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800" onclick="return confirm('Run php artisan migrate --force on this server? This may change the database schema.')">php artisan migrate --force</button></form>
             <form method="POST" action="{{ route('platform-admin.maintenance.clear-logs') }}">@csrf<button class="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700" onclick="return confirm('Clear all log files? This cannot be undone.')">Clear logs</button></form>
         </div>
     </section>

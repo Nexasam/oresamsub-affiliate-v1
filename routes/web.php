@@ -748,7 +748,8 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
 
 
 
-            Route::middleware(['auth','verified','admin'])->get('admin/product_plans', [ProductPlanController::class, 'index'])->name('admin.product_plans.index');
+            Route::middleware(['auth','verified','admin'])->get('admin/product_plans', [ProductPlanController::class, 'v2Index'])->name('admin.product_plans.index');
+            Route::middleware(['auth','verified','admin'])->get('admin/product_plans/legacy', [ProductPlanController::class, 'index'])->name('admin.product_plans.legacy.index');
             Route::middleware(['auth','verified','admin'])->get('admin/product_plans/v2', [ProductPlanController::class, 'v2Index'])->name('admin.product_plans.v2.index');
             Route::middleware(['auth','verified','admin'])->get('admin/product_plans/product_plan_details/{id}', [ProductPlanController::class, 'product_plan_details'])->name('admin.product_plans.product_plan_details');
             Route::middleware(['auth','verified','admin'])->post('admin/product_plans/store', [ProductPlanController::class, 'store'])->name('admin.product_plans.store');

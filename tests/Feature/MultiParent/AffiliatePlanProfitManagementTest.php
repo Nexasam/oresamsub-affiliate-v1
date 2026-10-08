@@ -174,6 +174,29 @@ it('renders exactly six modern customer pricing controls', function () {
     expect(substr_count($response->getContent(), 'data-profit-level='))->toBe(6);
 });
 
+it('uses the alpine product plans page as the main route and keeps datatables as legacy', function () {
+    $f = affiliateProfitFixture('main-product-plans-route');
+    $role = Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'role_id' => $role->id,
+        'user_plan_id' => null,
+        'email_verified_at' => now(),
+    ]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->get(route('admin.product_plans.index'))
+        ->assertOk()
+        ->assertSee('data-testid="sync-plans-button"', false)
+        ->assertSee('Legacy version');
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->get(route('admin.product_plans.legacy.index'))
+        ->assertOk()
+        ->assertDontSee('data-testid="sync-plans-button"', false)
+        ->assertSee('Open main version');
+});
+
 it('renders the sync and save controls with visible resting colours', function () {
     $f = affiliateProfitFixture('editor-visible-actions');
     $role = Role::create(['role_name' => 'Admin']);
@@ -197,6 +220,7 @@ it('renders the sync and save controls with visible resting colours', function (
     $response->assertOk()
         ->assertSee('data-testid="sync-plans-button"', false)
         ->assertSee('data-testid="save-profit-levels-button"', false)
+        ->assertSee("row.affiliate_visibility ? 'Turn off' : 'Turn on'", false)
         ->assertSee('bg-emerald-600', false)
         ->assertSee('bg-blue-600', false);
 });

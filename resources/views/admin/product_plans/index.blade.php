@@ -5,7 +5,7 @@
 <div class="workspace-page" x-data="affiliatePlansTable()" x-init="load()">
     <div class="workspace-stack">
         <x-workspace.page-header title="Product plans" description="Review acquisition prices, customer margins and plan availability.">
-            <a href="{{ route('admin.product_plans.index') }}" class="workspace-btn-secondary">Original version</a>
+            <a href="{{ route('admin.product_plans.legacy.index') }}" class="workspace-btn-secondary">Legacy version</a>
             <button type="button" data-testid="sync-plans-button" class="inline-flex min-h-9 items-center justify-center rounded-lg border border-emerald-700 bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="sync()" :disabled="syncing"><span x-text="syncing ? 'Syncing…' : 'Sync plans'"></span></button>
         </x-workspace.page-header>
         @if(Session::has('success'))<x-workspace.alert type="success">{{ Session::get('success') }}</x-workspace.alert>@endif
@@ -36,8 +36,8 @@
                                 <button type="button" class="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-blue-700 bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
                                 <p class="mt-1 text-[11px] text-slate-500" x-text="row.profit_editable ? profitSummary(row) : 'Add this plan first'"></p>
                             </td>
-                            <td><div class="space-y-2"><p class="text-xs font-semibold" :class="row.affiliate_toggle_enabled ? 'text-emerald-600' : 'text-amber-700'" x-text="row.parent_availability"></p><label class="flex items-center gap-2 text-xs"><input type="checkbox" :checked="row.affiliate_visibility" :disabled="!row.added || !row.affiliate_toggle_enabled || row.toggling" @change="toggleVisibility(row)"> Customer visibility</label><p class="text-[10px] font-semibold" :class="row.effective_availability ? 'text-emerald-600' : 'text-slate-500'" x-text="row.effective_availability ? 'Available to customers' : 'Unavailable to customers'"></p></div></td>
-                            <td><button type="button" class="workspace-btn-secondary whitespace-nowrap" :disabled="row.added || row.adding" @click="addPlan(row)" x-text="row.added ? 'Added' : (row.adding ? 'Adding…' : 'Add plan')"></button></td>
+                            <td><div class="space-y-2"><p class="text-xs font-semibold" :class="row.affiliate_toggle_enabled ? 'text-emerald-600' : 'text-amber-700'" x-text="row.parent_availability"></p><p class="text-xs font-semibold" :class="row.effective_availability ? 'text-emerald-600' : 'text-slate-500'" x-text="row.effective_availability ? 'Available to customers' : 'Unavailable to customers'"></p></div></td>
+                            <td><div class="flex flex-col items-start gap-2"><button type="button" class="workspace-btn-secondary whitespace-nowrap" :disabled="row.added || row.adding" @click="addPlan(row)" x-show="!row.added" x-text="row.adding ? 'Adding…' : 'Add plan'"></button><button type="button" class="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" :class="row.affiliate_visibility ? 'border-rose-300 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300' : 'border-emerald-700 bg-emerald-600 text-white hover:bg-emerald-700'" :disabled="!row.added || !row.affiliate_toggle_enabled || row.toggling" @click="toggleVisibility(row)" x-show="row.added" x-text="row.toggling ? 'Updating…' : (row.affiliate_visibility ? 'Turn off' : 'Turn on')"></button><p x-show="row.added && !row.affiliate_toggle_enabled" class="max-w-36 text-[10px] leading-4 text-amber-700 dark:text-amber-300">Parent must enable this plan first.</p></div></td>
                         </tr></template>
                         <tr x-show="!loading && rows.length === 0"><td colspan="7" class="workspace-empty">No plans match your filters.</td></tr>
                         <tr x-show="loading"><td colspan="7" class="workspace-empty">Loading product plans…</td></tr>
@@ -134,7 +134,7 @@
                         Product Plans
                     </h5>
                     <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.product_plans.v2.index') }}" class="rounded bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Open version 2</a>
+                    <a href="{{ route('admin.product_plans.index') }}" class="rounded bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Open main version</a>
                          {{-- 🔹 Generate Categories Button --}}
                     <button 
                          id="generatePlansBtn"

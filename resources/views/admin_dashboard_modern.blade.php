@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="main-content workspace-page" x-data="{ transactionDrawerOpen: false, transactionDetails: {}, openTransactionDrawer(details) { this.transactionDetails = details; this.transactionDrawerOpen = true }, closeTransactionDrawer() { this.transactionDrawerOpen = false } }" @keydown.escape.window="closeTransactionDrawer()">
+<div class="main-content workspace-page" x-data="{ transactionDrawerOpen: false, transactionDetails: {}, openTransactionDrawer(details) { this.transactionDetails = details; this.transactionDrawerOpen = true; document.body.style.overflow = 'hidden' }, closeTransactionDrawer() { this.transactionDrawerOpen = false; document.body.style.overflow = '' } }" @keydown.escape.window="closeTransactionDrawer()">
     <div class="workspace-stack">
         <x-workspace.page-header title="Welcome, {{ $user->first_name }}" description="Monitor customers, transactions, product plans and business funding from one place.">
             <a href="{{ route('admin.transactions.index') }}" class="workspace-btn-secondary">View transactions</a>
@@ -177,8 +177,11 @@
             </div>
         </section>
 
-        <div x-cloak x-show="transactionDrawerOpen" x-transition.opacity class="fixed inset-0 z-[80] bg-slate-950/60" @click="closeTransactionDrawer()"></div>
-        <aside data-testid="affiliate-transaction-drawer" x-cloak x-show="transactionDrawerOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="fixed inset-y-0 right-0 z-[90] flex w-full max-w-xl flex-col bg-white shadow-2xl dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="affiliate-transaction-drawer-title">
+        <template x-teleport="body">
+        <div x-cloak x-show="transactionDrawerOpen" x-transition.opacity class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm" style="z-index: 10000" @click="closeTransactionDrawer()"></div>
+        </template>
+        <template x-teleport="body">
+        <aside data-testid="affiliate-transaction-drawer" x-cloak x-show="transactionDrawerOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="fixed inset-y-0 right-0 flex w-full max-w-xl flex-col bg-white shadow-2xl dark:bg-slate-900" style="z-index: 10001" role="dialog" aria-modal="true" aria-labelledby="affiliate-transaction-drawer-title" @click.stop>
             <div class="flex items-start justify-between gap-4 border-b border-slate-200 p-5 dark:border-slate-700">
                 <div class="min-w-0"><p class="text-xs font-bold uppercase tracking-wider text-indigo-600">Transaction details</p><h2 id="affiliate-transaction-drawer-title" class="mt-1 truncate text-lg font-bold" x-text="transactionDetails.plan || transactionDetails.service"></h2><p class="mt-1 truncate font-mono text-[11px] text-slate-500" x-text="transactionDetails.reference"></p></div>
                 <button type="button" @click="closeTransactionDrawer()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold dark:border-slate-600">Close</button>
@@ -199,6 +202,7 @@
                 <section><h3 class="text-sm font-bold">Full redacted API response</h3><pre class="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100" x-text="transactionDetails.response ? JSON.stringify(transactionDetails.response, null, 2) : 'No provider response was stored.'"></pre></section>
             </div>
         </aside>
+        </template>
 
         @if(config('parent_businesses.features.multi_parent_funding') && session('affiliate')?->parent_business_id)
         <section class="workspace-panel">

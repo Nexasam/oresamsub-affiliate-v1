@@ -229,7 +229,9 @@ it('shows recent transaction phone and redacted provider diagnostics in a dashbo
         ->assertSee('DASHBOARD-DRAWER-TXN')
         ->assertSee('08168509044')
         ->assertSee('Provider delivered 1GB successfully.')
-        ->assertSee('data-testid="affiliate-transaction-drawer"', false);
+        ->assertSee('data-testid="affiliate-transaction-drawer"', false)
+        ->assertSee('x-teleport="body"', false)
+        ->assertSee('z-index: 10001', false);
 });
 
 it('lets an affiliate admin view only its complete settlement ledger', function () {

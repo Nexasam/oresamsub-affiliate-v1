@@ -338,6 +338,43 @@ it('keeps an affiliate local visibility preference when plans are synchronized',
         ->and((int) $f['affiliatePlan']->fresh()->public_visibility)->toBe(0);
 });
 
+it('clamps stale affiliate profits to current plan limits during synchronization', function () {
+    $f = effectiveAvailabilityFixture('sync-profit-cap');
+    $f['affiliatePlan']->update(collect(range(1, 6))->mapWithKeys(fn ($level) => ["user_level_{$level}_profit" => 80])->all());
+    \App\Models\ProductPlanParentPrice::where('product_plan_id', $f['plan']->id)
+        ->where('parent_reseller_level_id', $f['affiliate']->parent_reseller_level_id)
+        ->update(['max_profit' => 25]);
+    $adminRole = \App\Models\Role::create(['role_name' => 'Admin']);
+    $admin = User::factory()->create(['affiliate_id' => $f['affiliate']->id, 'role_id' => $adminRole->id, 'user_plan_id' => null, 'email_verified_at' => now()]);
+    $customerPlan = AffiliateUserPlan::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_name' => 'Basic',
+        'plan_level' => 1,
+        'visibility' => 1,
+    ]);
+    $customer = User::factory()->create([
+        'affiliate_id' => $f['affiliate']->id,
+        'user_plan_id' => $customerPlan->id,
+    ]);
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->postJson('/admin/affiliate/product-plans/sync')->assertOk();
+
+    $synced = $f['affiliatePlan']->fresh();
+    $plans = app(DataPlansService::class)->fetch_user_data_plans([
+        'user' => $customer,
+        'network_id' => null,
+        'product_id' => $f['product']->id,
+        'amount' => 0,
+    ])['plans'];
+
+    expect((float) $synced->user_level_1_profit)->toBe(25.0)
+        ->and((float) $synced->user_level_6_profit)->toBe(25.0)
+        ->and($plans)->toHaveCount(1)
+        ->and($plans[0]['product_plan_id'])->toBe($synced->id)
+        ->and($plans[0]['selling_price'])->toBe('475.00');
+});
+
 it('shows a parent-disabled plan to the affiliate admin and prevents local reactivation', function () {
     $f = effectiveAvailabilityFixture('admin-state');
     $f['affiliatePlan']->update(['visibility' => 0]);

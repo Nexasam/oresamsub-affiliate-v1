@@ -20,6 +20,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -298,18 +299,63 @@ class ProductPlanController extends Controller
 
         return view('parent-admin.product-plans.paste-preview', [
             'rows' => $rows,
-            'errors' => $errors,
+            'parseErrors' => $errors,
+            'validationErrors' => [],
             'token' => $token,
             'category' => $category->load(['product:id,product_name', 'network:id,network_name']),
         ]);
     }
 
-    public function pastePriceConfirm(Request $request): RedirectResponse
+    public function pastePriceConfirm(Request $request): View|RedirectResponse
     {
-        $request->validate(['token' => ['required', 'uuid']]);
+        $token = (string) $request->input('token');
         $parent = $request->user('parent_admin')->parentBusiness;
-        $payload = $request->session()->pull('paste_price_update.'.$request->token);
+        $sessionKey = 'paste_price_update.'.$token;
+        $payload = $request->session()->get($sessionKey);
         abort_unless($payload && (int) $payload['parent_id'] === (int) $parent->id && $payload['expires'] >= time(), 410, 'Paste preview expired.');
+
+        $validator = Validator::make($request->all(), [
+            'token' => ['required', 'uuid'],
+            'rows' => ['required', 'array', 'min:1', 'max:200'],
+            'rows.*.product_plan_name' => ['required', 'string', 'max:255'],
+            'rows.*.api_id' => ['required', 'string', 'max:255', 'distinct:strict'],
+            'rows.*.cost_price' => ['required', 'numeric', 'min:0'],
+            'rows.*.selling_price' => ['required', 'numeric', 'gt:rows.*.cost_price'],
+        ], [
+            'rows.*.api_id.distinct' => 'Each API ID must appear only once.',
+            'rows.*.selling_price.gt' => 'Each selling price must be greater than its cost price.',
+        ]);
+
+        if ($validator->fails()) {
+            $submittedRows = $request->input('rows', []);
+            $rows = collect($payload['rows'])->map(function (array $row, int $index) use ($submittedRows): array {
+                return [...$row, ...($submittedRows[$index] ?? [])];
+            })->all();
+            $category = ProductPlanCategory::query()->with(['product:id,product_name', 'network:id,network_name'])->findOrFail($payload['category_id']);
+
+            return view('parent-admin.product-plans.paste-preview', [
+                'rows' => $rows,
+                'parseErrors' => [],
+                'validationErrors' => $validator->errors()->all(),
+                'token' => $token,
+                'category' => $category,
+            ]);
+        }
+
+        $data = $validator->validated();
+
+        $payload['rows'] = collect($data['rows'])->map(function (array $row): array {
+            $cost = round((float) $row['cost_price'], 2);
+            $selling = round((float) $row['selling_price'], 2);
+
+            return [
+                'product_plan_name' => trim($row['product_plan_name']),
+                'api_id' => trim($row['api_id']),
+                'cost_price' => number_format($cost, 2, '.', ''),
+                'selling_price' => number_format($selling, 2, '.', ''),
+                'margin' => number_format($selling - $cost, 2, '.', ''),
+            ];
+        })->all();
 
         $levels = $parent->resellerLevels()->where('status', 'active')->orderBy('position')->get(['id']);
         $counts = DB::transaction(function () use ($parent, $payload, $levels): array {
@@ -359,6 +405,8 @@ class ProductPlanController extends Controller
 
             return $counts;
         });
+
+        $request->session()->forget($sessionKey);
 
         return redirect()->route('parent-admin.product-plans.index')
             ->with('success', "Paste update complete: {$counts['created']} created, {$counts['updated']} updated.");

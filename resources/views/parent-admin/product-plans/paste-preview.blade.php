@@ -16,22 +16,33 @@
         </div>
     </section>
 
-    @if($errors)
+    @if($parseErrors)
         <section class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
             <h2 class="font-semibold">Fix these issues and preview again</h2>
             <ul class="mt-3 list-disc space-y-1 pl-5">
-                @foreach($errors as $error)
+                @foreach($parseErrors as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </section>
     @endif
 
-    <section class="overflow-hidden rounded-2xl border bg-white shadow-sm">
+    <form method="POST" action="{{ route('parent-admin.product-plans.paste-prices.confirm') }}" onsubmit="return confirm('Apply these pasted price changes now?')" class="overflow-hidden rounded-2xl border bg-white shadow-sm">
+        @csrf
+        <input type="hidden" name="token" value="{{ $token }}">
         <div class="border-b p-5">
             <h2 class="font-semibold">Rows found</h2>
-            <p class="mt-1 text-sm text-slate-500">{{ count($rows) }} rows parsed. Green rows update existing plans; blue rows create new plans.</p>
+            <p class="mt-1 text-sm text-slate-500">{{ count($rows) }} rows parsed. Adjust any name, API ID, cost, or selling price below before saving.</p>
         </div>
+        @if($validationErrors)
+            <div class="border-b border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                <ul class="list-disc space-y-1 pl-5">
+                    @foreach($validationErrors as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="overflow-x-auto">
             <table class="w-full min-w-[900px] text-left text-sm">
                 <thead class="bg-slate-50 text-xs uppercase text-slate-500">
@@ -47,15 +58,15 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y">
-                    @forelse($rows as $row)
+                    @forelse($rows as $index => $row)
                         <tr>
                             <td class="p-3"><span class="rounded-full px-2 py-1 text-xs font-semibold {{ $row['classification'] === 'update' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }}">{{ $row['classification'] }}</span></td>
                             <td class="p-3">{{ $row['line'] }}</td>
-                            <td class="p-3 font-medium">{{ $row['product_plan_name'] }}</td>
-                            <td class="p-3 font-mono text-xs">{{ $row['api_id'] }}</td>
-                            <td class="p-3">₦{{ number_format((float) $row['cost_price'], 2) }}</td>
-                            <td class="p-3">₦{{ number_format((float) $row['selling_price'], 2) }}</td>
-                            <td class="p-3">₦{{ number_format((float) $row['margin'], 2) }}</td>
+                            <td class="p-3"><input name="rows[{{ $index }}][product_plan_name]" value="{{ old("rows.$index.product_plan_name", $row['product_plan_name']) }}" required class="w-64 rounded-lg border-slate-300 text-sm"></td>
+                            <td class="p-3"><input name="rows[{{ $index }}][api_id]" value="{{ old("rows.$index.api_id", $row['api_id']) }}" required class="w-28 rounded-lg border-slate-300 font-mono text-sm"></td>
+                            <td class="p-3"><input type="number" name="rows[{{ $index }}][cost_price]" value="{{ old("rows.$index.cost_price", $row['cost_price']) }}" min="0" step="0.01" required class="w-32 rounded-lg border-slate-300 text-sm"></td>
+                            <td class="p-3"><input type="number" name="rows[{{ $index }}][selling_price]" value="{{ old("rows.$index.selling_price", $row['selling_price']) }}" min="0.01" step="0.01" required class="w-32 rounded-lg border-slate-300 text-sm"></td>
+                            <td class="p-3 text-slate-500">Recalculated on save</td>
                             <td class="p-3 text-xs text-slate-500">
                                 @if($row['existing'] ?? null)
                                     {{ $row['existing']['product_plan_name'] }} · ₦{{ number_format((float) $row['existing']['cost_price'], 2) }}
@@ -73,13 +84,9 @@
         <div class="flex flex-wrap items-center justify-between gap-3 border-t bg-slate-50 p-5">
             <p class="text-xs text-slate-500">Nothing has been saved yet.</p>
             @if($token)
-                <form method="POST" action="{{ route('parent-admin.product-plans.paste-prices.confirm') }}" onsubmit="return confirm('Apply these pasted price changes now?')">
-                    @csrf
-                    <input type="hidden" name="token" value="{{ $token }}">
-                    <button class="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white">Confirm and save changes</button>
-                </form>
+                <button class="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white">Confirm and save changes</button>
             @endif
         </div>
-    </section>
+    </form>
 </div>
 @endsection

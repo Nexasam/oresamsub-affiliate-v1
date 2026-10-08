@@ -41,6 +41,8 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::get('product-plans/import/template', [ProductPlanImportController::class, 'template'])->name('product-plans.import.template');
         Route::post('product-plans/import/preview', [ProductPlanImportController::class, 'preview'])->name('product-plans.import.preview');
         Route::post('product-plans/import/confirm', [ProductPlanImportController::class, 'confirm'])->name('product-plans.import.confirm');
+        Route::post('product-plans/paste-prices/preview', [ProductPlanController::class, 'pastePricePreview'])->name('product-plans.paste-prices.preview');
+        Route::post('product-plans/paste-prices/confirm', [ProductPlanController::class, 'pastePriceConfirm'])->name('product-plans.paste-prices.confirm');
         Route::post('product-plans', [ProductPlanController::class, 'store'])->name('product-plans.store');
         Route::post('product-plans/bulk', [ProductPlanController::class, 'bulkStore'])->name('product-plans.bulk-store');
         Route::patch('product-plans/bulk-update', [ProductPlanController::class, 'bulkUpdate'])->name('product-plans.bulk-update');

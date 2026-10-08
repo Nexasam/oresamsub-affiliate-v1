@@ -71,6 +71,31 @@
         @if(session('import_errors'))<div class="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">@foreach(session('import_errors') as $line=>$error)<p>Row {{ $line }}: {{ $error }}</p>@endforeach</div>@endif
     </section>
 
+    <section class="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Quick price update</p>
+                <h2 class="mt-1 text-lg font-semibold">Paste provider price text</h2>
+                <p class="mt-1 max-w-3xl text-sm text-slate-500">Use <strong>api_id</strong> as the key. Existing api IDs are updated; missing api IDs are created after preview. Cost becomes both cost price and admin cost. Your margin is added to the pasted selling price; if no selling price is pasted, it is added to cost.</p>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('parent-admin.product-plans.paste-prices.preview') }}" class="mt-5 space-y-4">@csrf
+            <div class="grid gap-4 lg:grid-cols-4">
+                <label class="text-sm font-medium">Product<select name="product_id" class="mt-1 w-full rounded-xl border-slate-200"><option value="">Any product</option>@foreach($products as $product)<option value="{{ $product->id }}" @selected((string) old('product_id') === (string) $product->id)>{{ $product->product_name }}</option>@endforeach</select></label>
+                <label class="text-sm font-medium">Network<select name="network_id" class="mt-1 w-full rounded-xl border-slate-200"><option value="">Any network</option>@foreach($networks as $network)<option value="{{ $network->id }}" @selected((string) old('network_id') === (string) $network->id)>{{ $network->network_name }}</option>@endforeach</select></label>
+                <label class="text-sm font-medium lg:col-span-2">Product plan category<select name="product_plan_category_id" required class="mt-1 w-full rounded-xl border-slate-200"><option value="">Select category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('product_plan_category_id') === (string) $category->id)>{{ $category->product_plan_category_name }} · {{ $category->network?->network_name ?: 'No network' }} · {{ $category->product?->product_name ?: 'No product' }}</option>@endforeach</select></label>
+            </div>
+            <div class="grid gap-4 lg:grid-cols-3">
+                <label class="text-sm font-medium">Add to pasted selling price<input name="selling_margin" value="{{ old('selling_margin', '2.00') }}" required type="number" min="0.01" step="0.01" class="mt-1 w-full rounded-xl border-slate-200"></label>
+                <label class="flex items-center gap-2 rounded-xl border border-slate-200 p-4 text-sm"><input type="hidden" name="affiliate_visibility" value="0"><input name="affiliate_visibility" value="1" type="checkbox" @checked(old('affiliate_visibility', true))> Make available to affiliates</label>
+                <label class="flex items-center gap-2 rounded-xl border border-slate-200 p-4 text-sm"><input type="hidden" name="public_visibility" value="0"><input name="public_visibility" value="1" type="checkbox" @checked(old('public_visibility', true))> Publicly visible</label>
+            </div>
+            <label class="block text-sm font-medium">Paste raw records<textarea name="raw_text" rows="9" required class="mt-1 w-full rounded-xl border-slate-200 font-mono text-xs" placeholder="Plan name | api_id | cost price | selling price&#10;MTN SME 1GB | 101 | 318 | 320&#10;MTN SME 2GB | 102 | 635">{{ old('raw_text') }}</textarea></label>
+            <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-500">Accepted: the copied provider table, or columns <strong>Plan name</strong>, <strong>api_id</strong>, <strong>cost price</strong>, optional <strong>selling price</strong>. Separate simple rows with tab, comma, pipe, semicolon, or multiple spaces.</div>
+            <button class="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white">Preview price changes</button>
+        </form>
+    </section>
+
     <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-lg font-semibold">Add product plan</h2><p class="text-sm text-slate-500">Create one complete plan or submit several plans atomically.</p></div><div class="flex rounded-xl bg-slate-100 p-1"><button type="button" @click="mode='single'" class="rounded-lg px-4 py-2 text-sm font-semibold" :class="mode==='single'?'bg-white shadow-sm':'text-slate-500'">Single plan</button><button type="button" @click="mode='bulk'" class="rounded-lg px-4 py-2 text-sm font-semibold" :class="mode==='bulk'?'bg-white shadow-sm':'text-slate-500'">Bulk addition</button></div></div>
         @if($connections->isEmpty())<div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">No approved provider connection is available. You can save hidden drafts, but an external parent cannot activate a plan until a connection is approved.</div>@endif

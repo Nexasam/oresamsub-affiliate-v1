@@ -51,7 +51,7 @@ class ProductPlanController extends Controller
     public function adminProductPlansV2(Request $request)
     {
         $affiliate = Affiliate::with(['parentBusiness', 'processingProfile'])->findOrFail($this->getId());
-        $perPage = in_array((int) $request->integer('per_page', 25), [10, 25, 50], true)
+        $perPage = in_array((int) $request->integer('per_page', 25), [10, 25, 50, 100, 200, 500], true)
             ? (int) $request->integer('per_page', 25)
             : 25;
         $legacyOresamsub = $affiliate->parentBusiness?->slug === 'oresamsub'

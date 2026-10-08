@@ -195,6 +195,11 @@ it('uses the alpine product plans page as the main route and keeps datatables as
         ->assertOk()
         ->assertDontSee('data-testid="sync-plans-button"', false)
         ->assertSee('Open main version');
+
+    $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])
+        ->getJson(route('admin.product_plans.v2.data', ['per_page' => 500]))
+        ->assertOk()
+        ->assertJsonPath('meta.per_page', 500);
 });
 
 it('renders the sync and save controls with visible resting colours', function () {

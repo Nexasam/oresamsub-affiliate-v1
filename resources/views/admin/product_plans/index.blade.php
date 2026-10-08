@@ -18,7 +18,7 @@
                 <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
                     <input x-model="search" @input.debounce.350ms="page=1; load()" class="workspace-input sm:w-64" placeholder="Search plan, network or category">
                     <select x-model="availability" @change="page=1; load()" class="workspace-input"><option value="">All plans</option><option value="available">Available</option><option value="not_available">Unavailable</option></select>
-                    <select x-model.number="perPage" @change="page=1; load()" class="workspace-input"><option :value="10">10 rows</option><option :value="25">25 rows</option><option :value="50">50 rows</option></select>
+                    <select x-model.number="perPage" @change="page=1; load()" class="workspace-input"><option :value="10">10 rows</option><option :value="25">25 rows</option><option :value="50">50 rows</option><option :value="100">100 rows</option><option :value="200">200 rows</option><option :value="500">500 rows</option></select>
                 </div>
             </div>
             <div x-show="notice" class="p-4"><x-workspace.alert type="success"><span x-text="notice"></span></x-workspace.alert></div>

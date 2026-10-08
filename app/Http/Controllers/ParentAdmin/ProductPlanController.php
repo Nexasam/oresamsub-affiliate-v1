@@ -246,6 +246,7 @@ class ProductPlanController extends Controller
             'parent_provider_connection_id' => ['required', 'integer'],
             'raw_text' => ['required', 'string', 'min:3'],
             'selling_margin' => ['required', 'numeric', 'min:0.01'],
+            'metadata_only' => ['required', 'boolean'],
             'affiliate_visibility' => ['required', 'boolean'],
             'public_visibility' => ['required', 'boolean'],
         ]);
@@ -289,9 +290,13 @@ class ProductPlanController extends Controller
                     ->where('parent_provider_connection_id', $connection->id)
                     ->where('provider_plan_id', $row['api_id']))
                 ->first(['id', 'product_plan_name', 'api_id', 'cost_price']);
+            if ((bool) $data['metadata_only'] && ! $existing) {
+                $errors[] = "Line {$row['line']}: provider external plan ID {$row['api_id']} does not match an existing plan for metadata-only correction.";
+                continue;
+            }
             $rows[] = [
                 ...$row,
-                'classification' => $existing ? 'update' : 'create',
+                'classification' => (bool) $data['metadata_only'] ? 'metadata update' : ($existing ? 'update' : 'create'),
                 'internal_reference' => $existing?->api_id ?: $this->pastedPlanInternalReference($parent, $row['api_id']),
                 'existing' => $existing?->toArray(),
             ];
@@ -304,6 +309,7 @@ class ProductPlanController extends Controller
                 'parent_id' => $parent->id,
                 'category_id' => (int) $data['product_plan_category_id'],
                 'connection_id' => $connection->id,
+                'metadata_only' => (bool) $data['metadata_only'],
                 'affiliate_visibility' => (bool) $data['affiliate_visibility'],
                 'public_visibility' => (bool) $data['public_visibility'],
                 'rows' => $rows,
@@ -318,6 +324,7 @@ class ProductPlanController extends Controller
             'token' => $token,
             'category' => $category->load(['product:id,product_name', 'network:id,network_name']),
             'connection' => $connection,
+            'metadataOnly' => (bool) $data['metadata_only'],
         ]);
     }
 
@@ -341,6 +348,8 @@ class ProductPlanController extends Controller
             'rows.*.api_id' => ['required', 'string', 'max:255', 'distinct:strict'],
             'rows.*.cost_price' => ['required', 'numeric', 'min:0'],
             'rows.*.selling_price' => ['required', 'numeric', 'gt:rows.*.cost_price'],
+            'rows.*.data_size_in_mb' => ['required', 'numeric', 'min:0'],
+            'rows.*.validity_in_days' => ['required', 'integer', 'min:0'],
         ], [
             'rows.*.api_id.distinct' => 'Each API ID must appear only once.',
             'rows.*.selling_price.gt' => 'Each selling price must be greater than its cost price.',
@@ -360,6 +369,7 @@ class ProductPlanController extends Controller
                 'token' => $token,
                 'category' => $category,
                 'connection' => $connection,
+                'metadataOnly' => (bool) $payload['metadata_only'],
             ]);
         }
 
@@ -375,6 +385,8 @@ class ProductPlanController extends Controller
                 'cost_price' => number_format($cost, 2, '.', ''),
                 'selling_price' => number_format($selling, 2, '.', ''),
                 'margin' => number_format($selling - $cost, 2, '.', ''),
+                'data_size_in_mb' => (string) $row['data_size_in_mb'],
+                'validity_in_days' => (string) $row['validity_in_days'],
             ];
         })->all();
 
@@ -390,6 +402,16 @@ class ProductPlanController extends Controller
                         ->where('provider_plan_id', $row['api_id']))
                     ->first();
 
+                if ($payload['metadata_only']) {
+                    abort_unless($plan, 409, "A plan selected for metadata correction no longer exists.");
+                    $plan->update([
+                        'data_size_in_mb' => $row['data_size_in_mb'],
+                        'validity_in_days' => $row['validity_in_days'],
+                    ]);
+                    $counts['updated']++;
+                    continue;
+                }
+
                 $attributes = [
                     'product_plan_name' => $row['product_plan_name'],
                     'product_plan_category_id' => $payload['category_id'],
@@ -399,6 +421,8 @@ class ProductPlanController extends Controller
                     'visibility' => true,
                     'affiliate_visibility' => (bool) $payload['affiliate_visibility'],
                     'public_visibility' => (bool) $payload['public_visibility'],
+                    'data_size_in_mb' => $row['data_size_in_mb'],
+                    'validity_in_days' => $row['validity_in_days'],
                 ];
 
                 if ($plan) {
@@ -498,6 +522,9 @@ class ProductPlanController extends Controller
             $planName = trim((string) ($record['product_plan_name'] ?? ''));
             $cost = $this->moneyValue($record['cost_price'] ?? null);
             $selling = $this->moneyValue($record['selling_price'] ?? null);
+            $metadata = $this->planMetadata($planName);
+            $dataSize = $this->moneyValue($record['data_size_in_mb'] ?? null) ?? $metadata['data_size_in_mb'];
+            $validity = $this->integerValue($record['validity_in_days'] ?? null) ?? $metadata['validity_in_days'];
 
             if ($planName === '' || $apiId === '' || $cost === null) {
                 $errors[] = "Line {$lineNumber}: plan name, api_id and cost price are required.";
@@ -517,6 +544,8 @@ class ProductPlanController extends Controller
                 'cost_price' => number_format($cost, 2, '.', ''),
                 'selling_price' => number_format($selling, 2, '.', ''),
                 'margin' => number_format($selling - $cost, 2, '.', ''),
+                'data_size_in_mb' => $dataSize,
+                'validity_in_days' => $validity,
             ];
         }
 
@@ -595,6 +624,12 @@ class ProductPlanController extends Controller
                 continue;
             }
 
+            $metadata = $this->planMetadata($planName);
+            $segmentText = implode(' ', $segment);
+            if (preg_match('/\b(\d+)\s*days?\b/i', $segmentText, $validityMatch)) {
+                $metadata['validity_in_days'] = (int) $validityMatch[1];
+            }
+
             $rows[] = [
                 'line' => $lineNumber,
                 'product_plan_name' => $planName,
@@ -602,6 +637,8 @@ class ProductPlanController extends Controller
                 'cost_price' => number_format($cost, 2, '.', ''),
                 'selling_price' => number_format($selling, 2, '.', ''),
                 'margin' => number_format($selling - $cost, 2, '.', ''),
+                'data_size_in_mb' => $metadata['data_size_in_mb'],
+                'validity_in_days' => $metadata['validity_in_days'],
             ];
 
             $index = $nextRecord - 1;
@@ -664,6 +701,8 @@ class ProductPlanController extends Controller
                 in_array($header, ['api', 'api_id', 'apiid', 'plan_id', 'provider_id'], true) => 'api_id',
                 in_array($header, ['cost', 'cost_price', 'admin_cost', 'admin_cost_price'], true) => 'cost_price',
                 in_array($header, ['price', 'selling_price', 'sell_price', 'reseller_price'], true) => 'selling_price',
+                in_array($header, ['size', 'size_mb', 'data_size', 'data_size_mb', 'data_size_in_mb'], true) => 'data_size_in_mb',
+                in_array($header, ['validity', 'validity_days', 'validity_in_days', 'days'], true) => 'validity_in_days',
                 default => $header,
             };
 
@@ -678,6 +717,8 @@ class ProductPlanController extends Controller
             'api_id' => $columns[$headers['api_id'] ?? -1] ?? null,
             'cost_price' => $columns[$headers['cost_price'] ?? -1] ?? null,
             'selling_price' => $columns[$headers['selling_price'] ?? -1] ?? null,
+            'data_size_in_mb' => $columns[$headers['data_size_in_mb'] ?? -1] ?? null,
+            'validity_in_days' => $columns[$headers['validity_in_days'] ?? -1] ?? null,
         ];
     }
 
@@ -689,6 +730,8 @@ class ProductPlanController extends Controller
                 'api_id' => $columns[1],
                 'cost_price' => $columns[2],
                 'selling_price' => $columns[3] ?? null,
+                'data_size_in_mb' => $columns[4] ?? null,
+                'validity_in_days' => $columns[5] ?? null,
             ];
         }
 
@@ -712,5 +755,40 @@ class ProductPlanController extends Controller
 
         $normalized = preg_replace('/[^0-9.]/', '', (string) $value);
         return is_numeric($normalized) ? (float) $normalized : null;
+    }
+
+    private function integerValue(mixed $value): ?int
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        return filter_var(trim((string) $value), FILTER_VALIDATE_INT) !== false ? (int) $value : null;
+    }
+
+    private function planMetadata(string $planName): array
+    {
+        $size = null;
+        if (preg_match('/(\d+(?:\.\d+)?)\s*(MB|GB|TB)\b/i', $planName, $sizeMatch)) {
+            $multiplier = match (strtoupper($sizeMatch[2])) {
+                'GB' => 1000,
+                'TB' => 1000000,
+                default => 1,
+            };
+            $size = round((float) $sizeMatch[1] * $multiplier, 2);
+        }
+
+        $validity = null;
+        if (preg_match('/\((\d+)\s*(?:DAY|DAYS|D)\)/i', $planName, $validityMatch)) {
+            $validity = (int) $validityMatch[1];
+        } elseif (preg_match('/\b(\d+)\s*(?:DAY|DAYS|D)\b/i', $planName, $validityMatch)) {
+            $validity = (int) $validityMatch[1];
+        } elseif (stripos($planName, 'weekly') !== false) {
+            $validity = 7;
+        } elseif (stripos($planName, 'monthly') !== false) {
+            $validity = 30;
+        }
+
+        return ['data_size_in_mb' => $size, 'validity_in_days' => $validity];
     }
 }

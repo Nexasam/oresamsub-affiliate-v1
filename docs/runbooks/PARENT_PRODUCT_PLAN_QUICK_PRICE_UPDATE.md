@@ -7,9 +7,9 @@ This guide documents the text format and review process for bulk-creating or upd
 Use one plan per line. Separate the four fields with a pipe (`|`) and include the header:
 
 ```text
-Plan name | api_id | cost price | selling price
-75MB AIRTEL CG (1 DAY) | 25 | 70.50 | 74.00
-110MB AIRTEL CG (1 DAY) | 35 | 94.00 | 99.00
+Plan name | api_id | cost price | selling price | data size MB | validity days
+75MB AIRTEL CG (1 DAY) | 25 | 70.50 | 74.00 | 75 | 1
+110MB AIRTEL CG (1 DAY) | 35 | 94.00 | 99.00 | 110 | 1
 ```
 
 Field definitions:
@@ -20,6 +20,8 @@ Field definitions:
 | `api_id` | The provider external plan ID, such as `205`. It is stored on the selected provider route, not as the plan's internal reference. It must be unique within the pasted batch. |
 | `cost price` | Parent acquisition price. This is saved as both cost price and admin cost. |
 | `selling price` | Base selling price from the source list. The value entered in **Add to pasted selling price** is added to this amount. |
+| `data size MB` | Optional equivalent size in MB. The importer also derives this from plan names; `1 GB` is treated as `1000 MB`. |
+| `validity days` | Optional validity period in days. The importer also recognizes day values, `WEEKLY` as 7, and `MONTHLY` as 30 in plan names. |
 
 Example: a pasted selling price of `74.00` with an added amount of `2.00` produces a final selling price of `76.00`.
 
@@ -38,6 +40,18 @@ For newly created plans, the internal reference is generated as `{parent/affilia
 9. Select **Confirm and save changes**, then approve the confirmation prompt.
 
 Nothing is saved before the final confirmation. The preview rejects duplicate API IDs and any selling price that is not greater than its cost price.
+
+## Size and validity correction only
+
+Use **Correction only: update size and validity** when plans have already been imported and only their metadata needs correction. The provider connection, category, and provider external plan ID must match the existing plans.
+
+In this mode:
+
+- Only `data_size_in_mb` and `validity_in_days` are updated.
+- Names, internal references, costs, selling prices, visibility, reseller-level pricing, and provider routes remain unchanged.
+- New plans cannot be created.
+- Size and validity remain editable in the preview before confirmation.
+- Explicit `data size MB` and `validity days` columns take precedence over values derived from the plan name.
 
 ## Pricing behavior
 

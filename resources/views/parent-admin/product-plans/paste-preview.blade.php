@@ -53,6 +53,8 @@
                         <th class="p-3">Plan name</th>
                         <th class="p-3">Provider external plan ID</th>
                         <th class="p-3">Internal reference</th>
+                        <th class="p-3">Data size MB</th>
+                        <th class="p-3">Validity days</th>
                         <th class="p-3">Cost/Admin cost</th>
                         <th class="p-3">Selling price</th>
                         <th class="p-3">Margin</th>
@@ -64,9 +66,11 @@
                         <tr>
                             <td class="p-3"><span class="rounded-full px-2 py-1 text-xs font-semibold {{ $row['classification'] === 'update' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }}">{{ $row['classification'] }}</span></td>
                             <td class="p-3">{{ $row['line'] }}</td>
-                            <td class="p-3"><input name="rows[{{ $index }}][product_plan_name]" value="{{ old("rows.$index.product_plan_name", $row['product_plan_name']) }}" required class="w-64 rounded-lg border-slate-300 text-sm"></td>
-                            <td class="p-3"><input name="rows[{{ $index }}][api_id]" value="{{ old("rows.$index.api_id", $row['api_id']) }}" required class="w-28 rounded-lg border-slate-300 font-mono text-sm"></td>
+                            <td class="p-3"><input name="rows[{{ $index }}][product_plan_name]" value="{{ old("rows.$index.product_plan_name", $row['product_plan_name']) }}" required @readonly($metadataOnly) class="w-64 rounded-lg border-slate-300 text-sm disabled:bg-slate-50"></td>
+                            <td class="p-3"><input name="rows[{{ $index }}][api_id]" value="{{ old("rows.$index.api_id", $row['api_id']) }}" required @readonly($metadataOnly) class="w-28 rounded-lg border-slate-300 font-mono text-sm"></td>
                             <td class="p-3 font-mono text-xs">{{ $row['classification'] === 'create' ? auth('parent_admin')->user()->parentBusiness->slug.'-{external ID}' : ($row['internal_reference'] ?: 'Not set') }}</td>
+                            <td class="p-3"><input type="number" name="rows[{{ $index }}][data_size_in_mb]" value="{{ old("rows.$index.data_size_in_mb", $row['data_size_in_mb']) }}" min="0" step="0.01" required class="w-28 rounded-lg border-slate-300 text-sm"></td>
+                            <td class="p-3"><input type="number" name="rows[{{ $index }}][validity_in_days]" value="{{ old("rows.$index.validity_in_days", $row['validity_in_days']) }}" min="0" step="1" required class="w-24 rounded-lg border-slate-300 text-sm"></td>
                             <td class="p-3"><input type="number" name="rows[{{ $index }}][cost_price]" value="{{ old("rows.$index.cost_price", $row['cost_price']) }}" min="0" step="0.01" required class="w-32 rounded-lg border-slate-300 text-sm"></td>
                             <td class="p-3"><input type="number" name="rows[{{ $index }}][selling_price]" value="{{ old("rows.$index.selling_price", $row['selling_price']) }}" min="0.01" step="0.01" required class="w-32 rounded-lg border-slate-300 text-sm"></td>
                             <td class="p-3 text-slate-500">Recalculated on save</td>
@@ -79,7 +83,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="p-8 text-center text-slate-400">No rows parsed.</td></tr>
+                        <tr><td colspan="11" class="p-8 text-center text-slate-400">No rows parsed.</td></tr>
                     @endforelse
                 </tbody>
             </table>

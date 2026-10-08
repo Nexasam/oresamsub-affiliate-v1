@@ -1,10 +1,11 @@
 @extends('layouts.app')
 @section('content')
 
-@if(config('parent_businesses.features.affiliate_blade_ui'))
+@if($useV2 ?? false)
 <div class="workspace-page" x-data="affiliatePlansTable()" x-init="load()">
     <div class="workspace-stack">
         <x-workspace.page-header title="Product plans" description="Review acquisition prices, customer margins and plan availability.">
+            <a href="{{ route('admin.product_plans.index') }}" class="workspace-btn-secondary">Original version</a>
             <button type="button" data-testid="sync-plans-button" class="inline-flex min-h-9 items-center justify-center rounded-lg border border-emerald-700 bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="sync()" :disabled="syncing"><span x-text="syncing ? 'Syncing…' : 'Sync plans'"></span></button>
         </x-workspace.page-header>
         @if(Session::has('success'))<x-workspace.alert type="success">{{ Session::get('success') }}</x-workspace.alert>@endif
@@ -132,6 +133,8 @@
                         </svg>
                         Product Plans
                     </h5>
+                    <div class="flex items-center gap-2">
+                    <a href="{{ route('admin.product_plans.v2.index') }}" class="rounded bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Open version 2</a>
                          {{-- 🔹 Generate Categories Button --}}
                     <button 
                          id="generatePlansBtn"
@@ -140,6 +143,7 @@
                      >
                       ⚙️ Sync Plans
                   </button>
+                    </div>
                 </div>
 
                 <!-- Card Body -->

@@ -16,6 +16,7 @@ use App\Console\Commands\SendPendingTransactionEmail;
 use App\Console\Commands\ProcessPendingAirtimeTransactions;
 use App\Console\Commands\ReconcileParentManagedPurchases;
 use App\Console\Commands\NotifyParentPlanHealth;
+use App\Console\Commands\SyncAffiliateProductPlans;
 
 // Artisan::command('inspire', function () {
 //     $this->comment(Inspiring::quote());
@@ -28,6 +29,7 @@ Schedule::command(ProcessPendingAirtimeTransactions::class)->everyThirtySeconds(
 Schedule::command(SyncPlans::class)->everyMinute();
 Schedule::command(ReconcileParentManagedPurchases::class)->everyMinute()->withoutOverlapping();
 Schedule::command(NotifyParentPlanHealth::class)->everyMinute()->withoutOverlapping();
+Schedule::command(SyncAffiliateProductPlans::class)->everyFiveMinutes()->withoutOverlapping();
 
 // Schedule::command(ZerorizeNegativeBalances::class)->everyTwoMinutes()->withoutOverlapping();
 // Schedule::command(ComputeReferralCommission::class)->everyMinute();

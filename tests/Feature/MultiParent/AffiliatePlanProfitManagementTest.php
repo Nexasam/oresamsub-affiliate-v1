@@ -168,7 +168,7 @@ it('renders exactly six modern customer pricing controls', function () {
 
     $response = $this->actingAs($admin)
         ->withSession(['affiliate' => $f['affiliate']])
-        ->get(route('admin.product_plans.index'));
+        ->get(route('admin.product_plans.v2.index'));
 
     $response->assertOk();
     expect(substr_count($response->getContent(), 'data-profit-level='))->toBe(6);
@@ -192,7 +192,7 @@ it('renders the sync and save controls with visible resting colours', function (
 
     $response = $this->actingAs($admin)
         ->withSession(['affiliate' => $f['affiliate']])
-        ->get(route('admin.product_plans.index'));
+        ->get(route('admin.product_plans.v2.index'));
 
     $response->assertOk()
         ->assertSee('data-testid="sync-plans-button"', false)

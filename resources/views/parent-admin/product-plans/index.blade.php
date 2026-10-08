@@ -52,7 +52,7 @@
     });
 @endphp
 <div class="space-y-5" x-data="productPlanWorkspace" @keydown.escape.window="closeOverlays()">
-    <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">Only plans owned by <strong>{{ auth('parent_admin')->user()->parentBusiness->name }}</strong> appear here. Global categories are shared; provider routing and reseller prices belong to this parent.</div>
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><span>Only plans owned by <strong>{{ auth('parent_admin')->user()->parentBusiness->name }}</strong> appear here. Global categories are shared; provider routing and reseller prices belong to this parent.</span><button type="button" @click="syncAllAffiliates()" :disabled="syncingAll" class="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50" x-text="syncingAll ? 'Syncing affiliates…' : 'Sync all affiliates'"></button></div>
     @if(session('success'))<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</div>@endif
     @if($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Please correct the following:</p><ul class="mt-2 list-disc space-y-1 pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     <div x-show="notice" x-cloak class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" x-text="notice"></div>
@@ -275,7 +275,7 @@
 <script>
 document.addEventListener('alpine:init',()=>{
     Alpine.data('productPlanWorkspace',()=>({
-        mode:'single', drawerOpen:false, selectedPlan:null, selectedIds:[], selectionScope:'selected', bulkAction:'', switchModalOpen:false, switchRows:[], targetConnectionId:'', bulkEditOpen:false, bulkEditRows:[], submitting:false, notice:'', error:'',
+        mode:'single', drawerOpen:false, selectedPlan:null, selectedIds:[], selectionScope:'selected', bulkAction:'', switchModalOpen:false, switchRows:[], targetConnectionId:'', bulkEditOpen:false, bulkEditRows:[], submitting:false, syncingAll:false, notice:'', error:'',
         plans:@json($workspacePlans),
         connections:@json($connections->map(fn($connection)=>['id'=>(string)$connection->id,'label'=>$connection->name.' · '.($connection->providerConnection?->name ?: 'Provider')])->values()),
         openDrawer(id){ this.selectedPlan=JSON.parse(JSON.stringify(this.plans[String(id)])); this.drawerOpen=true },
@@ -283,6 +283,17 @@ document.addEventListener('alpine:init',()=>{
         closeSwitchModal(){ this.switchModalOpen=false; this.switchRows=[]; this.targetConnectionId='' },
         closeBulkEdit(){ this.bulkEditOpen=false; this.bulkEditRows=[] },
         closeOverlays(){ this.closeDrawer(); this.closeSwitchModal(); this.closeBulkEdit() },
+        async syncAllAffiliates(){
+            if(!confirm('Sync the parent catalogue to every affiliate now?')) return;
+            this.syncingAll=true; this.notice=''; this.error='';
+            try{
+                const response=await fetch(@js(route('parent-admin.product-plans.sync-all-affiliates')),{method:'POST',headers:{Accept:'application/json','X-CSRF-TOKEN':@js(csrf_token())}});
+                const data=await response.json().catch(()=>({}));
+                if(!response.ok) throw new Error(data.message || 'Unable to sync affiliates.');
+                this.notice=data.message;
+            }catch(error){ this.error=error.message; }
+            finally{ this.syncingAll=false; }
+        },
         openBulkEdit(){
             this.notice=''; this.error='';
             if(this.selectionScope !== 'selected'){ this.error='Bulk edit works with explicitly selected plans only.'; return }

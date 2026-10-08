@@ -21,17 +21,11 @@ use App\Models\ParentDefaultProfitRule;
 use App\Services\Pricing\AffiliateAcquisitionPriceResolver;
 use App\Services\Pricing\AffiliatePlanProfitService;
 use App\Models\AffiliateServiceProfitCap;
+use App\Services\AffiliateProductPlanSyncService;
 
 class ProductPlanController extends Controller
 {
     public function index(){
-        if (config('parent_businesses.features.affiliate_blade_ui')) {
-            return view('admin.product_plans.index', [
-                'product_plans' => collect(),
-                'product_plan_categories' => collect(),
-            ]);
-        }
-
         // dd('na here');
         $product_plans = ProductPlan::with(['product','product_plan_category','automation'])
         ->where('visibility',1)
@@ -43,6 +37,15 @@ class ProductPlanController extends Controller
 
         
         return view('admin.product_plans.index')->with($data);
+    }
+
+    public function v2Index()
+    {
+        return view('admin.product_plans.index', [
+            'useV2' => true,
+            'product_plans' => collect(),
+            'product_plan_categories' => collect(),
+        ]);
     }
 
     public function adminProductPlansV2(Request $request)
@@ -629,7 +632,7 @@ class ProductPlanController extends Controller
     
 
 
-    public function syncAffiliateProductPlans(Request $request)
+    public function syncAffiliateProductPlans(Request $request, AffiliateProductPlanSyncService $sync)
     {
         $affiliateId = $this->getId();
 
@@ -638,63 +641,17 @@ class ProductPlanController extends Controller
         }
 
         try {
-            DB::beginTransaction();
-
             $affiliate = \App\Models\Affiliate::findOrFail($affiliateId);
-            $globalPlans = ProductPlan::where('parent_business_id', $affiliate->parent_business_id)->get();
-            $marginService = app(\App\Services\AffiliateProductMarginService::class);
-
-            $created = 0;
-            $updated = 0;
-
-            foreach ($globalPlans as $plan) {
-                
-
-              $existing = AffiliateProductPlan::where('affiliate_id',$affiliateId)->where('product_plan_id',$plan->id)->first();
-
-              if($existing){
-                //update
-                $existing->update([
-                  'product_plan_name' => $plan->product_plan_name,
-                  'data_size_in_mb' => $plan->data_size_in_mb,
-                  'validity_in_days' => $plan->validity_in_days,
-                ]);
-                $updated++;
-              }else{
-                $defaultMargin = $marginService->defaultFor($affiliate, $plan);
-                //create
-                AffiliateProductPlan::create([
-                  'affiliate_id' => $affiliateId,
-                  'product_plan_id' => $plan->id,
-                  'product_plan_name' => $plan->product_plan_name,
-                  'user_level_1_profit' => $defaultMargin,
-                  'user_level_2_profit' => $defaultMargin,
-                  'user_level_3_profit' => $defaultMargin,
-                  'user_level_4_profit' => $defaultMargin,
-                  'user_level_5_profit' => $defaultMargin,
-                  'user_level_6_profit' => $defaultMargin,
-                  'data_size_in_mb' => $plan->data_size_in_mb,
-                  'validity_in_days' => $plan->validity_in_days,
-                  'visibility' => 1,
-                  'visibility_from_admin' => 1,
-                  'public_visibility' => 1,
-                ]);
-                $created++;
-              }
-               
-            }
-
-            DB::commit();
+            $counts = $sync->sync($affiliate);
 
             return response()->json([
                 'status' => true,
                 'message' => "Affiliate product plans synced successfully.",
-                'created' => $created,
-                'updated' => $updated,
+                'created' => $counts['created'],
+                'updated' => $counts['updated'],
             ]);
 
         } catch (\Throwable $th) {
-            DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => 'Error syncing affiliate product plans: ' . $th->getMessage()

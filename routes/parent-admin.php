@@ -38,6 +38,7 @@ Route::prefix('parent-admin')->name('parent-admin.')->group(function () {
         Route::post('impersonation/exit', [\App\Http\Controllers\PlatformAdmin\ParentImpersonationController::class, 'destroy'])->name('impersonation.exit');
         Route::get('product-plans', [ProductPlanController::class, 'index'])->name('product-plans.index');
         Route::get('product-plans/data', [ProductPlanController::class, 'data'])->name('product-plans.data');
+        Route::post('product-plans/sync-all-affiliates', [ProductPlanController::class, 'syncAllAffiliates'])->name('product-plans.sync-all-affiliates');
         Route::get('product-plans/import/template', [ProductPlanImportController::class, 'template'])->name('product-plans.import.template');
         Route::post('product-plans/import/preview', [ProductPlanImportController::class, 'preview'])->name('product-plans.import.preview');
         Route::post('product-plans/import/confirm', [ProductPlanImportController::class, 'confirm'])->name('product-plans.import.confirm');

@@ -16,6 +16,7 @@ use App\Models\ProductPlanParentPrice;
 use App\Models\ProductPlanCategory;
 use App\Services\ParentAdmin\ParentCatalogService;
 use App\Services\ParentAdmin\ProductPlanRouteSwitchService;
+use App\Services\AffiliateProductPlanSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,6 +80,26 @@ class ProductPlanController extends Controller
                 ->with('providerConnection:id,name,slug')
                 ->orderBy('name')
                 ->get(['id', 'provider_connection_id', 'name']),
+        ]);
+    }
+
+    public function syncAllAffiliates(Request $request, AffiliateProductPlanSyncService $sync): JsonResponse
+    {
+        $parent = $request->user('parent_admin')->parentBusiness;
+        $summary = ['affiliates' => 0, 'created' => 0, 'updated' => 0];
+
+        $parent->affiliates()->orderBy('id')->chunkById(100, function ($affiliates) use ($sync, &$summary): void {
+            foreach ($affiliates as $affiliate) {
+                $counts = $sync->sync($affiliate);
+                $summary['affiliates']++;
+                $summary['created'] += $counts['created'];
+                $summary['updated'] += $counts['updated'];
+            }
+        });
+
+        return response()->json([
+            'message' => "Synced {$summary['affiliates']} affiliates: {$summary['created']} plans created, {$summary['updated']} updated.",
+            ...$summary,
         ]);
     }
 

@@ -221,6 +221,8 @@ it('renders the sync and save controls with visible resting colours', function (
         ->assertSee('data-testid="sync-plans-button"', false)
         ->assertSee('data-testid="save-profit-levels-button"', false)
         ->assertSee("row.affiliate_visibility ? 'Turn off' : 'Turn on'", false)
+        ->assertSee('(!row.affiliate_visibility && !row.affiliate_toggle_enabled)', false)
+        ->assertSee('bg-rose-600', false)
         ->assertSee('bg-emerald-600', false)
         ->assertSee('bg-blue-600', false);
 });

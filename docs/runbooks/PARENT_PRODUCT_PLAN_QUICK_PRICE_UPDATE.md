@@ -23,6 +23,8 @@ Field definitions:
 
 Example: a pasted selling price of `74.00` with an added amount of `2.00` produces a final selling price of `76.00`.
 
+For newly created plans, the internal reference is generated as `{parent/affiliate-owner slug}-{provider external plan ID}`. For example, external ID `205` under the `tommyt` parent becomes `tommyt-205`. Existing plans keep their current internal references so active customer API integrations are not disrupted.
+
 ## Update procedure
 
 1. Open **Parent Admin > Product Plans** and find **Quick price update**.
@@ -44,6 +46,7 @@ Nothing is saved before the final confirmation. The preview rejects duplicate AP
 - Existing plans are matched by parent, selected plan category, selected provider connection, and provider external plan ID.
 - Existing plans are updated and enabled. Their primary provider route is enabled when one exists.
 - Missing provider external plan IDs create new parent plans and primary routes for the selected provider connection.
+- New plans receive an internal reference in the `{parent-slug}-{provider-external-plan-id}` format.
 - Do not mix products from different categories in one import. For example, an airtime plan must not be imported into an Airtel data category.
 - The preview expires after 30 minutes. Generate a new preview if it expires.
 

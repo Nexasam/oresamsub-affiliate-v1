@@ -9,6 +9,7 @@ use App\Http\Requests\ParentAdmin\SaveProductPlanConfigurationRequest;
 use App\Http\Requests\ParentAdmin\StoreProductPlanRequest;
 use App\Http\Requests\ParentAdmin\UpdateProductPlanRequest;
 use App\Models\Network;
+use App\Models\ParentBusiness;
 use App\Models\Product;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanParentPrice;
@@ -287,8 +288,13 @@ class ProductPlanController extends Controller
                 ->whereHas('providerRoutes', fn ($query) => $query
                     ->where('parent_provider_connection_id', $connection->id)
                     ->where('provider_plan_id', $row['api_id']))
-                ->first(['id', 'product_plan_name', 'cost_price']);
-            $rows[] = [...$row, 'classification' => $existing ? 'update' : 'create', 'existing' => $existing?->toArray()];
+                ->first(['id', 'product_plan_name', 'api_id', 'cost_price']);
+            $rows[] = [
+                ...$row,
+                'classification' => $existing ? 'update' : 'create',
+                'internal_reference' => $existing?->api_id ?: $this->pastedPlanInternalReference($parent, $row['api_id']),
+                'existing' => $existing?->toArray(),
+            ];
         }
 
         $token = null;
@@ -399,6 +405,7 @@ class ProductPlanController extends Controller
                     $plan->update($attributes);
                     $counts['updated']++;
                 } else {
+                    $attributes['api_id'] = $this->pastedPlanInternalReference($parent, $row['api_id']);
                     $plan = $parent->productPlans()->create($attributes);
                     $counts['created']++;
                 }
@@ -514,6 +521,11 @@ class ProductPlanController extends Controller
         }
 
         return ['rows' => $rows, 'errors' => $errors];
+    }
+
+    private function pastedPlanInternalReference(ParentBusiness $parent, string $providerPlanId): string
+    {
+        return substr(trim((string) $parent->slug).'-'.trim($providerPlanId), 0, 255);
     }
 
     private function looksLikeCopiedPlanTable(string $rawText): bool

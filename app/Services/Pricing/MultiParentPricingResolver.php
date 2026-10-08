@@ -107,7 +107,7 @@ class MultiParentPricingResolver
         if ($affiliateProfit->isNegative()) {
             $this->fail('affiliate_profit', 'The configured customer price would sell below the affiliate acquisition price.');
         }
-        if ($custom?->max_profit !== null && $affiliateProfit->isGreaterThan($this->decimal($custom->max_profit))) {
+        if (! $percentageService && $custom?->max_profit !== null && $affiliateProfit->isGreaterThan($this->decimal($custom->max_profit))) {
             $this->fail('affiliate_profit', 'The realized affiliate profit exceeds this plan reseller maximum.');
         }
 

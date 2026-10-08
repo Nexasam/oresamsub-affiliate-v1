@@ -90,7 +90,9 @@ it('returns only effectively available plans to a customer catalogue', function 
     expect(app(DataPlansService::class)->fetch_user_data_plans($payload)['plans'][0]['product_plan_id'])->toBe($f['affiliatePlan']->id);
 
     $f['plan']->update(['visibility' => 0]);
-    expect(app(DataPlansService::class)->fetch_user_data_plans($payload)['plans'][0]['product_plan_id'])->toBeNull();
+    $emptyCatalogue = app(DataPlansService::class)->fetch_user_data_plans($payload);
+    expect($emptyCatalogue['plans'])->toBeEmpty()
+        ->and($emptyCatalogue['sizes'])->toBeEmpty();
 });
 
 it('keeps approved MTN plans visible when another MTN plan uses a pending connection', function () {

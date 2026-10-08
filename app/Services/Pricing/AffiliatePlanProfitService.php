@@ -8,16 +8,22 @@ use App\Models\AffiliateServiceProfitCap;
 use App\Models\ParentDefaultProfitRule;
 use App\Models\ProductPlan;
 use App\Models\ProductPlanParentPrice;
+use App\Services\ParentAdmin\ParentProfitRuleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AffiliatePlanProfitService
 {
+    public function __construct(private readonly ParentProfitRuleService $profitRules) {}
+
     /** @return array{type:string, acquisition_discount:?float, parent_caps:array<int, float|null>, effective:array<int, float|null>} */
     public function limits(Affiliate $affiliate, ProductPlan $plan): array
     {
         $productId = $plan->product_plan_category?->product_id;
-        $percentage = $plan->profit_category === 'percent';
+        $product = $plan->product_plan_category?->product;
+        $percentage = $product
+            ? in_array($this->profitRules->serviceKey($product), ['airtime', 'electricity'], true)
+            : $plan->profit_category === 'percent';
         $caps = AffiliateServiceProfitCap::query()
             ->where('parent_business_id', $affiliate->parent_business_id)
             ->where('affiliate_id', $affiliate->id)

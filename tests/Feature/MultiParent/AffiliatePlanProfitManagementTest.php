@@ -34,7 +34,7 @@ it('uses the stricter plan level max profit override', function () {
 it('limits airtime customer discounts to below the affiliate acquisition discount', function () {
     $f = affiliateProfitFixture('editor-airtime-limit');
     $f['product']->update(['product_name' => 'Airtime', 'slug' => 'airtime']);
-    $f['plan']->update(['cost_price' => '980.40', 'profit_category' => 'percent']);
+    $f['plan']->update(['cost_price' => '980.40', 'profit_category' => 'flat']);
     ProductPlanParentPrice::create([
         'parent_business_id' => $f['parent']->id,
         'product_plan_id' => $f['plan']->id,

@@ -84,20 +84,9 @@ class CustomerPlansPricingService{
 
         }
 
-        if ($product_planss === []) {
-            $product_planss[0]['rate'] = null;
-            $product_planss[0]['category'] = null;
-            $product_planss[0]['network'] = null;
-            $product_planss[0]['product_plan_id'] = null;
-            $product_planss[0]['selling_price'] = null;
-            $product_planss[0]['product_plan_name'] = null;
-            $product_planss[0]['data_size_in_mb'] = null;
-            $product_planss[0]['validity_in_days'] = null; 
-        }
-
-
         $data_sizes = collect($product_planss)
         ->pluck('data_size_in_mb')
+        ->filter(fn ($size) => $size !== null && $size !== '')
         ->unique()
         ->sort()
         ->values()

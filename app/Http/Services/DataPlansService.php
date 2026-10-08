@@ -108,17 +108,6 @@ class DataPlansService{
 
         }
 
-        if ($product_planss === []) {
-            $product_planss[0]['cost_price'] = NULL;
-            $product_planss[0]['product_plan_id'] = NULL;
-            $product_planss[0]['api_id'] = NULL;
-            $product_planss[0]['selling_price'] = NULL;
-            $product_planss[0]['product_plan_name'] = NULL;
-            $product_planss[0]['data_size_in_mb'] = NULL;
-            $product_planss[0]['validity_in_days'] = NULL;    
-            $product_planss[0]['automation_id'] = NULL;  
-        }
-
         if($is_api != NULL){
             return [
                 'status' => 1,
@@ -129,6 +118,7 @@ class DataPlansService{
         
         $data_sizes = collect($product_planss)
         ->pluck('data_size_in_mb')
+        ->filter(fn ($size) => $size !== null && $size !== '')
         ->unique()
         ->sort()
         ->values()

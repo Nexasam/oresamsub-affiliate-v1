@@ -18,7 +18,7 @@
     <title>@yield('title', $affiliate?->name ?? 'Customer account')</title>
     <link rel="icon" href="{{ $favicon }}">
     <link rel="apple-touch-icon" href="{{ $favicon }}">
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="manifest" href="{{ route('pwa.manifest') }}">
     <script>
         (() => {
             const stored = localStorage.getItem('theme');

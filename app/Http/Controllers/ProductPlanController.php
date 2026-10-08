@@ -25,6 +25,13 @@ use App\Models\AffiliateServiceProfitCap;
 class ProductPlanController extends Controller
 {
     public function index(){
+        if (config('parent_businesses.features.affiliate_blade_ui')) {
+            return view('admin.product_plans.index', [
+                'product_plans' => collect(),
+                'product_plan_categories' => collect(),
+            ]);
+        }
+
         // dd('na here');
         $product_plans = ProductPlan::with(['product','product_plan_category','automation'])
         ->where('visibility',1)
@@ -36,6 +43,118 @@ class ProductPlanController extends Controller
 
         
         return view('admin.product_plans.index')->with($data);
+    }
+
+    public function adminProductPlansV2(Request $request)
+    {
+        $affiliate = Affiliate::with(['parentBusiness', 'processingProfile'])->findOrFail($this->getId());
+        $perPage = in_array((int) $request->integer('per_page', 25), [10, 25, 50], true)
+            ? (int) $request->integer('per_page', 25)
+            : 25;
+        $legacyOresamsub = $affiliate->parentBusiness?->slug === 'oresamsub'
+            && $affiliate->processingProfile?->processing_engine === 'legacy_oresamsub';
+
+        $query = ProductPlan::query()
+            ->with([
+                'product_plan_category.network:id,network_name',
+                'product_plan_category.product:id,product_name',
+                'affiliate_product_plan' => fn ($query) => $query->where('affiliate_id', $affiliate->id),
+                'parentPrices' => fn ($query) => $query->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id),
+                'providerRoutes.parentProviderConnection.providerConnection',
+            ])
+            ->where('parent_business_id', $affiliate->parent_business_id);
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($query) use ($search): void {
+                $query->where('product_plan_name', 'like', "%{$search}%")
+                    ->orWhereHas('product_plan_category', function ($query) use ($search): void {
+                        $query->where('product_plan_category_name', 'like', "%{$search}%")
+                            ->orWhereHas('network', fn ($query) => $query->where('network_name', 'like', "%{$search}%"));
+                    });
+            });
+        }
+
+        $availability = (string) $request->input('availability');
+        if ($availability !== '') {
+            $availableIds = ProductPlan::query()
+                ->select('product_plans.id')
+                ->where('parent_business_id', $affiliate->parent_business_id)
+                ->where('visibility', true)
+                ->where('affiliate_visibility', true)
+                ->whereHas('affiliate_product_plan', fn ($query) => $query
+                    ->where('affiliate_id', $affiliate->id)
+                    ->where('visibility', true));
+
+            if (! $legacyOresamsub) {
+                $availableIds->whereHas('providerRoutes', fn ($query) => $query
+                    ->where('priority', 1)
+                    ->where('active', true)
+                    ->whereHas('parentProviderConnection', fn ($query) => $query
+                        ->where('status', 'active')
+                        ->where('approval_status', 'approved')
+                        ->whereHas('providerConnection', fn ($query) => $query->where('status', 'active'))));
+            }
+
+            $availability === 'available'
+                ? $query->whereIn('product_plans.id', $availableIds)
+                : $query->whereNotIn('product_plans.id', $availableIds);
+        }
+
+        $plans = $query->orderByDesc('updated_at')->paginate($perPage);
+        $defaultRules = ParentDefaultProfitRule::query()
+            ->where('parent_business_id', $affiliate->parent_business_id)
+            ->where('parent_reseller_level_id', $affiliate->parent_reseller_level_id)
+            ->get()->keyBy('product_id');
+        $acquisitionPrices = app(AffiliateAcquisitionPriceResolver::class);
+        $profitLimits = app(AffiliatePlanProfitService::class);
+
+        $rows = $plans->getCollection()->map(function (ProductPlan $plan) use ($affiliate, $legacyOresamsub, $defaultRules, $acquisitionPrices, $profitLimits): array {
+            $affiliatePlan = $plan->affiliate_product_plan;
+            $limits = $legacyOresamsub
+                ? ['effective' => array_fill(1, 6, null), 'type' => $plan->profit_category === 'percent' ? 'percent' : 'flat', 'acquisition_discount' => null]
+                : $profitLimits->limits($affiliate, $plan);
+            $resolvedPrice = $legacyOresamsub
+                ? ['price' => (float) $plan->{'cost_price_'.$affiliate->parent_plan_level}, 'source' => 'legacy', 'level_position' => $affiliate->parent_plan_level]
+                : $acquisitionPrices->resolve($affiliate, $plan, $defaultRules->get($plan->product_plan_category?->product_id));
+            $parentState = $affiliatePlan?->parentAvailabilityState();
+            $effectiveState = $affiliatePlan?->availabilityState();
+
+            return [
+                'id' => $plan->id,
+                'product_plan_id' => $plan->id,
+                'product_plan_name' => $plan->product_plan_name ?: '—',
+                'network_name' => $plan->product_plan_category?->network?->network_name ?: '—',
+                'category' => $plan->product_plan_category?->product_plan_category_name ?: '—',
+                'data_size_in_mb' => $plan->data_size_in_mb ? $plan->data_size_in_mb.' MB' : '—',
+                'validity_in_days' => $plan->validity_in_days ? $plan->validity_in_days.' days' : '—',
+                'acquisition_price' => is_numeric($resolvedPrice['price'])
+                    ? number_format((float) $resolvedPrice['price'], 2)
+                    : (string) $resolvedPrice['price'],
+                'acquisition_source' => ucfirst((string) $resolvedPrice['source']),
+                'profit_values' => collect(range(1, 6))->mapWithKeys(fn ($level) => [(string) $level => (float) ($affiliatePlan?->{"user_level_{$level}_profit"} ?? 1)])->all(),
+                'profit_type' => $limits['type'],
+                'profit_limits' => $limits['effective'],
+                'acquisition_discount' => $limits['acquisition_discount'],
+                'profit_editable' => (bool) $affiliatePlan,
+                'added' => (bool) $affiliatePlan,
+                'affiliate_visibility' => (bool) ($affiliatePlan?->visibility),
+                'affiliate_toggle_enabled' => (bool) ($parentState['available'] ?? false),
+                'effective_availability' => (bool) ($effectiveState['available'] ?? false),
+                'parent_availability' => ($parentState['available'] ?? false) ? 'Available from parent' : 'Disabled by parent',
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'current_page' => $plans->currentPage(),
+                'last_page' => $plans->lastPage(),
+                'per_page' => $plans->perPage(),
+                'total' => $plans->total(),
+                'from' => $plans->firstItem(),
+                'to' => $plans->lastItem(),
+            ],
+        ]);
     }
 
     public function updateAffiliatePlanProfits(Request $request){
@@ -66,7 +185,9 @@ class ProductPlanController extends Controller
         return redirect()->back()->withErrors($validator)->withInput();
       }
 
-      $detail = AffiliateProductPlan::where('product_plan_id',$request->productPlanId)->first();
+      $detail = AffiliateProductPlan::where('affiliate_id', $this->getId())
+          ->where('product_plan_id', $request->productPlanId)
+          ->firstOrFail();
       $update = $detail->public_visibility ? 0 : 1;
       $detail->update([
         'public_visibility' => $update
@@ -87,7 +208,9 @@ class ProductPlanController extends Controller
         return redirect()->back()->withErrors($validator)->withInput();
       }
 
-      $detail = AffiliateProductPlan::where('product_plan_id',$request->productPlanId)->first();
+      $detail = AffiliateProductPlan::where('affiliate_id', $this->getId())
+          ->where('product_plan_id', $request->productPlanId)
+          ->firstOrFail();
       $update = $detail->visibility ? 0 : 1;
       if ($update === 1 && ! $detail->parentAvailabilityState()['available']) {
         throw \Illuminate\Validation\ValidationException::withMessages([

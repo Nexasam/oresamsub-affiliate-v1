@@ -28,6 +28,12 @@
         </section>
     @endif
 
+    @if($warnings)
+        <section class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            @foreach($warnings as $warning)<p>{{ $warning }}</p>@endforeach
+        </section>
+    @endif
+
     <form method="POST" action="{{ route('parent-admin.product-plans.paste-prices.confirm') }}" onsubmit="return confirm('Apply these pasted price changes now?')" class="overflow-hidden rounded-2xl border bg-white shadow-sm">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
@@ -69,8 +75,8 @@
                             <td class="p-3"><input name="rows[{{ $index }}][product_plan_name]" value="{{ old("rows.$index.product_plan_name", $row['product_plan_name']) }}" required @readonly($metadataOnly) class="w-64 rounded-lg border-slate-300 text-sm disabled:bg-slate-50"></td>
                             <td class="p-3"><input name="rows[{{ $index }}][api_id]" value="{{ old("rows.$index.api_id", $row['api_id']) }}" required @readonly($metadataOnly) class="w-28 rounded-lg border-slate-300 font-mono text-sm"></td>
                             <td class="p-3 font-mono text-xs">{{ $row['classification'] === 'create' ? auth('parent_admin')->user()->parentBusiness->slug.'-{external ID}' : ($row['internal_reference'] ?: 'Not set') }}</td>
-                            <td class="p-3"><input type="number" name="rows[{{ $index }}][data_size_in_mb]" value="{{ old("rows.$index.data_size_in_mb", $row['data_size_in_mb']) }}" min="0" step="0.01" required class="w-28 rounded-lg border-slate-300 text-sm"></td>
-                            <td class="p-3"><input type="number" name="rows[{{ $index }}][validity_in_days]" value="{{ old("rows.$index.validity_in_days", $row['validity_in_days']) }}" min="0" step="1" required class="w-24 rounded-lg border-slate-300 text-sm"></td>
+                            <td class="p-3"><input type="number" name="rows[{{ $index }}][data_size_in_mb]" value="{{ old("rows.$index.data_size_in_mb", $row['data_size_in_mb']) }}" min="0" step="0.01" class="w-28 rounded-lg border-slate-300 text-sm"></td>
+                            <td class="p-3"><input type="number" name="rows[{{ $index }}][validity_in_days]" value="{{ old("rows.$index.validity_in_days", $row['validity_in_days']) }}" min="0" step="1" class="w-24 rounded-lg border-slate-300 text-sm"></td>
                             <td class="p-3"><input type="number" name="rows[{{ $index }}][cost_price]" value="{{ old("rows.$index.cost_price", $row['cost_price']) }}" min="0" step="0.01" required class="w-32 rounded-lg border-slate-300 text-sm"></td>
                             <td class="p-3"><input type="number" name="rows[{{ $index }}][selling_price]" value="{{ old("rows.$index.selling_price", $row['selling_price']) }}" min="0.01" step="0.01" required class="w-32 rounded-lg border-slate-300 text-sm"></td>
                             <td class="p-3 text-slate-500">Recalculated on save</td>

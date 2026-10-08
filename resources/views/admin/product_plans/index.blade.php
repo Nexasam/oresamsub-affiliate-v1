@@ -13,11 +13,11 @@
 
         <section class="workspace-panel">
             <div class="workspace-panel-header">
-                <div><h3 class="font-semibold">Affiliate catalogue</h3><p class="mt-1 text-xs text-slate-500" x-text="`${filtered.length} plans`"></p></div>
+                <div><h3 class="font-semibold">Affiliate catalogue</h3><p class="mt-1 text-xs text-slate-500" x-text="`${meta.total || 0} plans`"></p></div>
                 <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
-                    <input x-model.debounce.250ms="search" @input="page=1" class="workspace-input sm:w-64" placeholder="Search plan, network or category">
-                    <select x-model="availability" @change="page=1" class="workspace-input"><option value="">All plans</option><option value="available">Available</option><option value="not available">Unavailable</option></select>
-                    <select x-model.number="perPage" @change="page=1" class="workspace-input"><option :value="10">10 rows</option><option :value="25">25 rows</option><option :value="50">50 rows</option></select>
+                    <input x-model="search" @input.debounce.350ms="page=1; load()" class="workspace-input sm:w-64" placeholder="Search plan, network or category">
+                    <select x-model="availability" @change="page=1; load()" class="workspace-input"><option value="">All plans</option><option value="available">Available</option><option value="not_available">Unavailable</option></select>
+                    <select x-model.number="perPage" @change="page=1; load()" class="workspace-input"><option :value="10">10 rows</option><option :value="25">25 rows</option><option :value="50">50 rows</option></select>
                 </div>
             </div>
             <div x-show="notice" class="p-4"><x-workspace.alert type="success"><span x-text="notice"></span></x-workspace.alert></div>
@@ -26,24 +26,24 @@
                 <table class="workspace-table min-w-[1050px]">
                     <thead><tr><th>Plan</th><th>Category</th><th>Acquisition</th><th>Maximum customer setting</th><th>Customer pricing</th><th>Availability</th><th>Actions</th></tr></thead>
                     <tbody>
-                        <template x-for="row in visible" :key="row.DT_RowIndex"><tr :class="row.DT_RowClass || ''">
+                        <template x-for="row in rows" :key="row.id"><tr :class="row.added ? '' : 'opacity-60'">
                             <td><p class="font-semibold" x-text="row.product_plan_name"></p><p class="mt-1 text-xs text-slate-500" x-text="row.network_name"></p></td>
                             <td><p x-text="row.category"></p><p class="mt-1 text-xs text-slate-500" x-text="row.data_size_in_mb + ' · ' + row.validity_in_days"></p></td>
-                            <td><div x-html="row.cost_price"></div></td>
-                            <td><div x-html="row.max_profit_range"></div></td>
+                            <td><p class="font-semibold" x-text="`₦${row.acquisition_price}`"></p><p class="mt-1 text-[10px] text-slate-500" x-text="row.acquisition_source"></p></td>
+                            <td><span x-text="profitSummary(row)"></span></td>
                             <td>
                                 <button type="button" class="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-blue-700 bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 dark:disabled:border-slate-700 dark:disabled:bg-slate-800 dark:disabled:text-slate-400" @click="editProfits(row)" :disabled="!row.profit_editable">Manage profits</button>
                                 <p class="mt-1 text-[11px] text-slate-500" x-text="row.profit_editable ? profitSummary(row) : 'Add this plan first'"></p>
                             </td>
-                            <td><div class="space-y-2"><div x-html="row.admin_visibility || ''"></div><div x-html="row.affiliate_visibility || ''"></div><p class="text-[10px] font-semibold" :class="row.effective_availability ? 'text-emerald-600' : 'text-slate-500'" x-text="row.effective_availability ? 'Available to customers' : 'Unavailable to customers'"></p></div></td>
-                            <td><div x-html="row.affiliate_status || ''"></div></td>
+                            <td><div class="space-y-2"><p class="text-xs font-semibold" :class="row.affiliate_toggle_enabled ? 'text-emerald-600' : 'text-amber-700'" x-text="row.parent_availability"></p><label class="flex items-center gap-2 text-xs"><input type="checkbox" :checked="row.affiliate_visibility" :disabled="!row.added || !row.affiliate_toggle_enabled || row.toggling" @change="toggleVisibility(row)"> Customer visibility</label><p class="text-[10px] font-semibold" :class="row.effective_availability ? 'text-emerald-600' : 'text-slate-500'" x-text="row.effective_availability ? 'Available to customers' : 'Unavailable to customers'"></p></div></td>
+                            <td><button type="button" class="workspace-btn-secondary whitespace-nowrap" :disabled="row.added || row.adding" @click="addPlan(row)" x-text="row.added ? 'Added' : (row.adding ? 'Adding…' : 'Add plan')"></button></td>
                         </tr></template>
-                        <tr x-show="!loading && visible.length === 0"><td colspan="7" class="workspace-empty">No plans match your filters.</td></tr>
+                        <tr x-show="!loading && rows.length === 0"><td colspan="7" class="workspace-empty">No plans match your filters.</td></tr>
                         <tr x-show="loading"><td colspan="7" class="workspace-empty">Loading product plans…</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs text-slate-500" x-text="pageSummary"></p><div class="flex gap-2"><button class="workspace-btn-secondary" @click="page--" :disabled="page<=1">Previous</button><button class="workspace-btn-secondary" @click="page++" :disabled="page>=pages">Next</button></div></div>
+            <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs text-slate-500" x-text="pageSummary"></p><div class="flex gap-2"><button class="workspace-btn-secondary" @click="page--; load()" :disabled="loading || page<=1">Previous</button><button class="workspace-btn-secondary" @click="page++; load()" :disabled="loading || page>=pages">Next</button></div></div>
         </section>
 
         <div x-cloak x-show="profitModal" x-transition.opacity class="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4" @keydown.escape.window="closeProfits()">
@@ -183,19 +183,18 @@
 <script>
     function affiliatePlansTable() {
       return {
-        rows: [], loading: false, syncing: false, error: '', notice: '', search: '', availability: '', page: 1, perPage: 25,
+        rows: [], meta: {total:0, current_page:1, last_page:1, from:null, to:null}, loading: false, syncing: false, error: '', notice: '', search: '', availability: '', page: 1, perPage: 25,
         profitModal: false, profitSaving: false, profitError: '', selectedPlan: null, profitValues: {},
-        async load() { this.loading = true; this.error = ''; try { const response = await fetch(@js(route('admin.product_plans.admin_fetch_product_plans')), {headers:{'Accept':'application/json'}}); if (!response.ok) throw new Error('Product plans could not be loaded.'); const payload = await response.json(); this.rows = payload.data || []; } catch (error) { this.error = error.message; } finally { this.loading = false; } },
-        plain(value) { const el = document.createElement('div'); el.innerHTML = value || ''; return (el.textContent || '').toLowerCase(); },
-        get filtered() { const term = this.search.toLowerCase().trim(); return this.rows.filter(row => (!term || `${row.product_plan_name} ${row.network_name} ${row.category}`.toLowerCase().includes(term)) && (!this.availability || (this.availability === 'available' ? row.effective_availability : !row.effective_availability))); },
-        get pages() { return Math.max(1, Math.ceil(this.filtered.length / this.perPage)); },
-        get visible() { if (this.page > this.pages) this.page = this.pages; const start=(this.page-1)*this.perPage; return this.filtered.slice(start,start+this.perPage); },
-        get pageSummary() { if (!this.filtered.length) return 'No plans'; const start=(this.page-1)*this.perPage+1; return `Showing ${start}–${Math.min(start+this.perPage-1,this.filtered.length)} of ${this.filtered.length}`; },
+        async load() { this.loading = true; this.error = ''; try { const params=new URLSearchParams({page:this.page,per_page:this.perPage,search:this.search,availability:this.availability}); const response = await fetch(`${@js(route('admin.product_plans.v2.data'))}?${params}`, {headers:{'Accept':'application/json'}}); if (!response.ok) throw new Error('Product plans could not be loaded.'); const payload = await response.json(); this.rows = payload.data || []; this.meta=payload.meta || this.meta; this.page=this.meta.current_page || 1; } catch (error) { this.error = error.message; } finally { this.loading = false; } },
+        get pages() { return Math.max(1, Number(this.meta.last_page || 1)); },
+        get pageSummary() { return this.meta.total ? `Showing ${this.meta.from}–${this.meta.to} of ${this.meta.total}` : 'No plans'; },
         profitSummary(row) { const values = Object.values(row.profit_values || {}); const suffix = row.profit_type === 'percent' ? '%' : ''; return values.length ? `${Math.min(...values)}–${Math.max(...values)}${suffix}` : 'Not configured'; },
         limitFor(level) { const limit=this.selectedPlan?.profit_limits?.[level]; return limit === null || limit === undefined ? null : Number(limit); },
         limitLabel(level) { const limit=this.limitFor(level); if (limit === null) return 'No maximum configured'; return `Maximum ${limit.toFixed(2)}${this.selectedPlan?.profit_type === 'percent' ? '%' : ''}`; },
         editProfits(row) { if (!row.profit_editable) return; this.selectedPlan = row; this.profitValues = JSON.parse(JSON.stringify(row.profit_values || {})); this.profitError = ''; this.profitModal = true; },
         closeProfits() { if (this.profitSaving) return; this.profitModal = false; this.selectedPlan = null; this.profitError = ''; },
+        async addPlan(row) { row.adding=true; this.error=''; try { const response=await fetch(@js(route('admin.affiliate.addProductPlan')),{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@js(csrf_token())},body:JSON.stringify({product_plan_id:row.id,product_plan_name:row.product_plan_name})}); const payload=await response.json(); if(!response.ok || !(payload.status===1 || payload.status==='exists')) throw new Error(payload.message || 'Plan could not be added.'); this.notice=payload.message; await this.load(); } catch(error){ this.error=error.message; } finally { row.adding=false; } },
+        async toggleVisibility(row) { row.toggling=true; this.error=''; try { const params=new URLSearchParams({productPlanId:row.id,token:@js(csrf_token())}); const response=await fetch(`${@js(route('admin.affiliate.toggle_product_plan_visibility'))}?${params}`,{headers:{'Accept':'application/json'}}); const payload=await response.json(); if(!response.ok || payload.status!=='1') throw new Error(payload.message || Object.values(payload.errors || {}).flat()[0] || 'Visibility could not be changed.'); await this.load(); } catch(error){ this.error=error.message; await this.load(); } finally { row.toggling=false; } },
         async saveProfits() {
           if (!this.selectedPlan) return;
           this.profitSaving = true; this.profitError = '';

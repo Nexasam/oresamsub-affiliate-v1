@@ -49,9 +49,10 @@ In this mode:
 
 - Only `data_size_in_mb` and `validity_in_days` are updated.
 - Names, internal references, costs, selling prices, visibility, reseller-level pricing, and provider routes remain unchanged.
-- New plans cannot be created.
+- Missing provider external plan IDs are shown as **Create** and create complete plans after confirmation.
 - Size and validity remain editable in the preview before confirmation.
 - Explicit `data size MB` and `validity days` columns take precedence over values derived from the plan name.
+- Repeated provider external plan IDs in the same paste are ignored after their first occurrence and shown as one preview warning.
 
 ## Pricing behavior
 

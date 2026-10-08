@@ -34,6 +34,7 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductPlanCategoryController;
 use App\Http\Controllers\ProductPlanController;
+use App\Http\Controllers\PwaManifestController;
 use App\Http\Controllers\ProductPlanCustomPricingController;
 use App\Http\Controllers\QuickToolController;
 use App\Http\Controllers\ReprocessTransactionController;
@@ -84,6 +85,7 @@ Route::get('query_airtime_transaction', [ParentSyncController::class, 'queryAirt
 
 
 Route::middleware(['set_locale','set_affiliate'])->group(function () {
+            Route::get('/manifest.webmanifest', PwaManifestController::class)->name('pwa.manifest');
             Route::get('admin/onboarding', AffiliateOnboardingChecklistController::class)->middleware(['auth','verified','admin'])->name('admin.onboarding.index');
             Route::get('/platform-impersonation/{token}', [\App\Http\Controllers\PlatformAdmin\ImpersonationController::class, 'consume'])
                 ->name('platform-impersonation.consume');
@@ -752,6 +754,7 @@ Route::middleware(['set_locale','set_affiliate'])->group(function () {
             Route::middleware(['auth','verified','admin'])->post('admin/product_plans/update', [ProductPlanController::class, 'update'])->name('admin.product_plans.update');
             Route::middleware(['auth','verified','admin'])->post('admin/product_plans/update_plan2', [ProductPlanController::class, 'update_plan2'])->name('admin.product_plans.update_plan2');
             Route::middleware(['auth','verified','admin'])->get('admin/product_plans/fetch_product_plans', [ProductPlanController::class, 'admin_fetch_product_plans'])->name('admin.product_plans.admin_fetch_product_plans');
+            Route::middleware(['auth','verified','admin'])->get('admin/product_plans/v2/data', [ProductPlanController::class, 'adminProductPlansV2'])->name('admin.product_plans.v2.data');
             Route::middleware(['auth','verified','admin'])->get('admin/product_categories', [ProductCategoryController::class, 'index'])->name('admin.product_categories.index');
 
 

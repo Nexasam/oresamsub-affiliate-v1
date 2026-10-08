@@ -276,10 +276,11 @@ class ProductPlanController extends Controller
         $seen = [];
         $rows = [];
         $errors = $parsed['errors'];
+        $duplicateCount = 0;
         foreach ($parsed['rows'] as $row) {
             $key = strtolower($row['api_id']);
             if (isset($seen[$key])) {
-                $errors[] = "Line {$row['line']}: provider external plan ID {$row['api_id']} already appears on line {$seen[$key]}.";
+                $duplicateCount++;
                 continue;
             }
             $seen[$key] = $row['line'];
@@ -290,13 +291,11 @@ class ProductPlanController extends Controller
                     ->where('parent_provider_connection_id', $connection->id)
                     ->where('provider_plan_id', $row['api_id']))
                 ->first(['id', 'product_plan_name', 'api_id', 'cost_price']);
-            if ((bool) $data['metadata_only'] && ! $existing) {
-                $errors[] = "Line {$row['line']}: provider external plan ID {$row['api_id']} does not match an existing plan for metadata-only correction.";
-                continue;
-            }
             $rows[] = [
                 ...$row,
-                'classification' => (bool) $data['metadata_only'] ? 'metadata update' : ($existing ? 'update' : 'create'),
+                'classification' => $existing
+                    ? ((bool) $data['metadata_only'] ? 'metadata update' : 'update')
+                    : 'create',
                 'internal_reference' => $existing?->api_id ?: $this->pastedPlanInternalReference($parent, $row['api_id']),
                 'existing' => $existing?->toArray(),
             ];
@@ -321,6 +320,7 @@ class ProductPlanController extends Controller
             'rows' => $rows,
             'parseErrors' => $errors,
             'validationErrors' => [],
+            'warnings' => $duplicateCount > 0 ? ["{$duplicateCount} repeated rows were ignored. Each provider external plan ID is previewed once."] : [],
             'token' => $token,
             'category' => $category->load(['product:id,product_name', 'network:id,network_name']),
             'connection' => $connection,
@@ -348,8 +348,8 @@ class ProductPlanController extends Controller
             'rows.*.api_id' => ['required', 'string', 'max:255', 'distinct:strict'],
             'rows.*.cost_price' => ['required', 'numeric', 'min:0'],
             'rows.*.selling_price' => ['required', 'numeric', 'gt:rows.*.cost_price'],
-            'rows.*.data_size_in_mb' => ['required', 'numeric', 'min:0'],
-            'rows.*.validity_in_days' => ['required', 'integer', 'min:0'],
+            'rows.*.data_size_in_mb' => ['nullable', 'numeric', 'min:0'],
+            'rows.*.validity_in_days' => ['nullable', 'integer', 'min:0'],
         ], [
             'rows.*.api_id.distinct' => 'Each API ID must appear only once.',
             'rows.*.selling_price.gt' => 'Each selling price must be greater than its cost price.',
@@ -366,6 +366,7 @@ class ProductPlanController extends Controller
                 'rows' => $rows,
                 'parseErrors' => [],
                 'validationErrors' => $validator->errors()->all(),
+                'warnings' => [],
                 'token' => $token,
                 'category' => $category,
                 'connection' => $connection,
@@ -385,8 +386,8 @@ class ProductPlanController extends Controller
                 'cost_price' => number_format($cost, 2, '.', ''),
                 'selling_price' => number_format($selling, 2, '.', ''),
                 'margin' => number_format($selling - $cost, 2, '.', ''),
-                'data_size_in_mb' => (string) $row['data_size_in_mb'],
-                'validity_in_days' => (string) $row['validity_in_days'],
+                'data_size_in_mb' => filled($row['data_size_in_mb'] ?? null) ? (string) $row['data_size_in_mb'] : null,
+                'validity_in_days' => filled($row['validity_in_days'] ?? null) ? (string) $row['validity_in_days'] : null,
             ];
         })->all();
 
@@ -402,8 +403,7 @@ class ProductPlanController extends Controller
                         ->where('provider_plan_id', $row['api_id']))
                     ->first();
 
-                if ($payload['metadata_only']) {
-                    abort_unless($plan, 409, "A plan selected for metadata correction no longer exists.");
+                if ($payload['metadata_only'] && $plan) {
                     $plan->update([
                         'data_size_in_mb' => $row['data_size_in_mb'],
                         'validity_in_days' => $row['validity_in_days'],

@@ -12,15 +12,14 @@
       <link rel="icon" type="image/png" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
 
       <!-- Manifest -->
-      <link rel="manifest" href="{{ asset('manifest.json') }}">
+      <link rel="manifest" href="{{ route('pwa.manifest') }}">
       <meta name="theme-color" content="#047857">
 
       <!-- iOS support -->
-      <link rel="apple-touch-icon" href="{{ asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
-      <link rel="apple-touch-icon" sizes="512x512" href="{{ asset('assets/logo_imgs/favicon/android-chrome-512x512.png') }}">
+      <link rel="apple-touch-icon" href="{{ session('affiliate')?->logo ? asset(session('affiliate')->logo) : asset('assets/logo_imgs/favicon/android-chrome-192x192.png') }}">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <meta name="apple-mobile-web-app-title" content="OresamSub">
+      <meta name="apple-mobile-web-app-title" content="{{ session('affiliate')?->name ?: 'OresamSub' }}">
 {{-- new content ends --}}
 
 

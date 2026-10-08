@@ -76,7 +76,7 @@
             <div>
                 <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Quick price update</p>
                 <h2 class="mt-1 text-lg font-semibold">Paste provider price text</h2>
-                <p class="mt-1 max-w-3xl text-sm text-slate-500">Use <strong>api_id</strong> as the key. Existing api IDs are updated; missing api IDs are created after preview. Cost becomes both cost price and admin cost. Your margin is added to the pasted selling price; if no selling price is pasted, it is added to cost.</p>
+                <p class="mt-1 max-w-3xl text-sm text-slate-500">The pasted <strong>api_id</strong> is the provider external plan ID. Existing IDs for the selected provider are updated; missing IDs are created after preview. Cost becomes both cost price and admin cost.</p>
             </div>
         </div>
         <form method="POST" action="{{ route('parent-admin.product-plans.paste-prices.preview') }}" class="mt-5 space-y-4">@csrf
@@ -85,13 +85,14 @@
                 <label class="text-sm font-medium">Network<select name="network_id" class="mt-1 w-full rounded-xl border-slate-200"><option value="">Any network</option>@foreach($networks as $network)<option value="{{ $network->id }}" @selected((string) old('network_id') === (string) $network->id)>{{ $network->network_name }}</option>@endforeach</select></label>
                 <label class="text-sm font-medium lg:col-span-2">Product plan category<select name="product_plan_category_id" required class="mt-1 w-full rounded-xl border-slate-200"><option value="">Select category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('product_plan_category_id') === (string) $category->id)>{{ $category->product_plan_category_name }} · {{ $category->network?->network_name ?: 'No network' }} · {{ $category->product?->product_name ?: 'No product' }}</option>@endforeach</select></label>
             </div>
+            <label class="block text-sm font-medium">Provider connection<select name="parent_provider_connection_id" required class="mt-1 w-full rounded-xl border-slate-200"><option value="">Select provider</option>@foreach($connections as $connection)<option value="{{ $connection->id }}" @selected((string) old('parent_provider_connection_id') === (string) $connection->id)>{{ $connection->name }} · {{ $connection->providerConnection?->name }}</option>@endforeach</select><span class="mt-1 block text-xs font-normal text-slate-500">Each pasted API ID will be saved as this provider's external plan ID.</span></label>
             <div class="grid gap-4 lg:grid-cols-3">
                 <label class="text-sm font-medium">Add to pasted selling price<input name="selling_margin" value="{{ old('selling_margin', '2.00') }}" required type="number" min="0.01" step="0.01" class="mt-1 w-full rounded-xl border-slate-200"></label>
                 <label class="flex items-center gap-2 rounded-xl border border-slate-200 p-4 text-sm"><input type="hidden" name="affiliate_visibility" value="0"><input name="affiliate_visibility" value="1" type="checkbox" @checked(old('affiliate_visibility', true))> Make available to affiliates</label>
                 <label class="flex items-center gap-2 rounded-xl border border-slate-200 p-4 text-sm"><input type="hidden" name="public_visibility" value="0"><input name="public_visibility" value="1" type="checkbox" @checked(old('public_visibility', true))> Publicly visible</label>
             </div>
             <label class="block text-sm font-medium">Paste raw records<textarea name="raw_text" rows="9" required class="mt-1 w-full rounded-xl border-slate-200 font-mono text-xs" placeholder="Plan name | api_id | cost price | selling price&#10;MTN SME 1GB | 101 | 318 | 320&#10;MTN SME 2GB | 102 | 635">{{ old('raw_text') }}</textarea></label>
-            <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-500">Accepted: the copied provider table, or columns <strong>Plan name</strong>, <strong>api_id</strong>, <strong>cost price</strong>, optional <strong>selling price</strong>. Separate simple rows with tab, comma, pipe, semicolon, or multiple spaces.</div>
+            <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-500">Accepted: the copied provider table, or columns <strong>Plan name</strong>, <strong>api_id (provider external plan ID)</strong>, <strong>cost price</strong>, optional <strong>selling price</strong>. Separate simple rows with tab, comma, pipe, semicolon, or multiple spaces.</div>
             <button class="rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white">Preview price changes</button>
         </form>
     </section>

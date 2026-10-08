@@ -11,6 +11,7 @@
                 <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Review before saving</p>
                 <h2 class="mt-1 text-lg font-semibold">{{ $category->product_plan_category_name }}</h2>
                 <p class="mt-1 text-sm text-slate-500">{{ $category->product?->product_name ?: 'No product' }} · {{ $category->network?->network_name ?: 'No network' }}</p>
+                <p class="mt-1 text-sm text-slate-500">Provider: {{ $connection->name }} · pasted API IDs become provider external plan IDs</p>
             </div>
             <a href="{{ route('parent-admin.product-plans.index') }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">Back to product plans</a>
         </div>
@@ -50,7 +51,7 @@
                         <th class="p-3">Action</th>
                         <th class="p-3">Line</th>
                         <th class="p-3">Plan name</th>
-                        <th class="p-3">api_id</th>
+                        <th class="p-3">Provider external plan ID</th>
                         <th class="p-3">Cost/Admin cost</th>
                         <th class="p-3">Selling price</th>
                         <th class="p-3">Margin</th>

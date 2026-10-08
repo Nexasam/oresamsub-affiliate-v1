@@ -242,6 +242,7 @@ class ProductPlanController extends Controller
             'product_id' => ['nullable', 'integer', Rule::exists('products', 'id')],
             'network_id' => ['nullable', 'integer', Rule::exists('networks', 'id')],
             'product_plan_category_id' => ['required', 'integer', Rule::exists('product_plan_categories', 'id')],
+            'parent_provider_connection_id' => ['required', 'integer'],
             'raw_text' => ['required', 'string', 'min:3'],
             'selling_margin' => ['required', 'numeric', 'min:0.01'],
             'affiliate_visibility' => ['required', 'boolean'],
@@ -249,6 +250,10 @@ class ProductPlanController extends Controller
         ]);
 
         $category = ProductPlanCategory::query()->findOrFail($data['product_plan_category_id']);
+        $connection = $parent->providerConnections()
+            ->where('status', 'active')
+            ->where('approval_status', 'approved')
+            ->findOrFail($data['parent_provider_connection_id']);
         if (filled($data['product_id'] ?? null) && (int) $category->product_id !== (int) $data['product_id']) {
             throw ValidationException::withMessages(['product_plan_category_id' => 'Selected category does not belong to the selected product.']);
         }
@@ -272,14 +277,16 @@ class ProductPlanController extends Controller
         foreach ($parsed['rows'] as $row) {
             $key = strtolower($row['api_id']);
             if (isset($seen[$key])) {
-                $errors[] = "Line {$row['line']}: api_id {$row['api_id']} already appears on line {$seen[$key]}.";
+                $errors[] = "Line {$row['line']}: provider external plan ID {$row['api_id']} already appears on line {$seen[$key]}.";
                 continue;
             }
             $seen[$key] = $row['line'];
             $existing = ProductPlan::query()
                 ->where('parent_business_id', $parent->id)
                 ->where('product_plan_category_id', $data['product_plan_category_id'])
-                ->where('api_id', $row['api_id'])
+                ->whereHas('providerRoutes', fn ($query) => $query
+                    ->where('parent_provider_connection_id', $connection->id)
+                    ->where('provider_plan_id', $row['api_id']))
                 ->first(['id', 'product_plan_name', 'cost_price']);
             $rows[] = [...$row, 'classification' => $existing ? 'update' : 'create', 'existing' => $existing?->toArray()];
         }
@@ -290,6 +297,7 @@ class ProductPlanController extends Controller
             $request->session()->put("paste_price_update.{$token}", [
                 'parent_id' => $parent->id,
                 'category_id' => (int) $data['product_plan_category_id'],
+                'connection_id' => $connection->id,
                 'affiliate_visibility' => (bool) $data['affiliate_visibility'],
                 'public_visibility' => (bool) $data['public_visibility'],
                 'rows' => $rows,
@@ -303,6 +311,7 @@ class ProductPlanController extends Controller
             'validationErrors' => [],
             'token' => $token,
             'category' => $category->load(['product:id,product_name', 'network:id,network_name']),
+            'connection' => $connection,
         ]);
     }
 
@@ -313,6 +322,11 @@ class ProductPlanController extends Controller
         $sessionKey = 'paste_price_update.'.$token;
         $payload = $request->session()->get($sessionKey);
         abort_unless($payload && (int) $payload['parent_id'] === (int) $parent->id && $payload['expires'] >= time(), 410, 'Paste preview expired.');
+
+        $connection = $parent->providerConnections()
+            ->where('status', 'active')
+            ->where('approval_status', 'approved')
+            ->findOrFail($payload['connection_id']);
 
         $validator = Validator::make($request->all(), [
             'token' => ['required', 'uuid'],
@@ -339,6 +353,7 @@ class ProductPlanController extends Controller
                 'validationErrors' => $validator->errors()->all(),
                 'token' => $token,
                 'category' => $category,
+                'connection' => $connection,
             ]);
         }
 
@@ -358,19 +373,20 @@ class ProductPlanController extends Controller
         })->all();
 
         $levels = $parent->resellerLevels()->where('status', 'active')->orderBy('position')->get(['id']);
-        $counts = DB::transaction(function () use ($parent, $payload, $levels): array {
+        $counts = DB::transaction(function () use ($parent, $payload, $levels, $connection): array {
             $counts = ['created' => 0, 'updated' => 0];
             foreach ($payload['rows'] as $row) {
                 $plan = ProductPlan::query()
                     ->where('parent_business_id', $parent->id)
                     ->where('product_plan_category_id', $payload['category_id'])
-                    ->where('api_id', $row['api_id'])
+                    ->whereHas('providerRoutes', fn ($query) => $query
+                        ->where('parent_provider_connection_id', $connection->id)
+                        ->where('provider_plan_id', $row['api_id']))
                     ->first();
 
                 $attributes = [
                     'product_plan_name' => $row['product_plan_name'],
                     'product_plan_category_id' => $payload['category_id'],
-                    'api_id' => $row['api_id'],
                     'admin_cost_price' => $row['cost_price'],
                     'cost_price' => $row['cost_price'],
                     'profit_category' => 'flat',
@@ -381,12 +397,13 @@ class ProductPlanController extends Controller
 
                 if ($plan) {
                     $plan->update($attributes);
-                    $plan->providerRoutes()->where('priority', 1)->update(['active' => true]);
                     $counts['updated']++;
                 } else {
                     $plan = $parent->productPlans()->create($attributes);
                     $counts['created']++;
                 }
+
+                $this->routeSwitcher->switch($parent, $plan, $connection, $row['api_id']);
 
                 foreach ($levels as $level) {
                     ProductPlanParentPrice::query()->updateOrCreate(

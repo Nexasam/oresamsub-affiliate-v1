@@ -161,9 +161,44 @@
           word-wrap: break-word;
           }
 
-          .modal-style {
+        .modal-style {
             box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
             border: 1px solid rgba(0, 0, 0, .2)
+        }
+
+        .mobile-sidebar-close,
+        .mobile-menu-label {
+          display: none;
+        }
+
+        @media (max-width: 991px) {
+          .mobile-menu-label {
+            display: inline;
+            font-size: 0.75rem;
+            font-weight: 700;
+          }
+
+          .mobile-sidebar-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 60;
+            display: inline-flex;
+            min-height: 2.5rem;
+            align-items: center;
+            gap: 0.375rem;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.14);
+            padding: 0.5rem 0.75rem;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+          }
+
+          .main-sidebar {
+            padding-top: 0.75rem;
+          }
         }
 
      .table.dataTable  {
@@ -2348,7 +2383,8 @@
 
     <!-- sidebar JS -->
     {{-- <script src="../../assets/js/defaultmenu.js"></script> --}}
-    <script src=" {{ asset(config('app.assets_base_url').'js/defaultmenu.js') }}"></script>
+    @php($defaultMenuPath = config('app.assets_base_url').'js/defaultmenu.js')
+    <script src="{{ asset($defaultMenuPath) }}?v={{ @filemtime(public_path($defaultMenuPath)) ?: '1' }}"></script>
 
 
     <!-- sticky JS -->

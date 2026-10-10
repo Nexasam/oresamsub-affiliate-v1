@@ -317,6 +317,7 @@ let headerToggleBtn, WindowPreSize;
   let html = document.querySelector("html");
   headerToggleBtn = document.querySelector(".sidebar-toggle");
   headerToggleBtn.addEventListener("click", toggleSidemenu);
+  document.querySelector("#mobile-sidebar-close")?.addEventListener("click", menuClose);
   let mainContent = document.querySelector(".main-content");
   if (window.innerWidth <= 992) {
     mainContent.addEventListener("click", menuClose);

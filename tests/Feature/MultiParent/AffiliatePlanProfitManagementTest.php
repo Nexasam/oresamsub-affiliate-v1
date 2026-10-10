@@ -188,6 +188,10 @@ it('uses the alpine product plans page as the main route and keeps datatables as
         ->get(route('admin.product_plans.index'))
         ->assertOk()
         ->assertSee('data-testid="sync-plans-button"', false)
+        ->assertSee('id="mobile-sidebar-close"', false)
+        ->assertSee('Close menu')
+        ->assertSee('mobile-menu-label', false)
+        ->assertSee('defaultmenu.js?v=', false)
         ->assertSee('Legacy version');
 
     $this->actingAs($admin)->withSession(['affiliate' => $f['affiliate']])

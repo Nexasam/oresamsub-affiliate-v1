@@ -1,4 +1,8 @@
 <aside class="app-sidebar" id="sidebar">
+    <button type="button" id="mobile-sidebar-close" class="mobile-sidebar-close" aria-label="Close navigation menu">
+        <i class="ri-close-line text-xl" aria-hidden="true"></i>
+        <span>Close menu</span>
+    </button>
 
     {{-- style="background-color: {{ 'blue'  }};
     style="background-color: {{ 'blue'  }}; --}}

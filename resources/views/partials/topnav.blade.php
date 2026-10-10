@@ -4,9 +4,9 @@
         <div class="header-left">
           <!-- Navigation Toggle -->
           <div class="">
-            <button type="button" class="sidebar-toggle !w-100 !h-100">
-              <span class="sr-only">Toggle Navigation</span>
-              <i class="ri-arrow-right-circle-line header-icon"></i>
+            <button type="button" class="sidebar-toggle !h-10 !w-auto gap-2 !px-3" aria-label="Show navigation menu">
+              <i class="ri-menu-line header-icon" aria-hidden="true"></i>
+              <span class="mobile-menu-label">Menu</span>
             </button>
           </div>
           <!-- End Navigation Toggle -->

@@ -360,7 +360,9 @@ let headerToggleBtn, WindowPreSize;
     }
   }
 
-  toggleSidemenu();
+  if (window.innerWidth >= 992) {
+    toggleSidemenu();
+  }
 
   if (
     (html.getAttribute("data-nav-style") === "menu-hover" ||
@@ -371,8 +373,16 @@ let headerToggleBtn, WindowPreSize;
   }
   if (window.innerWidth < 992) {
     html.setAttribute("toggled", "close");
+    document.querySelector("#responsive-overlay")?.classList.remove("active");
+    document.body.style.overflow = "";
   }
 })();
+
+window.addEventListener("pageshow", () => {
+  if (window.innerWidth < 992) {
+    menuClose();
+  }
+});
 
 function ResizeMenu() {
   let html = document.querySelector("html");
@@ -417,7 +427,8 @@ function ResizeMenu() {
 function menuClose() {
   let html = document.querySelector("html");
   html.setAttribute("toggled", "close");
-  document.querySelector("#responsive-overlay").classList.remove("active");
+  document.querySelector("#responsive-overlay")?.classList.remove("active");
+  document.body.style.overflow = "";
 }
 function toggleSidemenu() {
   let html = document.querySelector("html");
@@ -575,28 +586,22 @@ function toggleSidemenu() {
   } else {
     if (html.getAttribute("toggled") === "close") {
       html.setAttribute("toggled", "open");
-      let i = document.createElement("div");
-      i.id = "responsive-overlay";
+      document.body.style.overflow = "hidden";
       setTimeout(() => {
         if (document.querySelector("html").getAttribute("toggled") == "open") {
-          document.querySelector("#responsive-overlay").classList.add("active");
-          document
-            .querySelector("#responsive-overlay")
-            .addEventListener("click", () => {
-              document
-                .querySelector("#responsive-overlay")
-                .classList.remove("active");
-              menuClose();
-            });
+          const overlay = document.querySelector("#responsive-overlay");
+          overlay?.classList.add("active");
+          overlay?.addEventListener("click", menuClose, { once: true });
         }
         window.addEventListener("resize", () => {
           if (window.screen.width >= 992) {
-            document.querySelector("#responsive-overlay").classList.remove("active");
+            document.querySelector("#responsive-overlay")?.classList.remove("active");
+            document.body.style.overflow = "";
           }
-        });
+        }, { once: true });
       }, 100);
     } else {
-      html.setAttribute("toggled", "close");
+      menuClose();
     }
   }
 }

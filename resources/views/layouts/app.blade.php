@@ -172,6 +172,11 @@
         }
 
         @media (max-width: 991px) {
+          [toggled] .header .sidebar-toggle {
+            --tw-rotate: 0deg !important;
+            transform: none !important;
+          }
+
           .mobile-menu-label {
             display: inline;
             font-size: 0.75rem;
@@ -181,10 +186,12 @@
           .mobile-sidebar-close {
             position: absolute;
             top: 0.75rem;
+            left: 0.75rem;
             right: 0.75rem;
-            z-index: 60;
+            z-index: 10001;
             display: inline-flex;
             min-height: 2.5rem;
+            justify-content: center;
             align-items: center;
             gap: 0.375rem;
             border: 1px solid rgba(255, 255, 255, 0.28);
@@ -197,7 +204,17 @@
           }
 
           .main-sidebar {
+            margin-top: 4.75rem !important;
+            height: calc(100vh - 4.75rem) !important;
             padding-top: 0.75rem;
+          }
+
+          #responsive-overlay {
+            z-index: 9998;
+          }
+
+          .app-sidebar {
+            z-index: 9999;
           }
         }
 

@@ -191,6 +191,8 @@ it('uses the alpine product plans page as the main route and keeps datatables as
         ->assertSee('id="mobile-sidebar-close"', false)
         ->assertSee('Close menu')
         ->assertSee('mobile-menu-label', false)
+        ->assertSee('[toggled] .header .sidebar-toggle', false)
+        ->assertSee('height: calc(100vh - 4.75rem)', false)
         ->assertSee('defaultmenu.js?v=', false)
         ->assertSee('Legacy version');
 

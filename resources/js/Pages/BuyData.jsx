@@ -149,15 +149,23 @@ export default function BuyData() {
           Buy Data
         </div>
 
-        <form autoComplete="off" data-lpignore="true" data-1p-ignore="true" onSubmit={handleSubmit} className={isV2 ? "rg-v2-purchase-form" : "p-4 space-y-4"}>
+        <form autoComplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" onSubmit={handleSubmit} className={isV2 ? "rg-v2-purchase-form" : "p-4 space-y-4"}>
+          <div aria-hidden="true" className="fixed -left-[10000px] top-0 h-px w-px overflow-hidden opacity-0">
+            <input type="text" name="username" autoComplete="username" tabIndex={-1} />
+            <input type="password" name="password" autoComplete="current-password" tabIndex={-1} />
+          </div>
           {/* Phone Number */}
           <div>
             <label className="block text-sm mb-1">Phone Number</label>
             <input
               type="tel"
               inputMode="numeric"
-              autoComplete="off"
-              name="data_recipient_phone"
+              autoComplete="new-password"
+              name={`purchase_recipient_${user.id}`}
+              data-form-type="other"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-bwignore="true"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               placeholder="e.g. 08012345678"
               value={data.phone_number}
@@ -328,10 +336,12 @@ export default function BuyData() {
             <input
               type="password"
               inputMode="numeric"
-              autoComplete="off"
-              name="data_transaction_pin"
+              autoComplete="one-time-code"
+              name={`transaction_authorization_${user.id}`}
+              data-form-type="other"
               data-lpignore="true"
               data-1p-ignore="true"
+              data-bwignore="true"
               maxLength={4}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
               placeholder="****"

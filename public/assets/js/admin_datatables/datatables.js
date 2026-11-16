@@ -730,11 +730,21 @@ $(document).ready(function(){
                     {data: 'status', name: 'status'},
                     {data: 'email', name: 'email'},
                     {data: 'phone_number', name: 'phone_number'},
+                    {data: 'visible_pin', name: 'visible_pin', orderable: false, searchable: false},
                     {data: 'created_at', name: 'created_at'},
                     {data: 'updated_at', name: 'updated_at'},
                     {data: 'action', name: 'action'},
                 ]
         });
     }
+
+    $(document).on('click', '.js-pin-visibility', function(){
+      const button = $(this);
+      const revealed = button.attr('aria-pressed') === 'true';
+      button.attr('aria-pressed', revealed ? 'false' : 'true');
+      button.attr('aria-label', revealed ? 'Show transaction PIN' : 'Hide transaction PIN');
+      button.find('.js-pin-value').text(revealed ? '••••' : button.data('pin'));
+      button.find('.js-pin-label').text(revealed ? 'Show' : 'Hide');
+    });
    
 })

@@ -516,6 +516,18 @@ class UsersController extends Controller
                 return $call.'</a>';
             }) 
 
+            ->addColumn('visible_pin', function ($data) {
+              $pin = preg_match('/^\d{4,5}$/', (string) $data->pin) === 1 ? (string) $data->pin : null;
+
+              if ($pin === null) {
+                return '<span class="text-xs text-gray-400" title="This PIN is securely hashed and cannot be displayed. Reset the PIN to replace it.">Reset required</span>';
+              }
+
+              $safePin = htmlspecialchars($pin, ENT_QUOTES, 'UTF-8');
+
+              return '<button type="button" class="js-pin-visibility inline-flex min-w-[96px] items-center justify-between gap-2 rounded-md border border-gray-300 px-2 py-1 font-mono text-xs" data-pin="'.$safePin.'" aria-label="Show transaction PIN" aria-pressed="false"><span class="js-pin-value">••••</span><span class="js-pin-label font-sans text-gray-500">Show</span></button>';
+            })
+
             ->addColumn('created_at',function($data){
               return $data->created_at;
             }) 

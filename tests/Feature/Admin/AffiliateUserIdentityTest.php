@@ -65,3 +65,28 @@ it('allows an admin to reuse customer identity values owned by another affiliate
         ->exists())->toBeTrue();
 });
 
+it('lets an affiliate admin reveal a readable customer transaction pin', function () {
+    $context = affiliateTestContext();
+    $adminRole = Role::create(['role_name' => 'Admin']);
+    $admin = User::withoutGlobalScope('affiliate')->create([
+        'affiliate_id' => $context['affiliate']->id,
+        'username' => 'pin-view-admin',
+        'first_name' => 'PIN',
+        'last_name' => 'Admin',
+        'email' => 'pin-view-admin@example.com',
+        'password' => 'StrongPass1!',
+        'role_id' => $adminRole->id,
+        'email_verified_at' => now(),
+    ]);
+
+    $response = $this->withSession(['affiliate' => $context['affiliate']])
+        ->actingAs($admin)
+        ->getJson('/admin/users/fetch_users')
+        ->assertOk();
+
+    $customer = collect($response->json('data'))->firstWhere('DT_RowIndex', $context['user']->id);
+
+    expect($customer['visible_pin'])
+        ->toContain('data-pin="4321"')
+        ->toContain('Show transaction PIN');
+});

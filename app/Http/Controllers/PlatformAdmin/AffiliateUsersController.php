@@ -48,6 +48,7 @@ class AffiliateUsersController extends Controller
                 'id', 'affiliate_id', 'user_plan_id', 'role_id', 'upline_id',
                 'username', 'first_name', 'last_name', 'other_names', 'email',
                 'phone_number', 'main_wallet', 'active', 'is_deactivated',
+                'pin',
                 'email_verified_at', 'customer_category', 'customer_landmark', 'account_tier',
                 'default_wallet_setting', 'created_at',
             ])
@@ -66,6 +67,11 @@ class AffiliateUsersController extends Controller
             }))
             ->latest()
             ->paginate(25);
+
+        $users->getCollection()->each(function (User $user) {
+            $user->setAttribute('visible_pin', $this->visiblePin($user->pin));
+            $user->makeHidden('pin');
+        });
 
         $plans = AffiliateUserPlan::withoutGlobalScope('affiliate')
             ->when($affiliate, fn (Builder $query) => $query->where('affiliate_id', $affiliate->id))
@@ -144,8 +150,9 @@ class AffiliateUsersController extends Controller
         $user->fill($data)->save();
 
         $freshUser = $user->fresh()
-            ->load(['role:id,role_name', 'user_plan:id,affiliate_id,user_plan_name,updated_user_plan_name,plan_level'])
-            ->makeHidden(['pin', 'bvn', 'nin', 'bvn_json', 'nin_json']);
+            ->load(['role:id,role_name', 'user_plan:id,affiliate_id,user_plan_name,updated_user_plan_name,plan_level']);
+        $freshUser->setAttribute('visible_pin', $this->visiblePin($freshUser->pin));
+        $freshUser->makeHidden(['pin', 'bvn', 'nin', 'bvn_json', 'nin_json']);
 
         return response()->json([
             'message' => 'Affiliate user updated.',
@@ -184,5 +191,10 @@ class AffiliateUsersController extends Controller
         $plan->update($data);
 
         return response()->json(['message' => 'Affiliate user plan updated.', 'plan' => $plan->fresh()]);
+    }
+
+    private function visiblePin(?string $pin): ?string
+    {
+        return preg_match('/^\d{4,5}$/', (string) $pin) === 1 ? $pin : null;
     }
 }

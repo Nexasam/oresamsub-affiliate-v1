@@ -229,14 +229,16 @@ it('edits an affiliate user and its affiliate user plan', function () {
     $user = User::withoutGlobalScope('affiliate')->create([
         'affiliate_id' => $affiliate->id, 'username' => 'editable-user', 'first_name' => 'Before',
         'last_name' => 'User', 'email' => 'editable-user@example.com', 'password' => 'password123',
-        'role_id' => $role->id,
+        'role_id' => $role->id, 'pin' => '2468',
     ]);
 
     $this->actingAs($admin, 'platform_admin')
         ->getJson("/admin/affiliates/{$affiliate->id}/management-users")
         ->assertOk()
         ->assertJsonPath('plans.0.id', $plan->id)
-        ->assertJsonPath('users.data.0.id', $user->id);
+        ->assertJsonPath('users.data.0.id', $user->id)
+        ->assertJsonPath('users.data.0.visible_pin', '2468')
+        ->assertJsonMissingPath('users.data.0.pin');
 
     $this->actingAs($admin, 'platform_admin')
         ->patchJson("/admin/affiliates/{$affiliate->id}/management-users/{$user->id}", [

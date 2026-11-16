@@ -104,6 +104,7 @@
                                 <th class="px-2 py-1.5 text-left">Status</th>
                                 <th class="px-2 py-1.5 text-left">Email</th>
                                 <th class="px-2 py-1.5 text-left">Phone</th>
+                                <th class="px-2 py-1.5 text-left">PIN</th>
                                 <th class="px-2 py-1.5 text-left">Date Added</th>
                                 <th class="px-2 py-1.5 text-left">Last Login</th>
                                 <th class="px-2 py-1.5 text-left">Action</th>
@@ -399,4 +400,3 @@
 
        
 @endsection
-

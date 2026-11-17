@@ -89,4 +89,10 @@ it('lets an affiliate admin reveal a readable customer transaction pin', functio
     expect($customer['visible_pin'])
         ->toContain('data-pin="4321"')
         ->toContain('Show transaction PIN');
+
+    $this->withSession(['affiliate' => $context['affiliate']])
+        ->actingAs($admin)
+        ->get('/admin/users')
+        ->assertOk()
+        ->assertDontSee('john@example.com');
 });
